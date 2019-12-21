@@ -1,0 +1,258 @@
+#include <headers/VulkanGPUDevice.h>
+#include <headers/VulkanInstance.h>
+#include <headers/VulkanDebugLog.h>
+#include <headers/VulkanTranslator.h>
+#include <headers/VulkanBuffer.h>
+#include <headers/VulkanImage.h>
+#include <headers/VulkanRenderPass.h>
+#include <headers/vk_mem_alloc.h>
+#include <algorithm>
+#include <limits>
+#include <deque>
+
+namespace Crimson
+{
+	void VulkanGPUDevice::InitDeviceChannel(uint32_t num_channel)
+	{
+	}
+	void VulkanGPUDevice::RegisterWindow(IWindow& window)
+	{
+		auto find = m_SurfaceContexts.find(window.GetName());
+		if (find == m_SurfaceContexts.end())
+		{
+			VkSurfaceKHR window_surface = VK_NULL_HANDLE;
+#ifdef _WIN32
+			VkWin32SurfaceCreateInfoKHR surface_create_info = {};
+			surface_create_info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+			surface_create_info.pNext = nullptr;
+			surface_create_info.hinstance = window.GetWin32Instance();
+			surface_create_info.hwnd = window.GetWin32Handle();
+			VulkanDebug::CheckVKResult(vkCreateWin32SurfaceKHR(VulkanInstance::Get()->GetVulkanInstance(), &surface_create_info, VULKAN_ALLOCATOR_POINTER, &window_surface), "Vulkan Win32 Surface Creation Issue!");
+#endif
+			m_SurfaceContexts.insert(std::make_pair(window.GetName(), VulkanSurfaceContext()));
+			m_SurfaceContexts[window.GetName()].InitSurfaceContext(this, window_surface);
+		}
+	}
+	PGPUDeviceThread VulkanGPUDevice::CreateThread()
+	{
+		return PGPUDeviceThread();
+	}
+	PGPUBuffer VulkanGPUDevice::CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type)
+	{
+		VkBufferCreateInfo buffer_create_info{};
+		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		buffer_create_info.size = buffer_size;
+		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		buffer_create_info.usage = TranslateBufferUsageFlagsToVulkan(usages);
+
+
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = TranslateMemoryUsageToVMA(memory_type);
+		
+		VkBuffer new_buffer = VK_NULL_HANDLE;
+		VmaAllocation new_allocation = nullptr;
+		VulkanDebug::CheckVKResult(vmaCreateBuffer(m_MemoryAllocator, &buffer_create_info, &allocInfo, &new_buffer, &new_allocation, nullptr), "VMA Creating Buffer Issue!");
+		VulkanBufferObject* new_buffer_object = new VulkanBufferObject();
+		new_buffer_object->SetVulkanBuffer(this, new_buffer, new_allocation, buffer_size, usages, memory_type);
+		return new_buffer_object;
+	}
+	void VulkanGPUDevice::HandleDisposedBuffer(VulkanBufferObject* p_buffer)
+	{
+		vmaDestroyBuffer(m_MemoryAllocator, p_buffer->m_Buffer, p_buffer->m_Allocation);
+		delete p_buffer;
+	}
+	PGPUImage VulkanGPUDevice::CreateImage(EFormat format, uint32_t width, uint32_t height, uint32_t depth, std::vector<EImageUsage> const& usages, EMemoryType memory_type, uint32_t layer_num, uint32_t mip_level_num, uint32_t sample_num)
+	{
+		VkImageCreateInfo image_create_info{};
+		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_create_info.format = TranslateImageFormatToVulkan(format);
+		image_create_info.flags = 0;	//reserved
+		image_create_info.imageType = depth == 1 ? VK_IMAGE_TYPE_2D : VK_IMAGE_TYPE_3D;
+		image_create_info.extent.width = width;
+		image_create_info.extent.height = height;
+		image_create_info.extent.depth = depth;
+		image_create_info.mipLevels = mip_level_num;
+		image_create_info.arrayLayers = layer_num;
+		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+		image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		image_create_info.usage = TranslateImageUsageFlagsToVulkan(usages);
+
+		VmaAllocationCreateInfo alloc_info = {};
+		alloc_info.usage = TranslateMemoryUsageToVMA(memory_type);
+
+		VkImage new_image = VK_NULL_HANDLE;
+		VmaAllocation new_allocation = nullptr;
+		VulkanDebug::CheckVKResult(vmaCreateImage(m_MemoryAllocator, &image_create_info, &alloc_info, &new_image, &new_allocation, nullptr), "Vulkan Create Image Issue!");
+		
+		VulkanImageObject* new_image_object = new VulkanImageObject();
+		new_image_object->SetVulkanImage(this, new_image, new_allocation, format, width, height, depth, mip_level_num, layer_num, usages, memory_type);
+		return new_image_object;
+	}
+	void VulkanGPUDevice::HandleDisposedImage(VulkanImageObject* p_image)
+	{
+		vmaDestroyImage(m_MemoryAllocator, p_image->m_Image, p_image->m_Allocation);
+		delete p_image;
+	}
+	PRenderPass VulkanGPUDevice::CreateRenderPass()
+	{
+		return new VulkanRenderPass{this};
+	}
+	void VulkanGPUDevice::HandleDisposedRenderPass(VulkanRenderPass* p_renderpass)
+	{
+		delete p_renderpass;
+	}
+	VulkanGPUDevice::VulkanGPUDevice():
+		m_PhysicalDevice(VK_NULL_HANDLE),
+		m_LogicalDevice(VK_NULL_HANDLE),
+		m_GraphicsComputeGeneralFamily((std::numeric_limits<uint32_t>::max)()),
+		m_GraphicsDedicateFamily((std::numeric_limits<uint32_t>::max)()),
+		m_ComputeDedicateFamily((std::numeric_limits<uint32_t>::max)()),
+		m_TransferDedicateFamily((std::numeric_limits<uint32_t>::max)()),
+		m_SparseBindingFamily((std::numeric_limits<uint32_t>::max)())//,
+		//m_PresentFamily((std::numeric_limits<uint32_t>::max)())
+	{}
+	VulkanGPUDevice::~VulkanGPUDevice()
+	{
+	}
+	void VulkanGPUDevice::InitVulkanDevice(uint32_t prefered_device_index, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num)
+	{
+		auto p_vulkan_instance = VulkanInstance::Get();
+		auto& devices = p_vulkan_instance->GetPhysicalDevices();
+		//TODO: Check device number
+		uint32_t physical_device_index = (std::min)({ prefered_device_index, static_cast<uint32_t>(devices.size() - 1) });
+		m_PhysicalDevice = devices[physical_device_index];
+
+		uint32_t family_property_count = 0;
+		vkGetPhysicalDeviceQueueFamilyProperties(devices[physical_device_index], &family_property_count, nullptr);
+		m_QueueFamilies.resize(family_property_count);
+		std::vector<uint32_t> queue_numbers(family_property_count, 0);
+		vkGetPhysicalDeviceQueueFamilyProperties(devices[physical_device_index], &family_property_count, m_QueueFamilies.data());
+
+		for (uint32_t family_id = 0; family_id < family_property_count; ++family_id)
+		{
+			VkQueueFamilyProperties& family_property = m_QueueFamilies[family_id];
+			if ((family_property.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) == (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
+			{
+				//general queue family
+				m_GraphicsComputeGeneralFamily = family_id;
+			}
+			else 
+			{
+				if (family_property.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+				{
+					//graphics dedicate
+					m_GraphicsDedicateFamily = family_id;
+				}
+				else if (family_property.queueFlags & VK_QUEUE_COMPUTE_BIT)
+				{
+					//compute dedicate
+					m_ComputeDedicateFamily = family_id;
+				}
+				else if (family_property.queueFlags & VK_QUEUE_TRANSFER_BIT)
+				{
+					//transfer dedicate
+					m_TransferDedicateFamily = family_id;
+				}
+			}
+		}
+		//Assign "dedicate" families with general family if they are empty
+		if (m_GraphicsComputeGeneralFamily != (std::numeric_limits<uint32_t>::max()))
+		{
+			if (m_GraphicsDedicateFamily == (std::numeric_limits<uint32_t>::max()))
+			{
+				m_GraphicsDedicateFamily = m_GraphicsComputeGeneralFamily;
+			}
+			if (m_ComputeDedicateFamily == (std::numeric_limits<uint32_t>::max()))
+			{
+				m_ComputeDedicateFamily = m_GraphicsComputeGeneralFamily;
+			}
+			if (m_TransferDedicateFamily == (std::numeric_limits<uint32_t>::max()))
+			{
+				m_TransferDedicateFamily = m_GraphicsComputeGeneralFamily;
+			}
+		}
+		if (m_GraphicsDedicateFamily != (std::numeric_limits<uint32_t>::max()))
+		{
+			queue_numbers[m_GraphicsDedicateFamily] = (std::max)({ queue_numbers[m_GraphicsDedicateFamily], prefered_graphics_queue_num });
+		}
+		if (m_ComputeDedicateFamily != (std::numeric_limits<uint32_t>::max()))
+		{
+			queue_numbers[m_ComputeDedicateFamily] = (std::max)({ queue_numbers[m_GraphicsDedicateFamily], prefered_compute_queue_num });
+		}
+		if (m_TransferDedicateFamily != (std::numeric_limits<uint32_t>::max()))
+		{
+			queue_numbers[m_TransferDedicateFamily] = (std::max)({ queue_numbers[m_GraphicsDedicateFamily], prefered_transfer_queue_num });
+		}
+
+		std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+		std::deque<std::vector<float>> queue_priorities;
+		for (uint32_t family_id = 0; family_id < family_property_count; ++family_id)
+		{
+			queue_numbers[family_id] = (std::min)({ m_QueueFamilies[family_id].queueCount, queue_numbers[family_id] });
+			if (queue_numbers[family_id] > 0)
+			{
+				queue_priorities.push_back(std::vector<float>(queue_numbers[family_id]));
+				std::vector<float>& current_queue_priority_list = *(queue_priorities.rbegin());
+				{
+					if (queue_numbers[family_id] == 1)
+					{
+						current_queue_priority_list[0] = 1.0f;
+					}
+					else
+					{
+						for (uint32_t priority_id = 0; priority_id <= queue_numbers[family_id] - 1; ++priority_id)
+						{
+							current_queue_priority_list[priority_id] = 1.0f - (priority_id * 1.0f / (queue_numbers[family_id] - 1));
+						}
+					}
+				}
+				VkDeviceQueueCreateInfo new_create_info{};
+				new_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+				new_create_info.queueFamilyIndex = family_id;
+				new_create_info.queueCount = queue_numbers[family_id];
+				new_create_info.pQueuePriorities = current_queue_priority_list.data();
+				new_create_info.pNext = nullptr;
+				queue_create_infos.push_back(new_create_info);
+			}
+		}
+
+		VkPhysicalDeviceFeatures device_features{};
+		vkGetPhysicalDeviceFeatures(devices[physical_device_index], &device_features);
+
+		std::vector<char const*> device_extension_names =
+		{
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		};
+
+		VkDeviceCreateInfo logical_device_create_info = {};
+		logical_device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		logical_device_create_info.pNext = nullptr;
+		logical_device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
+		logical_device_create_info.pQueueCreateInfos = queue_create_infos.data();
+		logical_device_create_info.enabledExtensionCount = static_cast<uint32_t>(device_extension_names.size());
+		logical_device_create_info.ppEnabledExtensionNames = device_extension_names.data();
+		logical_device_create_info.enabledLayerCount = 0;
+		logical_device_create_info.ppEnabledLayerNames = nullptr;
+		logical_device_create_info.pEnabledFeatures = &device_features;
+
+		VulkanDebug::CheckVKResult(vkCreateDevice(devices[physical_device_index], &logical_device_create_info, VULKAN_ALLOCATOR_POINTER, &m_LogicalDevice), "Vulkan Logical Device Creation Error!");
+		std::swap(m_QueueNumbers, queue_numbers);
+		InitMemoryAllocator();
+	}
+	void VulkanGPUDevice::RegisterVulkanSurface(VkSurfaceKHR surface)
+	{
+		//VkSurfaceCapabilitiesKHR surface_capabilities{};
+		//vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, surface, &surface_capabilities);
+
+		//vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, current_device.LogicalDeviceInfo->QueueFamilies[family_index].ID, _new_context.Surface, &support_surface);
+
+		//surface_capabilities.
+	}
+	void VulkanGPUDevice::InitMemoryAllocator()
+	{
+		VmaAllocatorCreateInfo allocator_create_info = {};
+		allocator_create_info.physicalDevice = m_PhysicalDevice;
+		allocator_create_info.device = m_LogicalDevice;
+		VulkanDebug::CheckVKResult(vmaCreateAllocator(&allocator_create_info, &m_MemoryAllocator), "Vulkan Memory Allocator Initialization Failed!");
+	}
+}

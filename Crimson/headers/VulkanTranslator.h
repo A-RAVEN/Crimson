@@ -1,0 +1,146 @@
+#pragma once
+#include <headers/VulkanHeader.h>
+#include <headers/vk_mem_alloc.h>
+#include <unordered_map>
+#include <include/Generals.h>
+
+namespace Crimson
+{
+	static VkFormat VULKAN_STATIC_FORMAT_TABLE[] =
+	{
+		//R8
+		VK_FORMAT_R8_UNORM,
+		VK_FORMAT_R8_SNORM,
+		VK_FORMAT_R8_UINT,
+		VK_FORMAT_R8_SINT,
+
+		//R8G8
+		VK_FORMAT_R8G8_UNORM,
+		VK_FORMAT_R8G8_SNORM,
+		VK_FORMAT_R8G8_UINT,
+		VK_FORMAT_R8G8_SINT,
+
+		//R8G8B8
+		VK_FORMAT_R8G8B8_UNORM,
+		VK_FORMAT_R8G8B8_SNORM,
+		VK_FORMAT_R8G8B8_UINT,
+		VK_FORMAT_R8G8B8_SINT,
+		VK_FORMAT_R8G8B8_SRGB,
+
+		//B8G8R8
+		VK_FORMAT_B8G8R8_UNORM,
+		VK_FORMAT_B8G8R8_SNORM,
+		VK_FORMAT_B8G8R8_UINT,
+		VK_FORMAT_B8G8R8_SINT,
+		VK_FORMAT_B8G8R8_SRGB,
+
+		//R8G8B8A8
+		VK_FORMAT_R8G8B8A8_UNORM,
+		VK_FORMAT_R8G8B8A8_SNORM,
+		VK_FORMAT_R8G8B8A8_UINT,
+		VK_FORMAT_R8G8B8A8_SINT,
+		VK_FORMAT_R8G8B8A8_SRGB,
+
+		//B8G8R8A8
+		VK_FORMAT_B8G8R8A8_UNORM,
+		VK_FORMAT_B8G8R8A8_SNORM,
+		VK_FORMAT_B8G8R8A8_UINT,
+		VK_FORMAT_B8G8R8A8_SINT,
+		VK_FORMAT_B8G8R8A8_SRGB,
+
+		//R16
+		VK_FORMAT_R16_UNORM,
+		VK_FORMAT_R16_SNORM,
+		VK_FORMAT_R16_UINT,
+		VK_FORMAT_R16_SINT,
+		VK_FORMAT_R16_SFLOAT,
+
+		//R32
+		VK_FORMAT_R32_UINT,
+		VK_FORMAT_R32_SINT,
+		VK_FORMAT_R32_SFLOAT,
+
+		//R64
+		VK_FORMAT_R64_UINT,
+		VK_FORMAT_R64_SINT,
+		VK_FORMAT_R64_SFLOAT,
+
+		//R32G32B32A32
+		VK_FORMAT_R32G32B32A32_UINT,
+		VK_FORMAT_R32G32B32A32_SINT,
+		VK_FORMAT_R32G32B32A32_SFLOAT,
+
+		//D16
+		VK_FORMAT_D16_UNORM,
+
+		//D32
+		VK_FORMAT_D32_SFLOAT,
+
+		//S8
+		VK_FORMAT_S8_UINT,
+
+		//Depth Stencil
+		VK_FORMAT_D16_UNORM_S8_UINT,
+		VK_FORMAT_D24_UNORM_S8_UINT,
+		VK_FORMAT_D32_SFLOAT_S8_UINT,
+	};
+
+	static VkBufferUsageFlagBits VULKAN_STATIC_BUFFER_USAGE_TABLE[] =
+	{
+		VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+		VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+		VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+		VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+		VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+		VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT,
+	};
+
+	static VkImageUsageFlagBits VULKAN_STATIC_IMAGE_USAGE_TABLE[] =
+	{
+		VK_IMAGE_USAGE_TRANSFER_SRC_BIT,
+		VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+		VK_IMAGE_USAGE_SAMPLED_BIT,
+		VK_IMAGE_USAGE_STORAGE_BIT,
+		VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+	};
+
+	static VmaMemoryUsage VMA_STATIC_MEMORY_USAGE_TABLE[] =
+	{
+		VMA_MEMORY_USAGE_CPU_ONLY,
+		VMA_MEMORY_USAGE_GPU_ONLY,
+		VMA_MEMORY_USAGE_CPU_TO_GPU,
+		VMA_MEMORY_USAGE_GPU_TO_CPU
+	};
+
+	static VkFormat TranslateImageFormatToVulkan(EFormat format)
+	{
+		return VULKAN_STATIC_FORMAT_TABLE[static_cast<uint32_t>(format)];
+	}
+
+	static VkBufferUsageFlags TranslateBufferUsageFlagsToVulkan(std::vector<EBufferUsage> const& usages)
+	{
+		VkBufferUsageFlags return_val = 0;
+		for (auto usage : usages)
+		{
+			return_val |= VULKAN_STATIC_BUFFER_USAGE_TABLE[static_cast<uint32_t>(usage)];
+		}
+		return return_val;
+	}
+
+	static VkImageUsageFlags TranslateImageUsageFlagsToVulkan(std::vector<EImageUsage> const& usages)
+	{
+		VkImageUsageFlags return_val = 0;
+		for (auto usage : usages)
+		{
+			return_val |= VULKAN_STATIC_IMAGE_USAGE_TABLE[static_cast<uint32_t>(usage)];
+		}
+		return return_val;
+	}
+
+	static VmaMemoryUsage TranslateMemoryUsageToVMA(EMemoryType memory_type)
+	{
+		return VMA_STATIC_MEMORY_USAGE_TABLE[static_cast<uint32_t>(memory_type)];
+	}
+}
