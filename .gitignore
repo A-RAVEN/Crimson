@@ -40,3 +40,5 @@ RequiemEngine/Temp/x64/Debug/vc142.idb
 *.db
 .vs/Crimson/v16/.suo
 *.user
+
+.vs

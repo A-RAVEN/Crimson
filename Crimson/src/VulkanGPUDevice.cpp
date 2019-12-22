@@ -5,6 +5,7 @@
 #include <headers/VulkanBuffer.h>
 #include <headers/VulkanImage.h>
 #include <headers/VulkanRenderPass.h>
+#include <headers/VulkanDescriptors.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
 #include <limits>
@@ -100,6 +101,14 @@ namespace Crimson
 	void VulkanGPUDevice::HandleDisposedRenderPass(VulkanRenderPass* p_renderpass)
 	{
 		delete p_renderpass;
+	}
+	PDescriptorSetLayout VulkanGPUDevice::CreateDescriptorSetLayout()
+	{
+		return new VulkanDescriptorSetLayout(this);
+	}
+	void VulkanGPUDevice::HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout)
+	{
+		delete p_set_layout;
 	}
 	VulkanGPUDevice::VulkanGPUDevice():
 		m_PhysicalDevice(VK_NULL_HANDLE),
@@ -238,6 +247,7 @@ namespace Crimson
 		VulkanDebug::CheckVKResult(vkCreateDevice(devices[physical_device_index], &logical_device_create_info, VULKAN_ALLOCATOR_POINTER, &m_LogicalDevice), "Vulkan Logical Device Creation Error!");
 		std::swap(m_QueueNumbers, queue_numbers);
 		InitMemoryAllocator();
+		InitDescriptorPool();
 	}
 	void VulkanGPUDevice::RegisterVulkanSurface(VkSurfaceKHR surface)
 	{
@@ -254,5 +264,32 @@ namespace Crimson
 		allocator_create_info.physicalDevice = m_PhysicalDevice;
 		allocator_create_info.device = m_LogicalDevice;
 		VulkanDebug::CheckVKResult(vmaCreateAllocator(&allocator_create_info, &m_MemoryAllocator), "Vulkan Memory Allocator Initialization Failed!");
+	}
+	void VulkanGPUDevice::InitDescriptorPool()
+	{
+		std::vector<VkDescriptorPoolSize> pool_sizes(5);
+		// Uniform Buffer Max Size
+		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		pool_sizes[0].descriptorCount = 5000;
+		// Combined Image Sampler Max Size
+		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		pool_sizes[1].descriptorCount = 5000;
+		// Attachment Storage Image Max Size
+		pool_sizes[2].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		pool_sizes[2].descriptorCount = 1000;
+		// Attachment Input Max Size
+		pool_sizes[3].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+		pool_sizes[3].descriptorCount = 1000;
+		// Attachment SB Max Size
+		pool_sizes[4].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		pool_sizes[4].descriptorCount = 5000;
+		VkDescriptorPoolCreateInfo create_info{};
+		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		create_info.maxSets = 1000;
+		create_info.poolSizeCount = pool_sizes.size();
+		create_info.pPoolSizes = pool_sizes.data();
+		create_info.pNext = nullptr;
+		VulkanDebug::CheckVKResult(vkCreateDescriptorPool(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorPool), "Vulkan Descriptor Pool Creation Issue!");
 	}
 }

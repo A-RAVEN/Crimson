@@ -70,8 +70,8 @@ namespace Crimson
 			m_VulkanAttachmentInfos.clear();
 			m_VulkanSubpassInfos.resize(m_Subpasses.size());
 			std::vector<VkAttachmentDescription> vk_attachments;
-			SubpassDependencyTracker dependency_tracker(m_Attachments.size());
-			for (size_t attachment_id = 0; attachment_id < m_Attachments.size(); ++attachment_id)
+			SubpassDependencyTracker dependency_tracker(static_cast<uint32_t>(m_Attachments.size()));
+			for (uint32_t attachment_id = 0; attachment_id < m_Attachments.size(); ++attachment_id)
 			{
 				bool is_color_format = IsColorFormat(m_Attachments[attachment_id].m_Format);
 				if (is_color_format)
@@ -92,15 +92,15 @@ namespace Crimson
 			std::vector<std::vector<VkAttachmentReference>> vk_depth_stencil_attachment_refrences(m_Subpasses.size());
 			{
 				//solve for true attachments for depth stencil texture
-				std::map<int32_t, size_t> output_set;
-				std::map<int32_t, size_t> input_set;
-				std::map<int32_t, size_t> depth_input_view_set;
-				std::map<int32_t, size_t> stencil_input_view_set;
-				std::map<int32_t, size_t> depth_stencil_view_set;
-				for (size_t subpass_id = 0; subpass_id < m_Subpasses.size(); ++subpass_id)
+				std::map<int32_t, uint32_t> output_set;
+				std::map<int32_t, uint32_t> input_set;
+				std::map<int32_t, uint32_t> depth_input_view_set;
+				std::map<int32_t, uint32_t> stencil_input_view_set;
+				std::map<int32_t, uint32_t> depth_stencil_view_set;
+				for (uint32_t subpass_id = 0; subpass_id < m_Subpasses.size(); ++subpass_id)
 				{
-					std::map<int32_t, size_t> subpass_depth_input_set;
-					std::map<int32_t, size_t> subpass_stencil_input_set;
+					std::map<int32_t, uint32_t> subpass_depth_input_set;
+					std::map<int32_t, uint32_t> subpass_stencil_input_set;
 					std::vector<VkAttachmentReference>& r_subpass_output_attachment_refs = vk_color_attachment_references[subpass_id];
 					std::vector<VkAttachmentReference>& r_subpass_input_attachment_refs = vk_input_attachment_references[subpass_id];
 					std::vector<VkAttachmentReference>& r_subpass_depth_stencil_attachment_refs = vk_depth_stencil_attachment_refrences[subpass_id];
@@ -132,7 +132,7 @@ namespace Crimson
 							VulkanAttachmentInfo new_info{};
 							new_info.m_ImageReference = attachment_ref;
 							m_VulkanAttachmentInfos.push_back(new_info);
-							size_t new_attachment_index = m_VulkanAttachmentInfos.size() - 1;
+							uint32_t new_attachment_index = static_cast<uint32_t>(m_VulkanAttachmentInfos.size() - 1);
 							output_set.insert(std::make_pair(attachment_ref, new_attachment_index));
 							new_reference.attachment = new_attachment_index;
 						}
@@ -165,7 +165,7 @@ namespace Crimson
 							VulkanAttachmentInfo new_info{};
 							new_info.m_ImageReference = attachment_ref;
 							m_VulkanAttachmentInfos.push_back(new_info);
-							size_t new_attachment_index = m_VulkanAttachmentInfos.size() - 1;
+							uint32_t new_attachment_index = static_cast<uint32_t>(m_VulkanAttachmentInfos.size() - 1);
 							input_set.insert(std::make_pair(attachment_ref, new_attachment_index));
 							new_reference.attachment = new_attachment_index;
 						}
@@ -198,12 +198,12 @@ namespace Crimson
 							VulkanAttachmentInfo new_info{};
 							new_info.m_ImageReference = attachment_ref;
 							m_VulkanAttachmentInfos.push_back(new_info);
-							size_t new_attachment_index = m_VulkanAttachmentInfos.size() - 1;
+							uint32_t new_attachment_index = static_cast<uint32_t>(m_VulkanAttachmentInfos.size() - 1);
 							depth_input_view_set.insert(std::make_pair(attachment_ref, new_attachment_index));
 							new_reference.attachment = new_attachment_index;
 						}
 						r_subpass_input_attachment_refs.push_back(new_reference);
-						subpass_depth_input_set.insert(std::make_pair(attachment_ref, r_subpass_input_attachment_refs.size() - 1));
+						subpass_depth_input_set.insert(std::make_pair(attachment_ref, static_cast<uint32_t>(r_subpass_input_attachment_refs.size() - 1)));
 					}
 					//stencil inputs
 					for (int32_t attachment_ref : m_Subpasses[subpass_id].m_StencilInputAttachments)
@@ -232,12 +232,12 @@ namespace Crimson
 							VulkanAttachmentInfo new_info{};
 							new_info.m_ImageReference = attachment_ref;
 							m_VulkanAttachmentInfos.push_back(new_info);
-							size_t new_attachment_index = m_VulkanAttachmentInfos.size() - 1;
+							uint32_t new_attachment_index = static_cast<uint32_t>(m_VulkanAttachmentInfos.size() - 1);
 							stencil_input_view_set.insert(std::make_pair(attachment_ref, new_attachment_index));
 							new_reference.attachment = new_attachment_index;
 						}
 						r_subpass_input_attachment_refs.push_back(new_reference);
-						subpass_stencil_input_set.insert(std::make_pair(attachment_ref, r_subpass_input_attachment_refs.size()));
+						subpass_stencil_input_set.insert(std::make_pair(attachment_ref, static_cast<uint32_t>(r_subpass_input_attachment_refs.size())));
 					}
 					//depth stencil attachments
 					if (m_Subpasses[subpass_id].m_DepthStencilAttachment >= 0)
@@ -266,7 +266,7 @@ namespace Crimson
 							VulkanAttachmentInfo new_info{};
 							new_info.m_ImageReference = m_Subpasses[subpass_id].m_DepthStencilAttachment;
 							m_VulkanAttachmentInfos.push_back(new_info);
-							size_t new_attachment_index = m_VulkanAttachmentInfos.size() - 1;
+							uint32_t new_attachment_index = static_cast<uint32_t>(m_VulkanAttachmentInfos.size() - 1);
 							depth_stencil_view_set.insert(std::make_pair(m_Subpasses[subpass_id].m_DepthStencilAttachment, new_attachment_index));
 							new_reference.attachment = new_attachment_index;
 						}
@@ -313,7 +313,7 @@ namespace Crimson
 					current_subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS; //Default Usage For Now
 					current_subpass.colorAttachmentCount = static_cast<uint32_t>(r_subpass_output_attachment_refs.size());
 					current_subpass.pColorAttachments = current_subpass.colorAttachmentCount > 0 ? r_subpass_output_attachment_refs.data() : nullptr;
-					current_subpass.inputAttachmentCount = r_subpass_input_attachment_refs.size();
+					current_subpass.inputAttachmentCount = static_cast<uint32_t>(r_subpass_input_attachment_refs.size());
 					current_subpass.pInputAttachments = r_subpass_input_attachment_refs.size() > 0 ? r_subpass_input_attachment_refs.data() : nullptr;
 					current_subpass.pDepthStencilAttachment = r_subpass_depth_stencil_attachment_refs.size() > 0 ? r_subpass_depth_stencil_attachment_refs.data() : nullptr;
 					//TODO: Need Further Improvements
@@ -327,7 +327,7 @@ namespace Crimson
 					if(r_subpass_input_attachment_refs.size() > 0)
 					{
 						std::vector<VkDescriptorSetLayoutBinding> bindings(r_subpass_input_attachment_refs.size());
-						for (size_t binding_id = 0; binding_id < bindings.size(); ++binding_id)
+						for (uint32_t binding_id = 0; binding_id < bindings.size(); ++binding_id)
 						{
 							bindings[binding_id].binding = binding_id;
 							bindings[binding_id].descriptorCount = 1;
@@ -357,53 +357,17 @@ namespace Crimson
 					if (IsColorFormat(ref_attachment.m_Format))
 					{
 						current_attachment.initialLayout = current_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-						//switch (ref_attachment.m_ClearType)
-						//{
-						//case EAttachmentClearType::E_ATTACHMENT_NOT_CLEAR:
-						//	current_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-						//	break;
-						//case EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES:
-						//	current_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-						//	m_ClearValues[attachment_id] = { 1.0f, 1.0f, 1.0f, 1.0f };
-						//	break;
-						//case EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS:
-						//	current_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-						//	m_ClearValues[attachment_id] = { 0.0f, 0.0f, 0.0f, 0.0f };
-						//	break;
-						//}
-						//current_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 					}
 					else
 					{
 						current_attachment.initialLayout = current_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-						//bool stencil_only = IsStencilOnlyFormat(ref_attachment.m_Format);
-						//bool depth_only = IsDepthOnlyFormat(ref_attachment.m_Format);
-						//switch (ref_attachment.m_ClearType)
-						//{
-						//case EAttachmentClearType::E_ATTACHMENT_NOT_CLEAR:
-						//	current_attachment.stencilLoadOp = current_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-						//	break;
-						//case EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES:
-						//	current_attachment.stencilLoadOp = current_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-						//	m_ClearValues[attachment_id] = { 0.0f, 0x0 };
-						//	break;
-						//case EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS:
-						//	current_attachment.stencilLoadOp = current_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-						//	m_ClearValues[attachment_id] = { 1.0f, 0x0 };
-						//	break;
-						//}
-						//current_attachment.loadOp = stencil_only ? VK_ATTACHMENT_LOAD_OP_DONT_CARE : current_attachment.loadOp;
-						//current_attachment.storeOp = stencil_only ? VK_ATTACHMENT_STORE_OP_DONT_CARE : VK_ATTACHMENT_STORE_OP_STORE;
-						//current_attachment.stencilLoadOp = depth_only ? VK_ATTACHMENT_LOAD_OP_DONT_CARE : current_attachment.stencilLoadOp;
-						//current_attachment.stencilStoreOp = depth_only ? VK_ATTACHMENT_STORE_OP_DONT_CARE : VK_ATTACHMENT_STORE_OP_STORE;
 					}
-					//TODO: Modifications
-					current_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+					current_attachment.samples = TranslateSampleCountToVulkan(ref_attachment.m_SampleCount);
 				}
 			}
 			VkRenderPassCreateInfo create_info = {};
 			create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-			create_info.attachmentCount = m_VulkanAttachmentInfos.size();
+			create_info.attachmentCount = static_cast<uint32_t>(m_VulkanAttachmentInfos.size());
 			create_info.pAttachments = vk_attachments.data();
 			create_info.subpassCount = static_cast<uint32_t>(m_Subpasses.size());
 			create_info.pSubpasses = vk_subpasses.data();
@@ -419,7 +383,21 @@ namespace Crimson
 		{
 			vkDestroyRenderPass(p_OwningDevice->m_LogicalDevice, m_RenderPass, VULKAN_ALLOCATOR_POINTER);
 			m_RenderPass = VK_NULL_HANDLE;
-			p_OwningDevice->HandleDisposedRenderPass(this);
+
+			for (auto& subpass : m_VulkanSubpassInfos)
+			{
+				if (subpass.m_InputLayout != VK_NULL_HANDLE)
+				{
+					vkDestroyDescriptorSetLayout(p_OwningDevice->m_LogicalDevice, subpass.m_InputLayout, VULKAN_ALLOCATOR_POINTER);
+					subpass.m_InputLayout = VK_NULL_HANDLE;
+				}
+				for (auto& pipeline : subpass.m_PipelineInstances)
+				{
+					vkDestroyPipeline(p_OwningDevice->m_LogicalDevice, pipeline.second, VULKAN_ALLOCATOR_POINTER);
+				}
+				subpass.m_PipelineInstances.clear();
+			}
 		}
+		p_OwningDevice->HandleDisposedRenderPass(this);
 	}
 }

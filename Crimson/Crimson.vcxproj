@@ -175,6 +175,7 @@
     <ClInclude Include="headers\vk_mem_alloc.h" />
     <ClInclude Include="headers\VulkanBuffer.h" />
     <ClInclude Include="headers\VulkanDebugLog.h" />
+    <ClInclude Include="headers\VulkanDescriptors.h" />
     <ClInclude Include="headers\VulkanGPUDevice.h" />
     <ClInclude Include="headers\VulkanGPUDeviceThread.h" />
     <ClInclude Include="headers\VulkanHeader.h" />
@@ -183,9 +184,11 @@
     <ClInclude Include="headers\VulkanRenderPass.h" />
     <ClInclude Include="headers\VulkanSurfaceContext.h" />
     <ClInclude Include="headers\VulkanTranslator.h" />
+    <ClInclude Include="include\Configuration.h" />
     <ClInclude Include="include\Generals.h" />
     <ClInclude Include="include\GPUDevice.h" />
     <ClInclude Include="include\IWindow.h" />
+    <ClInclude Include="include\Pipeline.h" />
     <ClInclude Include="include\Version.h" />
   </ItemGroup>
   <ItemGroup>
@@ -193,6 +196,7 @@
     <ClCompile Include="src\GPUDevice.cpp" />
     <ClCompile Include="src\vk_mem_alloc.cpp" />
     <ClCompile Include="src\VulkanBuffer.cpp" />
+    <ClCompile Include="src\VulkanDescriptors.cpp" />
     <ClCompile Include="src\VulkanGPUDevice.cpp" />
     <ClCompile Include="src\VulkanImage.cpp" />
     <ClCompile Include="src\VulkanInstance.cpp" />

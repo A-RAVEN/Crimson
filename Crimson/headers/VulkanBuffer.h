@@ -18,5 +18,6 @@ namespace Crimson
 		VulkanGPUDevice*	p_OwningDevice;
 		VkBuffer			m_Buffer;
 		VmaAllocation		m_Allocation;
+		uint32_t			m_CurrentQueueFamily;
 	};
 }

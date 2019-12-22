@@ -2,6 +2,7 @@
 #include <headers/VulkanHeader.h>
 #include <headers/VulkanGPUDevice.h>
 #include <include/Generals.h>
+#include <include/Pipeline.h>
 #include <map>
 
 namespace Crimson

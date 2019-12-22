@@ -25,6 +25,21 @@ int main()
 	test_renderpass->m_Subpasses[1].m_DepthInputAttachments = { 1 };
 	test_renderpass->m_Subpasses[1].m_StencilInputAttachments = { 1 };
 	test_renderpass->BuildRenderPass();
+
+	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
+	layout->m_Bindings.resize(2);
+	layout->m_Bindings[0].m_BindingPoint = 0;
+	layout->m_Bindings[0].m_Num = 5;
+	layout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	layout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
+
+	layout->m_Bindings[1].m_BindingPoint = 1;
+	layout->m_Bindings[1].m_Num = 1;
+	layout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	layout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
+	//layout->BuildLayout();
+
+	PDescriptorSet test_set = layout->AllocDescriptorSet();
 	while (new_window.IsWindowRunning())
 	{
 		new_window.UpdateWindow();

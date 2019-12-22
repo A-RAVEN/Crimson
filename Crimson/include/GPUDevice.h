@@ -3,6 +3,7 @@
 #include <vector>
 #include <map>
 #include "Generals.h"
+#include "Pipeline.h"
 #include "IWindow.h"
 
 namespace Crimson
@@ -37,8 +38,11 @@ namespace Crimson
 		//ImageManaging
 		virtual PGPUImage CreateImage(EFormat format, uint32_t width, uint32_t height, uint32_t depth, std::vector<EImageUsage> const& usages, EMemoryType memory_type, uint32_t layer_num = 1, uint32_t mip_level_num = 1, uint32_t sample_num = 1) = 0;
 
-		//RenderPass Managine
+		//RenderPass Managing
 		virtual PRenderPass CreateRenderPass() = 0;
+
+		//Descriptor Set Layout Managing
+		virtual PDescriptorSetLayout CreateDescriptorSetLayout() = 0;
 	protected:
 		std::string m_Name;
 

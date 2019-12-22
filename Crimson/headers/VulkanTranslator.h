@@ -114,7 +114,30 @@ namespace Crimson
 		VMA_MEMORY_USAGE_GPU_TO_CPU
 	};
 
-	static VkFormat TranslateImageFormatToVulkan(EFormat format)
+	static VkShaderStageFlagBits VULKAN_STATIC_SHADER_STAGE_TABLE[] =
+	{
+		VK_SHADER_STAGE_VERTEX_BIT,
+		VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT,
+		VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT,
+		VK_SHADER_STAGE_GEOMETRY_BIT,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		VK_SHADER_STAGE_COMPUTE_BIT,
+		VK_SHADER_STAGE_TASK_BIT_NV,
+		VK_SHADER_STAGE_MESH_BIT_NV,
+
+		VK_SHADER_STAGE_ALL_GRAPHICS,
+	};
+	
+	static VkDescriptorType VULKAN_STATIC_DESCRIPTOR_TYPE_TABLE[] =
+	{
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+		VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
+	};
+
+	static inline VkFormat TranslateImageFormatToVulkan(EFormat format)
 	{
 		return VULKAN_STATIC_FORMAT_TABLE[static_cast<uint32_t>(format)];
 	}
@@ -139,8 +162,40 @@ namespace Crimson
 		return return_val;
 	}
 
-	static VmaMemoryUsage TranslateMemoryUsageToVMA(EMemoryType memory_type)
+	static inline VmaMemoryUsage TranslateMemoryUsageToVMA(EMemoryType memory_type)
 	{
 		return VMA_STATIC_MEMORY_USAGE_TABLE[static_cast<uint32_t>(memory_type)];
+	}
+
+	static VkSampleCountFlagBits TranslateSampleCountToVulkan(uint32_t sample_count)
+	{
+		switch (sample_count)
+		{
+		case 1:
+			return VK_SAMPLE_COUNT_1_BIT;
+		case 2:
+			return VK_SAMPLE_COUNT_2_BIT;
+		case 4:
+			return VK_SAMPLE_COUNT_4_BIT;
+		case 8:
+			return VK_SAMPLE_COUNT_8_BIT;
+		case 16:
+			return VK_SAMPLE_COUNT_16_BIT;
+		case 32:
+			return VK_SAMPLE_COUNT_32_BIT;
+		case 64:
+			return VK_SAMPLE_COUNT_64_BIT;
+		}
+		return VK_SAMPLE_COUNT_1_BIT;
+	}
+
+	static inline VkShaderStageFlagBits TranslateShaderTypeToVulkan(EShaderType shader_type)
+	{
+		return VULKAN_STATIC_SHADER_STAGE_TABLE[static_cast<uint32_t>(shader_type)];
+	}
+
+	static inline VkDescriptorType TranslateShaderResourceTupeToVulkan(EShaderResourceType resource_type)
+	{
+		return VULKAN_STATIC_DESCRIPTOR_TYPE_TABLE[static_cast<uint32_t>(resource_type)];
 	}
 }

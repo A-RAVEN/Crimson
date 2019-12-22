@@ -2,9 +2,12 @@
 
 namespace Crimson
 {
-	VulkanBufferObject::VulkanBufferObject()
-	{
-	}
+	VulkanBufferObject::VulkanBufferObject() :
+		p_OwningDevice(nullptr),
+		m_Buffer(VK_NULL_HANDLE),
+		m_Allocation(VK_NULL_HANDLE),
+		m_CurrentQueueFamily(~0u)
+	{}
 	void VulkanBufferObject::SetVulkanBuffer(VulkanGPUDevice* p_device, VkBuffer buffer, VmaAllocation allocation_info, uint64_t size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type)
 	{
 		p_OwningDevice = p_device;

@@ -4,12 +4,14 @@
 #include <include/IWindow.h>
 #include <headers/vk_mem_alloc.h>
 #include <headers/VulkanSurfaceContext.h>
+#include <include/Pipeline.h>
 
 namespace Crimson
 {
 	class VulkanBufferObject;
 	class VulkanImageObject;
 	class VulkanRenderPass;
+	class VulkanDescriptorSetLayout;
 	class VulkanGPUDevice : public IGPUDevice
 	{
 	public:
@@ -17,6 +19,7 @@ namespace Crimson
 		friend class GPUDeviceManager;
 		friend class VulkanSurfaceContext;
 		friend class VulkanRenderPass;
+		friend class VulkanDescriptorSetLayout;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;
@@ -34,15 +37,23 @@ namespace Crimson
 		//RenderPass Managine
 		virtual PRenderPass CreateRenderPass() override;
 		void HandleDisposedRenderPass(VulkanRenderPass* p_renderpass);
+
+		//Descriptor Set Layout Managing
+		virtual PDescriptorSetLayout CreateDescriptorSetLayout() override;
+		void HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout);
+
 	private:
 		VulkanGPUDevice();
 		~VulkanGPUDevice();
 		void InitVulkanDevice(uint32_t prefered_device_index, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
 		void RegisterVulkanSurface(VkSurfaceKHR surface);
 		void InitMemoryAllocator();
+		void InitDescriptorPool();
 	private:
 		VkPhysicalDevice	m_PhysicalDevice;
 		VkDevice			m_LogicalDevice;
+
+		VkDescriptorPool	m_DescriptorPool;
 
 		std::vector<VkQueueFamilyProperties>	m_QueueFamilies;
 		std::vector<uint32_t>					m_QueueNumbers;

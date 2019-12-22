@@ -173,6 +173,33 @@ namespace Crimson
 		E_ATTACHMENT_NOT_CLEAR,
 	};
 
+	enum class ECullMode : uint8_t
+	{
+		E_CULL_NONE = 0,
+		E_CULL_FRONT,
+		E_CULL_BACK,
+		E_CULL_FRONT_BACK,
+		E_CULL_MODE_MAX
+	};
+
+	enum class EPolygonMode : uint8_t
+	{
+		E_POLYGON_MODE_FILL = 0,
+		E_POLYGON_MODE_LINE,
+		E_POLYGON_MODE_POINT,
+		E_POLYTON_MODE_MAX,
+	};
+
+	enum class ETopology : uint8_t
+	{
+		E_TOPOLOGY_POINT_LIST = 0,
+		E_TOPOLOGY_LINE_LIST,
+		E_TOPOLOGY_TRIANGLE_LIST,
+		E_TOPOLOGY_TRIANGLE_STRIP,
+		E_TOPOLOGY_PATCH,
+		E_TOPOLOGY_MAX,
+	};
+
 	class IObjectManager
 	{
 	public:
@@ -234,6 +261,12 @@ namespace Crimson
 	public:
 		EFormat					m_Format;
 		EAttachmentClearType	m_ClearType;
+		uint32_t				m_SampleCount;
+		RenderPassAttachment(EFormat format, EAttachmentClearType clear_type, uint32_t sample_count = 1) : 
+			m_Format(format),
+			m_ClearType(clear_type),
+			m_SampleCount(sample_count)
+		{}
 	};
 
 	class SubpassInfo
@@ -270,10 +303,4 @@ namespace Crimson
 		uint32_t				m_Height;
 	};
 
-	class GraphicsPipeline : IObject
-	{
-	protected:
-
-	};
-	using PGraphicsPipeline = GraphicsPipeline*;
 }
