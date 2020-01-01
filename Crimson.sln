@@ -8,7 +8,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RequiemEngine", "RequiemEngine\RequiemEngine.vcxproj", "{1F1D488A-4F54-4586-8C8A-66B57362B787}"
 	ProjectSection(ProjectDependencies) = postProject
 		{AA8D8664-5069-4290-940B-6BF751498E88} = {AA8D8664-5069-4290-940B-6BF751498E88}
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7} = {5944BC68-ABA3-4B5E-A52D-677308D8EEC7}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShaderCompiler", "ShaderCompiler\ShaderCompiler.vcxproj", "{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +37,14 @@ Global
 		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x64.Build.0 = Release|x64
 		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x86.ActiveCfg = Release|Win32
 		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x86.Build.0 = Release|Win32
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x64.ActiveCfg = Debug|x64
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x64.Build.0 = Debug|x64
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x86.ActiveCfg = Debug|Win32
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x86.Build.0 = Debug|Win32
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Release|x64.ActiveCfg = Release|x64
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Release|x64.Build.0 = Release|x64
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Release|x86.ActiveCfg = Release|Win32
+		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

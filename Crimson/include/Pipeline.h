@@ -1,5 +1,7 @@
 #pragma once
 #include "Generals.h"
+#include <string>
+#include <vector>
 
 namespace Crimson
 {
@@ -69,19 +71,26 @@ namespace Crimson
 
 	enum class EDataType : uint16_t
 	{
+		//scalars
 		EINT = 0,
 		EUINT,
 		EFLOAT,
+		//vec
 		EVEC2,
 		EVEC3,
 		EVEC4,
+		//ivec
 		EIVEC2,
 		EIVEC3,
 		EIVEC4,
+		//uvec
 		EUVEC2,
 		EUVEC3,
 		EUVEC4,
+		//mat
+		EMAT3,
 		EMAT4,
+		//color
 		ERGBA8,
 		EDATA_TYPE_MAX,
 	};
@@ -94,6 +103,7 @@ namespace Crimson
 		E_DST_ALPHA,
 		E_ONE_MINUS_SRC_ALPHA,
 		E_ONE_MINUS_DST_ALPHA,
+		E_BLEND_FACTOR_MAX,
 	};
 
 	enum class EBlendOp : uint8_t
@@ -102,6 +112,7 @@ namespace Crimson
 		E_MINUS,
 		E_SUBTRACT,
 		E_MULTIPLY,
+		E_BLEND_OP_MAX
 	};
 
 	enum class EDepthTestRule : uint8_t
@@ -131,8 +142,9 @@ namespace Crimson
 
 	class VertexInputDescriptor
 	{
+	public:
 		EVertexInputMode		m_VertexInputMode;
-		std::vector<EDataType>	m_DataType;
+		std::vector<EDataType>	m_DataTypes;
 	};
 
 	class BlendSetting
@@ -146,11 +158,16 @@ namespace Crimson
 			m_DstFactor(dst_factor),
 			m_BlendOp(op)
 		{}
+		bool inline IsNoBlendSetting() const
+		{
+			return (m_SrcFactor == EBlendFactor::E_ONE) && (m_DstFactor == EBlendFactor::E_ZERO) && (m_BlendOp == EBlendOp::E_ADD);
+		}
 	};
 
 	class GraphicsPipeline : IObject
 	{
 	public:
+		virtual void LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type) = 0;
 		std::vector<std::pair<uint32_t, PDescriptorSetLayout>>		m_DescriptorSetLayouts;
 		std::vector<VertexInputDescriptor>		m_VertexInputs;
 		std::vector<BlendSetting>				m_ColorBlendSettings;
@@ -170,7 +187,7 @@ namespace Crimson
 
 		//uint32_t m_PushConstantSize = 0;
 		//ShaderTypes m_PushConstantShaderTypes = 0;
-	private:
+	protected:
 		GraphicsPipeline() :
 			m_CullMode(ECullMode::E_CULL_NONE),
 			m_PolygonMode(EPolygonMode::E_POLYGON_MODE_FILL),

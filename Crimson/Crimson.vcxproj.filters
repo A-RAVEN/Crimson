@@ -87,6 +87,15 @@
     <ClInclude Include="include\Configuration.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\VulkanPipeline.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\VulkanFramebuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\VulkanRenderPassInstance.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -117,6 +126,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\VulkanDescriptors.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanPipeline.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanFramebuffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanRenderPassInstance.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

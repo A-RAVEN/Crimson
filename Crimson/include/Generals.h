@@ -9,6 +9,7 @@ namespace Crimson
 	class IObject;
 	class IGPUBuffer;
 	class IGPUImage;
+	class GraphicsPipeline;
 
 	enum class EFormat : uint32_t
 	{
@@ -196,8 +197,18 @@ namespace Crimson
 		E_TOPOLOGY_LINE_LIST,
 		E_TOPOLOGY_TRIANGLE_LIST,
 		E_TOPOLOGY_TRIANGLE_STRIP,
-		E_TOPOLOGY_PATCH,
+		E_TOPOLOGY_PATCH_LIST,
 		E_TOPOLOGY_MAX,
+	};
+
+	enum class EViewAsType : uint32_t
+	{
+		//E_VIEW_AS_DEFAULT = 0,
+		E_VIEW_AS_COLOR = 0,
+		E_VIEW_AS_DEPTH,
+		E_VIEW_AS_STENCIL,
+		E_VIEW_AS_DEPTH_STENCIL,
+		E_VIEW_AS_TYPE_MAX
 	};
 
 	class IObjectManager
@@ -233,6 +244,9 @@ namespace Crimson
 	{
 	public:
 		virtual void Dispose() override {}
+		inline uint32_t GetImageWidth() const { return m_Width; }
+		inline uint32_t GetImageHeight() const { return m_Height; }
+		inline uint32_t GetImageLayerNum() const { return m_LayerNum; }
 	protected:
 		IGPUImage() :
 			m_Format(EFormat::E_FORMAT_MAX),
@@ -279,6 +293,10 @@ namespace Crimson
 		std::vector<int32_t>	m_ResolveAttachments;
 		int32_t					m_DepthStencilAttachment;
 		bool					b_DepthStencilReadOnly;
+		SubpassInfo() :
+			m_DepthStencilAttachment(-1),
+			b_DepthStencilReadOnly(false)
+		{}
 	};
 
 	class RenderPass : IObject
@@ -288,6 +306,7 @@ namespace Crimson
 		std::vector<RenderPassAttachment>	m_Attachments;
 		std::vector<SubpassInfo>			m_Subpasses;
 		virtual void BuildRenderPass() = 0;
+		virtual void InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass) = 0;
 		virtual void Dispose() override = 0;
 	protected:
 		RenderPass() {}
@@ -297,10 +316,27 @@ namespace Crimson
 
 	class Framebuffer : IObject
 	{
-	protected:
+	public:
 		std::vector<PGPUImage>	m_Images;
 		uint32_t				m_Width;
 		uint32_t				m_Height;
+		uint32_t				m_Layers;
+	protected:
+		Framebuffer() : 
+			m_Width(0),
+			m_Height(0),
+			m_Layers(0)
+		{}
+		virtual ~Framebuffer() {}
 	};
+	using PFramebuffer = Framebuffer*;
 
+	class RenderPassInstance : public IObject
+	{
+	public:
+		virtual void Call() = 0;
+	protected:
+		PRenderPass		p_RenderPass;
+		PFramebuffer	p_Framebuffer;
+	};
 }

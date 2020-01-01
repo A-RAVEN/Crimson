@@ -6,6 +6,7 @@
 #include <headers/VulkanImage.h>
 #include <headers/VulkanRenderPass.h>
 #include <headers/VulkanDescriptors.h>
+#include <headers/VulkanPipeline.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
 #include <limits>
@@ -109,6 +110,14 @@ namespace Crimson
 	void VulkanGPUDevice::HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout)
 	{
 		delete p_set_layout;
+	}
+	PGraphicsPipeline VulkanGPUDevice::CreateGraphicsPipeline()
+	{
+		return new VulkanGraphicsPipeline(this);
+	}
+	void VulkanGPUDevice::HandleDisposedGraphicsPipeline(VulkanGraphicsPipeline* p_pipeline)
+	{
+		delete p_pipeline;
 	}
 	VulkanGPUDevice::VulkanGPUDevice():
 		m_PhysicalDevice(VK_NULL_HANDLE),
@@ -249,15 +258,7 @@ namespace Crimson
 		InitMemoryAllocator();
 		InitDescriptorPool();
 	}
-	void VulkanGPUDevice::RegisterVulkanSurface(VkSurfaceKHR surface)
-	{
-		//VkSurfaceCapabilitiesKHR surface_capabilities{};
-		//vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_PhysicalDevice, surface, &surface_capabilities);
 
-		//vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, current_device.LogicalDeviceInfo->QueueFamilies[family_index].ID, _new_context.Surface, &support_surface);
-
-		//surface_capabilities.
-	}
 	void VulkanGPUDevice::InitMemoryAllocator()
 	{
 		VmaAllocatorCreateInfo allocator_create_info = {};
@@ -287,7 +288,7 @@ namespace Crimson
 		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 		create_info.maxSets = 1000;
-		create_info.poolSizeCount = pool_sizes.size();
+		create_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
 		create_info.pPoolSizes = pool_sizes.data();
 		create_info.pNext = nullptr;
 		VulkanDebug::CheckVKResult(vkCreateDescriptorPool(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorPool), "Vulkan Descriptor Pool Creation Issue!");

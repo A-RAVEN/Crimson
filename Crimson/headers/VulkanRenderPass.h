@@ -17,7 +17,7 @@ namespace Crimson
 
 	struct VulkanSubpassInfo
 	{
-		std::map<PGraphicsPipeline, VkPipeline> m_PipelineInstances;
+		std::map<GraphicsPipeline*, VkPipeline> m_PipelineInstances;
 		VkDescriptorSetLayout	m_InputLayout;
 		VulkanSubpassInfo() :
 			m_PipelineInstances(),
@@ -28,9 +28,12 @@ namespace Crimson
 	class VulkanRenderPass : public RenderPass
 	{
 	public:
+		friend class VulkanRenderPassInstance;
+
 		VulkanRenderPass(VulkanGPUDevice* owning_device);
 		~VulkanRenderPass() {};
 		virtual void BuildRenderPass() override;
+		virtual void InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass) override;
 		virtual void Dispose() override;
 	private:
 		VulkanGPUDevice*					p_OwningDevice;

@@ -16,3 +16,5 @@
 #include <vulkan/vulkan.h>
 
 #define VULKAN_ALLOCATOR_POINTER nullptr
+
+constexpr uint32_t UNDEFINED_QUEUE_FAMILY_ID = ~0u;

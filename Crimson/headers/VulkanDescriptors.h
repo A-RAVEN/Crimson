@@ -19,6 +19,8 @@ namespace Crimson
 	class VulkanDescriptorSetLayout : public DescriptorSetLayout
 	{
 	public:
+		friend class VulkanRenderPass;
+
 		VulkanDescriptorSetLayout(VulkanGPUDevice* device);
 		~VulkanDescriptorSetLayout() {}
 		virtual PDescriptorSet AllocDescriptorSet() override;

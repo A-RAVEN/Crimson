@@ -15,10 +15,17 @@ namespace Crimson
 		E_API_TYPE_MAX,
 	};
 
+	class GraphicsCommandBuffer
+	{
+
+	};
+	using PGraphicsCommandBuffer = GraphicsCommandBuffer*;
+
 	class IGPUDeviceThread
 	{
 	public:
-		virtual void Dispose() = 0;
+		PGraphicsCommandBuffer CreateDrawCommand();
+
 	};
 	using PGPUDeviceThread = IGPUDeviceThread*;
 
@@ -43,6 +50,12 @@ namespace Crimson
 
 		//Descriptor Set Layout Managing
 		virtual PDescriptorSetLayout CreateDescriptorSetLayout() = 0;
+
+		//Pipeline Managing
+		virtual PGraphicsPipeline CreateGraphicsPipeline() = 0;
+
+		//Framebuffer Managing
+		virtual PFramebuffer CreateFramebuffer() = 0;
 	protected:
 		std::string m_Name;
 

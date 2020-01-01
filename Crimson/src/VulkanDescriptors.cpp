@@ -44,7 +44,7 @@ namespace Crimson
 			{
 				bindings[binding_id].binding = m_Bindings[binding_id].m_BindingPoint;
 				bindings[binding_id].descriptorCount = m_Bindings[binding_id].m_Num;
-				bindings[binding_id].descriptorType = TranslateShaderResourceTupeToVulkan(m_Bindings[binding_id].m_ResourceType);
+				bindings[binding_id].descriptorType = TranslateShaderResourceTypeToVulkan(m_Bindings[binding_id].m_ResourceType);
 				bindings[binding_id].stageFlags = 0;
 				for (auto shader_type : m_Bindings[binding_id].m_ShaderTypes)
 				{
@@ -53,7 +53,7 @@ namespace Crimson
 			}
 			VkDescriptorSetLayoutCreateInfo create_info{};
 			create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			create_info.bindingCount = bindings.size();
+			create_info.bindingCount = static_cast<uint32_t>(bindings.size());
 			create_info.pBindings = bindings.data();
 			create_info.flags = 0;
 			create_info.pNext = nullptr;

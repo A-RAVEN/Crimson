@@ -1,0 +1,15 @@
+
+
+#if VERTEX_SHADER | FRAGMENT_SHADER
+layout(binding = 0) uniform CameraData
+{
+	mat4 m_CameraMatrix;
+};
+#endif
+
+#if VERTEX_SHADER
+layout(binding = 1) buffer readonly TransformData
+{
+	mat4 m_TransformMatrices[];
+};
+#endif

@@ -1,6 +1,8 @@
 #include <GPUDevice.h>
 #include <headers/Win32Window.h>
-
+#include <Compiler.h>
+#include <fstream>
+#include <iostream>
 int main()
 {
 	using namespace Crimson;
@@ -16,14 +18,9 @@ int main()
 	PGPUImage test_img0 = MainDevice->CreateImage(EFormat::E_FORMAT_R8G8B8A8_UNORM, 128, 128, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
 	test_renderpass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_UNORM, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS}, {EFormat::E_FORMAT_D16_UNORM_S8_UINT, EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES} };
-	test_renderpass->m_Subpasses.resize(2);
+	test_renderpass->m_Subpasses.resize(1);
 	test_renderpass->m_Subpasses[0].m_OutputAttachments = { 0 };
 	test_renderpass->m_Subpasses[0].m_DepthStencilAttachment = 1;
-
-	test_renderpass->m_Subpasses[1].m_OutputAttachments = { 0 };
-	test_renderpass->m_Subpasses[1].m_DepthStencilAttachment = 1;
-	test_renderpass->m_Subpasses[1].m_DepthInputAttachments = { 1 };
-	test_renderpass->m_Subpasses[1].m_StencilInputAttachments = { 1 };
 	test_renderpass->BuildRenderPass();
 
 	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
@@ -39,7 +36,50 @@ int main()
 	layout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
 	//layout->BuildLayout();
 
+	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
+
 	PDescriptorSet test_set = layout->AllocDescriptorSet();
+
+	auto compiler = ShaderCompiler::IShaderCompiler::GetCompiler();
+
+	{
+		std::ifstream shader_src("test.vert");
+		std::string src;
+		if (shader_src.is_open())
+		{
+			std::string line;
+			while (std::getline(shader_src, line))
+			{
+				src += line + "\n";
+			}
+		}
+		src = compiler->PreprocessGLSLShader("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
+		std::cout << src << std::endl;
+		auto binary = compiler->CompileGLSLShaderSource("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
+		pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
+	}
+
+	{
+		std::ifstream shader_src("test.frag");
+		std::string src;
+		if (shader_src.is_open())
+		{
+			std::string line;
+			while (std::getline(shader_src, line))
+			{
+				src += line + "\n";
+			}
+		}
+		src = compiler->PreprocessGLSLShader("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
+		std::cout << src << std::endl;
+		auto binary = compiler->CompileGLSLShaderSource("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
+		pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
+	}
+	pipeline->m_VertexInputs.resize(1);
+	pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
+	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
+	test_renderpass->InstanciatePipeline(pipeline, 0);
+
 	while (new_window.IsWindowRunning())
 	{
 		new_window.UpdateWindow();

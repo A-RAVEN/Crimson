@@ -12,6 +12,7 @@ namespace Crimson
 	class VulkanImageObject;
 	class VulkanRenderPass;
 	class VulkanDescriptorSetLayout;
+	class VulkanGraphicsPipeline;
 	class VulkanGPUDevice : public IGPUDevice
 	{
 	public:
@@ -20,6 +21,9 @@ namespace Crimson
 		friend class VulkanSurfaceContext;
 		friend class VulkanRenderPass;
 		friend class VulkanDescriptorSetLayout;
+		friend class VulkanGraphicsPipeline;
+		friend class VulkanImageObject;
+		friend class VulkanRenderPassInstance;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;
@@ -42,11 +46,17 @@ namespace Crimson
 		virtual PDescriptorSetLayout CreateDescriptorSetLayout() override;
 		void HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout);
 
+		//Pipeline Managing
+		virtual PGraphicsPipeline CreateGraphicsPipeline() override;
+		void HandleDisposedGraphicsPipeline(VulkanGraphicsPipeline* p_pipeline);
+
+		//Framebuffer Managing
+		virtual PFramebuffer CreateFramebuffer() override;
+		
 	private:
 		VulkanGPUDevice();
 		~VulkanGPUDevice();
 		void InitVulkanDevice(uint32_t prefered_device_index, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
-		void RegisterVulkanSurface(VkSurfaceKHR surface);
 		void InitMemoryAllocator();
 		void InitDescriptorPool();
 	private:

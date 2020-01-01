@@ -3,6 +3,7 @@
 #include <headers/vk_mem_alloc.h>
 #include <unordered_map>
 #include <include/Generals.h>
+#include <include/Pipeline.h>
 
 namespace Crimson
 {
@@ -137,6 +138,97 @@ namespace Crimson
 		VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
 	};
 
+	struct VulkanVertexInputDataTypeInfo
+	{
+		VkFormat m_Format;
+		uint32_t m_Size;
+		uint32_t m_LocationOccupation; // mat4 takes 4 locations
+		VulkanVertexInputDataTypeInfo(VkFormat format, uint32_t size, uint32_t location_occupation) :
+			m_Format(format),
+			m_Size(size),
+			m_LocationOccupation(location_occupation)
+		{}
+	};
+
+	static VulkanVertexInputDataTypeInfo VULKAN_STATIC_DATA_TYPE_TO_VERTEX_INPUT_DATA_TABLE[static_cast<size_t>(EDataType::EDATA_TYPE_MAX)] =
+	{
+		//scalar series
+		{VK_FORMAT_R32_SINT,			sizeof(int32_t),	1},
+		{VK_FORMAT_R32_UINT,			sizeof(uint32_t),	1},
+		{VK_FORMAT_R32_SFLOAT,			sizeof(float),		1},
+		//vec series
+		{VK_FORMAT_R32G32_SFLOAT,		sizeof(float) * 2,	1},
+		{VK_FORMAT_R32G32B32_SFLOAT,	sizeof(float) * 3,	1},
+		{VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 4,	1},
+		//ivec series
+		{VK_FORMAT_R32G32_SINT,			sizeof(int32_t) * 2, 1},
+		{VK_FORMAT_R32G32B32_SINT,		sizeof(int32_t) * 3, 1},
+		{VK_FORMAT_R32G32B32A32_SINT,	sizeof(int32_t) * 4, 1},
+		//uvec series
+		{VK_FORMAT_R32G32_UINT,			sizeof(uint32_t) * 2, 1},
+		{VK_FORMAT_R32G32B32_UINT,		sizeof(uint32_t) * 3, 1},
+		{VK_FORMAT_R32G32B32A32_UINT,	sizeof(uint32_t) * 4, 1},
+		//mat series
+		{VK_FORMAT_R32G32B32_SFLOAT,	sizeof(float) * 3,	3},
+		{VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 4,	4},
+		//color
+		{VK_FORMAT_R8G8B8A8_UNORM,		sizeof(uint8_t) * 4, 1},
+	};
+
+	static VkImageAspectFlags VULKAN_STATIC_IMAGE_ASPECT_TYPE_TABLE[static_cast<size_t>(EViewAsType::E_VIEW_AS_TYPE_MAX)] =
+	{
+		VK_IMAGE_ASPECT_COLOR_BIT,
+		VK_IMAGE_ASPECT_DEPTH_BIT,
+		VK_IMAGE_ASPECT_STENCIL_BIT,
+		VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT
+	};
+
+	static VkPrimitiveTopology VULKAN_STATIC_TOPOLOTY_TABLE[static_cast<size_t>(ETopology::E_TOPOLOGY_MAX)] =
+	{
+		VK_PRIMITIVE_TOPOLOGY_POINT_LIST,
+		VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,
+		VK_PRIMITIVE_TOPOLOGY_PATCH_LIST,
+	};
+
+	static VkPolygonMode VULKAN_STATIC_POLYGON_MODE_TABLE[static_cast<size_t>(EPolygonMode::E_POLYTON_MODE_MAX)] =
+	{
+		VK_POLYGON_MODE_FILL,
+		VK_POLYGON_MODE_LINE,
+		VK_POLYGON_MODE_POINT,
+	};
+
+	static VkCullModeFlagBits VULKAN_STATIC_CULL_MODE_TABLE[static_cast<size_t>(ECullMode::E_CULL_MODE_MAX)] =
+	{
+		VK_CULL_MODE_NONE,
+		VK_CULL_MODE_FRONT_BIT,
+		VK_CULL_MODE_BACK_BIT,
+		VK_CULL_MODE_FRONT_AND_BACK
+	};
+
+	static VkCompareOp VULKAN_STATIC_COMPARE_OP_TABLE[static_cast<size_t>(ECompareMode::E_COMPARE_MODE_MAX)] =
+	{
+		VK_COMPARE_OP_LESS,
+		VK_COMPARE_OP_LESS_OR_EQUAL,
+		VK_COMPARE_OP_GREATER
+	};
+
+	static VkBlendFactor VULKAN_STATIC_BLEND_FACTOR_TABLE[static_cast<size_t>(EBlendFactor::E_BLEND_FACTOR_MAX)] =
+	{
+		VK_BLEND_FACTOR_ONE,
+		VK_BLEND_FACTOR_ZERO,
+		VK_BLEND_FACTOR_SRC_ALPHA
+	};
+
+	static VkBlendOp VULKAN_STATIC_BLEND_OP_TABLE[static_cast<size_t>(EBlendOp::E_BLEND_OP_MAX)] =
+	{
+		VK_BLEND_OP_ADD,
+		VK_BLEND_OP_MINUS_EXT,
+		VK_BLEND_OP_SUBTRACT,
+		VK_BLEND_OP_MULTIPLY_EXT,
+	};
+
 	static inline VkFormat TranslateImageFormatToVulkan(EFormat format)
 	{
 		return VULKAN_STATIC_FORMAT_TABLE[static_cast<uint32_t>(format)];
@@ -194,8 +286,48 @@ namespace Crimson
 		return VULKAN_STATIC_SHADER_STAGE_TABLE[static_cast<uint32_t>(shader_type)];
 	}
 
-	static inline VkDescriptorType TranslateShaderResourceTupeToVulkan(EShaderResourceType resource_type)
+	static inline VkDescriptorType TranslateShaderResourceTypeToVulkan(EShaderResourceType resource_type)
 	{
 		return VULKAN_STATIC_DESCRIPTOR_TYPE_TABLE[static_cast<uint32_t>(resource_type)];
+	}
+
+	static inline VulkanVertexInputDataTypeInfo const& TranslateDataTypeToVulkanVertexInputDataTypeInfo(EDataType data_type)
+	{
+		return VULKAN_STATIC_DATA_TYPE_TO_VERTEX_INPUT_DATA_TABLE[static_cast<size_t>(data_type)];
+	}
+
+	static inline VkPrimitiveTopology TranslateTopologyToVulkan(ETopology topology)
+	{
+		return VULKAN_STATIC_TOPOLOTY_TABLE[static_cast<size_t>(topology)];
+	}
+
+	static inline VkPolygonMode TranslatePolygonModeToVulkan(EPolygonMode polygon_mode)
+	{
+		return VULKAN_STATIC_POLYGON_MODE_TABLE[static_cast<size_t>(polygon_mode)];
+	}
+
+	static inline VkCullModeFlagBits TranslateCullModeToVulkan(ECullMode cull_mode)
+	{
+		return VULKAN_STATIC_CULL_MODE_TABLE[static_cast<size_t>(cull_mode)];
+	}
+
+	static inline VkCompareOp TranslateCompareModeToVulkan(ECompareMode compare_mode)
+	{
+		return VULKAN_STATIC_COMPARE_OP_TABLE[static_cast<size_t>(compare_mode)];
+	}
+
+	static inline VkBlendFactor TranslateBlendFactorToVulkan(EBlendFactor blend_factor)
+	{
+		return VULKAN_STATIC_BLEND_FACTOR_TABLE[static_cast<size_t>(blend_factor)];
+	}
+
+	static inline VkBlendOp TranslateBlendOpToVulkan(EBlendOp blend_op)
+	{
+		return VULKAN_STATIC_BLEND_OP_TABLE[static_cast<size_t>(blend_op)];
+	}
+
+	static inline VkImageAspectFlags TranslateViewAsTypeToVulkanAspectFlags(EViewAsType view_as_type)
+	{
+		return VULKAN_STATIC_IMAGE_ASPECT_TYPE_TABLE[static_cast<size_t>(view_as_type)];
 	}
 }
