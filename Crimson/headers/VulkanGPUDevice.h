@@ -13,6 +13,8 @@ namespace Crimson
 	class VulkanRenderPass;
 	class VulkanDescriptorSetLayout;
 	class VulkanGraphicsPipeline;
+	class VulkanFramebuffer;
+	class VulkanRenderPassInstance;
 	class VulkanGPUDevice : public IGPUDevice
 	{
 	public:
@@ -24,6 +26,7 @@ namespace Crimson
 		friend class VulkanGraphicsPipeline;
 		friend class VulkanImageObject;
 		friend class VulkanRenderPassInstance;
+		friend class VulkanFramebuffer;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;
@@ -52,7 +55,10 @@ namespace Crimson
 
 		//Framebuffer Managing
 		virtual PFramebuffer CreateFramebuffer() override;
+		void HandleDisposedFramebuffer(VulkanFramebuffer* p_framebuffer);
 		
+		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) override;
+		void HandleDisposedRenderPassInstance(VulkanRenderPassInstance* p_render_pass_instance);
 	private:
 		VulkanGPUDevice();
 		~VulkanGPUDevice();

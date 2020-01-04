@@ -4,8 +4,14 @@
 
 namespace Crimson
 {
-	VulkanFramebuffer::VulkanFramebuffer()
+	void VulkanFramebuffer::Dispose()
 	{
+		p_OwningDevice->HandleDisposedFramebuffer(this);
+	}
+	VulkanFramebuffer::VulkanFramebuffer(VulkanGPUDevice* p_device) : 
+		p_OwningDevice(nullptr)
+	{
+		p_OwningDevice = p_device;
 	}
 	VulkanFramebuffer::~VulkanFramebuffer()
 	{

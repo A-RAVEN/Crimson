@@ -12,6 +12,8 @@ namespace Crimson
 	public:
 		VulkanRenderPassInstance();
 		~VulkanRenderPassInstance();
+		virtual void Call() override;
+		virtual void Dispose() override;
 		void InitRenderPassInstance(VulkanGPUDevice* device, VulkanRenderPass* render_pass, VulkanFramebuffer* framebuffer);
 	private:
 		VulkanGPUDevice* p_OwningDevice;

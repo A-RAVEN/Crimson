@@ -4,8 +4,33 @@
 
 namespace Crimson
 {
+	VulkanRenderPassInstance::VulkanRenderPassInstance():
+		p_OwningDevice(nullptr),
+		m_Framebuffer(VK_NULL_HANDLE)
+	{}
+
+	VulkanRenderPassInstance::~VulkanRenderPassInstance()
+	{
+	}
+
+	void VulkanRenderPassInstance::Call()
+	{
+	}
+
+	void VulkanRenderPassInstance::Dispose()
+	{
+		if (m_Framebuffer != VK_NULL_HANDLE)
+		{
+			vkDestroyFramebuffer(p_OwningDevice->m_LogicalDevice, m_Framebuffer, VULKAN_ALLOCATOR_POINTER);
+			m_Framebuffer = VK_NULL_HANDLE;
+		}
+	}
+
 	void VulkanRenderPassInstance::InitRenderPassInstance(VulkanGPUDevice* device, VulkanRenderPass* render_pass, VulkanFramebuffer* framebuffer)
 	{
+		p_OwningDevice = device;
+		p_RenderPass = render_pass;
+		p_Framebuffer = framebuffer;
 		render_pass->m_VulkanAttachmentInfos;
 		VkFramebufferCreateInfo framebuffer_create_info{};
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

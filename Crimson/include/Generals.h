@@ -339,4 +339,5 @@ namespace Crimson
 		PRenderPass		p_RenderPass;
 		PFramebuffer	p_Framebuffer;
 	};
+	using PRenderPassInstance = RenderPassInstance*;
 }

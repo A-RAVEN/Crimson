@@ -127,9 +127,9 @@ namespace Crimson
 			create_info.viewType = VK_IMAGE_VIEW_TYPE_MAX_ENUM;
 			{
 				uint8_t dimention = 0;
-				if (m_Width > 0) { dimention++; }
-				if (m_Height > 0) { dimention++; }
-				if (m_Depth > 0) { dimention++; }
+				if (m_Width > 1) { dimention++; }
+				if (m_Height > 1) { dimention++; }
+				if (m_Depth > 1) { dimention++; }
 				switch (dimention)
 				{
 				case 1:

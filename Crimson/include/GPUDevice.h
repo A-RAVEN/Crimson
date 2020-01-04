@@ -56,6 +56,9 @@ namespace Crimson
 
 		//Framebuffer Managing
 		virtual PFramebuffer CreateFramebuffer() = 0;
+
+		//RenderPass Instance Managing
+		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) = 0;
 	protected:
 		std::string m_Name;
 

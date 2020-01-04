@@ -7,6 +7,8 @@
 #include <headers/VulkanRenderPass.h>
 #include <headers/VulkanDescriptors.h>
 #include <headers/VulkanPipeline.h>
+#include <headers/VulkanFramebuffer.h>
+#include <headers/VulkanRenderPassInstance.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
 #include <limits>
@@ -87,7 +89,7 @@ namespace Crimson
 		VulkanDebug::CheckVKResult(vmaCreateImage(m_MemoryAllocator, &image_create_info, &alloc_info, &new_image, &new_allocation, nullptr), "Vulkan Create Image Issue!");
 		
 		VulkanImageObject* new_image_object = new VulkanImageObject();
-		new_image_object->SetVulkanImage(this, new_image, new_allocation, format, width, height, depth, mip_level_num, layer_num, usages, memory_type);
+		new_image_object->SetVulkanImage(this, new_image, new_allocation, format, width, height, depth, mip_level_num, layer_num, usages, memory_type, VK_SHARING_MODE_EXCLUSIVE);
 		return new_image_object;
 	}
 	void VulkanGPUDevice::HandleDisposedImage(VulkanImageObject* p_image)
@@ -119,6 +121,26 @@ namespace Crimson
 	{
 		delete p_pipeline;
 	}
+	PFramebuffer VulkanGPUDevice::CreateFramebuffer()
+	{
+		return new VulkanFramebuffer(this);
+	}
+	void VulkanGPUDevice::HandleDisposedFramebuffer(VulkanFramebuffer* p_framebuffer)
+	{
+		delete p_framebuffer;
+	}
+	PRenderPassInstance VulkanGPUDevice::CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer)
+	{
+		VulkanRenderPassInstance* return_val = new VulkanRenderPassInstance();
+		return_val->InitRenderPassInstance(this, 
+			static_cast<VulkanRenderPass*>(render_pass),
+			static_cast<VulkanFramebuffer*>(framebuffer));
+		return return_val;
+	}
+	void VulkanGPUDevice::HandleDisposedRenderPassInstance(VulkanRenderPassInstance* p_render_pass_instance)
+	{
+		delete p_render_pass_instance;
+	}
 	VulkanGPUDevice::VulkanGPUDevice():
 		m_PhysicalDevice(VK_NULL_HANDLE),
 		m_LogicalDevice(VK_NULL_HANDLE),
@@ -126,8 +148,9 @@ namespace Crimson
 		m_GraphicsDedicateFamily((std::numeric_limits<uint32_t>::max)()),
 		m_ComputeDedicateFamily((std::numeric_limits<uint32_t>::max)()),
 		m_TransferDedicateFamily((std::numeric_limits<uint32_t>::max)()),
-		m_SparseBindingFamily((std::numeric_limits<uint32_t>::max)())//,
-		//m_PresentFamily((std::numeric_limits<uint32_t>::max)())
+		m_SparseBindingFamily((std::numeric_limits<uint32_t>::max)()),
+		m_DescriptorPool(VK_NULL_HANDLE),
+		m_MemoryAllocator(VK_NULL_HANDLE)
 	{}
 	VulkanGPUDevice::~VulkanGPUDevice()
 	{
