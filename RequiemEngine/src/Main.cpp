@@ -15,8 +15,8 @@ int main()
 
 	PGPUBuffer test_buffer = MainDevice->CreateBuffer(256, { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	test_buffer->Dispose();
-	PGPUImage test_color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 128, 128, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 128, 128, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	PGPUImage test_color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
 	test_renderpass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS}, {EFormat::E_FORMAT_D24_UNORM_S8_UINT, EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES} };
 	test_renderpass->m_Subpasses.resize(1);

@@ -27,6 +27,7 @@ namespace Crimson
 		friend class VulkanImageObject;
 		friend class VulkanRenderPassInstance;
 		friend class VulkanFramebuffer;
+		friend class VulkanGPUDeviceThread;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;

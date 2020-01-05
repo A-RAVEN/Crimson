@@ -1,5 +1,6 @@
 #pragma once
 #include <include/GPUDevice.h>
+#include <headers/VulkanHeader.h>
 
 namespace Crimson
 {
@@ -8,8 +9,13 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanGPUDevice;
-	private:
+		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id);
 		void InitGPUDeviceThread(VulkanGPUDevice* device);
-		VulkanGPUDevice* p_GPUDevice;
+	private:
+		void InitGraphicsCommandPool();
+		void InitComputeCommandPool();
+		VulkanGPUDevice* p_OwningDevice;
+		VkCommandPool m_GraphicsCommandPool;
+		VkCommandPool m_ComputeCommandPool;
 	};
 }

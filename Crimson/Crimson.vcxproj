@@ -170,6 +170,7 @@
     <ClInclude Include="headers\D3D12GPUDevice.h" />
     <ClInclude Include="headers\D3D12Header.h" />
     <ClInclude Include="headers\D3D12Instance.h" />
+    <ClInclude Include="headers\D3D12SurfaceContext.h" />
     <ClInclude Include="headers\d3dx12.h" />
     <ClInclude Include="headers\Debug.h" />
     <ClInclude Include="headers\vk_mem_alloc.h" />
@@ -202,6 +203,7 @@
     <ClCompile Include="src\VulkanDescriptors.cpp" />
     <ClCompile Include="src\VulkanFramebuffer.cpp" />
     <ClCompile Include="src\VulkanGPUDevice.cpp" />
+    <ClCompile Include="src\VulkanGPUDeviceThread.cpp" />
     <ClCompile Include="src\VulkanImage.cpp" />
     <ClCompile Include="src\VulkanInstance.cpp" />
     <ClCompile Include="src\VulkanPipeline.cpp" />
