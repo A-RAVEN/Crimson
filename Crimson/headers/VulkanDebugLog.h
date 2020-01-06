@@ -9,7 +9,7 @@ namespace Crimson
 	namespace VulkanDebug
 	{
 		//Vulkan Result Checker
-		static void CheckVKResult(VkResult result, std::string const& error_string)
+		static inline void CheckVKResult(VkResult result, std::string const& error_string)
 		{
 #ifdef _WIN32
 			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);

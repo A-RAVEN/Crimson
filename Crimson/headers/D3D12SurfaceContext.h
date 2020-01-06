@@ -13,6 +13,6 @@ namespace Crimson
 		D3D12GPUDevice* p_OwningDevice;
 
 		ComPtr<IDXGISwapChain4> g_SwapChain;
-		ComPtr<ID3D12Resource> g_BackBuffers[g_NumFrames];
+		std::vector<ComPtr<ID3D12Resource>> g_BackBuffers;
 	};
 }

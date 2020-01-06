@@ -1,6 +1,7 @@
 #pragma once
 #include <headers/D3D12Header.h>
 #include <include/GPUDevice.h>
+#include <headers/D3D12SurfaceContext.h>
 
 namespace Crimson
 {
@@ -17,7 +18,7 @@ namespace Crimson
 		ComPtr<IDXGIAdapter4> m_Adapter;
 		ComPtr<ID3D12Device2> m_Device;
 
-		std::map<std::wstring, VulkanSurfaceContext> m_SurfaceContexts;
+		std::map<std::wstring, D3D12SurfaceContext> m_SurfaceContexts;
 
 	};
 }
