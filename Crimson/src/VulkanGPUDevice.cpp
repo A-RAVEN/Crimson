@@ -9,6 +9,7 @@
 #include <headers/VulkanPipeline.h>
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanRenderPassInstance.h>
+#include <headers/VulkanGPUDeviceThread.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
 #include <limits>
@@ -39,6 +40,7 @@ namespace Crimson
 	}
 	PGPUDeviceThread VulkanGPUDevice::CreateThread()
 	{
+		VulkanGPUDeviceThread new_thread = new VulkanGPUDeviceThread();
 		return PGPUDeviceThread();
 	}
 	PGPUBuffer VulkanGPUDevice::CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type)

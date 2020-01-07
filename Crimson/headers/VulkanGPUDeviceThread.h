@@ -6,11 +6,13 @@
 namespace Crimson
 {
 	class VulkanGraphicsCommandBuffer;
+	class VulkanRenderPassInstance;
 	class RenderPassInstanceGraphicsCommandBufferInfo
 	{
 	public:
-		RenderPassInstanceGraphicsCommandBufferInfo(VulkanRenderPassInstance* p_instance);
-		std::vector<VulkanGraphicsCommandBuffer*> m_SubpassCommands;
+		RenderPassInstanceGraphicsCommandBufferInfo();
+		void InitBufferInfo(VulkanRenderPassInstance* p_instance);
+		std::vector<VkCommandBuffer> m_SubpassCommands;
 	};
 
 	class VulkanGPUDevice;
@@ -18,6 +20,9 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanGPUDevice;
+		VulkanGPUDeviceThread();
+		~VulkanGPUDeviceThread();
+		virtual void Dispose() override;
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
 		void OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer);
 		void InitGPUDeviceThread(VulkanGPUDevice* device);
@@ -28,6 +33,7 @@ namespace Crimson
 		VkCommandPool m_GraphicsCommandPool;
 		VkCommandPool m_ComputeCommandPool;
 
+		std::deque<VkCommandBuffer> m_RecycledGraphicsCommandBuffer;
 		std::deque<uint32_t> m_RenderPassInstanceGraphicsCommandBufferInfoReferences;
 		std::deque<RenderPassInstanceGraphicsCommandBufferInfo> m_RenderPassInstanceGraphicsCommandBufferInfos;
 	};

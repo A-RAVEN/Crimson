@@ -28,7 +28,7 @@ namespace Crimson
 	};
 	using PGraphicsCommandBuffer = GraphicsCommandBuffer*;
 
-	class IGPUDeviceThread
+	class IGPUDeviceThread : public IObject
 	{
 	public:
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) = 0;

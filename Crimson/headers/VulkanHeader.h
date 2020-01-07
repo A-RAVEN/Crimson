@@ -18,3 +18,7 @@
 #define VULKAN_ALLOCATOR_POINTER nullptr
 
 constexpr uint32_t UNDEFINED_QUEUE_FAMILY_ID = ~0u;
+
+constexpr uint32_t NUMMAX_UINT32 = (std::numeric_limits<uint32_t>::max)();
+
+constexpr uint64_t NUMMAX_UINT64 = (std::numeric_limits<uint64_t>::max)();

@@ -19,6 +19,8 @@ namespace Crimson
 		virtual void BindIndexBuffer(PGPUBuffer buffer, uint64_t buffer_offset, EIndexType index_type) override;
 		virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count,
 			uint32_t first_index, uint32_t first_vertex, uint32_t first_instance_id) override;
+		void SetGraphicsCommandBuffer(VulkanGPUDeviceThread* p_owning_thread, 
+			VulkanRenderPass* p_owning_render_pass, uint32_t subpass, VkCommandBuffer cmd_buffer);
 	private:
 		VulkanGPUDeviceThread* p_OwningThread;
 		VulkanRenderPass* p_OwningRenderPass;
