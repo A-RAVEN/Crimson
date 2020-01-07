@@ -9,6 +9,7 @@ int main()
 	GPUDeviceManager::Init();
 	GPUDeviceManager::Get()->InitAPIContext(EAPIType::E_API_TYPE_VULKAN, true);
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
+	PGPUDevice HelperDevice = GPUDeviceManager::Get()->CreateDevice("HelperDevice", 1, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
 	MainDevice->RegisterWindow(new_window);
@@ -83,7 +84,13 @@ int main()
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
 	test_framebuffer->m_Images = { test_color , test_depth_stencil };
 
-	MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
+	PRenderPassInstance render_pass_instance = MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
+
+	PGPUDeviceThread test_thread = MainDevice->CreateThread();
+	PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
+	cmd->BindSubpassPipeline(pipeline);
+
+	cmd->EndCommandBuffer();
 
 	while (new_window.IsWindowRunning())
 	{

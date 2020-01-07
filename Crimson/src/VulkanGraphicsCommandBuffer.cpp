@@ -2,12 +2,44 @@
 #include <headers/VulkanPipeline.h>
 #include <headers/GeneralDebug.h>
 #include <headers/VulkanBuffer.h>
+#include <headers/VulkanRenderPassInstance.h>
+#include <headers/VulkanDebugLog.h>
 
 namespace Crimson
 {
+	VulkanGraphicsCommandBuffer::VulkanGraphicsCommandBuffer() :
+		p_OwningThread(nullptr),
+		p_OwningRenderPass(nullptr),
+		p_OwningInstance(nullptr),
+		m_SubpassId(0),
+		m_CommandBuffer(VK_NULL_HANDLE),
+		m_CurrentPipelineLayout(VK_NULL_HANDLE)
+	{}
+	VulkanGraphicsCommandBuffer::~VulkanGraphicsCommandBuffer()
+	{
+	}
 	void VulkanGraphicsCommandBuffer::EndCommandBuffer()
 	{
-		vkEndCommandBuffer(m_CommandBuffer);
+		VulkanDebug::CheckVKResult(vkEndCommandBuffer(m_CommandBuffer), "Vulkan End Graphics Command Buffer Issue!");
+	}
+	void VulkanGraphicsCommandBuffer::StartCommandBuffer()
+	{
+		VkCommandBufferInheritanceInfo inheritance{};
+		inheritance.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+		inheritance.framebuffer = p_OwningInstance->m_Framebuffer;
+		inheritance.renderPass = p_OwningRenderPass->m_RenderPass;
+		inheritance.subpass = m_SubpassId;
+		//TODO Further Explorations
+		inheritance.occlusionQueryEnable = VK_FALSE;
+		inheritance.pipelineStatistics = 0;
+		inheritance.queryFlags = 0;
+		inheritance.pNext = nullptr;
+		VkCommandBufferBeginInfo begin_info{};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+		begin_info.pInheritanceInfo = &inheritance;
+		begin_info.pNext = nullptr;
+		VulkanDebug::CheckVKResult(vkBeginCommandBuffer(m_CommandBuffer, &begin_info), "Vulkan Start Graphics Command Buffer Issue!");
 	}
 	void VulkanGraphicsCommandBuffer::BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets)
 	{
@@ -47,5 +79,14 @@ namespace Crimson
 		uint32_t first_index, uint32_t first_vertex, uint32_t first_instance_id)
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, index_count, instance_count, first_index, first_vertex, first_instance_id);
+	}
+	void VulkanGraphicsCommandBuffer::SetGraphicsCommandBuffer(VulkanGPUDeviceThread* p_owning_thread, 
+		VulkanRenderPass* p_owning_render_pass, VulkanRenderPassInstance* p_owning_instance, uint32_t subpass, VkCommandBuffer cmd_buffer)
+	{
+		p_OwningThread = p_owning_thread;
+		p_OwningRenderPass = p_owning_render_pass;
+		p_OwningInstance = p_owning_instance;
+		m_SubpassId = subpass;
+		m_CommandBuffer = cmd_buffer;
 	}
 }

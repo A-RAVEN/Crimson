@@ -14,6 +14,7 @@
 #define CURRENT_VULKAN_VERSION VK_API_VERSION_1_0
 
 #include <vulkan/vulkan.h>
+#include <limits>
 
 #define VULKAN_ALLOCATOR_POINTER nullptr
 

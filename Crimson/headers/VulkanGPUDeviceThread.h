@@ -30,6 +30,7 @@ namespace Crimson
 		void InitGraphicsCommandPool();
 		void InitComputeCommandPool();
 		VulkanGPUDevice* p_OwningDevice;
+
 		VkCommandPool m_GraphicsCommandPool;
 		VkCommandPool m_ComputeCommandPool;
 

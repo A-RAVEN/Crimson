@@ -5,7 +5,7 @@
 
 namespace Crimson
 {
-#define CRIM_ASSERT( _condition , _log ) {if(!_condition){LogError(_log, __LINE__, __FILE__);}}
+#define CRIM_ASSERT( _condition , _log ) {if(!(_condition)){LogError(_log, __LINE__, __FILE__);}}
 #define LOG_ERR(_log) {LogError(_log, __LINE__, __FILE__);}
 
 	static inline void LogError(std::string const& log, int line, std::string const& file)

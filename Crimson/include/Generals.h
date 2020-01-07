@@ -231,6 +231,8 @@ namespace Crimson
 	{
 	public:
 		virtual void Dispose() override {}
+		virtual uint8_t* GetMappedPointer() = 0;
+		virtual void UnMapp() = 0;
 	protected:
 		IGPUBuffer() : m_BufferSize(0), m_MemoryType(EMemoryType::E_MEMORY_TYPE_MAX), m_BufferUsages(0){}
 		virtual ~IGPUBuffer() {}

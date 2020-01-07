@@ -102,6 +102,15 @@
     <ClInclude Include="headers\D3D12DebugLog.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\VulkanGraphicsCommandBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\GeneralDebug.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\HelperContainers.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -147,6 +156,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\D3D12Instance.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanGraphicsCommandBuffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

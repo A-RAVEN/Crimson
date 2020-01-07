@@ -16,6 +16,7 @@ namespace Crimson
 	class VulkanGraphicsPipeline;
 	class VulkanFramebuffer;
 	class VulkanRenderPassInstance;
+	class VulkanGPUDeviceThread;
 	class VulkanGPUDevice : public IGPUDevice
 	{
 	public:
@@ -26,6 +27,7 @@ namespace Crimson
 		friend class VulkanDescriptorSetLayout;
 		friend class VulkanGraphicsPipeline;
 		friend class VulkanImageObject;
+		friend class VulkanBufferObject;
 		friend class VulkanRenderPassInstance;
 		friend class VulkanFramebuffer;
 		friend class VulkanGPUDeviceThread;
@@ -34,6 +36,7 @@ namespace Crimson
 		virtual void RegisterWindow(IWindow& window) override;
 
 		virtual PGPUDeviceThread CreateThread() override;
+		virtual void HandleDisposedThread(VulkanGPUDeviceThread* p_thread);
 
 		//Buffer Managing
 		virtual PGPUBuffer CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type) override;

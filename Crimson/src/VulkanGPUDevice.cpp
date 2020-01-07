@@ -40,8 +40,13 @@ namespace Crimson
 	}
 	PGPUDeviceThread VulkanGPUDevice::CreateThread()
 	{
-		VulkanGPUDeviceThread new_thread = new VulkanGPUDeviceThread();
-		return PGPUDeviceThread();
+		VulkanGPUDeviceThread* new_thread = new VulkanGPUDeviceThread();
+		new_thread->InitGPUDeviceThread(this);
+		return new_thread;
+	}
+	void VulkanGPUDevice::HandleDisposedThread(VulkanGPUDeviceThread* p_thread)
+	{
+		delete p_thread;
 	}
 	PGPUBuffer VulkanGPUDevice::CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type)
 	{
