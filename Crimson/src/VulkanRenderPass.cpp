@@ -765,7 +765,7 @@ namespace Crimson
 
 		VkPipeline new_graphic_pipeline;
 		VulkanDebug::CheckVKResult(vkCreateGraphicsPipelines(p_OwningDevice->m_LogicalDevice, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &new_graphic_pipeline), "Vulkan Pipeline Instantiation Issue!");
-		m_VulkanSubpassInfos[subpass].m_PipelineInstances.insert(std::make_pair(pipeline, new_graphic_pipeline));
+		m_VulkanSubpassInfos[subpass].m_PipelineInstances.insert(std::make_pair(pipeline, std::make_pair(new_graphic_pipeline, new_pipeline_layout)));
 	}
 	void VulkanRenderPass::Dispose()
 	{
@@ -783,7 +783,8 @@ namespace Crimson
 				}
 				for (auto& pipeline : subpass.m_PipelineInstances)
 				{
-					vkDestroyPipeline(p_OwningDevice->m_LogicalDevice, pipeline.second, VULKAN_ALLOCATOR_POINTER);
+					vkDestroyPipeline(p_OwningDevice->m_LogicalDevice, pipeline.second.first, VULKAN_ALLOCATOR_POINTER);
+					vkDestroyPipelineLayout(p_OwningDevice->m_LogicalDevice, pipeline.second.second, VULKAN_ALLOCATOR_POINTER);
 				}
 				subpass.m_PipelineInstances.clear();
 			}

@@ -11,6 +11,8 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanGPUDevice;
+		friend class VulkanGraphicsCommandBuffer;
+
 		VulkanBufferObject();
 		void SetVulkanBuffer(VulkanGPUDevice* p_device, VkBuffer buffer, VmaAllocation allocation_info, uint64_t size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type);
 		virtual void Dispose() override;

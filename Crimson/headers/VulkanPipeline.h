@@ -8,6 +8,7 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanRenderPass;
+		friend class VulkanGraphicsCommandBuffer;
 
 		VulkanGraphicsPipeline(VulkanGPUDevice* device);
 		virtual void LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type) override;

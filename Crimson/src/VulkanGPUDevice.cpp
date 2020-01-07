@@ -134,11 +134,12 @@ namespace Crimson
 		VulkanRenderPassInstance* return_val = new VulkanRenderPassInstance();
 		return_val->InitRenderPassInstance(this, 
 			static_cast<VulkanRenderPass*>(render_pass),
-			static_cast<VulkanFramebuffer*>(framebuffer));
+			static_cast<VulkanFramebuffer*>(framebuffer), m_RenderPassInstanceIdPool.Allocate());
 		return return_val;
 	}
 	void VulkanGPUDevice::HandleDisposedRenderPassInstance(VulkanRenderPassInstance* p_render_pass_instance)
 	{
+		m_RenderPassInstanceIdPool.Recycle(p_render_pass_instance->m_InstanceUniqueId);
 		delete p_render_pass_instance;
 	}
 	VulkanGPUDevice::VulkanGPUDevice():

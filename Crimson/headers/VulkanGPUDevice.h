@@ -5,6 +5,7 @@
 #include <headers/vk_mem_alloc.h>
 #include <headers/VulkanSurfaceContext.h>
 #include <include/Pipeline.h>
+#include <headers/HelperContainers.h>
 
 namespace Crimson
 {
@@ -84,5 +85,7 @@ namespace Crimson
 		std::map<std::wstring, VulkanSurfaceContext> m_SurfaceContexts;
 
 		VmaAllocator m_MemoryAllocator;
+
+		IndexPool<uint32_t> m_RenderPassInstanceIdPool;
 	};
 }

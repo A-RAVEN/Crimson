@@ -8,6 +8,8 @@ namespace Crimson
 	class VulkanDescriptorSet : public DescriptorSet
 	{
 	public:
+		friend class VulkanGraphicsCommandBuffer;
+
 		VulkanDescriptorSet();
 		~VulkanDescriptorSet() {};
 		void SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set);

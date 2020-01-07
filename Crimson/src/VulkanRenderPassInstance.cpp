@@ -6,7 +6,8 @@ namespace Crimson
 {
 	VulkanRenderPassInstance::VulkanRenderPassInstance():
 		p_OwningDevice(nullptr),
-		m_Framebuffer(VK_NULL_HANDLE)
+		m_Framebuffer(VK_NULL_HANDLE),
+		m_InstanceUniqueId(~0u)
 	{}
 
 	VulkanRenderPassInstance::~VulkanRenderPassInstance()
@@ -26,8 +27,9 @@ namespace Crimson
 		}
 	}
 
-	void VulkanRenderPassInstance::InitRenderPassInstance(VulkanGPUDevice* device, VulkanRenderPass* render_pass, VulkanFramebuffer* framebuffer)
+	void VulkanRenderPassInstance::InitRenderPassInstance(VulkanGPUDevice* device, VulkanRenderPass* render_pass, VulkanFramebuffer* framebuffer, uint64_t unique_id)
 	{
+		m_InstanceUniqueId = unique_id;
 		p_OwningDevice = device;
 		p_RenderPass = render_pass;
 		p_Framebuffer = framebuffer;

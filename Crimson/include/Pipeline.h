@@ -140,6 +140,13 @@ namespace Crimson
 		E_STENCIL_MAX
 	};
 
+	enum class EIndexType : uint8_t
+	{
+		E_INDEX_TYPE_16 = 0,
+		E_INDEX_TYPE_32,
+		E_INDEX_TYPE_MAX
+	};
+
 	class VertexInputDescriptor
 	{
 	public:
