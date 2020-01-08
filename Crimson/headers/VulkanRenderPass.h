@@ -30,6 +30,7 @@ namespace Crimson
 	public:
 		friend class VulkanRenderPassInstance;
 		friend class VulkanGraphicsCommandBuffer;
+		friend class VulkanExecutionCommandBuffer;
 
 		VulkanRenderPass(VulkanGPUDevice* owning_device);
 		~VulkanRenderPass() {};

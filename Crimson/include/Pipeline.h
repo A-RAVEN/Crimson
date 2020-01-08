@@ -29,10 +29,17 @@ namespace Crimson
 		E_SHADER_TYPE_MAX,
 	};
 
+	enum class EBufferUniformType
+	{
+		E_BUFFER_UNIFORM_TYPE_UNIFORM_BUFFER = 0,
+		E_BUFFER_UNIFORM_TYPE_STORAGE_BUFFER,
+		E_BUFFER_UNIFORM_TYPE_MAX
+	};
+
 	class DescriptorSet : IObject
 	{
 	public:
-		virtual void WriteDescriptorSetBuffer() {};
+		virtual void WriteDescriptorSetBuffer(EBufferUniformType uniform_type, PGPUBuffer buffer, uint64_t buffer_offset) {};
 		virtual void WriteDescriptorSetImage() {};
 		virtual void EndWriteDescriptorSet() {};
 	};

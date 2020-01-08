@@ -9,7 +9,9 @@ namespace Crimson
 		p_OwningDevice->HandleDisposedFramebuffer(this);
 	}
 	VulkanFramebuffer::VulkanFramebuffer(VulkanGPUDevice* p_device) : 
-		p_OwningDevice(nullptr)
+		p_OwningDevice(nullptr),
+		m_RenderArea(),
+		m_RenderAreaInited(false)
 	{
 		p_OwningDevice = p_device;
 	}
@@ -27,6 +29,17 @@ namespace Crimson
 	uint32_t VulkanFramebuffer::GetLayers()
 	{
 		return m_Layers > 0 ? m_Layers : m_Images[0]->GetImageLayerNum();
+	}
+	VkRect2D& VulkanFramebuffer::GetRenderArea()
+	{
+		if (!m_RenderAreaInited)
+		{
+			m_RenderArea.offset.x = m_RenderArea.offset.y = 0;
+			m_RenderArea.extent.width = GetWidth();
+			m_RenderArea.extent.height = GetHeight();
+			m_RenderAreaInited = true;
+		}
+		return m_RenderArea;
 	}
 	void VulkanFramebuffer::ImageBarriers(VkCommandBuffer cmd_buffer, uint32_t cmd_queue_family)
 	{

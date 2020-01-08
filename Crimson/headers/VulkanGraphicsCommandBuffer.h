@@ -24,6 +24,8 @@ namespace Crimson
 			uint32_t first_index, uint32_t first_vertex, uint32_t first_instance_id) override;
 		void SetGraphicsCommandBuffer(VulkanGPUDeviceThread* p_owning_thread, 
 			VulkanRenderPass* p_owning_render_pass, VulkanRenderPassInstance* p_owning_instance, uint32_t subpass, VkCommandBuffer cmd_buffer);
+
+		void BarrierDescriptorSets_Unsafe(VkCommandBuffer cmd_buffer);
 	private:
 		VulkanRenderPassInstance* p_OwningInstance;
 		VulkanGPUDeviceThread* p_OwningThread;
@@ -32,5 +34,7 @@ namespace Crimson
 
 		VkCommandBuffer m_CommandBuffer;
 		VkPipelineLayout m_CurrentPipelineLayout;
+
+		std::set<VulkanDescriptorSet*> p_ReferencingDescriptorSets;
 	};
 }

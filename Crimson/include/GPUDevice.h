@@ -15,6 +15,14 @@ namespace Crimson
 		E_API_TYPE_MAX,
 	};
 
+	enum class EExecutionCommandType : uint8_t
+	{
+		E_COMMAND_TYPE_GENERAL = 0,
+		E_COMMAND_TYPE_GRAPHICS,
+		E_COMMAND_TYPE_COMPUTE,
+		E_COMMAND_TYPE_MAX
+	};
+
 	class GraphicsCommandBuffer
 	{
 	public:
@@ -28,11 +36,21 @@ namespace Crimson
 	};
 	using PGraphicsCommandBuffer = GraphicsCommandBuffer*;
 
+	class ExecutionCommandBuffer
+	{
+	public:
+		//Execute Render Pass, not thread safe for framebuffer images
+		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) = 0;
+	protected:
+		EExecutionCommandType m_CommandType;
+	};
+	using PExecutionCommandBuffer = ExecutionCommandBuffer*;
+
 	class IGPUDeviceThread : public IObject
 	{
 	public:
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) = 0;
-
+		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) = 0;
 	};
 	using PGPUDeviceThread = IGPUDeviceThread*;
 

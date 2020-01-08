@@ -69,6 +69,22 @@ namespace Crimson
 		return_val->StartCommandBuffer();
 		return return_val;
 	}
+	PExecutionCommandBuffer VulkanGPUDeviceThread::CreateExecutionCommandBuffer(EExecutionCommandType cmd_type)
+	{
+		switch (cmd_type)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			InitGraphicsCommandPool();
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			InitComputeCommandPool();
+			break;
+		default:
+			break;
+		}
+
+		return PExecutionCommandBuffer();
+	}
 	void VulkanGPUDeviceThread::OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer)
 	{
 		delete cmd_buffer;

@@ -24,6 +24,7 @@ namespace Crimson
 	}
 	void VulkanGraphicsCommandBuffer::StartCommandBuffer()
 	{
+		p_ReferencingDescriptorSets.clear();
 		VkCommandBufferInheritanceInfo inheritance{};
 		inheritance.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 		inheritance.framebuffer = p_OwningInstance->m_Framebuffer;
@@ -47,7 +48,9 @@ namespace Crimson
 		std::vector<VkDescriptorSet> sets(descriptor_sets.size());
 		for (uint32_t set_id = 0; set_id < descriptor_sets.size(); ++set_id)
 		{
-			sets[set_id] = static_cast<VulkanDescriptorSet*>(descriptor_sets[set_id])->m_DescriptorSet;
+			VulkanDescriptorSet* p_vulkan_desc_set = static_cast<VulkanDescriptorSet*>(descriptor_sets[set_id]);
+			sets[set_id] = p_vulkan_desc_set->m_DescriptorSet;
+			p_ReferencingDescriptorSets.insert(p_vulkan_desc_set);
 		}
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_CurrentPipelineLayout, 0, descriptor_sets.size(), sets.data(), 0, nullptr);
 	}

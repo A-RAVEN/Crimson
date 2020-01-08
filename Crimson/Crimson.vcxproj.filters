@@ -111,6 +111,9 @@
     <ClInclude Include="headers\HelperContainers.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\VulkanExecutionCommandBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -159,6 +162,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\VulkanGraphicsCommandBuffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanExecutionCommandBuffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

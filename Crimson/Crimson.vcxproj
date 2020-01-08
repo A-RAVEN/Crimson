@@ -180,6 +180,7 @@
     <ClInclude Include="headers\VulkanBuffer.h" />
     <ClInclude Include="headers\VulkanDebugLog.h" />
     <ClInclude Include="headers\VulkanDescriptors.h" />
+    <ClInclude Include="headers\VulkanExecutionCommandBuffer.h" />
     <ClInclude Include="headers\VulkanFramebuffer.h" />
     <ClInclude Include="headers\VulkanGPUDevice.h" />
     <ClInclude Include="headers\VulkanGPUDeviceThread.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="src\vk_mem_alloc.cpp" />
     <ClCompile Include="src\VulkanBuffer.cpp" />
     <ClCompile Include="src\VulkanDescriptors.cpp" />
+    <ClCompile Include="src\VulkanExecutionCommandBuffer.cpp" />
     <ClCompile Include="src\VulkanFramebuffer.cpp" />
     <ClCompile Include="src\VulkanGPUDevice.cpp" />
     <ClCompile Include="src\VulkanGPUDeviceThread.cpp" />

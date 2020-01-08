@@ -17,10 +17,13 @@ namespace Crimson
 		uint32_t GetWidth();
 		uint32_t GetHeight();
 		uint32_t GetLayers();
+		VkRect2D& GetRenderArea();
 
 		void ImageBarriers(VkCommandBuffer cmd_buffer, uint32_t cmd_queue_family);
 		std::vector<VkImageMemoryBarrier> m_ImageMemoryBarriers;
 	private:
 		VulkanGPUDevice* p_OwningDevice;
+		VkRect2D m_RenderArea;
+		bool m_RenderAreaInited;
 	};
 }

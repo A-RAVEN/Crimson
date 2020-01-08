@@ -14,6 +14,7 @@ namespace Crimson
 		friend class VulkanGPUDeviceThread;
 		friend class VulkanGraphicsCommandBuffer;
 		friend class RenderPassInstanceGraphicsCommandBufferInfo;
+		friend class VulkanExecutionCommandBuffer;
 
 		VulkanRenderPassInstance();
 		~VulkanRenderPassInstance();
