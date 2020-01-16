@@ -211,6 +211,22 @@ namespace Crimson
 		E_VIEW_AS_TYPE_MAX
 	};
 
+	enum class EFilterMode : uint8_t
+	{
+		E_FILTER_MODE_NEAREST = 0,
+		E_FILTER_MODE_LINEAR,
+		E_FILTER_MODE_MAX
+	};
+
+	enum class EAddrMode : uint8_t
+	{
+		E_ADDR_MODE_CLAMP_TO_EDGE = 0,
+		E_ADDR_MODE_CLAMP_TO_BORDER,
+		E_ADDR_MODE_REPEAT,
+		E_ADDR_MIRRORED_REPEAT,
+		E_ADDR_MAX
+	};
+
 	class IObjectManager
 	{
 	public:
@@ -225,6 +241,17 @@ namespace Crimson
 		virtual void Dispose() {}
 	protected:
 		virtual ~IObject() {}
+	};
+
+	class BufferRange
+	{
+	public:
+		uint64_t m_Offset;
+		uint64_t m_Size;
+		BufferRange(uint64_t offset = 0u, uint64_t size = 0u) :
+			m_Offset(offset),
+			m_Size(size)
+		{}
 	};
 
 	class IGPUBuffer : public IObject

@@ -31,7 +31,6 @@ namespace Crimson
 		{
 			void* p_data = nullptr;
 			VulkanDebug::CheckVKResult(vmaMapMemory(p_OwningDevice->m_MemoryAllocator, m_Allocation, &p_data), "Vulkan Map Memory Issue!");
-			//VulkanDebug::CheckVKResult(vkMapMemory(p_OwningDevice->m_LogicalDevice, m_Allocation->GetMemory(), 0, m_BufferSize, 0, &return_val), "Vulkan Map Memory Issue!");
 			p_Mapped = reinterpret_cast<uint8_t*>(p_data);
 		}
 		return p_Mapped;

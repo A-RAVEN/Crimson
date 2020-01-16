@@ -39,8 +39,11 @@ namespace Crimson
 	class DescriptorSet : IObject
 	{
 	public:
-		virtual void WriteDescriptorSetBuffer(EBufferUniformType uniform_type, PGPUBuffer buffer, uint64_t buffer_offset) {};
-		virtual void WriteDescriptorSetImage() {};
+		//virtual void WriteDescriptorSetBuffer(uint32_t binding_point, EBufferUniformType uniform_type, PGPUBuffer buffer, uint64_t buffer_offset, uint64_t write_size) {};
+		virtual void WriteDescriptorSetBuffers(uint32_t binding_point,
+			std::vector<PGPUBuffer> const& buffers, std::vector<BufferRange> const& buffer_ranges, uint32_t start_array_id) = 0;
+		virtual void WriteDescriptorSetImage(uint32_t binding_point,
+			PGPUImage image, EFilterMode filter_mode, EAddrMode addr_mode, EViewAsType view_as = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t array_id = 0) = 0;
 		virtual void EndWriteDescriptorSet() {};
 	};
 	using PDescriptorSet = DescriptorSet*;

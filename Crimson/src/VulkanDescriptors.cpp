@@ -2,6 +2,7 @@
 #include <headers/VulkanDebugLog.h>
 #include <headers/VulkanTranslator.h>
 #include <headers/VulkanBuffer.h>
+#include <headers/VulkanImage.h>
 
 namespace Crimson
 {
@@ -9,7 +10,7 @@ namespace Crimson
 		p_OwningDevice(nullptr),
 		m_DescriptorSet(VK_NULL_HANDLE)
 	{}
-	void VulkanDescriptorSet::WriteDescriptorSetBuffer(EBufferUniformType uniform_type, PGPUBuffer buffer, uint64_t buffer_offset, uint64_t write_size)
+	/*void VulkanDescriptorSet::WriteDescriptorSetBuffer(uint32_t binding_point, EBufferUniformType uniform_type, PGPUBuffer buffer, uint64_t buffer_offset, uint64_t write_size)
 	{
 		VulkanBufferObject* p_vulkan_buffer = static_cast<VulkanBufferObject*>(buffer);
 		VkDescriptorBufferInfo new_buffer_write_info{};
@@ -17,29 +18,63 @@ namespace Crimson
 		new_buffer_write_info.offset = buffer_offset;
 		new_buffer_write_info.range = write_size;
 		m_BufferWriteCache[static_cast<size_t>(uniform_type)].push_back(new_buffer_write_info);
+	}*/
+	void VulkanDescriptorSet::WriteDescriptorSetBuffers(uint32_t binding_point, std::vector<PGPUBuffer> const& buffers, std::vector<BufferRange> const& buffer_ranges, uint32_t start_array_id)
+	{
+		m_BufferWriteInfoCache.push_back(std::vector<VkDescriptorBufferInfo>(buffers.size()));
+		std::vector<VkDescriptorBufferInfo> &new_buffer_infos = *(m_BufferWriteInfoCache.rbegin());
+		for (uint32_t id = 0; id < buffers.size(); ++id)
+		{
+			VulkanBufferObject* p_vulkan_buffer = static_cast<VulkanBufferObject*>(buffers[id]);
+			auto& itr_buffer_info = new_buffer_infos[id];
+			itr_buffer_info.buffer = p_vulkan_buffer->m_Buffer;
+			itr_buffer_info.offset = buffer_ranges[id].m_Offset;
+			itr_buffer_info.range = buffer_ranges[id].m_Size;
+		}
+		VkWriteDescriptorSet new_write{};
+		new_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		new_write.descriptorCount = new_buffer_infos.size();
+		//TODO: Change To Translation Function
+		new_write.descriptorType = p_OwningSetLayout->m_Bindings[binding_point].m_ResourceType == EShaderResourceType::E_SHADER_UNIFORM_BUFFER ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+		new_write.dstArrayElement = start_array_id;
+		new_write.dstBinding = binding_point;
+		new_write.dstSet = m_DescriptorSet;
+		new_write.pBufferInfo = new_buffer_infos.data();
+		m_WriteCache.push_back(new_write);
+	}
+	void VulkanDescriptorSet::WriteDescriptorSetImage(uint32_t binding_point, PGPUImage image, EFilterMode filter_mode, EAddrMode addr_mode, EViewAsType view_as, uint32_t array_id)
+	{
+		m_ImageWriteInfo.push_back({});
+		VkDescriptorImageInfo &new_image_info = *(m_ImageWriteInfo.rbegin());
+		VulkanImageObject* p_vulkan_image = static_cast<VulkanImageObject*>(image);
+		new_image_info.imageLayout = p_vulkan_image->GetDefaultViewAsType() == EViewAsType::E_VIEW_AS_COLOR ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		new_image_info.imageView = p_vulkan_image->GetView(view_as);
+		new_image_info.sampler = p_vulkan_image->GetSampler(filter_mode, addr_mode);
+
+		VkWriteDescriptorSet new_write{};
+		new_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		new_write.descriptorCount = 1;
+		//TODO: Change To Translation Function
+		new_write.descriptorType = p_OwningSetLayout->m_Bindings[binding_point].m_ResourceType == EShaderResourceType::E_SHADER_IMAGE_SAMPLER ? VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER : VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		new_write.dstArrayElement = array_id;
+		new_write.dstBinding = binding_point;
+		new_write.dstSet = m_DescriptorSet;
+		new_write.pImageInfo = &new_image_info;
+		m_WriteCache.push_back(new_write);
 	}
 	void VulkanDescriptorSet::EndWriteDescriptorSet()
 	{
-		for (uint32_t enum_id = 0; enum_id < static_cast<uint32_t>(EBufferUniformType::E_BUFFER_UNIFORM_TYPE_MAX); ++enum_id)
-		{
-			EBufferUniformType type = EBufferUniformType(enum_id);
-			if (m_BufferWriteCache[enum_id].size() > 0)
-			{
-				VkWriteDescriptorSet write_info{};
-				write_info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-				write_info.descriptorCount = m_BufferWriteCache[enum_id].size();
-				//TODO: Change To Translation Function
-				write_info.descriptorType = type == EBufferUniformType::E_BUFFER_UNIFORM_TYPE_UNIFORM_BUFFER ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-				write_info.dstArrayElement = 0;
-				write_info.dstBinding = 0;
-				write_info.dstSet = m_DescriptorSet;
-			}
-		}
+		if (m_WriteCache.empty()) { return; }
+		vkUpdateDescriptorSets(p_OwningDevice->m_LogicalDevice, m_WriteCache.size(), m_WriteCache.data(), 0, nullptr);
+		m_WriteCache.clear();
+		m_BufferWriteInfoCache.clear();
+		m_ImageWriteInfo.clear();
 	}
-	void VulkanDescriptorSet::SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set)
+	void VulkanDescriptorSet::SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set, VulkanDescriptorSetLayout* p_layout)
 	{
 		p_OwningDevice = device;
 		m_DescriptorSet = set;
+		p_OwningSetLayout = p_layout;
 	}
 
 	VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanGPUDevice* device) :
@@ -60,7 +95,7 @@ namespace Crimson
 		allocate_info.pNext = nullptr;
 		VulkanDebug::CheckVKResult(vkAllocateDescriptorSets(p_OwningDevice->m_LogicalDevice, &allocate_info, &new_set),
 			"Vulkan Allocate Descriptor Set Issue!");
-		return_val->SetVulkanDescriptorSet(p_OwningDevice, new_set);
+		return_val->SetVulkanDescriptorSet(p_OwningDevice, new_set, this);
 		return return_val;
 	}
 	void VulkanDescriptorSetLayout::BuildLayout()

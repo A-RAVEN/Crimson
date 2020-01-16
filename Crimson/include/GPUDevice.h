@@ -84,6 +84,9 @@ namespace Crimson
 
 		//RenderPass Instance Managing
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) = 0;
+
+		//Batch Managing
+		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType cmd_type) = 0;
 	protected:
 		std::string m_Name;
 

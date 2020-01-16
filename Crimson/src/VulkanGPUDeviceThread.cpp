@@ -118,6 +118,51 @@ namespace Crimson
 				VULKAN_ALLOCATOR_POINTER, &m_ComputeCommandPool), "Vulkan Create Compute Command Pool Issue!");
 		}
 	}
+	VkCommandBuffer VulkanGPUDeviceThread::AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type)
+	{
+		switch (cmd_type)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			if (!m_RecycledGraphicsExecutionCommandBuffer.empty())
+			{
+				auto return_val = m_RecycledGraphicsExecutionCommandBuffer.front();
+				CHECK_VKRESULT(vkResetCommandBuffer(return_val, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT), "Vulkan Reset Recycled Command Buffer Issue!");
+				m_RecycledGraphicsExecutionCommandBuffer.pop_front();
+				return return_val;
+			}
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			if (!m_RecycledComputeExecutionCommandBuffer.empty())
+			{
+				auto return_val = m_RecycledComputeExecutionCommandBuffer.front();
+				CHECK_VKRESULT(vkResetCommandBuffer(return_val, VkCommandBufferResetFlagBits::VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT), "Vulkan Reset Recycled Command Buffer Issue!");
+				m_RecycledComputeExecutionCommandBuffer.pop_front();
+				return return_val;
+			}
+		}
+
+		VkCommandBufferAllocateInfo  new_alloc_info{};
+		new_alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		new_alloc_info.commandPool = cmd_type == EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS ? m_GraphicsCommandPool : m_ComputeCommandPool;
+		new_alloc_info.commandBufferCount = 1;
+		new_alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		new_alloc_info.pNext = nullptr;
+		VkCommandBuffer new_cmd_buffer = VK_NULL_HANDLE;
+		CHECK_VKRESULT(vkAllocateCommandBuffers(p_OwningDevice->m_LogicalDevice, &new_alloc_info, &new_cmd_buffer), "Vulkan Allocate Primary Command Buffer Issue!");
+
+		return new_cmd_buffer;
+	}
+	void VulkanGPUDeviceThread::RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer, EExecutionCommandType cmd_type)
+	{
+		switch (cmd_type)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			m_RecycledGraphicsExecutionCommandBuffer.push_back(cmd_buffer);
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			m_RecycledComputeExecutionCommandBuffer.push_back(cmd_buffer);
+			break;
+		}
+	}
 	RenderPassInstanceGraphicsCommandBufferInfo::RenderPassInstanceGraphicsCommandBufferInfo():
 		m_SubpassCommands(0)
 	{}

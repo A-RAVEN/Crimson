@@ -31,7 +31,7 @@ namespace Crimson
 		void InitGraphicsCommandPool();
 		void InitComputeCommandPool();
 		VkCommandBuffer AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type);
-		void RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer);
+		void RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer, EExecutionCommandType cmd_type);
 
 		VulkanGPUDevice* p_OwningDevice;
 
@@ -39,8 +39,10 @@ namespace Crimson
 		VkCommandPool m_ComputeCommandPool;
 
 		std::deque<VkCommandBuffer> m_RecycledGraphicsCommandBuffer;
+
 		std::deque<VkCommandBuffer> m_RecycledGraphicsExecutionCommandBuffer;
 		std::deque<VkCommandBuffer> m_RecycledComputeExecutionCommandBuffer;
+
 		std::deque<uint32_t> m_RenderPassInstanceGraphicsCommandBufferInfoReferences;
 		std::deque<RenderPassInstanceGraphicsCommandBufferInfo> m_RenderPassInstanceGraphicsCommandBufferInfos;
 	};

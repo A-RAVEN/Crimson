@@ -8,6 +8,9 @@ namespace Crimson
 {
 	namespace VulkanDebug
 	{
+
+#define CHECK_VKRESULT( vkresult , _error_string ) {VulkanDebug::CheckVKResultWithLine(vkresult, _error_string, __LINE__, __FILE__);} 
+
 		//Vulkan Result Checker
 		static inline void CheckVKResult(VkResult result, std::string const& error_string)
 		{
@@ -23,6 +26,23 @@ namespace Crimson
 			SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 #endif
 		}
+
+		static inline void CheckVKResultWithLine(VkResult result, std::string const& error_string, int line, std::string const& file)
+		{
+#ifdef _WIN32
+			HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+#endif
+			if (result != VK_SUCCESS)
+			{
+				std::string out = "Vulkan Runtime Error:\n" + error_string + "\nLine: " + std::to_string(line) + "\nFile: " + file + "\n";
+				std::cerr << out << std::endl;
+			}
+#ifdef _WIN32
+			SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+#endif
+		}
+
 		//Vulkan Debug Callback
 		static VKAPI_ATTR VkBool32 VKAPI_CALL
 			VulkanDebugCallback(

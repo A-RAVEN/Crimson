@@ -7,6 +7,13 @@
 
 namespace Crimson
 {
+	class VulkanImageTransitionData
+	{
+	public:
+		VulkanImageObject* p_image;
+
+	};
+
 	class VulkanImageObject : public IGPUImage
 	{
 	public:
@@ -24,6 +31,9 @@ namespace Crimson
 		virtual void Dispose() override;
 		VkImageSubresourceRange GetFullSubresourceRange(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX);
 		VkImageView GetView(EViewAsType view_as_type);
+		//TODO: Improve to a more efficient way
+		VkSampler GetSampler(EFilterMode filter_mode, EAddrMode address_mode);
+		EViewAsType GetDefaultViewAsType() { return m_DefaultViewAsType; }
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VkImage				m_Image;
@@ -38,5 +48,8 @@ namespace Crimson
 		std::array<int8_t, static_cast<size_t>(EViewAsType::E_VIEW_AS_TYPE_MAX)> m_ImageViewMap;
 		std::vector<VkImageView> m_ImageViews;
 		EViewAsType m_DefaultViewAsType;
+
+		std::array<std::array<VkSampler, static_cast<size_t>(EAddrMode::E_ADDR_MAX)>,
+			static_cast<size_t>(EFilterMode::E_FILTER_MODE_MAX)> m_Samplers;
 	};
 }

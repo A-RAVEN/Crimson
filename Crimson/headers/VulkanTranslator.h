@@ -138,6 +138,26 @@ namespace Crimson
 		VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT,
 	};
 
+	static VkSamplerAddressMode VULKAN_STATIC_SAMPLER_ADDRESS_MODE_TABLE[static_cast<size_t>(EAddrMode::E_ADDR_MAX)] =
+	{
+		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE,
+		VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER,
+		VK_SAMPLER_ADDRESS_MODE_REPEAT,
+		VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT,
+	};
+
+	static VkFilter VULKAN_STATIC_FILTER_MODE_TABLE[static_cast<size_t>(EFilterMode::E_FILTER_MODE_MAX)]
+	{
+		VK_FILTER_NEAREST,
+		VK_FILTER_LINEAR
+	};
+
+	static VkSamplerMipmapMode VULKAN_STATIC_MIPMAP_MODE_TABLE[static_cast<size_t>(EFilterMode::E_FILTER_MODE_MAX)]
+	{
+		VK_SAMPLER_MIPMAP_MODE_NEAREST,
+		VK_SAMPLER_MIPMAP_MODE_LINEAR,
+	};
+
 	struct VulkanVertexInputDataTypeInfo
 	{
 		VkFormat m_Format;
@@ -329,5 +349,20 @@ namespace Crimson
 	static inline VkImageAspectFlags TranslateViewAsTypeToVulkanAspectFlags(EViewAsType view_as_type)
 	{
 		return VULKAN_STATIC_IMAGE_ASPECT_TYPE_TABLE[static_cast<size_t>(view_as_type)];
+	}
+
+	static inline VkSamplerAddressMode TranslateSamplerAddressModeToVulkan(EAddrMode addr_mode)
+	{
+		return VULKAN_STATIC_SAMPLER_ADDRESS_MODE_TABLE[static_cast<size_t>(addr_mode)];
+	}
+
+	static inline VkFilter TranslateFilterModeToVulkanFilter(EFilterMode filter_mode)
+	{
+		return VULKAN_STATIC_FILTER_MODE_TABLE[static_cast<size_t>(filter_mode)];
+	}
+
+	static inline VkSamplerMipmapMode TranslateFilterModeToVulkanMipMapMode(EFilterMode filter_mode)
+	{
+		return VULKAN_STATIC_MIPMAP_MODE_TABLE[static_cast<size_t>(filter_mode)];
 	}
 }

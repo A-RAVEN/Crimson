@@ -17,6 +17,13 @@ namespace Crimson
 		m_DefaultViewAsType(EViewAsType::E_VIEW_AS_TYPE_MAX)
 	{
 		std::fill(m_ImageViewMap.begin(), m_ImageViewMap.end(), int8_t(-1));
+		for (auto& itr_vec : m_Samplers)
+		{
+			for (auto& itr_samp : itr_vec)
+			{
+				itr_samp = VK_NULL_HANDLE;
+			}
+		}
 	}
 	void VulkanImageObject::SetVulkanImage(VulkanGPUDevice* p_device, 
 		VkImage image, 
@@ -152,5 +159,37 @@ namespace Crimson
 			m_ImageViewMap[index] = m_ImageViews.size() - 1;
 		}
 		return m_ImageViews[m_ImageViewMap[index]];
+	}
+	VkSampler VulkanImageObject::GetSampler(EFilterMode filter_mode, EAddrMode address_mode)
+	{
+		VkSampler& target_sampler = m_Samplers[static_cast<size_t>(filter_mode)][static_cast<size_t>(address_mode)];
+		if (target_sampler == VK_NULL_HANDLE)
+		{
+			VkSamplerCreateInfo sampler_create_info{};
+			sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+			sampler_create_info.addressModeU = TranslateSamplerAddressModeToVulkan(address_mode);
+			sampler_create_info.addressModeV = TranslateSamplerAddressModeToVulkan(address_mode);
+			sampler_create_info.addressModeW = TranslateSamplerAddressModeToVulkan(address_mode);
+			sampler_create_info.anisotropyEnable = true;
+			sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+			sampler_create_info.unnormalizedCoordinates = VK_FALSE;
+			sampler_create_info.minFilter = sampler_create_info.magFilter = TranslateFilterModeToVulkanFilter(filter_mode);
+			
+			//compare operation
+			sampler_create_info.compareEnable = VK_FALSE;
+			sampler_create_info.compareOp = VK_COMPARE_OP_ALWAYS;
+			//mipmap
+			sampler_create_info.mipmapMode = TranslateFilterModeToVulkanMipMapMode(filter_mode);
+			sampler_create_info.mipLodBias = 0.0f;
+			sampler_create_info.minLod = 0.0f;
+			sampler_create_info.maxLod = 50.0f;
+			//anisotropy
+			sampler_create_info.anisotropyEnable = VK_TRUE;
+			sampler_create_info.maxAnisotropy = 1;
+
+			CHECK_VKRESULT(vkCreateSampler(p_OwningDevice->m_LogicalDevice, &sampler_create_info, VULKAN_ALLOCATOR_POINTER, &target_sampler), "Creating Vulkan Sampler Issue!");
+		}
+
+		return target_sampler;
 	}
 }
