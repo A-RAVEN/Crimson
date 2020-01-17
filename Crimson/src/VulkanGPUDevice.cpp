@@ -10,6 +10,7 @@
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanRenderPassInstance.h>
 #include <headers/VulkanGPUDeviceThread.h>
+#include <headers/VulkanBatch.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
 #include <limits>
@@ -42,10 +43,12 @@ namespace Crimson
 	{
 		VulkanGPUDeviceThread* new_thread = new VulkanGPUDeviceThread();
 		new_thread->InitGPUDeviceThread(this);
+		m_Threads.insert(new_thread);
 		return new_thread;
 	}
 	void VulkanGPUDevice::HandleDisposedThread(VulkanGPUDeviceThread* p_thread)
 	{
+		m_Threads.erase(p_thread);
 		delete p_thread;
 	}
 	PGPUBuffer VulkanGPUDevice::CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type)
@@ -148,6 +151,48 @@ namespace Crimson
 	{
 		m_RenderPassInstanceIdPool.Recycle(p_render_pass_instance->m_InstanceUniqueId);
 		delete p_render_pass_instance;
+	}
+	void VulkanGPUDevice::CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority)
+	{
+		VulkanBatch* new_batch = new VulkanBatch();
+		uint32_t queue_family_id = 0;
+		switch (command_type)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			queue_family_id = m_GraphicsDedicateFamily;
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			queue_family_id = m_ComputeDedicateFamily;
+			break;
+		default:
+			break;
+		}
+		new_batch->SetBatch(this, m_BatchIdPool.Allocate(), queue_family_id, priority);
+		m_Batches.insert(std::make_pair(batch_name, new_batch));
+	}
+	void VulkanGPUDevice::DestroyBatch(std::string const& batch_name)
+	{
+		auto find = m_Batches.find(batch_name);
+		if (find != m_Batches.end())
+		{
+			find->second->DestroyBatch();
+			m_BatchIdPool.Recycle(find->second->m_BatchID);
+			delete find->second;
+			m_Batches.erase(find);
+		}
+	}
+	void VulkanGPUDevice::ExecuteBatches(std::vector<std::string> const& batches)
+	{
+
+	}
+	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance)
+	{
+		std::vector<VkCommandBuffer> return_val;
+		for (auto& thread : m_Threads)
+		{
+			thread->PushBackSubpassCommandBuffer(return_val, p_instance->m_InstanceUniqueId, subpass_id);
+		}
+		return return_val;
 	}
 	VulkanGPUDevice::VulkanGPUDevice():
 		m_PhysicalDevice(VK_NULL_HANDLE),

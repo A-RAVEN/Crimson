@@ -7,6 +7,7 @@ namespace Crimson {
 	public:
 		void SetBatch(VulkanGPUDevice* p_owning_device, uint32_t batch_id, uint32_t queue_family_id, uint32_t priority);
 		void SubmitCommands();
+		void DestroyBatch();
 		VulkanGPUDevice*	p_OwningDevice;
 		VkFence				m_Fence;
 		VkSemaphore			m_Semaphore;

@@ -6,6 +6,8 @@
 #include <headers/VulkanSurfaceContext.h>
 #include <include/Pipeline.h>
 #include <headers/HelperContainers.h>
+#include <unordered_map>
+#include <set>
 
 namespace Crimson
 {
@@ -17,6 +19,8 @@ namespace Crimson
 	class VulkanFramebuffer;
 	class VulkanRenderPassInstance;
 	class VulkanGPUDeviceThread;
+	class VulkanBatch;
+	class VulkanBufferObject;
 	class VulkanGPUDevice : public IGPUDevice
 	{
 	public:
@@ -66,6 +70,13 @@ namespace Crimson
 		
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) override;
 		void HandleDisposedRenderPassInstance(VulkanRenderPassInstance* p_render_pass_instance);
+
+		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority);
+		virtual void DestroyBatch(std::string const& batch_name);
+
+		virtual void ExecuteBatches(std::vector<std::string> const& batches);
+
+		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance);
 	private:
 		VulkanGPUDevice();
 		~VulkanGPUDevice();
@@ -92,5 +103,10 @@ namespace Crimson
 		VmaAllocator m_MemoryAllocator;
 
 		IndexPool<uint32_t> m_RenderPassInstanceIdPool;
+
+		std::set<VulkanGPUDeviceThread*> m_Threads;
+
+		IndexPool<uint32_t> m_BatchIdPool;
+		std::unordered_map<std::string, VulkanBatch*> m_Batches;
 	};
 }

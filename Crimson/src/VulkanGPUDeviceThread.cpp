@@ -2,6 +2,7 @@
 #include <headers/VulkanGPUDevice.h>
 #include <headers/VulkanDebugLog.h>
 #include <headers/VulkanGraphicsCommandBuffer.h>
+#include <headers/VulkanExecutionCommandBuffer.h>
 #include <headers/VulkanRenderPassInstance.h>
 #include <headers/GeneralDebug.h>
 
@@ -83,7 +84,13 @@ namespace Crimson
 			break;
 		}
 
-		return PExecutionCommandBuffer();
+		VulkanExecutionCommandBuffer* new_command_buffer = new VulkanExecutionCommandBuffer();
+
+		return new_command_buffer;
+	}
+	void VulkanGPUDeviceThread::BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer)
+	{
+
 	}
 	void VulkanGPUDeviceThread::OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer)
 	{
@@ -92,6 +99,18 @@ namespace Crimson
 	void VulkanGPUDeviceThread::InitGPUDeviceThread(VulkanGPUDevice* device)
 	{
 		p_OwningDevice = device;
+	}
+	void VulkanGPUDeviceThread::PushBackSubpassCommandBuffer(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t renderpass_instance_id, uint32_t subpass_id)
+	{
+		if (m_RenderPassInstanceGraphicsCommandBufferInfoReferences.size() > renderpass_instance_id &&
+			m_RenderPassInstanceGraphicsCommandBufferInfoReferences[renderpass_instance_id] != NUMMAX_UINT32)
+		{
+			auto& info = m_RenderPassInstanceGraphicsCommandBufferInfos[m_RenderPassInstanceGraphicsCommandBufferInfoReferences[renderpass_instance_id]];
+			if (info.m_SubpassCommands.size() > subpass_id&& info.m_SubpassCommands[subpass_id] != VK_NULL_HANDLE)
+			{
+				cmd_buffers.push_back(info.m_SubpassCommands[subpass_id]);
+			}
+		}
 	}
 	void VulkanGPUDeviceThread::InitGraphicsCommandPool()
 	{

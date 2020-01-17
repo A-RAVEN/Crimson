@@ -1,4 +1,5 @@
 #include <headers/VulkanBatch.h>
+#include <headers/VulkanDebugLog.h>
 
 namespace Crimson
 {
@@ -28,5 +29,11 @@ namespace Crimson
 		VkSubmitInfo submit_info{};
 
 		vkQueueSubmit(m_Queue, 1, &submit_info, m_Fence);
+	}
+	void VulkanBatch::DestroyBatch()
+	{
+		CHECK_VKRESULT(vkWaitForFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence, VK_TRUE, UINT64_MAX), "Vulkan Batch Wait For Fence Issue On Destroy!");
+		vkDestroyFence(p_OwningDevice->m_LogicalDevice, m_Fence, VULKAN_ALLOCATOR_POINTER);
+		vkDestroySemaphore(p_OwningDevice->m_LogicalDevice, m_Semaphore, VULKAN_ALLOCATOR_POINTER);
 	}
 }

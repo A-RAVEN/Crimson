@@ -10,6 +10,7 @@ namespace Crimson
 	{
 	public:
 		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) override;
+
 	private:
 		VulkanGPUDeviceThread* p_OwningThread;
 		uint32_t m_QueueFamilyId;
