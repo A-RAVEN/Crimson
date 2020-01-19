@@ -71,12 +71,13 @@ namespace Crimson
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) override;
 		void HandleDisposedRenderPassInstance(VulkanRenderPassInstance* p_render_pass_instance);
 
-		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority);
-		virtual void DestroyBatch(std::string const& batch_name);
+		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) override;
+		virtual void DestroyBatch(std::string const& batch_name) override;
 
 		virtual void ExecuteBatches(std::vector<std::string> const& batches);
 
 		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance);
+		std::vector<VkCommandBuffer> CollectBatchCommandBuffers(uint32_t batch_id);
 		uint32_t GetQueueFamilyIdByCommandType(EExecutionCommandType command_type);
 	private:
 		VulkanGPUDevice();

@@ -201,6 +201,15 @@ namespace Crimson
 		}
 		return return_val;
 	}
+	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectBatchCommandBuffers(uint32_t batch_id)
+	{
+		std::vector<VkCommandBuffer> return_val;
+		for (auto& thread : m_Threads)
+		{
+			thread->PushBackExecutionCommandBuffers(return_val, batch_id);
+		}
+		return return_val;
+	}
 	uint32_t VulkanGPUDevice::GetQueueFamilyIdByCommandType(EExecutionCommandType command_type)
 	{
 		switch (command_type)

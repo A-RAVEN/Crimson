@@ -90,8 +90,6 @@ namespace Crimson
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) = 0;
 
 		//Batch Managing
-		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType cmd_type) = 0;
-
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;
 		virtual void DestroyBatch(std::string const& batch_name) = 0;
 		virtual void ExecuteBatches(std::vector<std::string> const& batches) = 0;

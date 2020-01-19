@@ -1,6 +1,6 @@
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanImage.h>
-#include <assert.h>
+#include <headers/GeneralDebug.h>
 
 namespace Crimson
 {
@@ -66,8 +66,12 @@ namespace Crimson
 				}
 				else
 				{
-					assert(vulkan_image->m_NextQueueFamily == cmd_queue_family);
+					CRIM_ASSERT(vulkan_image->m_NextQueueFamily == NUMMAX_UINT32 || vulkan_image->m_NextQueueFamily == cmd_queue_family, "Vulkan Image Is Not Prepared For Barrier In This Queue!");
 					image_barrier.srcQueueFamilyIndex = vulkan_image->m_CurrentQueueFamily;
+					if (image_barrier.srcQueueFamilyIndex == VK_QUEUE_FAMILY_IGNORED)
+					{
+						image_barrier.srcQueueFamilyIndex = cmd_queue_family;
+					}
 					image_barrier.dstQueueFamilyIndex = cmd_queue_family;
 				}
 				vulkan_image->m_NextQueueFamily = vulkan_image->m_CurrentQueueFamily = cmd_queue_family;
@@ -92,7 +96,7 @@ namespace Crimson
 			}
 		}
 		if (m_ImageMemoryBarriers.size() > 0) {
-			vkCmdPipelineBarrier(cmd_buffer, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, m_ImageMemoryBarriers.size(),
+			vkCmdPipelineBarrier(cmd_buffer, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, 0, 0, nullptr, 0, nullptr, m_ImageMemoryBarriers.size(),
 				m_ImageMemoryBarriers.data());
 		}
 	}
