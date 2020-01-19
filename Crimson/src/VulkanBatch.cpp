@@ -25,8 +25,10 @@ namespace Crimson
 	}
 	void VulkanBatch::SubmitCommands()
 	{
-		//p_OwningDevice->m_QueueFamilies
+		//TODO Find a better way for submission like double buffer
+		CHECK_VKRESULT(vkWaitForFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence, VK_TRUE, UINT64_MAX), "Vulkan Batch Wait For Fence Issue Before Submit!");
 		VkSubmitInfo submit_info{};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
 		vkQueueSubmit(m_Queue, 1, &submit_info, m_Fence);
 	}
@@ -35,5 +37,9 @@ namespace Crimson
 		CHECK_VKRESULT(vkWaitForFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence, VK_TRUE, UINT64_MAX), "Vulkan Batch Wait For Fence Issue On Destroy!");
 		vkDestroyFence(p_OwningDevice->m_LogicalDevice, m_Fence, VULKAN_ALLOCATOR_POINTER);
 		vkDestroySemaphore(p_OwningDevice->m_LogicalDevice, m_Semaphore, VULKAN_ALLOCATOR_POINTER);
+	}
+	void VulkanBatch::Wait()
+	{
+		CHECK_VKRESULT(vkWaitForFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence, VK_TRUE, UINT64_MAX), "Vulkan Batch Wait For Fence Issue!");
 	}
 }

@@ -183,7 +183,14 @@ namespace Crimson
 	}
 	void VulkanGPUDevice::ExecuteBatches(std::vector<std::string> const& batches)
 	{
-
+		for (auto& batch_name : batches)
+		{
+			auto batch_find = m_Batches.find(batch_name);
+			if (batch_find != m_Batches.end())
+			{
+				batch_find->second->SubmitCommands();
+			}
+		}
 	}
 	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance)
 	{
@@ -193,6 +200,26 @@ namespace Crimson
 			thread->PushBackSubpassCommandBuffer(return_val, p_instance->m_InstanceUniqueId, subpass_id);
 		}
 		return return_val;
+	}
+	uint32_t VulkanGPUDevice::GetQueueFamilyIdByCommandType(EExecutionCommandType command_type)
+	{
+		switch (command_type)
+		{
+		case Crimson::EExecutionCommandType::E_COMMAND_TYPE_GENERAL:
+			return m_GraphicsComputeGeneralFamily;
+			break;
+		case Crimson::EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			return m_GraphicsDedicateFamily;
+			break;
+		case Crimson::EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			return m_ComputeDedicateFamily;
+			break;
+		case Crimson::EExecutionCommandType::E_COMMAND_TYPE_MAX:
+			break;
+		default:
+			break;
+		}
+		return NUMMAX_UINT32;
 	}
 	VulkanGPUDevice::VulkanGPUDevice():
 		m_PhysicalDevice(VK_NULL_HANDLE),

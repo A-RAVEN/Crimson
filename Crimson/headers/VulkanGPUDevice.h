@@ -77,6 +77,7 @@ namespace Crimson
 		virtual void ExecuteBatches(std::vector<std::string> const& batches);
 
 		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance);
+		uint32_t GetQueueFamilyIdByCommandType(EExecutionCommandType command_type);
 	private:
 		VulkanGPUDevice();
 		~VulkanGPUDevice();

@@ -28,15 +28,18 @@ namespace Crimson
 		virtual void Dispose() override;
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
 		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override;
-		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer);
+		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer) override;
+		
 		void OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer);
 		void InitGPUDeviceThread(VulkanGPUDevice* device);
 		void PushBackSubpassCommandBuffer(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t renderpass_instance_id, uint32_t subpass_id);
+		void PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id);
+
+		VkCommandBuffer AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type);
+		void RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer, EExecutionCommandType cmd_type);
 	private:
 		void InitGraphicsCommandPool();
 		void InitComputeCommandPool();
-		VkCommandBuffer AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type);
-		void RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer, EExecutionCommandType cmd_type);
 
 		VulkanGPUDevice* p_OwningDevice;
 

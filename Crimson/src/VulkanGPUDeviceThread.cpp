@@ -85,12 +85,24 @@ namespace Crimson
 		}
 
 		VulkanExecutionCommandBuffer* new_command_buffer = new VulkanExecutionCommandBuffer();
-
+		new_command_buffer->SetExecutionCommandBuffer(p_OwningDevice, this, cmd_type);
 		return new_command_buffer;
 	}
 	void VulkanGPUDeviceThread::BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer)
 	{
+		VulkanExecutionCommandBuffer* cmd_buffer = static_cast<VulkanExecutionCommandBuffer*>(command_buffer);
+		auto batch_find = p_OwningDevice->m_Batches.find(batch_name);
+		if (batch_find != p_OwningDevice->m_Batches.end())
+		{
+			uint32_t batch_id = batch_find->second->m_BatchID;
+			cmd_buffer->p_AttachedBatch = batch_find->second;
 
+			if (m_AttachedExecutionCommandBuffers.size() <= batch_id)
+			{
+				m_AttachedExecutionCommandBuffers.resize(batch_id + 1);
+			}
+			m_AttachedExecutionCommandBuffers[batch_id].insert(cmd_buffer);
+		}
 	}
 	void VulkanGPUDeviceThread::OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer)
 	{
@@ -109,6 +121,16 @@ namespace Crimson
 			if (info.m_SubpassCommands.size() > subpass_id&& info.m_SubpassCommands[subpass_id] != VK_NULL_HANDLE)
 			{
 				cmd_buffers.push_back(info.m_SubpassCommands[subpass_id]);
+			}
+		}
+	}
+	void VulkanGPUDeviceThread::PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id)
+	{
+		if (m_AttachedExecutionCommandBuffers.size() > batch_unique_id)
+		{
+			for (auto& cmd_buffer : m_AttachedExecutionCommandBuffers[batch_unique_id])
+			{
+				cmd_buffers.push_back(cmd_buffer->m_CurrentCommandBuffer);
 			}
 		}
 	}

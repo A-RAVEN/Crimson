@@ -33,6 +33,7 @@ namespace Crimson
 		virtual void BindIndexBuffer(PGPUBuffer buffer, uint64_t buffer_offset, EIndexType index_type = EIndexType::E_INDEX_TYPE_32) = 0;
 		virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count,
 			uint32_t first_index = 0, uint32_t first_vertex = 0, uint32_t first_instance_id = 0) = 0;
+		virtual void Draw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance_id) = 0;
 	};
 	using PGraphicsCommandBuffer = GraphicsCommandBuffer*;
 
@@ -41,6 +42,8 @@ namespace Crimson
 	public:
 		//Execute Render Pass, not thread safe for framebuffer images
 		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) = 0;
+		virtual void StartCommand() = 0;
+		virtual void EndCommand() = 0;
 	protected:
 		EExecutionCommandType m_CommandType;
 	};
@@ -51,6 +54,7 @@ namespace Crimson
 	public:
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) = 0;
 		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) = 0;
+		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer) = 0;
 	};
 	using PGPUDeviceThread = IGPUDeviceThread*;
 
@@ -87,6 +91,10 @@ namespace Crimson
 
 		//Batch Managing
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType cmd_type) = 0;
+
+		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;
+		virtual void DestroyBatch(std::string const& batch_name) = 0;
+		virtual void ExecuteBatches(std::vector<std::string> const& batches) = 0;
 	protected:
 		std::string m_Name;
 

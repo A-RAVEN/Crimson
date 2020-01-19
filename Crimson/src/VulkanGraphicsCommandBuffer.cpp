@@ -83,6 +83,10 @@ namespace Crimson
 	{
 		vkCmdDrawIndexed(m_CommandBuffer, index_count, instance_count, first_index, first_vertex, first_instance_id);
 	}
+	void VulkanGraphicsCommandBuffer::Draw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance_id)
+	{
+		vkCmdDraw(m_CommandBuffer, vertex_count, instance_count, first_vertex, first_instance_id);
+	}
 	void VulkanGraphicsCommandBuffer::SetGraphicsCommandBuffer(VulkanGPUDeviceThread* p_owning_thread, 
 		VulkanRenderPass* p_owning_render_pass, VulkanRenderPassInstance* p_owning_instance, uint32_t subpass, VkCommandBuffer cmd_buffer)
 	{
@@ -91,5 +95,8 @@ namespace Crimson
 		p_OwningInstance = p_owning_instance;
 		m_SubpassId = subpass;
 		m_CommandBuffer = cmd_buffer;
+	}
+	void VulkanGraphicsCommandBuffer::BarrierDescriptorSets_Unsafe(VkCommandBuffer cmd_buffer)
+	{
 	}
 }
