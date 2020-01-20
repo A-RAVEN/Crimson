@@ -33,7 +33,7 @@ namespace Crimson
 		void OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer);
 		void InitGPUDeviceThread(VulkanGPUDevice* device);
 		void PushBackSubpassCommandBuffer(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t renderpass_instance_id, uint32_t subpass_id);
-		void PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id);
+		void PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id, std::vector<VkSemaphore>& waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 
 		VkCommandBuffer AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type);
 		void RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer, EExecutionCommandType cmd_type);

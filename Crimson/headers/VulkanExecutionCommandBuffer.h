@@ -18,10 +18,14 @@ namespace Crimson
 		virtual void EndCommand() override;
 		void SetExecutionCommandBuffer(VulkanGPUDevice* p_device, VulkanGPUDeviceThread* p_thread, EExecutionCommandType command_type);
 	private:
+		void TransitionSwapchainImageToCopyDst(VkImage swapchain_image, VulkanSurfaceContext* surface_context, bool initialized);
+		void TransitionSwapchainImageToPresent(VkImage swapchain_image, VulkanSurfaceContext* surface_context);
 		VulkanGPUDevice* p_OwningDevice;
 		VulkanGPUDeviceThread* p_OwningThread;
 		VulkanBatch* p_AttachedBatch;
 		EExecutionCommandType m_CommandType;
 		VkCommandBuffer m_CurrentCommandBuffer;
+		std::vector<VkSemaphore> m_AdditionialWaitingSemaphores;
+		std::vector<VkPipelineStageFlags> m_AdditionalWaitingStages;
 	};
 }

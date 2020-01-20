@@ -359,6 +359,7 @@ namespace Crimson
 					if (IsColorFormat(ref_attachment.m_Format))
 					{
 						current_attachment.initialLayout = current_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+						//ref_attachment
 					}
 					else
 					{
@@ -448,30 +449,30 @@ namespace Crimson
 		input_assembly.topology = TranslateTopologyToVulkan(vulkan_pipeline->m_Topology);
 		input_assembly.primitiveRestartEnable = VK_FALSE;
 
-		////viewport and sissors
-		//VkViewport viewport = {};
-		//viewport.x = 0.0f;
-		//viewport.y = 0.0f;
-		//viewport.width = 512.0f;
-		//viewport.height = 512.0f;
-		//viewport.minDepth = 0.0f;
-		//viewport.maxDepth = 1.0f;
+		//viewport and sissors
+		VkViewport viewport = {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = 512.0f;
+		viewport.height = 512.0f;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
 
-		//VkRect2D scissor = {};
-		//scissor.offset = { 0, 0 };
-		//scissor.extent = { 512, 512 };
+		VkRect2D scissor = {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = { 512, 512 };
 
 		VkPipelineViewportStateCreateInfo viewport_state = {};
 		viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewport_state.viewportCount = 0;// 1;
-		viewport_state.pViewports = nullptr;// &viewport;
-		viewport_state.scissorCount = 0;// 1;
-		viewport_state.pScissors = nullptr;// &scissor;
+		viewport_state.viewportCount = 1;
+		viewport_state.pViewports = &viewport;
+		viewport_state.scissorCount = 1;
+		viewport_state.pScissors = &scissor;
 
 		VkPipelineRasterizationStateCreateInfo rasterizer = {};
 		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 		rasterizer.depthClampEnable = VK_FALSE;
-		rasterizer.rasterizerDiscardEnable = VK_TRUE;
+		rasterizer.rasterizerDiscardEnable = VK_FALSE;
 		rasterizer.polygonMode = TranslatePolygonModeToVulkan(vulkan_pipeline->m_PolygonMode);
 		rasterizer.lineWidth = 1.0f;
 		rasterizer.cullMode = TranslateCullModeToVulkan(vulkan_pipeline->m_CullMode);

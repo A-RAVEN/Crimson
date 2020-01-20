@@ -16,6 +16,8 @@ namespace Crimson
 		virtual void EndCommandBuffer() override;
 		void StartCommandBuffer();
 		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets) override;
+		virtual void ViewPort(float x, float y, float width, float height) override;
+		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) override;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) override;
 		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, 
 			std::vector<uint64_t> const& buffer_offset_list) override;

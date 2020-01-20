@@ -76,9 +76,10 @@ namespace Crimson
 		virtual void DestroyBatch(std::string const& batch_name) override;
 
 		virtual void ExecuteBatches(std::vector<std::string> const& batches);
+		virtual void PresentWindow(IWindow& window) override;
 
 		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance);
-		std::vector<VkCommandBuffer> CollectBatchCommandBuffers(uint32_t batch_id);
+		std::vector<VkCommandBuffer> CollectBatchCommandBuffers(uint32_t batch_id, std::vector<VkSemaphore> &waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 		uint32_t GetQueueFamilyIdByCommandType(EExecutionCommandType command_type);
 	private:
 		VulkanGPUDevice();
@@ -93,6 +94,7 @@ namespace Crimson
 		VkDescriptorPool	m_DescriptorPool;
 
 		std::vector<VkQueueFamilyProperties>	m_QueueFamilies;
+		std::vector<uint32_t>					m_AllQueueFamilyIds;
 		std::vector<uint32_t>					m_QueueNumbers;
 		uint32_t								m_GraphicsComputeGeneralFamily;
 		uint32_t								m_GraphicsDedicateFamily;

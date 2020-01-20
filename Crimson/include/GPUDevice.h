@@ -28,6 +28,8 @@ namespace Crimson
 	public:
 		virtual void EndCommandBuffer() = 0;
 		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets) = 0;
+		virtual void ViewPort(float x, float y, float width, float height) = 0;
+		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) = 0;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) = 0;
 		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<uint64_t> const& buffer_offset_list) = 0;
 		virtual void BindIndexBuffer(PGPUBuffer buffer, uint64_t buffer_offset, EIndexType index_type = EIndexType::E_INDEX_TYPE_32) = 0;
@@ -94,6 +96,8 @@ namespace Crimson
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;
 		virtual void DestroyBatch(std::string const& batch_name) = 0;
 		virtual void ExecuteBatches(std::vector<std::string> const& batches) = 0;
+
+		virtual void PresentWindow(IWindow& window) = 0;
 	protected:
 		std::string m_Name;
 

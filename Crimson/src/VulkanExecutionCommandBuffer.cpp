@@ -48,17 +48,24 @@ namespace Crimson
 		auto find = p_OwningDevice->m_SurfaceContexts.find(p_window->GetName());
 		if (find != p_OwningDevice->m_SurfaceContexts.end())
 		{
+			auto& context = find->second;
+			uint32_t img_id = context.AquireNextImage();
+			VkImage swapchain_img = context.m_SwapchainImages[img_id];
+			m_AdditionialWaitingSemaphores.push_back(context.m_AquireFinishSemaphore);
+			m_AdditionalWaitingStages.push_back(VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT);
 			VulkanImageObject* vulkan_image = static_cast<VulkanImageObject*>(image);
 			vulkan_image->CmdChangeOverallLayout(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-			auto& context = find->second;
-			VkImage swapchain_img = context.AquireNextImage();
+			TransitionSwapchainImageToCopyDst(swapchain_img, &context, context.m_SwapchainImageInitialized[img_id]);
+			context.m_SwapchainImageInitialized[img_id] = true;
 			VkImageCopy image_copy{};
 			image_copy.srcOffset = { 0, 0, 0 };
 			image_copy.dstOffset = { 0, 0, 0 };
 			image_copy.srcSubresource = vulkan_image->GetFullSubresourceLayers();
-			vkCmdCopyImage(m_CurrentCommandBuffer, vulkan_image->m_Image, vulkan_image->m_OverallImageLayout, swapchain_img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, )
+			image_copy.dstSubresource = context.GetSwapchainImageSubresourceLayers();
+			image_copy.extent = { (std::min)(vulkan_image->m_Width, context.m_Extent.width), (std::min)(vulkan_image->m_Height, context.m_Extent.height), 1 };
+			vkCmdCopyImage(m_CurrentCommandBuffer, vulkan_image->m_Image, vulkan_image->m_OverallImageLayout, swapchain_img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_copy);
+			TransitionSwapchainImageToPresent(swapchain_img, &context);
 		}
-		//vkCmdCopyImage
 	}
 	void VulkanExecutionCommandBuffer::StartCommand()
 	{
@@ -72,6 +79,8 @@ namespace Crimson
 		begin_info.pInheritanceInfo = nullptr;
 		begin_info.pNext = nullptr;
 		CHECK_VKRESULT(vkBeginCommandBuffer(m_CurrentCommandBuffer, &begin_info), "Vulkan Begin Primary Command Buffer Issue!");
+		m_AdditionialWaitingSemaphores.clear();
+		m_AdditionalWaitingStages.clear();
 	}
 	void VulkanExecutionCommandBuffer::EndCommand()
 	{
@@ -83,5 +92,33 @@ namespace Crimson
 		p_OwningThread = p_thread;
 		m_CommandType = command_type;
 		m_CurrentCommandBuffer = p_OwningThread->AllocExecutionVkCommandBuffer(m_CommandType);
+	}
+	void VulkanExecutionCommandBuffer::TransitionSwapchainImageToCopyDst(VkImage swapchain_image, VulkanSurfaceContext* surface_context, bool initialized)
+	{
+		VkImageMemoryBarrier image_barrier{};
+		image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		image_barrier.image = swapchain_image;
+		image_barrier.oldLayout = initialized ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR : VK_IMAGE_LAYOUT_UNDEFINED;
+		image_barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		image_barrier.srcAccessMask = 0;
+		image_barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		image_barrier.subresourceRange = surface_context->GetSwapchainImageSubresourceRange();
+		image_barrier.srcQueueFamilyIndex = image_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		image_barrier.pNext = nullptr;
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
+	}
+	void VulkanExecutionCommandBuffer::TransitionSwapchainImageToPresent(VkImage swapchain_image, VulkanSurfaceContext* surface_context)
+	{
+		VkImageMemoryBarrier image_barrier{};
+		image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		image_barrier.image = swapchain_image;
+		image_barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		image_barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		image_barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		image_barrier.dstAccessMask = 0;
+		image_barrier.subresourceRange = surface_context->GetSwapchainImageSubresourceRange();
+		image_barrier.srcQueueFamilyIndex = image_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		image_barrier.pNext = nullptr;
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
 	}
 }

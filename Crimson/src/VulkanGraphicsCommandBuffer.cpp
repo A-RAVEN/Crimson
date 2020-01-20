@@ -54,6 +54,22 @@ namespace Crimson
 		}
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_CurrentPipelineLayout, 0, descriptor_sets.size(), sets.data(), 0, nullptr);
 	}
+	void VulkanGraphicsCommandBuffer::ViewPort(float x, float y, float width, float height)
+	{
+		VkViewport view_port{};
+		view_port.x = x;
+		view_port.y = y;
+		view_port.width = width;
+		view_port.height = height;
+		view_port.minDepth = 0.0f;
+		view_port.maxDepth = 1.0f;
+		vkCmdSetViewport(m_CommandBuffer, 0, 1, &view_port);
+	}
+	void VulkanGraphicsCommandBuffer::Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y)
+	{
+		VkRect2D sissor = { {_offsetx, _offsety},{_extend_x, _extend_y} };
+		vkCmdSetScissor(m_CommandBuffer, 0, 1, &sissor);
+	}
 	void VulkanGraphicsCommandBuffer::BindSubpassPipeline(PGraphicsPipeline pipeline)
 	{
 		VulkanGraphicsPipeline* p_pipeline = static_cast<VulkanGraphicsPipeline*>(pipeline);

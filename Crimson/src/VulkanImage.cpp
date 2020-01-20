@@ -114,10 +114,10 @@ namespace Crimson
 		}*/
 		return return_val;
 	}
-	VkImageSubresourceLayers VulkanImageObject::GetFullSubresourceLayers(EViewAsType type) const
+	VkImageSubresourceLayers VulkanImageObject::GetFullSubresourceLayers(EViewAsType type, uint32_t mip_level) const
 	{
 		VkImageSubresourceLayers return_val{};
-		return_val.mipLevel = m_MipLevelNum;
+		return_val.mipLevel = (std::min)(mip_level, m_MipLevelNum - 1);
 		return_val.baseArrayLayer = 0;
 		return_val.layerCount = m_LayerNum;
 		if (type == EViewAsType::E_VIEW_AS_TYPE_MAX)
@@ -228,8 +228,12 @@ namespace Crimson
 		}
 		else
 		{
-			CRIM_ASSERT(m_NextQueueFamily == queue_family, "Vulkan Image Not Prepared For Layout Transition On This Queue Family");
+			CRIM_ASSERT((m_NextQueueFamily == VK_QUEUE_FAMILY_IGNORED || m_NextQueueFamily == queue_family), "Vulkan Image Not Prepared For Layout Transition On This Queue Family");
 			image_barrier.srcQueueFamilyIndex = m_CurrentQueueFamily;
+			if (image_barrier.srcQueueFamilyIndex == VK_QUEUE_FAMILY_IGNORED)
+			{
+				image_barrier.srcQueueFamilyIndex = queue_family;
+			}
 			image_barrier.dstQueueFamilyIndex = queue_family;
 			m_CurrentQueueFamily = m_NextQueueFamily = queue_family;
 		}

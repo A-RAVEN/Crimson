@@ -95,6 +95,17 @@ namespace Crimson
 		if (batch_find != p_OwningDevice->m_Batches.end())
 		{
 			uint32_t batch_id = batch_find->second->m_BatchID;
+			if (cmd_buffer->p_AttachedBatch != nullptr)
+			{
+				if(cmd_buffer->p_AttachedBatch == batch_find->second)
+				{
+					return;
+				}
+				else
+				{
+					m_AttachedExecutionCommandBuffers[cmd_buffer->p_AttachedBatch->m_BatchID].erase(cmd_buffer);
+				}
+			}
 			cmd_buffer->p_AttachedBatch = batch_find->second;
 
 			if (m_AttachedExecutionCommandBuffers.size() <= batch_id)
@@ -124,13 +135,18 @@ namespace Crimson
 			}
 		}
 	}
-	void VulkanGPUDeviceThread::PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id)
+	void VulkanGPUDeviceThread::PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id, std::vector<VkSemaphore>& waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages)
 	{
 		if (m_AttachedExecutionCommandBuffers.size() > batch_unique_id)
 		{
 			for (auto& cmd_buffer : m_AttachedExecutionCommandBuffers[batch_unique_id])
 			{
 				cmd_buffers.push_back(cmd_buffer->m_CurrentCommandBuffer);
+				for (uint32_t id = 0; id < cmd_buffer->m_AdditionialWaitingSemaphores.size(); ++id)
+				{
+					waiting_semaphores.push_back(cmd_buffer->m_AdditionialWaitingSemaphores[id]);
+					waiting_stages.push_back(cmd_buffer->m_AdditionalWaitingStages[id]);
+				}
 			}
 		}
 	}

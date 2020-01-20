@@ -192,6 +192,26 @@ namespace Crimson
 			}
 		}
 	}
+	void VulkanGPUDevice::PresentWindow(IWindow& window)
+	{
+		auto find = m_SurfaceContexts.find(window.GetName());
+		if (find != m_SurfaceContexts.end())
+		{
+			VkResult result;
+			VkPresentInfoKHR present_info{};
+			present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+			present_info.swapchainCount = 1;
+			present_info.pSwapchains = &find->second.m_Swapchain;
+			present_info.pImageIndices = &find->second.m_PresentImageId;
+			present_info.pResults = &result;
+
+			present_info.waitSemaphoreCount = 0;
+			present_info.pWaitSemaphores = nullptr;
+			present_info.pNext = nullptr;
+			vkQueuePresentKHR(find->second.m_PresentQueue, &present_info);
+			CHECK_VKRESULT(result, "Vulkan Present Issue!");
+		}
+	}
 	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance)
 	{
 		std::vector<VkCommandBuffer> return_val;
@@ -201,12 +221,12 @@ namespace Crimson
 		}
 		return return_val;
 	}
-	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectBatchCommandBuffers(uint32_t batch_id)
+	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectBatchCommandBuffers(uint32_t batch_id, std::vector<VkSemaphore>& waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages)
 	{
 		std::vector<VkCommandBuffer> return_val;
 		for (auto& thread : m_Threads)
 		{
-			thread->PushBackExecutionCommandBuffers(return_val, batch_id);
+			thread->PushBackExecutionCommandBuffers(return_val, batch_id, waiting_semaphores, waiting_stages);
 		}
 		return return_val;
 	}
@@ -255,11 +275,13 @@ namespace Crimson
 		uint32_t family_property_count = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(devices[physical_device_index], &family_property_count, nullptr);
 		m_QueueFamilies.resize(family_property_count);
+		m_AllQueueFamilyIds.resize(family_property_count);
 		std::vector<uint32_t> queue_numbers(family_property_count, 0);
 		vkGetPhysicalDeviceQueueFamilyProperties(devices[physical_device_index], &family_property_count, m_QueueFamilies.data());
 
 		for (uint32_t family_id = 0; family_id < family_property_count; ++family_id)
 		{
+			m_AllQueueFamilyIds[family_id] = family_id;
 			VkQueueFamilyProperties& family_property = m_QueueFamilies[family_id];
 			if ((family_property.queueFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) == (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT))
 			{
