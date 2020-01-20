@@ -93,6 +93,7 @@ namespace Crimson
 				vulkan_image->m_OverallImageLayout = image_barrier.newLayout;
 				image_barrier.subresourceRange = vulkan_image->GetFullSubresourceRange();
 				m_ImageMemoryBarriers.push_back(image_barrier);
+				vulkan_image->m_LastUsingStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 			}
 		}
 		if (m_ImageMemoryBarriers.size() > 0) {

@@ -37,6 +37,7 @@ namespace Crimson
 		friend class VulkanGPUDeviceThread;
 		friend class VulkanDescriptorSet;
 		friend class VulkanBatch;
+		friend class VulkanExecutionCommandBuffer;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;

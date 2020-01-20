@@ -3,6 +3,7 @@
 #include <headers/VulkanRenderPass.h>
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanDebugLog.h>
+#include <headers/VulkanImage.h>
 
 namespace Crimson
 {
@@ -41,6 +42,23 @@ namespace Crimson
 			vkCmdExecuteCommands(m_CurrentCommandBuffer, cmd_buffers.size(), cmd_buffers.data());
 		}
 		vkCmdEndRenderPass(m_CurrentCommandBuffer);
+	}
+	void VulkanExecutionCommandBuffer::CopyToSwapchain(PGPUImage image, IWindow* p_window)
+	{
+		auto find = p_OwningDevice->m_SurfaceContexts.find(p_window->GetName());
+		if (find != p_OwningDevice->m_SurfaceContexts.end())
+		{
+			VulkanImageObject* vulkan_image = static_cast<VulkanImageObject*>(image);
+			vulkan_image->CmdChangeOverallLayout(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+			auto& context = find->second;
+			VkImage swapchain_img = context.AquireNextImage();
+			VkImageCopy image_copy{};
+			image_copy.srcOffset = { 0, 0, 0 };
+			image_copy.dstOffset = { 0, 0, 0 };
+			image_copy.srcSubresource = vulkan_image->GetFullSubresourceLayers();
+			vkCmdCopyImage(m_CurrentCommandBuffer, vulkan_image->m_Image, vulkan_image->m_OverallImageLayout, swapchain_img, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, )
+		}
+		//vkCmdCopyImage
 	}
 	void VulkanExecutionCommandBuffer::StartCommand()
 	{

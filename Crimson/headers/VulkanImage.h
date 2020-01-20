@@ -19,6 +19,7 @@ namespace Crimson
 	public:
 		friend class VulkanGPUDevice;
 		friend class VulkanFramebuffer;
+		friend class VulkanExecutionCommandBuffer;
 		VulkanImageObject();
 		void SetVulkanImage(VulkanGPUDevice* p_device, VkImage image, VmaAllocation allocation_info,
 			EFormat format,
@@ -29,11 +30,13 @@ namespace Crimson
 			uint32_t layer_num,
 			std::vector<EImageUsage> const& usages, EMemoryType memory_type, VkSharingMode sharing_mode);
 		virtual void Dispose() override;
-		VkImageSubresourceRange GetFullSubresourceRange(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX);
+		VkImageSubresourceRange GetFullSubresourceRange(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX) const;
+		VkImageSubresourceLayers GetFullSubresourceLayers(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX) const;
 		VkImageView GetView(EViewAsType view_as_type);
 		//TODO: Improve to a more efficient way
 		VkSampler GetSampler(EFilterMode filter_mode, EAddrMode address_mode);
 		EViewAsType GetDefaultViewAsType() { return m_DefaultViewAsType; }
+		void CmdChangeOverallLayout(VkCommandBuffer cmd_buffer, uint32_t queue_family, VkImageLayout dst_layout, VkPipelineStageFlags dst_stage, VkPipelineStageFlags finished_stage);
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VkImage				m_Image;
@@ -45,6 +48,7 @@ namespace Crimson
 		VkImageLayout		m_OverallImageLayout;
 		VkSharingMode		m_SharingMode;
 		VkAccessFlags		m_CurrentAccessMask;
+		VkPipelineStageFlags m_LastUsingStage;
 		std::array<int8_t, static_cast<size_t>(EViewAsType::E_VIEW_AS_TYPE_MAX)> m_ImageViewMap;
 		std::vector<VkImageView> m_ImageViews;
 		EViewAsType m_DefaultViewAsType;

@@ -38,9 +38,26 @@ namespace Crimson
 		m_Swapchain(VK_NULL_HANDLE),
 		m_SurfaceFormat{ VK_FORMAT_UNDEFINED , VK_COLOR_SPACE_MAX_ENUM_KHR },
 		m_PresentMode(VK_PRESENT_MODE_FIFO_KHR),
-		m_PresentFamily(std::numeric_limits<uint32_t>::max())
+		m_PresentFamily(std::numeric_limits<uint32_t>::max()),
+		m_AquireFinishFence(VK_NULL_HANDLE),
+		m_AquireFinishSemaphore(VK_NULL_HANDLE),
 	{}
 	VulkanSurfaceContext::~VulkanSurfaceContext(){}
+	VkImage VulkanSurfaceContext::AquireNextImage()
+	{
+		uint32_t index = 0;
+		CHECK_VKRESULT(vkAcquireNextImageKHR(p_OwningDevice->m_LogicalDevice, m_Swapchain, UINT_MAX, m_AquireFinishSemaphore, m_AquireFinishFence, &index), "Vulkan Aquire Next Swapchain Image Issue!");
+		return m_SwapchainImages[index];
+	}
+	VkImageSubresourceLayers VulkanSurfaceContext::GetSwapchainImageSubresourceLayers()
+	{
+		VkImageSubresourceLayers return_val{};
+		return_val.mipLevel = 1;
+		return_val.baseArrayLayer = 0;
+		return_val.layerCount = 1;
+		return_val.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		return return_val;
+	}
 	void VulkanSurfaceContext::InitSurfaceContext(VulkanGPUDevice* p_device, VkSurfaceKHR surface)
 	{
 		p_OwningDevice = p_device;
@@ -68,7 +85,7 @@ namespace Crimson
 			if (p_device->m_QueueNumbers[family_id] > 0)
 			{
 				VkBool32 b_support_surface = VK_FALSE;
-				VulkanDebug::CheckVKResult(vkGetPhysicalDeviceSurfaceSupportKHR(p_device->m_PhysicalDevice, family_id, surface, &b_support_surface), "Vulkan Check Surface Support Issue!");
+				CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceSupportKHR(p_device->m_PhysicalDevice, family_id, surface, &b_support_surface), "Vulkan Check Surface Support Issue!");
 				if (b_support_surface == VK_TRUE)
 				{
 					m_PresentFamily = family_id;
@@ -93,11 +110,29 @@ namespace Crimson
 					swapchain_create_info.pQueueFamilyIndices = nullptr;
 					swapchain_create_info.clipped = VK_TRUE;
 
-					VulkanDebug::CheckVKResult(vkCreateSwapchainKHR(p_device->m_LogicalDevice, &swapchain_create_info, VULKAN_ALLOCATOR_POINTER, &m_Swapchain), "Vulkan Swapchain Creation Issue!");
+					CHECK_VKRESULT(vkCreateSwapchainKHR(p_device->m_LogicalDevice, &swapchain_create_info, VULKAN_ALLOCATOR_POINTER, &m_Swapchain), "Vulkan Swapchain Creation Issue!");
 					return;
 				}
 			}
 		}
+		{
+			uint32_t image_count = 0;
+			CHECK_VKRESULT(vkGetSwapchainImagesKHR(p_device->m_LogicalDevice, m_Swapchain, &image_count, nullptr), "Vulkan Enumerate Swapchain Images Issue!");
+			m_SwapchainImages.resize(image_count);
+			CHECK_VKRESULT(vkGetSwapchainImagesKHR(p_device->m_LogicalDevice, m_Swapchain, &image_count, m_SwapchainImages.data()), "Vulkan Get Swapchain Images Issue!");
+		}
+
+		VkFenceCreateInfo fence_create_info{};
+		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		fence_create_info.pNext = nullptr;
+		CHECK_VKRESULT(vkCreateFence(p_OwningDevice->m_LogicalDevice, &fence_create_info, VULKAN_ALLOCATOR_POINTER, &m_AquireFinishFence), "Vulkan Swapchain Fence Creation Issue!");
+
+		VkSemaphoreCreateInfo semaphore_create_info{};
+		semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		semaphore_create_info.flags = 0;
+		semaphore_create_info.pNext = nullptr;
+		CHECK_VKRESULT(vkCreateSemaphore(p_OwningDevice->m_LogicalDevice, &semaphore_create_info, VULKAN_ALLOCATOR_POINTER, &m_AquireFinishSemaphore), "Vulkan Swapchain Fence Creation Issue!");
 	}
 	void VulkanSurfaceContext::RevalidateSurfaceContext()
 	{

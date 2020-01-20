@@ -158,6 +158,19 @@ namespace Crimson
 		VK_SAMPLER_MIPMAP_MODE_LINEAR,
 	};
 
+	static VkImageAspectFlags VULKAN_STATIC_IMAGE_LAYOUT_TO_ACCESS_FLAGS_TABLE[9] =
+	{
+		0,
+		VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT,
+		VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+		VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+		VK_ACCESS_SHADER_READ_BIT,
+		VK_ACCESS_TRANSFER_READ_BIT,
+		VK_ACCESS_TRANSFER_WRITE_BIT,
+		0,
+	};
+
 	struct VulkanVertexInputDataTypeInfo
 	{
 		VkFormat m_Format;
@@ -364,5 +377,19 @@ namespace Crimson
 	static inline VkSamplerMipmapMode TranslateFilterModeToVulkanMipMapMode(EFilterMode filter_mode)
 	{
 		return VULKAN_STATIC_MIPMAP_MODE_TABLE[static_cast<size_t>(filter_mode)];
+	}
+
+	static inline VkImageAspectFlags VkTranslateLayoutToAccessFlags(VkImageLayout layout)
+	{
+		if (layout < 9)
+		{
+			return VULKAN_STATIC_IMAGE_LAYOUT_TO_ACCESS_FLAGS_TABLE[layout];
+		}
+		switch (layout)
+		{
+		case VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_STENCIL_ATTACHMENT_OPTIMAL:
+		case VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_STENCIL_READ_ONLY_OPTIMAL:
+			return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		}
 	}
 }

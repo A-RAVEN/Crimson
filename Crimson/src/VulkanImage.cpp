@@ -1,6 +1,7 @@
 #include <headers/VulkanImage.h>
 #include <headers/VulkanTranslator.h>
 #include <headers/VulkanDebugLog.h>
+#include <headers/GeneralDebug.h>
 
 namespace Crimson
 {
@@ -14,7 +15,8 @@ namespace Crimson
 		m_SharingMode(VK_SHARING_MODE_EXCLUSIVE),
 		m_CurrentAccessMask(0),
 		m_ImageViewMap(),
-		m_DefaultViewAsType(EViewAsType::E_VIEW_AS_TYPE_MAX)
+		m_DefaultViewAsType(EViewAsType::E_VIEW_AS_TYPE_MAX),
+		m_LastUsingStage(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT)
 	{
 		std::fill(m_ImageViewMap.begin(), m_ImageViewMap.end(), int8_t(-1));
 		for (auto& itr_vec : m_Samplers)
@@ -76,7 +78,7 @@ namespace Crimson
 		std::fill(m_ImageViewMap.begin(), m_ImageViewMap.end(), int8_t(-1));
 		p_OwningDevice->HandleDisposedImage(this);
 	}
-	VkImageSubresourceRange VulkanImageObject::GetFullSubresourceRange(EViewAsType type)
+	VkImageSubresourceRange VulkanImageObject::GetFullSubresourceRange(EViewAsType type) const
 	{
 		VkImageSubresourceRange return_val{};
 		return_val.baseArrayLayer = 0;
@@ -110,6 +112,22 @@ namespace Crimson
 				return_val.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 			}
 		}*/
+		return return_val;
+	}
+	VkImageSubresourceLayers VulkanImageObject::GetFullSubresourceLayers(EViewAsType type) const
+	{
+		VkImageSubresourceLayers return_val{};
+		return_val.mipLevel = m_MipLevelNum;
+		return_val.baseArrayLayer = 0;
+		return_val.layerCount = m_LayerNum;
+		if (type == EViewAsType::E_VIEW_AS_TYPE_MAX)
+		{
+			return_val.aspectMask = TranslateViewAsTypeToVulkanAspectFlags(m_DefaultViewAsType);
+		}
+		else
+		{
+			return_val.aspectMask = TranslateViewAsTypeToVulkanAspectFlags(type);
+		}
 		return return_val;
 	}
 	VkImageView VulkanImageObject::GetView(EViewAsType view_as_type)
@@ -191,5 +209,35 @@ namespace Crimson
 		}
 
 		return target_sampler;
+	}
+	void VulkanImageObject::CmdChangeOverallLayout(VkCommandBuffer cmd_buffer, uint32_t queue_family, VkImageLayout dst_layout,
+		VkPipelineStageFlags dst_stage, VkPipelineStageFlags finished_stage)
+	{
+		VkImageMemoryBarrier image_barrier{};
+		image_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		image_barrier.image = m_Image;
+		image_barrier.oldLayout = m_OverallImageLayout;
+		image_barrier.newLayout = dst_layout;
+		image_barrier.srcAccessMask = m_CurrentAccessMask;
+		image_barrier.dstAccessMask = VkTranslateLayoutToAccessFlags(dst_layout);
+		image_barrier.subresourceRange = GetFullSubresourceRange();
+		if (m_SharingMode == VK_SHARING_MODE_CONCURRENT)
+		{
+			image_barrier.srcQueueFamilyIndex = image_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			m_CurrentQueueFamily = m_NextQueueFamily = VK_QUEUE_FAMILY_IGNORED;
+		}
+		else
+		{
+			CRIM_ASSERT(m_NextQueueFamily == queue_family, "Vulkan Image Not Prepared For Layout Transition On This Queue Family");
+			image_barrier.srcQueueFamilyIndex = m_CurrentQueueFamily;
+			image_barrier.dstQueueFamilyIndex = queue_family;
+			m_CurrentQueueFamily = m_NextQueueFamily = queue_family;
+		}
+		image_barrier.pNext = nullptr;
+		vkCmdPipelineBarrier(cmd_buffer, m_LastUsingStage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &image_barrier);
+
+		m_OverallImageLayout = dst_layout;
+		m_CurrentAccessMask = VkTranslateLayoutToAccessFlags(dst_layout);
+		m_LastUsingStage = finished_stage;
 	}
 }
