@@ -37,10 +37,10 @@ int main()
 	PGPUImage test_color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
-	test_renderpass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS} };// , { EFormat::E_FORMAT_D24_UNORM_S8_UINT, EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES }};
+	test_renderpass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS} , { EFormat::E_FORMAT_D24_UNORM_S8_UINT, EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES }};
 	test_renderpass->m_Subpasses.resize(1);
 	test_renderpass->m_Subpasses[0].m_OutputAttachments = { 0 };
-	//test_renderpass->m_Subpasses[0].m_DepthStencilAttachment = 1;
+	test_renderpass->m_Subpasses[0].m_DepthStencilAttachment = 1;
 	test_renderpass->BuildRenderPass();
 
 	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
@@ -97,23 +97,19 @@ int main()
 	pipeline->m_VertexInputs.resize(1);
 	pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
 	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
+	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
+	pipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
 	test_renderpass->InstanciatePipeline(pipeline, 0);
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
-	test_framebuffer->m_Images = { test_color };// , test_depth_stencil};
+	test_framebuffer->m_Images = { test_color, test_depth_stencil};
 
 	PRenderPassInstance render_pass_instance = MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
 
 	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 
 	PGPUDeviceThread test_thread = MainDevice->CreateThread();
-	PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
-	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-	cmd->Sissor(0, 0, 1024, 720);
-	cmd->BindSubpassPipeline(pipeline);
-	cmd->BindVertexInputeBuffer({ vertex_buffer }, { 0 });
-	cmd->Draw(3, 1, 0, 0);
-	cmd->EndCommandBuffer();
+
 
 	PExecutionCommandBuffer execution = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
 
@@ -121,9 +117,17 @@ int main()
 
 	while (new_window.IsWindowRunning())
 	{
+		PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
+		cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+		cmd->Sissor(0, 0, 1024, 720);
+		cmd->BindSubpassPipeline(pipeline);
+		cmd->BindVertexInputeBuffer({ vertex_buffer }, { 0 });
+		cmd->Draw(3, 1, 0, 0);
+		cmd->EndCommandBuffer();
+
 		execution->StartCommand();
 		execution->ExecuteRenderPassInstance(render_pass_instance);
-		execution->CopyToSwapchain(test_color, &new_window);
+		execution->CopyToSwapchain_Dynamic(test_color, &new_window);
 		execution->EndCommand();
 		MainDevice->ExecuteBatches({ "Main Render" });
 

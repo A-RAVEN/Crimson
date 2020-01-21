@@ -359,11 +359,28 @@ namespace Crimson
 					if (IsColorFormat(ref_attachment.m_Format))
 					{
 						current_attachment.initialLayout = current_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-						//ref_attachment
+						switch (ref_attachment.m_ClearType)
+						{
+						case EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS:
+							m_ClearValues[attachment_id].color = { 0.0f, 0.0f, 0.0f, 0.0f };
+							break;
+						case EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES:
+							m_ClearValues[attachment_id].color = { 1.0f, 1.0f, 1.0f, 1.0f };
+							break;
+						}
 					}
 					else
 					{
 						current_attachment.initialLayout = current_attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+						switch (ref_attachment.m_ClearType)
+						{
+						case EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS:
+							m_ClearValues[attachment_id].depthStencil = { 0.0f, 0x0 };
+							break;
+						case EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES:
+							m_ClearValues[attachment_id].depthStencil = { 1.0f, 0x0 };
+							break;
+						}
 					}
 					current_attachment.samples = TranslateSampleCountToVulkan(ref_attachment.m_SampleCount);
 				}

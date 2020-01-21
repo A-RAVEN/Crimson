@@ -13,7 +13,8 @@ namespace Crimson
 		friend class VulkanGPUDeviceThread;
 		VulkanExecutionCommandBuffer();
 		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) override;
-		virtual void CopyToSwapchain(PGPUImage image, IWindow* p_window) override;
+		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image) override;
+		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) override;
 		virtual void StartCommand() override;
 		virtual void EndCommand() override;
 		void SetExecutionCommandBuffer(VulkanGPUDevice* p_device, VulkanGPUDeviceThread* p_thread, EExecutionCommandType command_type);

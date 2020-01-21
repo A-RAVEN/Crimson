@@ -20,7 +20,8 @@ namespace Crimson
 	}
 	void VulkanGraphicsCommandBuffer::EndCommandBuffer()
 	{
-		VulkanDebug::CheckVKResult(vkEndCommandBuffer(m_CommandBuffer), "Vulkan End Graphics Command Buffer Issue!");
+		CHECK_VKRESULT(vkEndCommandBuffer(m_CommandBuffer), "Vulkan End Graphics Command Buffer Issue!");
+		p_OwningThread->HandleDisposedGraphicsCommandBuffer(this);
 	}
 	void VulkanGraphicsCommandBuffer::StartCommandBuffer()
 	{
@@ -40,7 +41,7 @@ namespace Crimson
 		begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT | VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 		begin_info.pInheritanceInfo = &inheritance;
 		begin_info.pNext = nullptr;
-		VulkanDebug::CheckVKResult(vkBeginCommandBuffer(m_CommandBuffer, &begin_info), "Vulkan Start Graphics Command Buffer Issue!");
+		CHECK_VKRESULT(vkBeginCommandBuffer(m_CommandBuffer, &begin_info), "Vulkan Start Graphics Command Buffer Issue!");
 	}
 	void VulkanGraphicsCommandBuffer::BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets)
 	{

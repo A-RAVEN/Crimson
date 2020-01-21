@@ -12,6 +12,7 @@ namespace Crimson
 	public:
 		friend class VulkanGPUDevice;
 		friend class VulkanGraphicsCommandBuffer;
+		friend class VulkanExecutionCommandBuffer;
 		friend class VulkanDescriptorSet;
 
 		VulkanBufferObject();

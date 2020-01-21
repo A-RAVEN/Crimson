@@ -44,7 +44,8 @@ namespace Crimson
 	public:
 		//Execute Render Pass, not thread safe for framebuffer images
 		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) = 0;
-		virtual void CopyToSwapchain(PGPUImage image, IWindow* p_window) = 0;
+		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image) = 0;
+		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
 	protected:

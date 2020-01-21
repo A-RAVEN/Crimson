@@ -27,6 +27,7 @@ namespace Crimson
 		~VulkanGPUDeviceThread();
 		virtual void Dispose() override;
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
+		void HandleDisposedGraphicsCommandBuffer(VulkanGraphicsCommandBuffer* cmd_buffer);
 		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override;
 		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer) override;
 		
@@ -46,6 +47,7 @@ namespace Crimson
 		VkCommandPool m_GraphicsCommandPool;
 		VkCommandPool m_ComputeCommandPool;
 
+		//obsolete
 		std::deque<VkCommandBuffer> m_RecycledGraphicsCommandBuffer;
 
 		std::deque<VkCommandBuffer> m_RecycledGraphicsExecutionCommandBuffer;

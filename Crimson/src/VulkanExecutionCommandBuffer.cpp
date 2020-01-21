@@ -3,6 +3,7 @@
 #include <headers/VulkanRenderPass.h>
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanDebugLog.h>
+#include <headers/VulkanBuffer.h>
 #include <headers/VulkanImage.h>
 
 namespace Crimson
@@ -19,6 +20,7 @@ namespace Crimson
 		VulkanRenderPassInstance* vulkan_renderpass_instance = static_cast<VulkanRenderPassInstance*>(renderpass_instance);
 		VulkanFramebuffer* vulkan_framebuffer = static_cast<VulkanFramebuffer*> (vulkan_renderpass_instance->p_Framebuffer);
 		VulkanRenderPass* vulkan_renderpass = static_cast<VulkanRenderPass*> (vulkan_renderpass_instance->p_RenderPass);
+		vulkan_renderpass_instance->p_OwningExecutionCommandBuffer = this;
 
 		VkRenderPassBeginInfo begin_info{};
 		begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -43,7 +45,16 @@ namespace Crimson
 		}
 		vkCmdEndRenderPass(m_CurrentCommandBuffer);
 	}
-	void VulkanExecutionCommandBuffer::CopyToSwapchain(PGPUImage image, IWindow* p_window)
+	void VulkanExecutionCommandBuffer::CopyBufferToImage(PGPUBuffer buffer, PGPUImage image)
+	{
+		VulkanBufferObject* vulkan_buffer = static_cast<VulkanBufferObject*>(buffer);
+		VulkanImageObject* vulkan_image = static_cast<VulkanImageObject*>(image);
+		vulkan_image->CmdChangeOverallLayout(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		//VkBufferImageCopy copy{};
+		//copy.
+		//vkCmdCopyBufferToImage(m_CurrentCommandBuffer, vulkan_buffer->m_Buffer, vulkan_image->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, )
+	}
+	void VulkanExecutionCommandBuffer::CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window)
 	{
 		auto find = p_OwningDevice->m_SurfaceContexts.find(p_window->GetName());
 		if (find != p_OwningDevice->m_SurfaceContexts.end())

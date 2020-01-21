@@ -7,6 +7,7 @@ namespace Crimson
 	VulkanRenderPassInstance::VulkanRenderPassInstance():
 		p_OwningDevice(nullptr),
 		m_Framebuffer(VK_NULL_HANDLE),
+		p_OwningExecutionCommandBuffer(nullptr),
 		m_InstanceUniqueId(~0u)
 	{}
 
@@ -55,6 +56,6 @@ namespace Crimson
 		//TODO: further explorations
 		framebuffer_create_info.flags = 0;
 		framebuffer_create_info.pNext = nullptr;
-		VulkanDebug::CheckVKResult(vkCreateFramebuffer(device->m_LogicalDevice, &framebuffer_create_info, VULKAN_ALLOCATOR_POINTER, &m_Framebuffer), "Vulkan Instantiate Framebuffer Issue!");
+		CHECK_VKRESULT(vkCreateFramebuffer(device->m_LogicalDevice, &framebuffer_create_info, VULKAN_ALLOCATOR_POINTER, &m_Framebuffer), "Vulkan Render Pass Instance Instantiate Framebuffer Issue!");
 	}
 }

@@ -22,8 +22,9 @@ namespace Crimson
 		virtual void Dispose() override;
 		void InitRenderPassInstance(VulkanGPUDevice* device, VulkanRenderPass* render_pass, VulkanFramebuffer* framebuffer, uint64_t unique_id);
 	private:
-		VulkanGPUDevice* p_OwningDevice;
-		VkFramebuffer	m_Framebuffer;
-		uint64_t		m_InstanceUniqueId;
+		VulkanGPUDevice*				p_OwningDevice;
+		VkFramebuffer					m_Framebuffer;
+		VulkanExecutionCommandBuffer*	p_OwningExecutionCommandBuffer;
+		uint64_t						m_InstanceUniqueId;
 	};
 }

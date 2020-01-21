@@ -51,24 +51,36 @@ namespace Crimson
 		auto& cmd_buffer_info = m_RenderPassInstanceGraphicsCommandBufferInfos[m_RenderPassInstanceGraphicsCommandBufferInfoReferences[vulkan_renderpass_instance->m_InstanceUniqueId]];
 		if (cmd_buffer_info.m_SubpassCommands[subpass_id] != VK_NULL_HANDLE)
 		{
-			m_RecycledGraphicsCommandBuffer.push_back(cmd_buffer_info.m_SubpassCommands[subpass_id]);
+			if (vulkan_renderpass_instance->p_OwningExecutionCommandBuffer && vulkan_renderpass_instance->p_OwningExecutionCommandBuffer->p_AttachedBatch)
+			{
+				vulkan_renderpass_instance->p_OwningExecutionCommandBuffer->p_AttachedBatch->Wait();
+			}
+			vkResetCommandBuffer(cmd_buffer_info.m_SubpassCommands[subpass_id], 0);
+			//m_RecycledGraphicsCommandBuffer.push_back(cmd_buffer_info.m_SubpassCommands[subpass_id]);
 		}
-		//TODO add allocation
-		VkCommandBufferAllocateInfo allocate_info{};
-		allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocate_info.commandPool = m_GraphicsCommandPool;
-		allocate_info.commandBufferCount = 1;
-		allocate_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-		allocate_info.pNext = nullptr;
-		VkCommandBuffer new_cmd_buffer = VK_NULL_HANDLE;
-		vkAllocateCommandBuffers(p_OwningDevice->m_LogicalDevice, &allocate_info, &new_cmd_buffer);
+		else 
+		{
+			//TODO add allocation
+			VkCommandBufferAllocateInfo allocate_info{};
+			allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocate_info.commandPool = m_GraphicsCommandPool;
+			allocate_info.commandBufferCount = 1;
+			allocate_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+			allocate_info.pNext = nullptr;
+			VkCommandBuffer new_cmd_buffer = VK_NULL_HANDLE;
+			vkAllocateCommandBuffers(p_OwningDevice->m_LogicalDevice, &allocate_info, &new_cmd_buffer);
+			cmd_buffer_info.m_SubpassCommands[subpass_id] = new_cmd_buffer;
+		}
 
-		cmd_buffer_info.m_SubpassCommands[subpass_id] = new_cmd_buffer;
 		VulkanGraphicsCommandBuffer* return_val = new VulkanGraphicsCommandBuffer();
 		return_val->SetGraphicsCommandBuffer(this, 
-			static_cast<VulkanRenderPass*>(vulkan_renderpass_instance->p_RenderPass), vulkan_renderpass_instance, subpass_id, new_cmd_buffer);
+			static_cast<VulkanRenderPass*>(vulkan_renderpass_instance->p_RenderPass), vulkan_renderpass_instance, subpass_id, cmd_buffer_info.m_SubpassCommands[subpass_id]);
 		return_val->StartCommandBuffer();
 		return return_val;
+	}
+	void VulkanGPUDeviceThread::HandleDisposedGraphicsCommandBuffer(VulkanGraphicsCommandBuffer* cmd_buffer)
+	{
+		delete cmd_buffer;
 	}
 	PExecutionCommandBuffer VulkanGPUDeviceThread::CreateExecutionCommandBuffer(EExecutionCommandType cmd_type)
 	{
