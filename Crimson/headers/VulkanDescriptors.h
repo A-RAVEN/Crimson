@@ -44,6 +44,7 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanRenderPass;
+		friend class VulkanRayTracer;
 
 		VulkanDescriptorSetLayout(VulkanGPUDevice* device);
 		~VulkanDescriptorSetLayout() {}

@@ -20,4 +20,13 @@ namespace Crimson
 			"Vulkan Creat Shader Module Issue!");
 		m_Shaders.push_back(std::make_pair(new_shader_module, shader_type));
 	}
+	void VulkanGraphicsPipeline::Dispose()
+	{
+		for (auto& pair : m_Shaders)
+		{
+			vkDestroyShaderModule(p_OwningDevice->m_LogicalDevice, pair.first, VULKAN_ALLOCATOR_POINTER);
+		}
+		m_Shaders.clear();
+		p_OwningDevice->HandleDisposedGraphicsPipeline(this);
+	}
 }

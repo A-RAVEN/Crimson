@@ -43,11 +43,13 @@ namespace Crimson
 
 	VulkanInstance::VulkanInstance(bool enable_debug_extension) : m_DebugReportCallBack(VK_NULL_HANDLE)
 	{
-		std::vector<char const*> instance_extension_names =
+		std::vector<char const*> instance_extension_names = GetFilteredInstanceExtensions(
 		{
 			VK_KHR_SURFACE_EXTENSION_NAME,
-			CURRENT_VULKAN_SURFACE_EXTENSION_NAME
-		};
+			CURRENT_VULKAN_SURFACE_EXTENSION_NAME,
+
+			VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+		});
 
 		if (enable_debug_extension)
 		{
@@ -95,6 +97,26 @@ namespace Crimson
 		ClearPhysicalDevices();
 		DestroyDebugCallback();
 		vkDestroyInstance(m_VulkanInstance, VULKAN_ALLOCATOR_POINTER);
+	}
+	std::vector<char const*> VulkanInstance::GetFilteredInstanceExtensions(std::vector<char const*> const& wanted_extensions)
+	{
+		uint32_t ext_count = 0;
+		CHECK_VKRESULT(vkEnumerateInstanceExtensionProperties(nullptr, &ext_count, nullptr), "Vulkan Enumerate Instance Extensions Issue!");
+		std::vector<VkExtensionProperties> properties(ext_count);
+		CHECK_VKRESULT(vkEnumerateInstanceExtensionProperties(nullptr, &ext_count, properties.data()), "Vulkan Enumerate Instance Extensions Issue!");
+		std::vector<char const*> return_val;
+		for (auto name : wanted_extensions)
+		{
+			for (auto& itr_property : properties)
+			{
+				if (std::string(name) == std::string(itr_property.extensionName))
+				{
+					return_val.push_back(name);
+					break;
+				}
+			}
+		}
+		return return_val;
 	}
 	uint32_t VulkanInstance::EvaluateVulkanPhysicalDevice(VkPhysicalDevice device)
 	{

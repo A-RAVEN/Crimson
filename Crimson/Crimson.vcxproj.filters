@@ -117,6 +117,18 @@
     <ClInclude Include="headers\VulkanBatch.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\RayTracer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\VulkanRayTracer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RayTraceGeometry.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\VulkanRayTraceGeometry.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -171,6 +183,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\VulkanBatch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanRayTracer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanRayTraceGeometry.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

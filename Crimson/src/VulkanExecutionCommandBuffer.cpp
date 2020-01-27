@@ -45,14 +45,20 @@ namespace Crimson
 		}
 		vkCmdEndRenderPass(m_CurrentCommandBuffer);
 	}
-	void VulkanExecutionCommandBuffer::CopyBufferToImage(PGPUBuffer buffer, PGPUImage image)
+	void VulkanExecutionCommandBuffer::CopyBufferToImage(PGPUBuffer buffer, PGPUImage image, 
+		uint64_t buffer_offset, uint32_t mip_level, uint32_t base_layer, uint32_t layer_count)
 	{
 		VulkanBufferObject* vulkan_buffer = static_cast<VulkanBufferObject*>(buffer);
 		VulkanImageObject* vulkan_image = static_cast<VulkanImageObject*>(image);
 		vulkan_image->CmdChangeOverallLayout(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-		//VkBufferImageCopy copy{};
-		//copy.
-		//vkCmdCopyBufferToImage(m_CurrentCommandBuffer, vulkan_buffer->m_Buffer, vulkan_image->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, )
+		
+		VkBufferImageCopy region = {};
+		region.bufferOffset = buffer_offset;
+		region.bufferRowLength = 0;
+		region.bufferImageHeight = 0;
+		region.imageSubresource = vulkan_image->GetSubresourceLayers(EViewAsType::E_VIEW_AS_TYPE_MAX, mip_level, base_layer, layer_count);
+
+		vkCmdCopyBufferToImage(m_CurrentCommandBuffer, vulkan_buffer->m_Buffer, vulkan_image->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	}
 	void VulkanExecutionCommandBuffer::CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window)
 	{

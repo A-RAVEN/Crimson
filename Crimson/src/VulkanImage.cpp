@@ -130,6 +130,22 @@ namespace Crimson
 		}
 		return return_val;
 	}
+	VkImageSubresourceLayers VulkanImageObject::GetSubresourceLayers(EViewAsType type, uint32_t mip_level, uint32_t base_layer, uint32_t layer_num) const
+	{
+		VkImageSubresourceLayers return_val{};
+		return_val.mipLevel = (std::min)(mip_level, m_MipLevelNum - 1);
+		return_val.baseArrayLayer = base_layer;
+		return_val.layerCount = layer_num;
+		if (type == EViewAsType::E_VIEW_AS_TYPE_MAX)
+		{
+			return_val.aspectMask = TranslateViewAsTypeToVulkanAspectFlags(m_DefaultViewAsType);
+		}
+		else
+		{
+			return_val.aspectMask = TranslateViewAsTypeToVulkanAspectFlags(type);
+		}
+		return return_val;
+	}
 	VkImageView VulkanImageObject::GetView(EViewAsType view_as_type)
 	{
 		size_t index = static_cast<size_t>(view_as_type);

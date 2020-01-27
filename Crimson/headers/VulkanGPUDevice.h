@@ -5,6 +5,7 @@
 #include <headers/vk_mem_alloc.h>
 #include <headers/VulkanSurfaceContext.h>
 #include <include/Pipeline.h>
+#include <include/RayTracer.h>
 #include <headers/HelperContainers.h>
 #include <unordered_map>
 #include <set>
@@ -16,11 +17,48 @@ namespace Crimson
 	class VulkanRenderPass;
 	class VulkanDescriptorSetLayout;
 	class VulkanGraphicsPipeline;
+	class VulkanRayTracer;
 	class VulkanFramebuffer;
 	class VulkanRenderPassInstance;
 	class VulkanGPUDeviceThread;
 	class VulkanBatch;
 	class VulkanBufferObject;
+
+	class NVExtension
+	{
+	public:
+
+		PFN_vkCreateAccelerationStructureNV vkCreateAccelerationStructureNV;
+
+		PFN_vkDestroyAccelerationStructureNV vkDestroyAccelerationStructureNV;
+
+		PFN_vkBindAccelerationStructureMemoryNV vkBindAccelerationStructureMemoryNV;
+
+		PFN_vkGetAccelerationStructureHandleNV vkGetAccelerationStructureHandleNV;
+
+		PFN_vkGetAccelerationStructureMemoryRequirementsNV vkGetAccelerationStructureMemoryRequirementsNV;
+
+		PFN_vkCmdBuildAccelerationStructureNV vkCmdBuildAccelerationStructureNV;
+
+		PFN_vkCreateRayTracingPipelinesNV vkCreateRayTracingPipelinesNV;
+
+		PFN_vkGetRayTracingShaderGroupHandlesNV vkGetRayTracingShaderGroupHandlesNV;
+
+		PFN_vkCmdTraceRaysNV vkCmdTraceRaysNV;
+		NVExtension() :
+			vkCreateAccelerationStructureNV(nullptr),
+			vkDestroyAccelerationStructureNV(nullptr),
+			vkBindAccelerationStructureMemoryNV(nullptr),
+			vkGetAccelerationStructureHandleNV(nullptr),
+			vkGetAccelerationStructureMemoryRequirementsNV(nullptr),
+			vkCmdBuildAccelerationStructureNV(nullptr),
+			vkCreateRayTracingPipelinesNV(nullptr),
+			vkGetRayTracingShaderGroupHandlesNV(nullptr),
+			vkCmdTraceRaysNV(nullptr)
+		{}
+		void InitExtensions(VkDevice device);
+	};
+
 	class VulkanGPUDevice : public IGPUDevice
 	{
 	public:
@@ -38,6 +76,7 @@ namespace Crimson
 		friend class VulkanDescriptorSet;
 		friend class VulkanBatch;
 		friend class VulkanExecutionCommandBuffer;
+		friend class VulkanRayTracer;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;
@@ -65,6 +104,10 @@ namespace Crimson
 		virtual PGraphicsPipeline CreateGraphicsPipeline() override;
 		void HandleDisposedGraphicsPipeline(VulkanGraphicsPipeline* p_pipeline);
 
+		//Ray Tracer Managing
+		virtual PRayTracer CreateRayTracer() override;
+		void HandleDisposedRayTracer(VulkanRayTracer* p_raytracer);
+
 		//Framebuffer Managing
 		virtual PFramebuffer CreateFramebuffer() override;
 		void HandleDisposedFramebuffer(VulkanFramebuffer* p_framebuffer);
@@ -81,10 +124,13 @@ namespace Crimson
 		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance);
 		std::vector<VkCommandBuffer> CollectBatchCommandBuffers(uint32_t batch_id, std::vector<VkSemaphore> &waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 		uint32_t GetQueueFamilyIdByCommandType(EExecutionCommandType command_type);
+
+		NVExtension m_NVExtension;
 	private:
 		VulkanGPUDevice();
 		~VulkanGPUDevice();
 		void InitVulkanDevice(uint32_t prefered_device_index, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
+		std::vector<char const*> GetFilteredDeviceExtensions(VkPhysicalDevice physical_devices, std::vector<char const*> const& wanted_extensions);
 		void InitMemoryAllocator();
 		void InitDescriptorPool();
 	private:

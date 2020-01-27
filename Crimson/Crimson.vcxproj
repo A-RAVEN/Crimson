@@ -190,6 +190,8 @@
     <ClInclude Include="headers\VulkanImage.h" />
     <ClInclude Include="headers\VulkanInstance.h" />
     <ClInclude Include="headers\VulkanPipeline.h" />
+    <ClInclude Include="headers\VulkanRayTraceGeometry.h" />
+    <ClInclude Include="headers\VulkanRayTracer.h" />
     <ClInclude Include="headers\VulkanRenderPass.h" />
     <ClInclude Include="headers\VulkanRenderPassInstance.h" />
     <ClInclude Include="headers\VulkanSurfaceContext.h" />
@@ -199,6 +201,8 @@
     <ClInclude Include="include\GPUDevice.h" />
     <ClInclude Include="include\IWindow.h" />
     <ClInclude Include="include\Pipeline.h" />
+    <ClInclude Include="include\RayTraceGeometry.h" />
+    <ClInclude Include="include\RayTracer.h" />
     <ClInclude Include="include\Version.h" />
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +221,8 @@
     <ClCompile Include="src\VulkanImage.cpp" />
     <ClCompile Include="src\VulkanInstance.cpp" />
     <ClCompile Include="src\VulkanPipeline.cpp" />
+    <ClCompile Include="src\VulkanRayTraceGeometry.cpp" />
+    <ClCompile Include="src\VulkanRayTracer.cpp" />
     <ClCompile Include="src\VulkanRenderPass.cpp" />
     <ClCompile Include="src\VulkanRenderPassInstance.cpp" />
     <ClCompile Include="src\VulkanSurfaceContext.cpp" />

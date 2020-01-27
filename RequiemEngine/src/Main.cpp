@@ -107,29 +107,37 @@ int main()
 	PRenderPassInstance render_pass_instance = MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
 
 	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
+	MainDevice->CreateBatch("Present", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 
 	PGPUDeviceThread test_thread = MainDevice->CreateThread();
 
-
 	PExecutionCommandBuffer execution = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
-
 	test_thread->BindExecutionCommandBufferToBatch("Main Render", execution);
+
+	PExecutionCommandBuffer present = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
+	test_thread->BindExecutionCommandBufferToBatch("Present", present);
+
+	PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
+	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+	cmd->Sissor(0, 0, 1024, 720);
+	cmd->BindSubpassPipeline(pipeline);
+	cmd->BindVertexInputeBuffer({ vertex_buffer }, { 0 });
+	cmd->Draw(3, 1, 0, 0);
+	cmd->EndCommandBuffer();
+
+
 
 	while (new_window.IsWindowRunning())
 	{
-		PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
-		cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-		cmd->Sissor(0, 0, 1024, 720);
-		cmd->BindSubpassPipeline(pipeline);
-		cmd->BindVertexInputeBuffer({ vertex_buffer }, { 0 });
-		cmd->Draw(3, 1, 0, 0);
-		cmd->EndCommandBuffer();
-
 		execution->StartCommand();
 		execution->ExecuteRenderPassInstance(render_pass_instance);
-		execution->CopyToSwapchain_Dynamic(test_color, &new_window);
 		execution->EndCommand();
-		MainDevice->ExecuteBatches({ "Main Render" });
+
+		present->StartCommand();
+		present->CopyToSwapchain_Dynamic(test_color, &new_window);
+		present->EndCommand();
+
+		MainDevice->ExecuteBatches({ "Main Render", "Present" });
 
 		MainDevice->PresentWindow(new_window);
 		new_window.UpdateWindow();

@@ -7,6 +7,7 @@
 #include <headers/VulkanRenderPass.h>
 #include <headers/VulkanDescriptors.h>
 #include <headers/VulkanPipeline.h>
+#include <headers/VulkanRayTracer.h>
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanRenderPassInstance.h>
 #include <headers/VulkanGPUDeviceThread.h>
@@ -130,6 +131,14 @@ namespace Crimson
 	void VulkanGPUDevice::HandleDisposedGraphicsPipeline(VulkanGraphicsPipeline* p_pipeline)
 	{
 		delete p_pipeline;
+	}
+	PRayTracer VulkanGPUDevice::CreateRayTracer()
+	{
+		return new VulkanRayTracer(this);
+	}
+	void VulkanGPUDevice::HandleDisposedRayTracer(VulkanRayTracer* p_raytracer)
+	{
+		delete p_raytracer;
 	}
 	PFramebuffer VulkanGPUDevice::CreateFramebuffer()
 	{
@@ -371,10 +380,14 @@ namespace Crimson
 		VkPhysicalDeviceFeatures device_features{};
 		vkGetPhysicalDeviceFeatures(devices[physical_device_index], &device_features);
 
-		std::vector<char const*> device_extension_names =
-		{
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
+		std::vector<char const*> device_extension_names = GetFilteredDeviceExtensions(devices[physical_device_index], {
+			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+
+			VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+			VK_NV_RAY_TRACING_EXTENSION_NAME,
+			VK_KHR_MAINTENANCE3_EXTENSION_NAME,
+		});
+
 
 		VkDeviceCreateInfo logical_device_create_info = {};
 		logical_device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -391,6 +404,28 @@ namespace Crimson
 		std::swap(m_QueueNumbers, queue_numbers);
 		InitMemoryAllocator();
 		InitDescriptorPool();
+		m_NVExtension.InitExtensions(m_LogicalDevice);
+	}
+
+	std::vector<char const*> VulkanGPUDevice::GetFilteredDeviceExtensions(VkPhysicalDevice physical_devices, std::vector<char const*> const& wanted_extensions)
+	{
+		uint32_t ext_count = 0;
+		CHECK_VKRESULT(vkEnumerateDeviceExtensionProperties(physical_devices, nullptr, &ext_count, nullptr), "Vulkan Enumerate Device Extensions Issue!");
+		std::vector<VkExtensionProperties> properties(ext_count);
+		CHECK_VKRESULT(vkEnumerateDeviceExtensionProperties(physical_devices, nullptr, &ext_count, properties.data()), "Vulkan Enumerate Device Extensions Issue!");
+		std::vector<char const*> return_val;
+		for (auto name : wanted_extensions)
+		{
+			for (auto& itr_property : properties)
+			{
+				if (std::string(name) == std::string(itr_property.extensionName))
+				{
+					return_val.push_back(name);
+					break;
+				}
+			}
+		}
+		return return_val;
 	}
 
 	void VulkanGPUDevice::InitMemoryAllocator()
@@ -426,5 +461,20 @@ namespace Crimson
 		create_info.pPoolSizes = pool_sizes.data();
 		create_info.pNext = nullptr;
 		VulkanDebug::CheckVKResult(vkCreateDescriptorPool(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorPool), "Vulkan Descriptor Pool Creation Issue!");
+	}
+	void NVExtension::InitExtensions(VkDevice device)
+	{
+#ifndef GET_EXTENSION_FUNC
+#define GET_EXTENSION_FUNC(func_name) {func_name = reinterpret_cast<PFN_##func_name>(vkGetDeviceProcAddr(device, #func_name));}
+#endif
+		GET_EXTENSION_FUNC(vkCreateAccelerationStructureNV);
+		GET_EXTENSION_FUNC(vkDestroyAccelerationStructureNV);
+		GET_EXTENSION_FUNC(vkBindAccelerationStructureMemoryNV);
+		GET_EXTENSION_FUNC(vkGetAccelerationStructureHandleNV);
+		GET_EXTENSION_FUNC(vkGetAccelerationStructureMemoryRequirementsNV);
+		GET_EXTENSION_FUNC(vkCmdBuildAccelerationStructureNV);
+		GET_EXTENSION_FUNC(vkCreateRayTracingPipelinesNV);
+		GET_EXTENSION_FUNC(vkGetRayTracingShaderGroupHandlesNV);
+		GET_EXTENSION_FUNC(vkCmdTraceRaysNV);
 	}
 }

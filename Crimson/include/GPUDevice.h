@@ -4,6 +4,7 @@
 #include <map>
 #include "Generals.h"
 #include "Pipeline.h"
+#include "RayTracer.h"
 #include "IWindow.h"
 
 namespace Crimson
@@ -44,7 +45,8 @@ namespace Crimson
 	public:
 		//Execute Render Pass, not thread safe for framebuffer images
 		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) = 0;
-		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image) = 0;
+		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image,
+			uint64_t buffer_offset = 0, uint32_t mip_level = 0, uint32_t base_layer = 0, uint32_t layer_count = 1) = 0;
 		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
@@ -87,11 +89,17 @@ namespace Crimson
 		//Pipeline Managing
 		virtual PGraphicsPipeline CreateGraphicsPipeline() = 0;
 
+		//Ray Tracer Managing
+		virtual PRayTracer CreateRayTracer() = 0;
+
 		//Framebuffer Managing
 		virtual PFramebuffer CreateFramebuffer() = 0;
 
 		//RenderPass Instance Managing
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) = 0;
+
+		//RayTracer Managing
+		//virtual 
 
 		//Batch Managing
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;

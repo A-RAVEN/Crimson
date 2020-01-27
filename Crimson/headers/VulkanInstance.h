@@ -17,6 +17,7 @@ namespace Crimson
 	private:
 		VulkanInstance(bool enable_debug_extension);
 		~VulkanInstance();
+		std::vector<char const*> GetFilteredInstanceExtensions(std::vector<char const*> const& wanted_extensions);
 		//Debug Callbacks
 		void SetupDebugCallback();
 		void DestroyDebugCallback();

@@ -32,6 +32,7 @@ namespace Crimson
 		virtual void Dispose() override;
 		VkImageSubresourceRange GetFullSubresourceRange(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX) const;
 		VkImageSubresourceLayers GetFullSubresourceLayers(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t mip_level = 0) const;
+		VkImageSubresourceLayers GetSubresourceLayers(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t mip_level = 0, uint32_t base_layer = 0, uint32_t layer_num = 1) const;
 		VkImageView GetView(EViewAsType view_as_type);
 		//TODO: Improve to a more efficient way
 		VkSampler GetSampler(EFilterMode filter_mode, EAddrMode address_mode);
