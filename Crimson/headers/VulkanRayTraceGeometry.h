@@ -25,7 +25,13 @@ namespace Crimson
 		virtual void SetIndexData(PGPUBuffer index_buffer, uint32_t offset, uint32_t count, EIndexType index_type) override;
 
 		virtual void SetAABBData(PGPUBuffer aabb_buffer, uint32_t aabb_count, uint32_t stride, uint64_t offset) override;
+
+		virtual void SetGeometryType(ERayTraceGeometryType type) override;
+		virtual void SetGeometryFlags(std::vector<EGeometryFlags> const& flags) override;
+
+		VkGeometryNV const& GetGeometry() { return m_Geometry; }
 	private:
-		VkGeometryDataNV m_GeometryData;
+		//VkGeometryDataNV m_GeometryData;
+		VkGeometryNV m_Geometry;
 	};
 }

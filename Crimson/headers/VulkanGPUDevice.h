@@ -77,6 +77,7 @@ namespace Crimson
 		friend class VulkanBatch;
 		friend class VulkanExecutionCommandBuffer;
 		friend class VulkanRayTracer;
+		friend class VulkanAccelerationStructure;
 		
 		virtual void InitDeviceChannel(uint32_t num_channel) override;
 		virtual void RegisterWindow(IWindow& window) override;

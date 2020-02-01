@@ -3,7 +3,29 @@
 
 namespace Crimson
 {
+	enum class EBuildAccelerationStructureFlags : uint8_t
+	{
+		E_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV = 0,
+		E_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_NV,
+		E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV,
+		E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_NV,
+		E_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV,
+		E_BUILD_ACCELERATION_STRUCTURE_MAX,
+	};
 
+	enum class ERayTraceGeometryType : uint8_t
+	{
+		E_GEOMETRY_TYPE_TRIANGLES = 0,
+		E_GEOMETRY_TYPE_AABBS,
+		E_GEOMETRY_TYPE_MAX
+	};
+
+	enum class EGeometryFlags : uint8_t
+	{
+		E_GEOMETRY_OPAQUE = 0,
+		E_GEOMETRY_NO_DUPLICATE_ANYHIT,
+		E_GEOMETRY_MAX,
+	};
 
 	class RayTraceGeometry : public IObject
 	{
@@ -23,5 +45,21 @@ namespace Crimson
 		virtual void SetIndexType(EIndexType index_type) = 0;
 		virtual void SetIndexData(PGPUBuffer index_buffer, uint32_t offset, uint32_t count, EIndexType index_type) = 0;
 		virtual void SetAABBData(PGPUBuffer aabb_buffer, uint32_t aabb_count, uint32_t stride, uint64_t offset) = 0;
+
+		virtual void SetGeometryType(ERayTraceGeometryType) = 0;
+		virtual void SetGeometryFlags(std::vector<EGeometryFlags> const& flags) = 0;
 	};
+	using PRayTraceGeometry = RayTraceGeometry*;
+
+	//Geometry Group 
+	class AccelerationStructure : public IObject
+	{
+	public:
+		std::vector<PRayTraceGeometry> m_Geometries;
+		std::vector<EBuildAccelerationStructureFlags> m_BuildFlags;
+		// init acceleration structure, them a build should be done in cmd buffer
+		virtual void InitAS() = 0;
+	};
+	using PAccelerationStructure = AccelerationStructure*;
+
 }

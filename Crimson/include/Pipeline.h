@@ -26,13 +26,13 @@ namespace Crimson
 		//nvidia mesh shader
 		E_SHADER_TYPE_TASK_NV,
 		E_SHADER_TYPE_MESH_NV,
-		E_SHADER_TYPE_MAX,
 		//nvidia ray tracing shader
 		E_SHADER_TYPE_RAYGEN_NV,
 		E_SHADER_TYPE_ANYHIT_NV,
 		E_SHADER_TYPE_CLOSEHIT_NV,
 		E_SHADER_TYPE_MISS_NV,
 		E_SHADER_TYPE_INTERSECTION_NV,
+		E_SHADER_TYPE_MAX,
 	};
 
 	enum class EBufferUniformType
