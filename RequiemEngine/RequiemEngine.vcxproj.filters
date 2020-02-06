@@ -21,9 +21,15 @@
     <ClCompile Include="src\Win32Window.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\MeshResource.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\MeshResource.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

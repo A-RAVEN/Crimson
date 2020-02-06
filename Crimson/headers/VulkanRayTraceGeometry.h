@@ -7,9 +7,8 @@ namespace Crimson
 	class VulkanRayTraceGeometry : public RayTraceGeometry
 	{
 	public:
-		virtual void BuildGeometry() override;
 		virtual void Dispose() override;
-		VulkanRayTraceGeometry();
+		VulkanRayTraceGeometry(VulkanGPUDevice *device);
 		virtual void SetVertexBuffer(PGPUBuffer vertex_buffer) override;
 		virtual void SetVertexBufferOffset(uint64_t offset) override;
 		virtual void SetVertexCount(uint32_t count) override;
@@ -31,7 +30,7 @@ namespace Crimson
 
 		VkGeometryNV const& GetGeometry() { return m_Geometry; }
 	private:
-		//VkGeometryDataNV m_GeometryData;
+		VulkanGPUDevice* p_OwningDevice;
 		VkGeometryNV m_Geometry;
 	};
 }

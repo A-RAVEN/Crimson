@@ -70,22 +70,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -99,9 +99,12 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -113,9 +116,12 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -130,9 +136,12 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -147,15 +156,20 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\MeshResource.cpp" />
     <ClCompile Include="src\Win32Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\MeshResource.h" />
     <ClInclude Include="headers\Win32Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

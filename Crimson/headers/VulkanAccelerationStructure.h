@@ -8,12 +8,17 @@ namespace Crimson
 	class VulkanAccelerationStructure : public AccelerationStructure
 	{
 	public:
+		friend class VulkanExecutionCommandBuffer;
+		VulkanAccelerationStructure(VulkanGPUDevice* device);
+		virtual void Dispose() override;
 		virtual void InitAS() override;
 	private:
 		VulkanGPUDevice* p_OwningDevice;
+
 		VkAccelerationStructureNV m_Structure;
 		VulkanBufferObject* p_ScratchBuffer;
 		VmaAllocation m_Allocation;
 		VmaAllocationInfo m_AllocationInfo;
+		VkAccelerationStructureInfoNV m_StructureInfo;
 	};
 }

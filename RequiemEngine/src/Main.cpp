@@ -1,11 +1,18 @@
+#define NOMINMAX
 #include <GPUDevice.h>
 #include <headers/Win32Window.h>
 #include <Compiler.h>
 #include <fstream>
 #include <iostream>
 #include <array>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
+#include <headers/MeshResource.h>
 int main()
 {
+	Assimp::Importer scene_importer;
+	const aiScene* scene = scene_importer.ReadFile("testslime.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	std::cout << "Start" << std::endl;
 	using namespace Crimson;
 	GPUDeviceManager::Init();
@@ -13,6 +20,14 @@ int main()
 	GPUDeviceManager::Get()->InitAPIContext(EAPIType::E_API_TYPE_VULKAN, true);
 	std::cout << "Create Device" << std::endl;
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
+
+	MeshResource new_resource;
+	new_resource.ProcessAiScene(scene);
+
+	//Try Create Ray Tracing Structure
+	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
+	PAccelerationStructure accel_struct = MainDevice->CreateAccelerationStructure();
+
 	//PGPUDevice HelperDevice = GPUDeviceManager::Get()->CreateDevice("HelperDevice", 1, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
@@ -121,8 +136,10 @@ int main()
 	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
 	cmd->Sissor(0, 0, 1024, 720);
 	cmd->BindSubpassPipeline(pipeline);
-	cmd->BindVertexInputeBuffer({ vertex_buffer }, { 0 });
-	cmd->Draw(3, 1, 0, 0);
+	cmd->BindVertexInputeBuffer({ new_resource.m_VertexBuffer }, { 0 });
+	cmd->BindIndexBuffer(new_resource.m_IndexBuffer, 0);
+	cmd->DrawIndexed(new_resource.m_IndexSize, 1);
+	//cmd->Draw(3, 1, 0, 0);
 	cmd->EndCommandBuffer();
 
 

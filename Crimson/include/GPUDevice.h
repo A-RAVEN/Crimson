@@ -5,6 +5,7 @@
 #include "Generals.h"
 #include "Pipeline.h"
 #include "RayTracer.h"
+#include "RayTraceGeometry.h"
 #include "IWindow.h"
 
 namespace Crimson
@@ -48,6 +49,7 @@ namespace Crimson
 		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image,
 			uint64_t buffer_offset = 0, uint32_t mip_level = 0, uint32_t base_layer = 0, uint32_t layer_count = 1) = 0;
 		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) = 0;
+		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
 	protected:
@@ -98,8 +100,11 @@ namespace Crimson
 		//RenderPass Instance Managing
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) = 0;
 
-		//RayTracer Managing
-		//virtual 
+		//Ray Trace Geometry Managing 
+		virtual PRayTraceGeometry CreateRayTraceGeometry() = 0;
+
+		//Acceleration Structure Managing
+		virtual PAccelerationStructure CreateAccelerationStructure() = 0;
 
 		//Batch Managing
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;

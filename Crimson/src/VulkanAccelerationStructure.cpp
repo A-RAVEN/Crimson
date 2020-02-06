@@ -5,22 +5,48 @@
 
 namespace Crimson
 {
+	VulkanAccelerationStructure::VulkanAccelerationStructure(VulkanGPUDevice* device) : 
+		p_OwningDevice(device),
+		m_Structure(VK_NULL_HANDLE),
+		p_ScratchBuffer(nullptr),
+		m_Allocation(VK_NULL_HANDLE),
+		m_AllocationInfo(),
+		m_StructureInfo()
+	{}
+
+	void VulkanAccelerationStructure::Dispose()
+	{
+		if (m_Structure)
+		{
+			p_OwningDevice->m_NVExtension.vkDestroyAccelerationStructureNV(p_OwningDevice->m_LogicalDevice, m_Structure, VULKAN_ALLOCATOR_POINTER);
+			m_Structure = VK_NULL_HANDLE;
+		}
+		if (p_ScratchBuffer)
+		{
+			p_ScratchBuffer->Dispose();
+			p_ScratchBuffer = nullptr;
+		}
+		p_OwningDevice->HandleDisposedAccelerationStructure(this);
+	}
+
 	void VulkanAccelerationStructure::InitAS()
 	{
 		VkAccelerationStructureCreateInfoNV create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_NV;
 		create_info.pNext = nullptr;
 		create_info.compactedSize = 0;
-		create_info.info.geometryCount = m_Geometries.size();
+		m_StructureInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_INFO_NV;
+		m_StructureInfo.geometryCount = m_Geometries.size();
 		std::vector<VkGeometryNV> geometries(create_info.info.geometryCount);
 		for (uint32_t id = 0; id < create_info.info.geometryCount; ++id)
 		{
 			geometries[id] = static_cast<VulkanRayTraceGeometry*>(m_Geometries[id])->GetGeometry();
 		}
-		create_info.info.pGeometries = geometries.data();
-		create_info.info.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV | VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV;
-		create_info.info.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_NV;
-		create_info.info.instanceCount = 0;
+		m_StructureInfo.pGeometries = geometries.data();
+		m_StructureInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV | VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV;
+		m_StructureInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_NV;
+		m_StructureInfo.instanceCount = 0;
+		create_info.info = m_StructureInfo;
 
 		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkCreateAccelerationStructureNV(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_Structure), 
 			"Vulkan Create Nvidia Ray Tracing Acceleration Structure Issue!");
@@ -65,6 +91,7 @@ namespace Crimson
 		bind_info.accelerationStructure = m_Structure;
 		bind_info.memory = m_AllocationInfo.deviceMemory;
 		bind_info.memoryOffset = m_AllocationInfo.offset;
-		vkBindAccelerationStructureMemoryNV(p_OwningDevice->m_LogicalDevice, 1, &bind_info);
+		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkBindAccelerationStructureMemoryNV(p_OwningDevice->m_LogicalDevice, 1, &bind_info),
+			"Vulkan Bind Acceleration Structure Issue!");
 	}
 }

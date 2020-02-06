@@ -23,7 +23,8 @@ namespace Crimson
 	class VulkanGPUDeviceThread;
 	class VulkanBatch;
 	class VulkanBufferObject;
-
+	class VulkanRayTraceGeometry;
+	class VulkanAccelerationStructure;
 	class NVExtension
 	{
 	public:
@@ -115,6 +116,12 @@ namespace Crimson
 		
 		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) override;
 		void HandleDisposedRenderPassInstance(VulkanRenderPassInstance* p_render_pass_instance);
+
+		virtual PRayTraceGeometry CreateRayTraceGeometry() override;
+		void HandleDisposedRayTraceGeometry(VulkanRayTraceGeometry* p_geometry);
+
+		virtual PAccelerationStructure CreateAccelerationStructure() override;
+		void HandleDisposedAccelerationStructure(VulkanAccelerationStructure* p_structure);
 
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) override;
 		virtual void DestroyBatch(std::string const& batch_name) override;

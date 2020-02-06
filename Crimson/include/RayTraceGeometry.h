@@ -30,7 +30,6 @@ namespace Crimson
 	class RayTraceGeometry : public IObject
 	{
 	public:
-		virtual void BuildGeometry() = 0;
 		virtual void SetVertexBuffer(PGPUBuffer vertex_buffer) = 0;
 		virtual void SetVertexBufferOffset(uint64_t offset) = 0;
 		virtual void SetVertexCount(uint32_t count) = 0;

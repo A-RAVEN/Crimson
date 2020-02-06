@@ -11,6 +11,8 @@
 #include <headers/VulkanFramebuffer.h>
 #include <headers/VulkanRenderPassInstance.h>
 #include <headers/VulkanGPUDeviceThread.h>
+#include <headers/VulkanRayTraceGeometry.h>
+#include <headers/VulkanAccelerationStructure.h>
 #include <headers/VulkanBatch.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
@@ -160,6 +162,24 @@ namespace Crimson
 	{
 		m_RenderPassInstanceIdPool.Recycle(p_render_pass_instance->m_InstanceUniqueId);
 		delete p_render_pass_instance;
+	}
+	PRayTraceGeometry VulkanGPUDevice::CreateRayTraceGeometry()
+	{
+		VulkanRayTraceGeometry* new_geometry = new VulkanRayTraceGeometry(this);
+		return new_geometry;
+	}
+	void VulkanGPUDevice::HandleDisposedRayTraceGeometry(VulkanRayTraceGeometry* p_geometry)
+	{
+		delete p_geometry;
+	}
+	PAccelerationStructure VulkanGPUDevice::CreateAccelerationStructure()
+	{ 
+		VulkanAccelerationStructure* new_acceleration_structure = new VulkanAccelerationStructure(this);
+		return new_acceleration_structure;
+	}
+	void VulkanGPUDevice::HandleDisposedAccelerationStructure(VulkanAccelerationStructure* p_structure)
+	{
+		delete p_structure;
 	}
 	void VulkanGPUDevice::CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority)
 	{

@@ -84,6 +84,11 @@ namespace Crimson
 			TransitionSwapchainImageToPresent(swapchain_img, &context);
 		}
 	}
+	void VulkanExecutionCommandBuffer::BuildAccelerationStructure(PAccelerationStructure accel_struct)
+	{
+		VulkanAccelerationStructure* vulkan_accel_struct = static_cast<VulkanAccelerationStructure*>(accel_struct);
+		p_OwningDevice->m_NVExtension.vkCmdBuildAccelerationStructureNV(m_CurrentCommandBuffer, &vulkan_accel_struct->m_StructureInfo, VK_NULL_HANDLE, 0, VK_TRUE, vulkan_accel_struct->m_Structure, VK_NULL_HANDLE, vulkan_accel_struct->p_ScratchBuffer->GetVulkanBuffer(), 0);
+	}
 	void VulkanExecutionCommandBuffer::StartCommand()
 	{
 		if (p_AttachedBatch != nullptr)

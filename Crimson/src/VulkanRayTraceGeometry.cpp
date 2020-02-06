@@ -4,14 +4,12 @@
 
 namespace Crimson
 {
-	void VulkanRayTraceGeometry::BuildGeometry()
-	{
-	}
 	void VulkanRayTraceGeometry::Dispose()
 	{
-		
+		p_OwningDevice->HandleDisposedRayTraceGeometry(this);
 	}
-	VulkanRayTraceGeometry::VulkanRayTraceGeometry() :
+	VulkanRayTraceGeometry::VulkanRayTraceGeometry(VulkanGPUDevice* device) :
+		p_OwningDevice(device),
 		m_Geometry{}
 	{
 		m_Geometry.sType = VK_STRUCTURE_TYPE_GEOMETRY_NV;
