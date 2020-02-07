@@ -9,6 +9,8 @@
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include <headers/MeshResource.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 int main()
 {
 	Assimp::Importer scene_importer;
@@ -27,6 +29,10 @@ int main()
 	//Try Create Ray Tracing Structure
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
 	PAccelerationStructure accel_struct = MainDevice->CreateAccelerationStructure();
+	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, 0, EDataType::EVEC3);
+	accel_struct->m_Geometries = { raytrace_geometry };
+	accel_struct->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV };
+	accel_struct->InitAS();
 
 	//PGPUDevice HelperDevice = GPUDeviceManager::Get()->CreateDevice("HelperDevice", 1, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 	Win32Window new_window;
@@ -40,6 +46,12 @@ int main()
 	test_buffer->Dispose();
 	
 	PGPUBuffer vertex_buffer = MainDevice->CreateBuffer(sizeof(float) * 3 * 3, { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+
+	PGPUBuffer camera_buffer = MainDevice->CreateBuffer(sizeof(glm::mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+
+	glm::mat4 change = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f));
+	memcpy(camera_buffer->GetMappedPointer(), &change, sizeof(glm::mat4));
+	camera_buffer->UnMapp();
 
 	std::array<float, 9> triangle_data = {
 		1.0f, -1.0f, 0.1f,
@@ -59,16 +71,15 @@ int main()
 	test_renderpass->BuildRenderPass();
 
 	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
-	layout->m_Bindings.resize(2);
+	layout->m_Bindings.resize(1);
 	layout->m_Bindings[0].m_BindingPoint = 0;
-	layout->m_Bindings[0].m_Num = 5;
-	layout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	layout->m_Bindings[0].m_Num = 1;
+	layout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
 	layout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
 
-	layout->m_Bindings[1].m_BindingPoint = 1;
-	layout->m_Bindings[1].m_Num = 1;
-	layout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
-	layout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
+	PDescriptorSet set = layout->AllocDescriptorSet();
+	set->WriteDescriptorSetBuffers(0, { camera_buffer }, { {0, sizeof(glm::mat4)} }, 0);
+	set->EndWriteDescriptorSet();
 
 	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
 
@@ -114,6 +125,7 @@ int main()
 	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
 	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
 	pipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
+	pipeline->m_DescriptorSetLayouts.push_back({ 0, layout });
 	test_renderpass->InstanciatePipeline(pipeline, 0);
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
@@ -121,6 +133,7 @@ int main()
 
 	PRenderPassInstance render_pass_instance = MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
 
+	MainDevice->CreateBatch("GraphicsLoading", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 	MainDevice->CreateBatch("Present", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 
@@ -132,16 +145,22 @@ int main()
 	PExecutionCommandBuffer present = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
 	test_thread->BindExecutionCommandBufferToBatch("Present", present);
 
+	PExecutionCommandBuffer load = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
+	load->StartCommand();
+	load->BuildAccelerationStructure(accel_struct);
+	load->EndCommand();
+	test_thread->BindExecutionCommandBufferToBatch("GraphicsLoading", load, true);
+
 	PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
 	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
 	cmd->Sissor(0, 0, 1024, 720);
 	cmd->BindSubpassPipeline(pipeline);
+	cmd->BindSubpassDescriptorSets({ set });
 	cmd->BindVertexInputeBuffer({ new_resource.m_VertexBuffer }, { 0 });
 	cmd->BindIndexBuffer(new_resource.m_IndexBuffer, 0);
 	cmd->DrawIndexed(new_resource.m_IndexSize, 1);
 	//cmd->Draw(3, 1, 0, 0);
 	cmd->EndCommandBuffer();
-
 
 
 	while (new_window.IsWindowRunning())
@@ -154,7 +173,7 @@ int main()
 		present->CopyToSwapchain_Dynamic(test_color, &new_window);
 		present->EndCommand();
 
-		MainDevice->ExecuteBatches({ "Main Render", "Present" });
+		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
 
 		MainDevice->PresentWindow(new_window);
 		new_window.UpdateWindow();

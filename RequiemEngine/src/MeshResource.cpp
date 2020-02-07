@@ -25,6 +25,7 @@ void MeshResource::ProcessAiScene(const aiScene* scene)
 			}
 		}
 	}
+	m_VertexSize = positions.size();
 	m_IndexSize = indicies.size();
 	PGPUDevice main_device = GPUDeviceManager::Get()->GetDevice("MainDevice");
 	if (main_device)

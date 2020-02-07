@@ -62,7 +62,7 @@ namespace Crimson
 	public:
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) = 0;
 		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) = 0;
-		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer) = 0;
+		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time = false) = 0;
 	};
 	using PGPUDeviceThread = IGPUDeviceThread*;
 

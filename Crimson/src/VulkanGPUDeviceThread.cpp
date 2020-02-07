@@ -100,14 +100,14 @@ namespace Crimson
 		new_command_buffer->SetExecutionCommandBuffer(p_OwningDevice, this, cmd_type);
 		return new_command_buffer;
 	}
-	void VulkanGPUDeviceThread::BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer)
+	void VulkanGPUDeviceThread::BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time)
 	{
 		VulkanExecutionCommandBuffer* cmd_buffer = static_cast<VulkanExecutionCommandBuffer*>(command_buffer);
 		auto batch_find = p_OwningDevice->m_Batches.find(batch_name);
 		if (batch_find != p_OwningDevice->m_Batches.end())
 		{
 			uint32_t batch_id = batch_find->second->m_BatchID;
-			if (cmd_buffer->p_AttachedBatch != nullptr)
+			if (cmd_buffer->p_AttachedBatch != nullptr && !one_time)
 			{
 				if(cmd_buffer->p_AttachedBatch == batch_find->second)
 				{
@@ -115,7 +115,8 @@ namespace Crimson
 				}
 				else
 				{
-					m_AttachedExecutionCommandBuffers[cmd_buffer->p_AttachedBatch->m_BatchID].erase(cmd_buffer);
+					m_AttachedExecutionCommandBuffers[cmd_buffer->p_AttachedBatch->m_BatchID].second.erase(cmd_buffer);
+					cmd_buffer->p_AttachedBatch = nullptr;
 				}
 			}
 			cmd_buffer->p_AttachedBatch = batch_find->second;
@@ -124,7 +125,14 @@ namespace Crimson
 			{
 				m_AttachedExecutionCommandBuffers.resize(batch_id + 1);
 			}
-			m_AttachedExecutionCommandBuffers[batch_id].insert(cmd_buffer);
+			if (one_time)
+			{
+				m_AttachedExecutionCommandBuffers[batch_id].first.insert(cmd_buffer);
+			}
+			else
+			{ 
+				m_AttachedExecutionCommandBuffers[batch_id].second.insert(cmd_buffer);
+			}
 		}
 	}
 	void VulkanGPUDeviceThread::OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer)
@@ -151,7 +159,7 @@ namespace Crimson
 	{
 		if (m_AttachedExecutionCommandBuffers.size() > batch_unique_id)
 		{
-			for (auto& cmd_buffer : m_AttachedExecutionCommandBuffers[batch_unique_id])
+			for (auto& cmd_buffer : m_AttachedExecutionCommandBuffers[batch_unique_id].second)
 			{
 				cmd_buffers.push_back(cmd_buffer->m_CurrentCommandBuffer);
 				for (uint32_t id = 0; id < cmd_buffer->m_AdditionialWaitingSemaphores.size(); ++id)
@@ -160,6 +168,17 @@ namespace Crimson
 					waiting_stages.push_back(cmd_buffer->m_AdditionalWaitingStages[id]);
 				}
 			}
+			//push back one time command buffers
+			for (auto& cmd_buffer : m_AttachedExecutionCommandBuffers[batch_unique_id].first)
+			{
+				cmd_buffers.push_back(cmd_buffer->m_CurrentCommandBuffer);
+				for (uint32_t id = 0; id < cmd_buffer->m_AdditionialWaitingSemaphores.size(); ++id)
+				{
+					waiting_semaphores.push_back(cmd_buffer->m_AdditionialWaitingSemaphores[id]);
+					waiting_stages.push_back(cmd_buffer->m_AdditionalWaitingStages[id]);
+				}
+			}
+			m_AttachedExecutionCommandBuffers[batch_unique_id].first.clear();
 		}
 	}
 	void VulkanGPUDeviceThread::InitGraphicsCommandPool()

@@ -20,5 +20,6 @@ namespace Crimson
 		VmaAllocation m_Allocation;
 		VmaAllocationInfo m_AllocationInfo;
 		VkAccelerationStructureInfoNV m_StructureInfo;
+		std::vector<VkGeometryNV> p_Geometries;
 	};
 }

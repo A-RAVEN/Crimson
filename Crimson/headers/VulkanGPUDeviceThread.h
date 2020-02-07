@@ -29,7 +29,7 @@ namespace Crimson
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
 		void HandleDisposedGraphicsCommandBuffer(VulkanGraphicsCommandBuffer* cmd_buffer);
 		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override;
-		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer) override;
+		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time) override;
 		
 		void OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer);
 		void InitGPUDeviceThread(VulkanGPUDevice* device);
@@ -56,6 +56,8 @@ namespace Crimson
 		std::deque<uint32_t> m_RenderPassInstanceGraphicsCommandBufferInfoReferences;
 		std::deque<RenderPassInstanceGraphicsCommandBufferInfo> m_RenderPassInstanceGraphicsCommandBufferInfos;
 
-		std::deque<std::set<VulkanExecutionCommandBuffer*>> m_AttachedExecutionCommandBuffers;
+		std::deque<
+			std::pair<std::set<VulkanExecutionCommandBuffer*>, std::set<VulkanExecutionCommandBuffer*>>
+		> m_AttachedExecutionCommandBuffers;
 	};
 }

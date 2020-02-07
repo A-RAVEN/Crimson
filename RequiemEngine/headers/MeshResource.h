@@ -10,5 +10,6 @@ public:
 public:
 	PGPUBuffer m_VertexBuffer;
 	PGPUBuffer m_IndexBuffer;
+	uint32_t m_VertexSize;
 	uint32_t m_IndexSize;
 };

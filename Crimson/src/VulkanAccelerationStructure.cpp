@@ -37,12 +37,12 @@ namespace Crimson
 		create_info.compactedSize = 0;
 		m_StructureInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_INFO_NV;
 		m_StructureInfo.geometryCount = m_Geometries.size();
-		std::vector<VkGeometryNV> geometries(create_info.info.geometryCount);
-		for (uint32_t id = 0; id < create_info.info.geometryCount; ++id)
+		p_Geometries = std::vector<VkGeometryNV>(m_StructureInfo.geometryCount);
+		for (uint32_t id = 0; id < m_StructureInfo.geometryCount; ++id)
 		{
-			geometries[id] = static_cast<VulkanRayTraceGeometry*>(m_Geometries[id])->GetGeometry();
+			p_Geometries[id] = static_cast<VulkanRayTraceGeometry*>(m_Geometries[id])->GetGeometry();
 		}
-		m_StructureInfo.pGeometries = geometries.data();
+		m_StructureInfo.pGeometries = p_Geometries.data();
 		m_StructureInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV | VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV;
 		m_StructureInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_NV;
 		m_StructureInfo.instanceCount = 0;
