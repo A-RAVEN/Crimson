@@ -16,7 +16,7 @@ namespace Crimson
 		create_info.pCode = reinterpret_cast<const uint32_t*>(src_code);
 		create_info.codeSize = src_size;
 		create_info.flags = 0;
-		VulkanDebug::CheckVKResult(vkCreateShaderModule(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &new_shader_module),
+		CHECK_VKRESULT(vkCreateShaderModule(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &new_shader_module),
 			"Vulkan Creat Shader Module Issue!");
 		m_Shaders.push_back(std::make_pair(new_shader_module, shader_type));
 	}

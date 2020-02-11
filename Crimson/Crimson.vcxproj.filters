@@ -132,6 +132,12 @@
     <ClInclude Include="headers\VulkanAccelerationStructure.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\DescriptorSets.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PipelineEnums.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">

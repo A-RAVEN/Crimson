@@ -1,6 +1,7 @@
 #pragma once
-#include <include/Pipeline.h>
+#include <include/DescriptorSets.h>
 #include <headers/VulkanGPUDevice.h>
+#include <include/RayTraceGeometry.h>
 #include <set>
 #include <array>
 
@@ -28,16 +29,21 @@ namespace Crimson
 			std::vector<PGPUBuffer> const& buffers, std::vector<BufferRange> const& buffer_ranges, uint32_t start_array_id) override;
 		virtual void WriteDescriptorSetImage(uint32_t binding_point,
 			PGPUImage image, EFilterMode filter_mode, EAddrMode addr_mode, EViewAsType view_as = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t array_id = 0) override;
+		virtual void WriteDescriptorSetAccelStructuresNV(uint32_t binding_point,
+			std::vector<PAccelerationStructure> const& structures) override;
 		virtual void EndWriteDescriptorSet() override;
 		void SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set, VulkanDescriptorSetLayout* p_layout);
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VulkanDescriptorSetLayout* p_OwningSetLayout;
 		VkDescriptorSet		m_DescriptorSet;
-		std::vector<std::vector<VkDescriptorBufferInfo>> m_BufferWriteInfoCache;
-		std::vector<VkDescriptorImageInfo> m_ImageWriteInfo;
+		std::deque<std::vector<VkDescriptorBufferInfo>> m_BufferWriteInfoCache;
+		std::deque<VkDescriptorImageInfo> m_ImageWriteInfo;
+		std::deque<std::vector<VkAccelerationStructureNV>> m_AccelStructureListCache;
+		std::deque<VkWriteDescriptorSetAccelerationStructureNV> m_AccelStructWriteInfoCache;
 		std::vector<VkWriteDescriptorSet> m_WriteCache;
 
+		inline VkImageLayout DetermineLayout(EViewAsType view_as, EShaderResourceType resource_type);
 	};
 
 	class VulkanDescriptorSetLayout : public DescriptorSetLayout

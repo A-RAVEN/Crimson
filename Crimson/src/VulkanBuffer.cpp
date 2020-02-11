@@ -30,7 +30,7 @@ namespace Crimson
 		if ((p_Mapped == nullptr) && (m_MemoryType == EMemoryType::E_MEMORY_TYPE_HOST || m_MemoryType == EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE || m_MemoryType == EMemoryType::E_MEMORY_TYPE_DEVICE_TO_HOST))
 		{
 			void* p_data = nullptr;
-			VulkanDebug::CheckVKResult(vmaMapMemory(p_OwningDevice->m_MemoryAllocator, m_Allocation, &p_data), "Vulkan Map Memory Issue!");
+			CHECK_VKRESULT(vmaMapMemory(p_OwningDevice->m_MemoryAllocator, m_Allocation, &p_data), "Vulkan Map Memory Issue!");
 			p_Mapped = reinterpret_cast<uint8_t*>(p_data);
 		}
 		return p_Mapped;

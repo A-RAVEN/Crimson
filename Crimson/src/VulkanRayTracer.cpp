@@ -75,6 +75,18 @@ namespace Crimson
 			VulkanDescriptorSetLayout* vulkan_layout = static_cast<VulkanDescriptorSetLayout*>(layout.second);
 			layout_map.insert(std::make_pair(layout.first, vulkan_layout->m_DescriptorSetLayout));
 		}
+		std::vector<VkDescriptorSetLayout> set_layouts(set_layout_size);
+		set_layouts.clear();
+		for (auto& itr_layout : layout_map)
+		{
+			set_layouts.push_back(itr_layout.second);
+		}
+		pipelineLayoutInfo.setLayoutCount = set_layouts.size();
+		pipelineLayoutInfo.pSetLayouts = pipelineLayoutInfo.setLayoutCount > 0 ? set_layouts.data() : nullptr;
+		VkPushConstantRange push_constant_range{};
+		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
+		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+		CHECK_VKRESULT(vkCreatePipelineLayout(p_OwningDevice->m_LogicalDevice, &pipelineLayoutInfo, nullptr, &m_PipelineLayout), "Vulkan Pipeline Layout For Ray Tracer Creation Issue!");
 
 		VkRayTracingPipelineCreateInfoNV pipeline_create_info{};
 		pipeline_create_info.sType = VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_NV;

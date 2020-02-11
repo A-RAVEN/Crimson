@@ -36,7 +36,7 @@ namespace Crimson
 			surface_create_info.pNext = nullptr;
 			surface_create_info.hinstance = window.GetWin32Instance();
 			surface_create_info.hwnd = window.GetWin32Handle();
-			VulkanDebug::CheckVKResult(vkCreateWin32SurfaceKHR(VulkanInstance::Get()->GetVulkanInstance(), &surface_create_info, VULKAN_ALLOCATOR_POINTER, &window_surface), "Vulkan Win32 Surface Creation Issue!");
+			CHECK_VKRESULT(vkCreateWin32SurfaceKHR(VulkanInstance::Get()->GetVulkanInstance(), &surface_create_info, VULKAN_ALLOCATOR_POINTER, &window_surface), "Vulkan Win32 Surface Creation Issue!");
 #endif
 			m_SurfaceContexts.insert(std::make_pair(window.GetName(), VulkanSurfaceContext()));
 			m_SurfaceContexts[window.GetName()].InitSurfaceContext(this, window_surface);
@@ -68,7 +68,7 @@ namespace Crimson
 		
 		VkBuffer new_buffer = VK_NULL_HANDLE;
 		VmaAllocation new_allocation = nullptr;
-		VulkanDebug::CheckVKResult(vmaCreateBuffer(m_MemoryAllocator, &buffer_create_info, &allocInfo, &new_buffer, &new_allocation, nullptr), "VMA Creating Buffer Issue!");
+		CHECK_VKRESULT(vmaCreateBuffer(m_MemoryAllocator, &buffer_create_info, &allocInfo, &new_buffer, &new_allocation, nullptr), "VMA Creating Buffer Issue!");
 		VulkanBufferObject* new_buffer_object = new VulkanBufferObject();
 		new_buffer_object->SetVulkanBuffer(this, new_buffer, new_allocation, buffer_size, usages, memory_type);
 		return new_buffer_object;
@@ -99,7 +99,7 @@ namespace Crimson
 
 		VkImage new_image = VK_NULL_HANDLE;
 		VmaAllocation new_allocation = nullptr;
-		VulkanDebug::CheckVKResult(vmaCreateImage(m_MemoryAllocator, &image_create_info, &alloc_info, &new_image, &new_allocation, nullptr), "Vulkan Create Image Issue!");
+		CHECK_VKRESULT(vmaCreateImage(m_MemoryAllocator, &image_create_info, &alloc_info, &new_image, &new_allocation, nullptr), "Vulkan Create Image Issue!");
 		
 		VulkanImageObject* new_image_object = new VulkanImageObject();
 		new_image_object->SetVulkanImage(this, new_image, new_allocation, format, width, height, depth, mip_level_num, layer_num, usages, memory_type, VK_SHARING_MODE_EXCLUSIVE);
@@ -420,7 +420,7 @@ namespace Crimson
 		logical_device_create_info.ppEnabledLayerNames = nullptr;
 		logical_device_create_info.pEnabledFeatures = &device_features;
 
-		VulkanDebug::CheckVKResult(vkCreateDevice(devices[physical_device_index], &logical_device_create_info, VULKAN_ALLOCATOR_POINTER, &m_LogicalDevice), "Vulkan Logical Device Creation Error!");
+		CHECK_VKRESULT(vkCreateDevice(devices[physical_device_index], &logical_device_create_info, VULKAN_ALLOCATOR_POINTER, &m_LogicalDevice), "Vulkan Logical Device Creation Error!");
 		std::swap(m_QueueNumbers, queue_numbers);
 		InitMemoryAllocator();
 		InitDescriptorPool();
@@ -453,11 +453,11 @@ namespace Crimson
 		VmaAllocatorCreateInfo allocator_create_info = {};
 		allocator_create_info.physicalDevice = m_PhysicalDevice;
 		allocator_create_info.device = m_LogicalDevice;
-		VulkanDebug::CheckVKResult(vmaCreateAllocator(&allocator_create_info, &m_MemoryAllocator), "Vulkan Memory Allocator Initialization Failed!");
+		CHECK_VKRESULT(vmaCreateAllocator(&allocator_create_info, &m_MemoryAllocator), "Vulkan Memory Allocator Initialization Failed!");
 	}
 	void VulkanGPUDevice::InitDescriptorPool()
 	{
-		std::vector<VkDescriptorPoolSize> pool_sizes(5);
+		std::vector<VkDescriptorPoolSize> pool_sizes(6);
 		// Uniform Buffer Max Size
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		pool_sizes[0].descriptorCount = 5000;
@@ -473,6 +473,9 @@ namespace Crimson
 		// Attachment SB Max Size
 		pool_sizes[4].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 		pool_sizes[4].descriptorCount = 5000;
+		// Acceleration Structure Max Size
+		pool_sizes[5].type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
+		pool_sizes[5].descriptorCount = 100;
 		VkDescriptorPoolCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
@@ -480,7 +483,7 @@ namespace Crimson
 		create_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
 		create_info.pPoolSizes = pool_sizes.data();
 		create_info.pNext = nullptr;
-		VulkanDebug::CheckVKResult(vkCreateDescriptorPool(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorPool), "Vulkan Descriptor Pool Creation Issue!");
+		CHECK_VKRESULT(vkCreateDescriptorPool(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorPool), "Vulkan Descriptor Pool Creation Issue!");
 	}
 	void NVExtension::InitExtensions(VkDevice device)
 	{

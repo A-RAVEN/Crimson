@@ -1,5 +1,6 @@
 #pragma once
-#include "Pipeline.h"
+#include "PipelineEnums.h"
+#include "DescriptorSets.h"
 
 namespace Crimson
 {

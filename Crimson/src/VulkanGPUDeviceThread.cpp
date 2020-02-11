@@ -190,7 +190,7 @@ namespace Crimson
 			create_info.queueFamilyIndex = p_OwningDevice->m_GraphicsDedicateFamily;
 			create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 			create_info.pNext = nullptr;
-			VulkanDebug::CheckVKResult(vkCreateCommandPool(p_OwningDevice->m_LogicalDevice, &create_info,
+			CHECK_VKRESULT(vkCreateCommandPool(p_OwningDevice->m_LogicalDevice, &create_info,
 				VULKAN_ALLOCATOR_POINTER, &m_GraphicsCommandPool), "Vulkan Create Graphics Command Pool Issue!");
 		}
 	}
@@ -202,7 +202,7 @@ namespace Crimson
 			create_info.queueFamilyIndex = p_OwningDevice->m_ComputeDedicateFamily;
 			create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 			create_info.pNext = nullptr;
-			VulkanDebug::CheckVKResult(vkCreateCommandPool(p_OwningDevice->m_LogicalDevice, &create_info,
+			CHECK_VKRESULT(vkCreateCommandPool(p_OwningDevice->m_LogicalDevice, &create_info,
 				VULKAN_ALLOCATOR_POINTER, &m_ComputeCommandPool), "Vulkan Create Compute Command Pool Issue!");
 		}
 	}

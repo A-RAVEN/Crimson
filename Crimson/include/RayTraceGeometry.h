@@ -1,5 +1,6 @@
 #pragma once
-#include "Pipeline.h"
+#include "Generals.h"
+#include "PipelineEnums.h"
 
 namespace Crimson
 {
@@ -27,6 +28,16 @@ namespace Crimson
 		E_GEOMETRY_MAX,
 	};
 
+	//Geometry Instance Flags Directly Copied From VkGeometryInstanceFlagBits
+	enum class EGeometryInstanceFlags : uint32_t
+	{
+		E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE = 0x00000001,
+		E_GEOMETRY_INSTANCE_TRIANGLE_FRONT_COUNTERCLOCKWISE = 0x00000002,
+		E_GEOMETRY_INSTANCE_FORCE_OPAQUE = 0x00000004,
+		E_GEOMETRY_INSTANCE_FORCE_NO_OPAQUE = 0x00000008,
+		E_GEOMETRY_INSTANCE_MAX = 0x7FFFFFFF
+	};
+
 	class RayTraceGeometry : public IObject
 	{
 	public:
@@ -50,14 +61,30 @@ namespace Crimson
 	};
 	using PRayTraceGeometry = RayTraceGeometry*;
 
+	struct RayTraceGeometryInstance
+	{
+	public:
+		float m_TransformMatrix[12];
+		uint32_t m_InstanceId : 24;
+		uint32_t m_Mask : 8;
+		uint32_t m_InstanceOffset : 24;
+		uint32_t m_Flags : 8;
+		uint64_t m_AccelerationStructureHandle;
+	};
+
 	//Geometry Group 
 	class AccelerationStructure : public IObject
 	{
 	public:
 		std::vector<PRayTraceGeometry> m_Geometries;
 		std::vector<EBuildAccelerationStructureFlags> m_BuildFlags;
+		uint32_t m_InstanceNumber;
 		// init acceleration structure, them a build should be done in cmd buffer
-		virtual void InitAS() = 0;
+		virtual void InitAS(bool top_level = false) = 0;
+		virtual uint64_t GetHandle() = 0;
+		AccelerationStructure() :
+			m_InstanceNumber(0)
+		{}
 	};
 	using PAccelerationStructure = AccelerationStructure*;
 

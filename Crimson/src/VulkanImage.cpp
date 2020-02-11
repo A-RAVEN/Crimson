@@ -188,7 +188,7 @@ namespace Crimson
 			//TODO: further explorations
 			create_info.flags = 0;
 			create_info.pNext = nullptr;
-			VulkanDebug::CheckVKResult(vkCreateImageView(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &new_view), "Vulkan Create Image View Issue!");
+			CHECK_VKRESULT(vkCreateImageView(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &new_view), "Vulkan Create Image View Issue!");
 			m_ImageViews.push_back(new_view);
 			m_ImageViewMap[index] = m_ImageViews.size() - 1;
 		}

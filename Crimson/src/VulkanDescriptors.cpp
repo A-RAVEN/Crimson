@@ -3,6 +3,7 @@
 #include <headers/VulkanTranslator.h>
 #include <headers/VulkanBuffer.h>
 #include <headers/VulkanImage.h>
+#include <headers/VulkanAccelerationStructure.h>
 
 namespace Crimson
 {
@@ -47,7 +48,8 @@ namespace Crimson
 		m_ImageWriteInfo.push_back({});
 		VkDescriptorImageInfo &new_image_info = *(m_ImageWriteInfo.rbegin());
 		VulkanImageObject* p_vulkan_image = static_cast<VulkanImageObject*>(image);
-		new_image_info.imageLayout = p_vulkan_image->GetDefaultViewAsType() == EViewAsType::E_VIEW_AS_COLOR ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		new_image_info.imageLayout = 
+			DetermineLayout(p_vulkan_image->GetDefaultViewAsType(), p_OwningSetLayout->m_Bindings[binding_point].m_ResourceType);
 		new_image_info.imageView = p_vulkan_image->GetView(view_as);
 		new_image_info.sampler = p_vulkan_image->GetSampler(filter_mode, addr_mode);
 
@@ -62,6 +64,29 @@ namespace Crimson
 		new_write.pImageInfo = &new_image_info;
 		m_WriteCache.push_back(new_write);
 	}
+	void VulkanDescriptorSet::WriteDescriptorSetAccelStructuresNV(uint32_t binding_point, std::vector<PAccelerationStructure> const& structures)
+	{
+		m_AccelStructureListCache.push_back(std::vector<VkAccelerationStructureNV>{structures.size()});
+		std::vector<VkAccelerationStructureNV>& nv_structures = *(m_AccelStructureListCache.rbegin());
+		for (size_t id = 0; id < structures.size(); ++id)
+		{
+			nv_structures[id] = static_cast<VulkanAccelerationStructure*>(structures[id])->m_Structure;
+		}
+		m_AccelStructWriteInfoCache.push_back({});
+		VkWriteDescriptorSetAccelerationStructureNV &new_accel_info = *(m_AccelStructWriteInfoCache.rbegin());
+		new_accel_info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_NV;
+		new_accel_info.accelerationStructureCount = static_cast<uint32_t>(nv_structures.size());
+		new_accel_info.pAccelerationStructures = nv_structures.data();
+
+		VkWriteDescriptorSet new_write{};
+		new_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		new_write.pNext = &new_accel_info;
+		new_write.dstSet = m_DescriptorSet;
+		new_write.dstBinding = binding_point;
+		new_write.descriptorCount = new_accel_info.accelerationStructureCount;
+		new_write.descriptorType = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
+		m_WriteCache.push_back(new_write);
+	}
 	void VulkanDescriptorSet::EndWriteDescriptorSet()
 	{
 		if (m_WriteCache.empty()) { return; }
@@ -69,12 +94,23 @@ namespace Crimson
 		m_WriteCache.clear();
 		m_BufferWriteInfoCache.clear();
 		m_ImageWriteInfo.clear();
+		m_AccelStructWriteInfoCache.clear();
+		m_AccelStructureListCache.clear();
 	}
 	void VulkanDescriptorSet::SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set, VulkanDescriptorSetLayout* p_layout)
 	{
 		p_OwningDevice = device;
 		m_DescriptorSet = set;
 		p_OwningSetLayout = p_layout;
+	}
+
+	inline VkImageLayout VulkanDescriptorSet::DetermineLayout(EViewAsType view_as, EShaderResourceType resource_type)
+	{
+		if (resource_type == EShaderResourceType::E_SHADER_STORAGE_IMAGE)
+		{
+			return VK_IMAGE_LAYOUT_GENERAL;
+		}
+		return view_as == EViewAsType::E_VIEW_AS_COLOR ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 	}
 
 	VulkanDescriptorSetLayout::VulkanDescriptorSetLayout(VulkanGPUDevice* device) :
@@ -93,7 +129,7 @@ namespace Crimson
 		allocate_info.descriptorSetCount = 1;
 		allocate_info.pSetLayouts = &m_DescriptorSetLayout;
 		allocate_info.pNext = nullptr;
-		VulkanDebug::CheckVKResult(vkAllocateDescriptorSets(p_OwningDevice->m_LogicalDevice, &allocate_info, &new_set),
+		CHECK_VKRESULT(vkAllocateDescriptorSets(p_OwningDevice->m_LogicalDevice, &allocate_info, &new_set),
 			"Vulkan Allocate Descriptor Set Issue!");
 		return_val->SetVulkanDescriptorSet(p_OwningDevice, new_set, this);
 		return return_val;
@@ -120,7 +156,7 @@ namespace Crimson
 			create_info.pBindings = bindings.data();
 			create_info.flags = 0;
 			create_info.pNext = nullptr;
-			VulkanDebug::CheckVKResult(vkCreateDescriptorSetLayout(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorSetLayout), 
+			CHECK_VKRESULT(vkCreateDescriptorSetLayout(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorSetLayout), 
 				"Vulkan Create Descriptor Set Layout Issue!");
 		}
 	}

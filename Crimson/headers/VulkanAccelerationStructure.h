@@ -9,9 +9,11 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanExecutionCommandBuffer;
+		friend class VulkanDescriptorSet;
 		VulkanAccelerationStructure(VulkanGPUDevice* device);
 		virtual void Dispose() override;
-		virtual void InitAS() override;
+		virtual void InitAS(bool top_level) override;
+		virtual uint64_t GetHandle() override;
 	private:
 		VulkanGPUDevice* p_OwningDevice;
 
@@ -21,5 +23,7 @@ namespace Crimson
 		VmaAllocationInfo m_AllocationInfo;
 		VkAccelerationStructureInfoNV m_StructureInfo;
 		std::vector<VkGeometryNV> p_Geometries;
+
+		uint64_t m_Handle;
 	};
 }

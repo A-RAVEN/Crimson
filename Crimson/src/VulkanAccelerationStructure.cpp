@@ -29,7 +29,7 @@ namespace Crimson
 		p_OwningDevice->HandleDisposedAccelerationStructure(this);
 	}
 
-	void VulkanAccelerationStructure::InitAS()
+	void VulkanAccelerationStructure::InitAS(bool top_level)
 	{
 		VkAccelerationStructureCreateInfoNV create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_NV;
@@ -44,8 +44,8 @@ namespace Crimson
 		}
 		m_StructureInfo.pGeometries = p_Geometries.data();
 		m_StructureInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV | VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV;
-		m_StructureInfo.type = VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_NV;
-		m_StructureInfo.instanceCount = 0;
+		m_StructureInfo.type = top_level ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_NV : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_NV;
+		m_StructureInfo.instanceCount = m_InstanceNumber;
 		create_info.info = m_StructureInfo;
 
 		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkCreateAccelerationStructureNV(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_Structure), 
@@ -93,5 +93,11 @@ namespace Crimson
 		bind_info.memoryOffset = m_AllocationInfo.offset;
 		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkBindAccelerationStructureMemoryNV(p_OwningDevice->m_LogicalDevice, 1, &bind_info),
 			"Vulkan Bind Acceleration Structure Issue!");
+		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkGetAccelerationStructureHandleNV(p_OwningDevice->m_LogicalDevice, m_Structure, sizeof(uint64_t), &m_Handle),
+			"Vulkan Get Acceleration Struct Handle Issue!");
+	}
+	uint64_t VulkanAccelerationStructure::GetHandle()
+	{
+		return m_Handle;
 	}
 }

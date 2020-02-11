@@ -17,7 +17,8 @@ namespace Crimson
 		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image,
 			uint64_t buffer_offset, uint32_t mip_level, uint32_t base_layer, uint32_t layer_count) override;
 		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) override;
-		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct) override;
+		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct, 
+			PGPUBuffer instance_buffer, uint64_t instance_offset, bool update) override;
 		virtual void StartCommand() override;
 		virtual void EndCommand() override;
 		void SetExecutionCommandBuffer(VulkanGPUDevice* p_device, VulkanGPUDeviceThread* p_thread, EExecutionCommandType command_type);

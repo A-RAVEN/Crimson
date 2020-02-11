@@ -83,7 +83,7 @@ namespace Crimson
 		instance_create_info.ppEnabledExtensionNames = instance_extension_names.data();
 
 		//Create Vulkan application instance
-		VulkanDebug::CheckVKResult(vkCreateInstance(&instance_create_info, VULKAN_ALLOCATOR_POINTER, &m_VulkanInstance), "Vulkan Instance Creation Failed!");
+		CHECK_VKRESULT(vkCreateInstance(&instance_create_info, VULKAN_ALLOCATOR_POINTER, &m_VulkanInstance), "Vulkan Instance Creation Failed!");
 		if (enable_debug_extension) 
 		{ 
 			SetupDebugCallback(); 
@@ -154,7 +154,7 @@ namespace Crimson
 		auto p_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_VulkanInstance, "vkCreateDebugReportCallbackEXT");
 		if (p_vkCreateDebugReportCallbackEXT != nullptr)
 		{
-			VulkanDebug::CheckVKResult(p_vkCreateDebugReportCallbackEXT(m_VulkanInstance, &callback_createInfo, VULKAN_ALLOCATOR_POINTER, &m_DebugReportCallBack), "Vulkan Debug Callback Creation Failed!");
+			CHECK_VKRESULT(p_vkCreateDebugReportCallbackEXT(m_VulkanInstance, &callback_createInfo, VULKAN_ALLOCATOR_POINTER, &m_DebugReportCallBack), "Vulkan Debug Callback Creation Failed!");
 		}
 		else
 		{
@@ -175,10 +175,10 @@ namespace Crimson
 	{
 		//check & get physical devices' infos
 		uint32_t count(0);
-		VulkanDebug::CheckVKResult(vkEnumeratePhysicalDevices(m_VulkanInstance, &count, VK_NULL_HANDLE), "Enumerate Vulkan Physical Devices Issue!");
+		CHECK_VKRESULT(vkEnumeratePhysicalDevices(m_VulkanInstance, &count, VK_NULL_HANDLE), "Enumerate Vulkan Physical Devices Issue!");
 		m_PhysicalDevices.resize(count);
 
-		VulkanDebug::CheckVKResult(vkEnumeratePhysicalDevices(m_VulkanInstance, &count, m_PhysicalDevices.data()), "Get Physical Devices Irror!");
+		CHECK_VKRESULT(vkEnumeratePhysicalDevices(m_VulkanInstance, &count, m_PhysicalDevices.data()), "Get Physical Devices Irror!");
 		
 		std::map<uint32_t, VkPhysicalDevice> device_sort;
 		for (uint32_t i = 0; i < count; ++i)

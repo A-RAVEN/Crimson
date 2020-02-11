@@ -343,7 +343,7 @@ namespace Crimson
 						set_layout_create_info.bindingCount = static_cast<uint32_t>(r_subpass_input_attachment_refs.size());
 						set_layout_create_info.pBindings = bindings.data();
 						set_layout_create_info.pNext = nullptr;
-						VulkanDebug::CheckVKResult(vkCreateDescriptorSetLayout(p_OwningDevice->m_LogicalDevice, &set_layout_create_info, VULKAN_ALLOCATOR_POINTER, &m_VulkanSubpassInfos[subpass_id].m_InputLayout),
+						CHECK_VKRESULT(vkCreateDescriptorSetLayout(p_OwningDevice->m_LogicalDevice, &set_layout_create_info, VULKAN_ALLOCATOR_POINTER, &m_VulkanSubpassInfos[subpass_id].m_InputLayout),
 							"Vulkan Subpass Attachment Input Descriptor Set Layout Creation Issue!");
 					}
 				}
@@ -394,7 +394,7 @@ namespace Crimson
 			create_info.dependencyCount = static_cast<uint32_t>(vk_subpass_dependencies.size());
 			create_info.pDependencies = vk_subpass_dependencies.size() > 0 ? vk_subpass_dependencies.data() : nullptr;
 
-			VulkanDebug::CheckVKResult(vkCreateRenderPass(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_RenderPass), "Vulkan Create RenderPass Issue!");
+			CHECK_VKRESULT(vkCreateRenderPass(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_RenderPass), "Vulkan Create RenderPass Issue!");
 		}
 	}
 	void VulkanRenderPass::InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass)
@@ -696,31 +696,9 @@ namespace Crimson
 			VulkanDescriptorSetLayout* vulkan_layout = static_cast<VulkanDescriptorSetLayout*>(layout.second);
 			layout_map.insert(std::make_pair(layout.first, vulkan_layout->m_DescriptorSetLayout));
 		}
-		//if (set_layout_size > 0)
-		//{
-		//	for (size_t i = 0; i < set_layout_size; ++i)
-		//	{
-		//		DescriptorSetPoolStruct& set_layout_struct = DescriptorSetPoolStructPool.getData(pipeline_struct.Config->m_DescriptorSetLayouts[i]);
-		//		set_layouts[i] = set_layout_struct.SetLayout;
-		//	}
-		//	pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(set_layout_size);
-		//	pipelineLayoutInfo.pSetLayouts = set_layouts.data();
-		//}
 		if (m_VulkanSubpassInfos[subpass].m_InputLayout != VK_NULL_HANDLE)
 		{
 			layout_map.insert(std::make_pair(vulkan_pipeline->m_SubpassInputAttachmentBindPoint, m_VulkanSubpassInfos[subpass].m_InputLayout));
-
-			////assert(set_layout_size < 2 && "Set 1 is already being used!");
-			//++set_layout_size;
-			//DescriptorSetPoolStruct& set_layout_struct = DescriptorSetPoolStructPool.getData(renderpass_struct.SubpassInputDescriptorSetLayouts[_stage]);
-			////if (set_layout_size == 1)
-			////{
-			////	set_layouts.push_back(current_device.mEmptySetLayout);
-			////	++set_layout_size;
-			////}
-			//set_layouts.push_back(set_layout_struct.SetLayout);
-			//pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(set_layout_size);
-			//pipelineLayoutInfo.pSetLayouts = set_layouts.data();
 		}
 		std::vector<VkDescriptorSetLayout> set_layouts(set_layout_size);
 		set_layouts.clear();
@@ -734,24 +712,7 @@ namespace Crimson
 		VkPushConstantRange push_constant_range{};
 		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
 		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-		//if (_config.m_PushConstantSize > 0)
-		//{
-		//	pipelineLayoutInfo.pushConstantRangeCount = 1;
-		//	push_constant_range.offset = 0;
-		//	push_constant_range.size = _config.m_PushConstantSize;
-		//	push_constant_range.stageFlags = 0;
-		//	for (size_t itr = 0; itr < static_cast<uint32_t>(EShaderType::SHADER_TYPE_MAX); ++itr)
-		//	{
-		//		if (_config.m_PushConstantShaderTypes & (1 << itr))
-		//		{
-		//			VkShaderStageFlagBits new_stage = FVulkan::ShaderStageTypeMap[itr];
-		//			push_constant_range.stageFlags |= new_stage;
-		//		}
-		//	}
-		//	pipelineLayoutInfo.pPushConstantRanges = &push_constant_range;
-		//}
-
-		VulkanDebug::CheckVKResult(vkCreatePipelineLayout(p_OwningDevice->m_LogicalDevice, &pipelineLayoutInfo, nullptr, &new_pipeline_layout), "Vulkan Pipeline Layout Creation Issue!");
+		CHECK_VKRESULT(vkCreatePipelineLayout(p_OwningDevice->m_LogicalDevice, &pipelineLayoutInfo, nullptr, &new_pipeline_layout), "Vulkan Pipeline Layout Creation Issue!");
 
 
 		VkGraphicsPipelineCreateInfo pipeline_info = {};
@@ -782,7 +743,7 @@ namespace Crimson
 		pipeline_info.basePipelineIndex = -1; // Optional
 
 		VkPipeline new_graphic_pipeline;
-		VulkanDebug::CheckVKResult(vkCreateGraphicsPipelines(p_OwningDevice->m_LogicalDevice, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &new_graphic_pipeline), "Vulkan Pipeline Instantiation Issue!");
+		CHECK_VKRESULT(vkCreateGraphicsPipelines(p_OwningDevice->m_LogicalDevice, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &new_graphic_pipeline), "Vulkan Pipeline Instantiation Issue!");
 		m_VulkanSubpassInfos[subpass].m_PipelineInstances.insert(std::make_pair(pipeline, std::make_pair(new_graphic_pipeline, new_pipeline_layout)));
 	}
 	void VulkanRenderPass::Dispose()

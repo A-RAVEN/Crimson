@@ -49,7 +49,7 @@ namespace Crimson
 		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image,
 			uint64_t buffer_offset = 0, uint32_t mip_level = 0, uint32_t base_layer = 0, uint32_t layer_count = 1) = 0;
 		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) = 0;
-		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct) = 0;
+		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct, PGPUBuffer instance_buffer = nullptr, uint64_t instance_offset = 0, bool update = false) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
 	protected:

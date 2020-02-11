@@ -198,10 +198,12 @@
     <ClInclude Include="headers\VulkanSurfaceContext.h" />
     <ClInclude Include="headers\VulkanTranslator.h" />
     <ClInclude Include="include\Configuration.h" />
+    <ClInclude Include="include\DescriptorSets.h" />
     <ClInclude Include="include\Generals.h" />
     <ClInclude Include="include\GPUDevice.h" />
     <ClInclude Include="include\IWindow.h" />
     <ClInclude Include="include\Pipeline.h" />
+    <ClInclude Include="include\PipelineEnums.h" />
     <ClInclude Include="include\RayTraceGeometry.h" />
     <ClInclude Include="include\RayTracer.h" />
     <ClInclude Include="include\Version.h" />
