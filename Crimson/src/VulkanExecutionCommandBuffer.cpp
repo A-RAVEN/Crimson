@@ -34,24 +34,36 @@ namespace Crimson
 		begin_info.pNext = nullptr;
 		//recording commands
 		vulkan_framebuffer->ImageBarriers(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType));
+
+		std::vector<std::vector<VkCommandBuffer>> subpass_cmd_buffers(vulkan_renderpass->m_Subpasses.size());
 		std::deque<VulkanDescriptorSet*> referenced_sets;
+		for (uint32_t subpass_id = 0; subpass_id < vulkan_renderpass->m_Subpasses.size(); ++subpass_id)
 		{
-			std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(0, vulkan_renderpass_instance, referenced_sets);
+			referenced_sets.clear();
+			subpass_cmd_buffers[subpass_id] = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance, referenced_sets);
 			for (auto set : referenced_sets)
 			{
 				//NOTICE: Currently, Render Pass Is Only Used For Graphics Use
 				set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 0);
 			}
+		}
+		{
+			//std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(0, vulkan_renderpass_instance, referenced_sets);
+			//for (auto set : referenced_sets)
+			//{
+			//	//NOTICE: Currently, Render Pass Is Only Used For Graphics Use
+			//	set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 0);
+			//}
 
 			vkCmdBeginRenderPass(m_CurrentCommandBuffer, &begin_info, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-			vkCmdExecuteCommands(m_CurrentCommandBuffer, cmd_buffers.size(), cmd_buffers.data());
+			vkCmdExecuteCommands(m_CurrentCommandBuffer, subpass_cmd_buffers[0].size(), subpass_cmd_buffers[0].data());
 		}
 		for (uint32_t subpass_id = 1; subpass_id < vulkan_renderpass->m_Subpasses.size(); ++subpass_id)
 		{
 			referenced_sets.clear();
 			vkCmdNextSubpass(m_CurrentCommandBuffer, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-			std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance, referenced_sets);
-			vkCmdExecuteCommands(m_CurrentCommandBuffer, cmd_buffers.size(), cmd_buffers.data());
+			//std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance, referenced_sets);
+			vkCmdExecuteCommands(m_CurrentCommandBuffer, subpass_cmd_buffers[subpass_id].size(), subpass_cmd_buffers[subpass_id].data());
 		}
 		vkCmdEndRenderPass(m_CurrentCommandBuffer);
 	}
