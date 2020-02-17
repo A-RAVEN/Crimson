@@ -1,5 +1,5 @@
 #define NOMINMAX
-#include <GPUDevice.h>
+#include <GPUDevice.h>shaderGroupHandleSize
 #include <headers/Win32Window.h>
 #include <Compiler.h>
 #include <fstream>
@@ -11,8 +11,24 @@
 #include <headers/MeshResource.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <headers/stb_image.h>
+
+struct Camera
+{
+	glm::mat4 view;
+	glm::mat4 proj;
+	glm::mat4 viewInverse;
+	glm::mat4 projInverse;
+};
+
 int main()
 {
+	Camera cam;
+	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	cam.proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
+	cam.viewInverse = glm::inverse(cam.view);
+	cam.projInverse = glm::inverse(cam.proj);
+
 	Assimp::Importer scene_importer;
 	const aiScene* scene = scene_importer.ReadFile("testslime.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	std::cout << "Start" << std::endl;
@@ -53,7 +69,7 @@ int main()
 	
 	PGPUBuffer vertex_buffer = MainDevice->CreateBuffer(sizeof(float) * 3 * 3, { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
-	PGPUBuffer camera_buffer = MainDevice->CreateBuffer(sizeof(glm::mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	PGPUBuffer camera_buffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
 	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RayTraceGeometryInstance), { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	RayTraceGeometryInstance* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RayTraceGeometryInstance();
@@ -68,8 +84,7 @@ int main()
 		0.0f, 0.0f, 1.0f, 0.0f,
 	};
 
-	glm::mat4 change = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f));
-	memcpy(camera_buffer->GetMappedPointer(), &change, sizeof(glm::mat4));
+	memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 	camera_buffer->UnMapp();
 
 	std::array<float, 9> triangle_data = {
@@ -91,11 +106,15 @@ int main()
 	test_renderpass->BuildRenderPass();
 
 	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
-	layout->m_Bindings.resize(1);
+	layout->m_Bindings.resize(2);
 	layout->m_Bindings[0].m_BindingPoint = 0;
 	layout->m_Bindings[0].m_Num = 1;
 	layout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
 	layout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
+	layout->m_Bindings[1].m_BindingPoint = 1;
+	layout->m_Bindings[1].m_Num = 1;
+	layout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	layout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
 
 	PDescriptorSetLayout rtlayout = MainDevice->CreateDescriptorSetLayout();
 	rtlayout->m_Bindings.resize(3);
@@ -186,11 +205,13 @@ int main()
 		src = compiler->PreprocessGLSLShader("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
 		std::cout << src << std::endl;
 		auto binary = compiler->CompileGLSLShaderSource("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
-		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_RAYGEN_NV);
+		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_RAYGEN_NV, "default");
 	}
 	raytracer->m_DescriptorSetLayouts.push_back({ 0, rtlayout });
 	raytracer->m_MaxRecursionDepth = 1;
 	raytracer->Build();
+	PGPUBuffer shader_table = MainDevice->CreateBuffer(raytracer->GetShaderTableSize("default"), {EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV}, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	raytracer->CopyShaderTable(shader_table->GetMappedPointer(), "default");
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
 	test_framebuffer->m_Images = { test_color, test_depth_stencil};
@@ -209,8 +230,25 @@ int main()
 	PExecutionCommandBuffer present = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
 	test_thread->BindExecutionCommandBufferToBatch("Present", present);
 
+	PGPUBuffer image_load_buffer;
+	PGPUImage test_loaded_image;
+	{
+		int w, h, channel_num;
+		auto data = stbi_load("testnormal1.jpg", &w, &h, &channel_num, 4);
+		image_load_buffer = MainDevice->CreateBuffer(w * h * sizeof(int), { EBufferUsage::E_BUFFER_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_HOST);
+		memcpy(image_load_buffer->GetMappedPointer(), data, w* h * sizeof(int));
+		stbi_image_free(data);
+		image_load_buffer->UnMapp();
+		test_loaded_image = MainDevice->CreateImage(EFormat::E_FORMAT_R8G8B8A8_UNORM, w, h, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_SAMPLE }
+		, EMemoryType::E_MEMORY_TYPE_DEVICE);
+
+		set->WriteDescriptorSetImage(1, test_loaded_image, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT);
+		set->EndWriteDescriptorSet();
+	}
+
 	PExecutionCommandBuffer load = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
 	load->StartCommand();
+	load->CopyBufferToImage(image_load_buffer, test_loaded_image);
 	load->BuildAccelerationStructure(accel_struct);
 	load->BuildAccelerationStructure(tlas, geometry_instance_buffer);
 	load->EndCommand();

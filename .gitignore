@@ -42,3 +42,6 @@ RequiemEngine/Temp/x64/Debug/vc142.idb
 *.user
 
 .vs
+
+#Folders
+Profiler/

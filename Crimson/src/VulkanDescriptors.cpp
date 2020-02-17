@@ -31,6 +31,7 @@ namespace Crimson
 			itr_buffer_info.buffer = p_vulkan_buffer->m_Buffer;
 			itr_buffer_info.offset = buffer_ranges[id].m_Offset;
 			itr_buffer_info.range = buffer_ranges[id].m_Size;
+			m_ReferencedBuffers[m_ResourceReference[binding_point]][start_array_id + id] = p_vulkan_buffer;
 		}
 		VkWriteDescriptorSet new_write{};
 		new_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -63,6 +64,7 @@ namespace Crimson
 		new_write.dstSet = m_DescriptorSet;
 		new_write.pImageInfo = &new_image_info;
 		m_WriteCache.push_back(new_write);
+		m_ReferencedImages[m_ResourceReference[binding_point]][array_id] = p_vulkan_image;
 	}
 	void VulkanDescriptorSet::WriteDescriptorSetAccelStructuresNV(uint32_t binding_point, std::vector<PAccelerationStructure> const& structures)
 	{
@@ -102,6 +104,49 @@ namespace Crimson
 		p_OwningDevice = device;
 		m_DescriptorSet = set;
 		p_OwningSetLayout = p_layout;
+		m_ResourceReference.reserve(p_layout->m_Bindings.size());
+		for (auto& binding : p_layout->m_Bindings)
+		{
+			if (IsBufferResourceType(binding.m_ResourceType))
+			{
+				m_ResourceReference.push_back(m_ReferencedBuffers.size());
+				m_ReferencedBuffers.push_back(std::vector<VulkanBufferObject*>(binding.m_Num, nullptr));
+			}
+			else if(IsImageResourceType(binding.m_ResourceType))
+			{
+				m_ResourceReference.push_back(m_ReferencedImages.size());
+				m_ReferencedImages.push_back(std::vector<VulkanImageObject*>(binding.m_Num, nullptr));
+			}
+			else
+			{
+				m_ResourceReference.push_back(UINT32_MAX);
+			}
+		}
+	}
+
+	void VulkanDescriptorSet::CmdBarrierDescriptorSet(VkCommandBuffer cmd_buffer, uint32_t queue_family, uint32_t type)
+	{
+		uint32_t id = 0;
+		for (auto& binding : p_OwningSetLayout->m_Bindings)
+		{
+			if (IsImageResourceType(binding.m_ResourceType))
+			{
+				for (auto image : m_ReferencedImages[m_ResourceReference[id]])
+				{
+					VkPipelineStageFlags flags = p_OwningSetLayout->GetReferenceStageRanges(id, type);
+					image->CmdChangeOverallLayout(cmd_buffer, queue_family,
+						TranslateShaderResourceTypeToVulkanImageLayout(binding.m_ResourceType, image->m_Format),
+						flags, flags);
+				}
+			}
+			//else if (IsImageResourceType(binding.m_ResourceType))
+			//{
+			//}
+			//else
+			//{
+			//}
+			++id;
+		}
 	}
 
 	inline VkImageLayout VulkanDescriptorSet::DetermineLayout(EViewAsType view_as, EShaderResourceType resource_type)
@@ -139,6 +184,7 @@ namespace Crimson
 		if (m_DescriptorSetLayout == VK_NULL_HANDLE)
 		{
 			std::vector<VkDescriptorSetLayoutBinding> bindings(m_Bindings.size());
+			m_ReferenceRanges.resize(m_Bindings.size());
 			for (size_t binding_id = 0; binding_id < m_Bindings.size(); ++binding_id)
 			{
 				bindings[binding_id].binding = m_Bindings[binding_id].m_BindingPoint;
@@ -148,6 +194,19 @@ namespace Crimson
 				for (auto shader_type : m_Bindings[binding_id].m_ShaderTypes)
 				{
 					bindings[binding_id].stageFlags |= TranslateShaderTypeToVulkan(shader_type);
+					VkPipelineStageFlagBits stage_bit = TranslateShaderTypeToVulkanPipelineStage(shader_type);
+					if (IsNormalGraphicsShaderGroup(shader_type))
+					{
+						m_ReferenceRanges[binding_id].m_GraphicsStages |= stage_bit;
+					}
+					if (IsMeshShaderGroup(shader_type))
+					{
+						m_ReferenceRanges[binding_id].m_MeshPipelineStages |= stage_bit;
+					}
+					if (IsRayTracingShaderGroup(shader_type))
+					{
+						m_ReferenceRanges[binding_id].m_RayTracingStages |= stage_bit;
+					}
 				}
 			}
 			VkDescriptorSetLayoutCreateInfo create_info{};
@@ -168,6 +227,20 @@ namespace Crimson
 			m_DescriptorSetLayout = VK_NULL_HANDLE;
 		}
 		p_OwningDevice->HandleDisposedDescriptorSetLayout(this);
+	}
+
+	VkPipelineStageFlags VulkanDescriptorSetLayout::GetReferenceStageRanges(uint32_t binding_id, uint32_t type)
+	{
+		switch (type)
+		{
+		case 0:
+			return m_ReferenceRanges[binding_id].m_GraphicsStages;
+		case 1:
+			return m_ReferenceRanges[binding_id].m_MeshPipelineStages;
+		case 2:
+			return m_ReferenceRanges[binding_id].m_RayTracingStages;
+		}
+		return VkPipelineStageFlags();
 	}
 
 }

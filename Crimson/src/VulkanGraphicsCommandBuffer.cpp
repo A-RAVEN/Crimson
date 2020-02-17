@@ -51,7 +51,7 @@ namespace Crimson
 		{
 			VulkanDescriptorSet* p_vulkan_desc_set = static_cast<VulkanDescriptorSet*>(descriptor_sets[set_id]);
 			sets[set_id] = p_vulkan_desc_set->m_DescriptorSet;
-			p_ReferencingDescriptorSets.insert(p_vulkan_desc_set);
+			p_ReferencingDescriptorSets.push_back(p_vulkan_desc_set);
 		}
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_CurrentPipelineLayout, 0, descriptor_sets.size(), sets.data(), 0, nullptr);
 	}

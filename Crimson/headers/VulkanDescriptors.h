@@ -19,6 +19,7 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanGraphicsCommandBuffer;
+		friend class VulkanExecutionCommandBuffer;
 
 		VulkanDescriptorSet();
 		~VulkanDescriptorSet() {};
@@ -33,6 +34,8 @@ namespace Crimson
 			std::vector<PAccelerationStructure> const& structures) override;
 		virtual void EndWriteDescriptorSet() override;
 		void SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set, VulkanDescriptorSetLayout* p_layout);
+		//type : 0 normal 1 mesh 2 ray tracing
+		void CmdBarrierDescriptorSet(VkCommandBuffer cmd_buffer, uint32_t queue_family, uint32_t type);
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VulkanDescriptorSetLayout* p_OwningSetLayout;
@@ -43,7 +46,18 @@ namespace Crimson
 		std::deque<VkWriteDescriptorSetAccelerationStructureNV> m_AccelStructWriteInfoCache;
 		std::vector<VkWriteDescriptorSet> m_WriteCache;
 
+		std::vector<uint32_t> m_ResourceReference;
+		std::vector<std::vector<VulkanImageObject*>> m_ReferencedImages;
+		std::vector<std::vector<VulkanBufferObject*>> m_ReferencedBuffers;
+
 		inline VkImageLayout DetermineLayout(EViewAsType view_as, EShaderResourceType resource_type);
+	};
+
+	struct ReferenceRanges
+	{
+		VkPipelineStageFlags m_GraphicsStages = 0;
+		VkPipelineStageFlags m_RayTracingStages = 0;
+		VkPipelineStageFlags m_MeshPipelineStages = 0;
 	};
 
 	class VulkanDescriptorSetLayout : public DescriptorSetLayout
@@ -51,14 +65,18 @@ namespace Crimson
 	public:
 		friend class VulkanRenderPass;
 		friend class VulkanRayTracer;
+		friend class VulkanDescriptorSet;
 
 		VulkanDescriptorSetLayout(VulkanGPUDevice* device);
 		~VulkanDescriptorSetLayout() {}
 		virtual PDescriptorSet AllocDescriptorSet() override;
 		virtual void BuildLayout() override;
 		virtual void Dispose() override;
+		//type : 0 normal 1 mesh 2 ray tracing
+		VkPipelineStageFlags GetReferenceStageRanges(uint32_t binding_id, uint32_t type);
 	private:
 		VulkanGPUDevice*		p_OwningDevice;
 		VkDescriptorSetLayout	m_DescriptorSetLayout;
+		std::vector<ReferenceRanges> m_ReferenceRanges;
 	};
 }

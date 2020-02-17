@@ -1,0 +1,10 @@
+#ifndef CAMERA_SHADER_INCLUDE
+#define CAMERA_SHADER_INCLUDE
+struct Camera
+{
+    mat4 view;
+    mat4 proj;
+    mat4 viewInverse;
+    mat4 projInverse;
+};
+#endif

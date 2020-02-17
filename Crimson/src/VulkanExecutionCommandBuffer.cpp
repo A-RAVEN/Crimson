@@ -5,6 +5,8 @@
 #include <headers/VulkanDebugLog.h>
 #include <headers/VulkanBuffer.h>
 #include <headers/VulkanImage.h>
+#include <headers/VulkanRayTracer.h>
+#include <headers/VulkanDescriptors.h>
 
 namespace Crimson
 {
@@ -32,15 +34,23 @@ namespace Crimson
 		begin_info.pNext = nullptr;
 		//recording commands
 		vulkan_framebuffer->ImageBarriers(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType));
-		vkCmdBeginRenderPass(m_CurrentCommandBuffer, &begin_info, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+		std::deque<VulkanDescriptorSet*> referenced_sets;
 		{
-			std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(0, vulkan_renderpass_instance);
+			std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(0, vulkan_renderpass_instance, referenced_sets);
+			for (auto set : referenced_sets)
+			{
+				//NOTICE: Currently, Render Pass Is Only Used For Graphics Use
+				set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 0);
+			}
+
+			vkCmdBeginRenderPass(m_CurrentCommandBuffer, &begin_info, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 			vkCmdExecuteCommands(m_CurrentCommandBuffer, cmd_buffers.size(), cmd_buffers.data());
 		}
 		for (uint32_t subpass_id = 1; subpass_id < vulkan_renderpass->m_Subpasses.size(); ++subpass_id)
 		{
+			referenced_sets.clear();
 			vkCmdNextSubpass(m_CurrentCommandBuffer, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-			std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance);
+			std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance, referenced_sets);
 			vkCmdExecuteCommands(m_CurrentCommandBuffer, cmd_buffers.size(), cmd_buffers.data());
 		}
 		vkCmdEndRenderPass(m_CurrentCommandBuffer);
@@ -54,6 +64,8 @@ namespace Crimson
 		
 		VkBufferImageCopy region = {};
 		region.bufferOffset = buffer_offset;
+		region.imageOffset = { 0, 0, 0 };
+		region.imageExtent = { vulkan_image->m_Width,  vulkan_image->m_Height, vulkan_image->m_Depth };
 		region.bufferRowLength = 0;
 		region.bufferImageHeight = 0;
 		region.imageSubresource = vulkan_image->GetSubresourceLayers(EViewAsType::E_VIEW_AS_TYPE_MAX, mip_level, base_layer, layer_count);
@@ -94,6 +106,17 @@ namespace Crimson
 			vulkan_instance_buffer = static_cast<VulkanBufferObject*>(instance_buffer)->m_Buffer;
 		}
 		p_OwningDevice->m_NVExtension.vkCmdBuildAccelerationStructureNV(m_CurrentCommandBuffer, &vulkan_accel_struct->m_StructureInfo, vulkan_instance_buffer, instance_offset, update ? VK_TRUE : VK_FALSE, vulkan_accel_struct->m_Structure, VK_NULL_HANDLE, vulkan_accel_struct->p_ScratchBuffer->GetVulkanBuffer(), 0);
+	}
+	void VulkanExecutionCommandBuffer::BindRayTracer(PRayTracer raytracer)
+	{
+		VulkanRayTracer* vulkan_raytracer = static_cast<VulkanRayTracer*>(raytracer);
+		vkCmdBindPipeline(m_CurrentCommandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_NV, vulkan_raytracer->m_Pipeline);
+	}
+	void VulkanExecutionCommandBuffer::BindRayTracingDescriptorSet(PDescriptorSet descriptor_set, uint32_t set_id)
+	{
+		VulkanDescriptorSet* vulkan_set = static_cast<VulkanDescriptorSet*>(descriptor_set);
+		vkCmdBindDescriptorSets(m_CurrentCommandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_NV, p_CurrentBoundedRayTracer->m_PipelineLayout,
+			set_id, 1, &vulkan_set->m_DescriptorSet, 0, nullptr);
 	}
 	void VulkanExecutionCommandBuffer::StartCommand()
 	{

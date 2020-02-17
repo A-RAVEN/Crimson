@@ -11,6 +11,7 @@ namespace Crimson
 	class VulkanGraphicsCommandBuffer : public GraphicsCommandBuffer
 	{
 	public:
+		friend class VulkanGPUDeviceThread;
 		VulkanGraphicsCommandBuffer();
 		~VulkanGraphicsCommandBuffer();
 		virtual void EndCommandBuffer() override;
@@ -38,6 +39,6 @@ namespace Crimson
 		VkCommandBuffer m_CommandBuffer;
 		VkPipelineLayout m_CurrentPipelineLayout;
 
-		std::set<VulkanDescriptorSet*> p_ReferencingDescriptorSets;
+		std::vector<VulkanDescriptorSet*> p_ReferencingDescriptorSets;
 	};
 }

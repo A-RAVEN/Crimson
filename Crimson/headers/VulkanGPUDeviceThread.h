@@ -10,12 +10,25 @@ namespace Crimson
 	class VulkanRenderPassInstance;
 	class VulkanBatch;
 	class VulkanExecutionCommandBuffer;
+	class VulkanDescriptorSet;
+
+	struct SubpassCommandInfo
+	{
+		VkCommandBuffer m_CommandBuffer;
+		std::vector<VulkanDescriptorSet*> m_ReferencingDescriptorSets;
+		SubpassCommandInfo() :
+			m_CommandBuffer(VK_NULL_HANDLE),
+			m_ReferencingDescriptorSets()
+		{}
+	};
+
 	class RenderPassInstanceGraphicsCommandBufferInfo
 	{
 	public:
 		RenderPassInstanceGraphicsCommandBufferInfo();
 		void InitBufferInfo(VulkanRenderPassInstance* p_instance);
-		std::vector<VkCommandBuffer> m_SubpassCommands;
+		//std::vector<VkCommandBuffer> m_SubpassCommands;
+		std::vector<SubpassCommandInfo> m_SubpassCommands;
 	};
 
 	class VulkanGPUDevice;
@@ -33,7 +46,7 @@ namespace Crimson
 		
 		void OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer);
 		void InitGPUDeviceThread(VulkanGPUDevice* device);
-		void PushBackSubpassCommandBuffer(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t renderpass_instance_id, uint32_t subpass_id);
+		void PushBackSubpassCommandBuffer(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t renderpass_instance_id, uint32_t subpass_id, std::deque<VulkanDescriptorSet*>& referenced_sets);
 		void PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id, std::vector<VkSemaphore>& waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 
 		VkCommandBuffer AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type);

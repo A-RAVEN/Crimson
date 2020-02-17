@@ -25,6 +25,13 @@ namespace Crimson
 	class VulkanBufferObject;
 	class VulkanRayTraceGeometry;
 	class VulkanAccelerationStructure;
+	class VulkanDescriptorSet;
+
+	struct DeviceSupportFeatures
+	{
+		bool m_RayTracingNV = false;
+	};
+
 	class NVExtension
 	{
 	public:
@@ -46,6 +53,8 @@ namespace Crimson
 		PFN_vkGetRayTracingShaderGroupHandlesNV vkGetRayTracingShaderGroupHandlesNV;
 
 		PFN_vkCmdTraceRaysNV vkCmdTraceRaysNV;
+
+		VkPhysicalDeviceRayTracingPropertiesNV m_RayTracingProperties;
 		NVExtension() :
 			vkCreateAccelerationStructureNV(nullptr),
 			vkDestroyAccelerationStructureNV(nullptr),
@@ -55,9 +64,10 @@ namespace Crimson
 			vkCmdBuildAccelerationStructureNV(nullptr),
 			vkCreateRayTracingPipelinesNV(nullptr),
 			vkGetRayTracingShaderGroupHandlesNV(nullptr),
-			vkCmdTraceRaysNV(nullptr)
+			vkCmdTraceRaysNV(nullptr),
+			m_RayTracingProperties{}
 		{}
-		void InitExtensions(VkDevice device);
+		void InitExtensions(VkDevice device, VkPhysicalDevice physical_device);
 	};
 
 	class VulkanGPUDevice : public IGPUDevice
@@ -129,7 +139,7 @@ namespace Crimson
 		virtual void ExecuteBatches(std::vector<std::string> const& batches);
 		virtual void PresentWindow(IWindow& window) override;
 
-		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance);
+		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance, std::deque<VulkanDescriptorSet*>& referenced_set);
 		std::vector<VkCommandBuffer> CollectBatchCommandBuffers(uint32_t batch_id, std::vector<VkSemaphore> &waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 		uint32_t GetQueueFamilyIdByCommandType(EExecutionCommandType command_type);
 
@@ -167,5 +177,8 @@ namespace Crimson
 
 		IndexPool<uint32_t> m_BatchIdPool;
 		std::unordered_map<std::string, VulkanBatch*> m_Batches;
+
+		//features
+		DeviceSupportFeatures m_SupportedFeatures;
 	};
 }

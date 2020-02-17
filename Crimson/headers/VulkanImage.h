@@ -20,6 +20,7 @@ namespace Crimson
 		friend class VulkanGPUDevice;
 		friend class VulkanFramebuffer;
 		friend class VulkanExecutionCommandBuffer;
+		friend class VulkanDescriptorSet;
 		VulkanImageObject();
 		void SetVulkanImage(VulkanGPUDevice* p_device, VkImage image, VmaAllocation allocation_info,
 			EFormat format,

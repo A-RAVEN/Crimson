@@ -134,6 +134,24 @@ namespace Crimson
 
 		VK_SHADER_STAGE_ALL_GRAPHICS,
 	};
+
+	static VkPipelineStageFlagBits VULKAN_STATIC_SHADER_TO_PIPELINE_STAGE_TABLE[] =
+	{
+		VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+		VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT,
+		VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT,
+		VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT,
+		VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+		VK_PIPELINE_STAGE_TASK_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_MESH_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_NV,
+		VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+	};
 	
 	static VkDescriptorType VULKAN_STATIC_DESCRIPTOR_TYPE_TABLE[] =
 	{
@@ -332,6 +350,42 @@ namespace Crimson
 		return VULKAN_STATIC_SHADER_STAGE_TABLE[static_cast<uint32_t>(shader_type)];
 	}
 
+	static inline bool IsNormalGraphicsShaderGroup(EShaderType shader_type)
+	{
+		switch (shader_type) 
+		{
+		case EShaderType::E_SHADER_TYPE_VERTEX:
+		case EShaderType::E_SHADER_TYPE_TESSCTR:
+		case EShaderType::E_SHADER_TYPE_TESSEVL:
+		case EShaderType::E_SHADER_TYPE_GEOMETRY:
+		case EShaderType::E_SHADER_TYPE_FRAGMENT:
+			return true;
+		}
+		return false;
+	}
+
+	static inline bool IsMeshShaderGroup(EShaderType shader_type)
+	{
+		switch (shader_type)
+		{
+		case EShaderType::E_SHADER_TYPE_TASK_NV:
+		case EShaderType::E_SHADER_TYPE_MESH_NV:
+		case EShaderType::E_SHADER_TYPE_FRAGMENT:
+			return true;
+		}
+		return false;
+	}
+
+	static inline bool IsRayTracingShaderGroup(EShaderType shader_type)
+	{
+		return (shader_type >= EShaderType::E_SHADER_TYPE_RAYGEN_NV) && (shader_type < EShaderType::E_SHADER_TYPE_MAX);
+	}
+
+	static inline VkPipelineStageFlagBits TranslateShaderTypeToVulkanPipelineStage(EShaderType shader_type)
+	{
+		return VULKAN_STATIC_SHADER_TO_PIPELINE_STAGE_TABLE[static_cast<uint32_t>(shader_type)];
+	}
+
 	static inline VkDescriptorType TranslateShaderResourceTypeToVulkan(EShaderResourceType resource_type)
 	{
 		return VULKAN_STATIC_DESCRIPTOR_TYPE_TABLE[static_cast<uint32_t>(resource_type)];
@@ -409,5 +463,25 @@ namespace Crimson
 	static inline VkGeometryFlagBitsNV TranslateGeometryFlagToVulkan(EGeometryFlags flag)
 	{
 		return VULKAN_STATIC_GEOMETRY_FLAG_TABLE[static_cast<uint8_t>(flag)];
+	}
+
+	static inline VkImageLayout TranslateShaderResourceTypeToVulkanImageLayout(EShaderResourceType resource_type, EFormat image_format)
+	{
+		bool is_depth_stencil = IsDepthStencilFormat(image_format);
+		switch (resource_type)
+		{
+		case Crimson::EShaderResourceType::E_SHADER_IMAGE_SAMPLER:
+			return is_depth_stencil ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			break;
+		case Crimson::EShaderResourceType::E_SHADER_STORAGE_IMAGE:
+			return VK_IMAGE_LAYOUT_GENERAL;
+			break;
+		case Crimson::EShaderResourceType::E_SHADER_TYPE_INPUT_ATTACHMENT:
+			return is_depth_stencil ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			break;
+		default:
+			break;
+		}
+		return VK_IMAGE_LAYOUT_GENERAL;
 	}
 }

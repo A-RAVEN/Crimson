@@ -127,4 +127,27 @@ namespace Crimson
 		E_INDEX_TYPE_32,
 		E_INDEX_TYPE_MAX
 	};
+
+	static inline bool IsBufferResourceType(EShaderResourceType resource_type)
+	{
+		switch (resource_type)
+		{
+		case EShaderResourceType::E_SHADER_UNIFORM_BUFFER:
+		case EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER:
+			return true;
+		}
+		return false;
+	}
+
+	static inline bool IsImageResourceType(EShaderResourceType resource_type)
+	{
+		switch (resource_type)
+		{
+		case EShaderResourceType::E_SHADER_IMAGE_SAMPLER:
+		case EShaderResourceType::E_SHADER_STORAGE_IMAGE:
+		case EShaderResourceType::E_SHADER_TYPE_INPUT_ATTACHMENT:
+			return true;
+		}
+		return false;
+	}
 }

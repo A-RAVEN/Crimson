@@ -11,7 +11,7 @@ namespace Crimson
 		m_PipelineLayout(VK_NULL_HANDLE),
 		m_Pipeline(VK_NULL_HANDLE)
 	{}
-	void VulkanRayTracer::LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type)
+	void VulkanRayTracer::LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type, std::string const& shader_table)
 	{
 		if (shader_type >= EShaderType::E_SHADER_TYPE_RAYGEN_NV && shader_type <= EShaderType::E_SHADER_TYPE_INTERSECTION_NV) {
 			VkShaderModule new_shader_module = VK_NULL_HANDLE;
@@ -23,6 +23,37 @@ namespace Crimson
 			CHECK_VKRESULT(vkCreateShaderModule(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &new_shader_module),
 				"Vulkan Creat Shader Module Issue!");
 			m_Shaders.push_back(std::make_pair(new_shader_module, shader_type));
+			auto find = m_ShaderTables.find(shader_table);
+			if (find != m_ShaderTables.end())
+			{
+				find->second.push_back(m_Shaders.size() - 1);
+			}
+			else
+			{
+				std::vector<size_t> new_list = { m_Shaders.size() - 1 };
+				m_ShaderTables.insert(std::make_pair(shader_table, new_list));
+			}
+		}
+	}
+	uint64_t VulkanRayTracer::GetShaderTableSize(std::string const& shader_table_name)
+	{
+		auto find = m_ShaderTables.find(shader_table_name);
+		if (find != m_ShaderTables.end())
+		{
+			return find->second.size() * p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize;
+		}
+		return 0u;
+	}
+	void VulkanRayTracer::CopyShaderTable(void* copy_dst, std::string const& shader_table_name)
+	{
+		auto find = m_ShaderTables.find(shader_table_name);
+		if (find != m_ShaderTables.end())
+		{
+			char* dst = static_cast<char*>(copy_dst);
+			for (uint64_t i = 0; i < find->second.size(); ++i)
+			{
+				memcpy(dst + i * p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize, &m_Handles[find->second[i]], p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize);
+			}
 		}
 	}
 	void VulkanRayTracer::Build()
@@ -97,6 +128,10 @@ namespace Crimson
 		pipeline_create_info.maxRecursionDepth = m_MaxRecursionDepth;
 		pipeline_create_info.layout = m_PipelineLayout;
 		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkCreateRayTracingPipelinesNV(p_OwningDevice->m_LogicalDevice, VK_NULL_HANDLE, 1, &pipeline_create_info, VULKAN_ALLOCATOR_POINTER, &m_Pipeline), "Vulkan Create Ray Tracing Pipeline Issue!");
+
+		m_Handles.resize(pipeline_create_info.groupCount * p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize);
+		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkGetRayTracingShaderGroupHandlesNV(p_OwningDevice->m_LogicalDevice, m_Pipeline, 0, pipeline_create_info.groupCount,
+			m_Handles.size(), m_Handles.data()), "Vulkan Get Ray Tracing Shader Group Handle Issue!");
 	}
 	void VulkanRayTracer::Dispose()
 	{

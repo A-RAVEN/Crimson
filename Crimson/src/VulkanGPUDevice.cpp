@@ -241,12 +241,12 @@ namespace Crimson
 			CHECK_VKRESULT(result, "Vulkan Present Issue!");
 		}
 	}
-	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance)
+	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance, std::deque<VulkanDescriptorSet*>& referenced_set)
 	{
 		std::vector<VkCommandBuffer> return_val;
 		for (auto& thread : m_Threads)
 		{
-			thread->PushBackSubpassCommandBuffer(return_val, p_instance->m_InstanceUniqueId, subpass_id);
+			thread->PushBackSubpassCommandBuffer(return_val, p_instance->m_InstanceUniqueId, subpass_id, referenced_set);
 		}
 		return return_val;
 	}
@@ -424,7 +424,10 @@ namespace Crimson
 		std::swap(m_QueueNumbers, queue_numbers);
 		InitMemoryAllocator();
 		InitDescriptorPool();
-		m_NVExtension.InitExtensions(m_LogicalDevice);
+		if (m_SupportedFeatures.m_RayTracingNV) 
+		{
+			m_NVExtension.InitExtensions(m_LogicalDevice, m_PhysicalDevice);
+		}
 	}
 
 	std::vector<char const*> VulkanGPUDevice::GetFilteredDeviceExtensions(VkPhysicalDevice physical_devices, std::vector<char const*> const& wanted_extensions)
@@ -438,8 +441,13 @@ namespace Crimson
 		{
 			for (auto& itr_property : properties)
 			{
+				std::string strname(name);
 				if (std::string(name) == std::string(itr_property.extensionName))
 				{
+					if (strname == VK_NV_RAY_TRACING_EXTENSION_NAME)
+					{
+						m_SupportedFeatures.m_RayTracingNV = true;
+					}
 					return_val.push_back(name);
 					break;
 				}
@@ -485,7 +493,7 @@ namespace Crimson
 		create_info.pNext = nullptr;
 		CHECK_VKRESULT(vkCreateDescriptorPool(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_DescriptorPool), "Vulkan Descriptor Pool Creation Issue!");
 	}
-	void NVExtension::InitExtensions(VkDevice device)
+	void NVExtension::InitExtensions(VkDevice device, VkPhysicalDevice physical_device)
 	{
 #ifndef GET_EXTENSION_FUNC
 #define GET_EXTENSION_FUNC(func_name) {func_name = reinterpret_cast<PFN_##func_name>(vkGetDeviceProcAddr(device, #func_name));}
@@ -499,5 +507,11 @@ namespace Crimson
 		GET_EXTENSION_FUNC(vkCreateRayTracingPipelinesNV);
 		GET_EXTENSION_FUNC(vkGetRayTracingShaderGroupHandlesNV);
 		GET_EXTENSION_FUNC(vkCmdTraceRaysNV);
+
+		m_RayTracingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_NV;
+		VkPhysicalDeviceProperties2 deviceProps2{};
+		deviceProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+		deviceProps2.pNext = &m_RayTracingProperties;
+		vkGetPhysicalDeviceProperties2(physical_device, &deviceProps2);
 	}
 }
