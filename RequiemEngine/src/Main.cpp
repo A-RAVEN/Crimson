@@ -12,6 +12,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <headers/stb_image.h>
+#include <headers/VertexData.h>
 
 struct Camera
 {
@@ -184,7 +185,9 @@ int main()
 		pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
 	}
 	pipeline->m_VertexInputs.resize(1);
-	pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
+	//pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
+	//pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
+	pipeline->m_VertexInputs[0].m_DataTypes = VertexDataLightWeight::GetDataType();
 	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
 	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
 	pipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;

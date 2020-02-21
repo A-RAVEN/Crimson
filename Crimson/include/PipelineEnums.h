@@ -72,7 +72,8 @@ namespace Crimson
 		EMAT3,
 		EMAT4,
 		//color
-		ERGBA8,
+		ERGBA8_UNORM,
+		ERGBA8_SNORM,
 		EDATA_TYPE_MAX,
 	};
 

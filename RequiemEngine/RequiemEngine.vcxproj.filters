@@ -27,6 +27,9 @@
     <ClCompile Include="src\stb_impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\VertexData.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -39,6 +42,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\stb_image_write.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\VertexData.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

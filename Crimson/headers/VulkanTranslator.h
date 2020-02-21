@@ -237,6 +237,7 @@ namespace Crimson
 		{VK_FORMAT_R32G32B32A32_SFLOAT, sizeof(float) * 4,	4},
 		//color
 		{VK_FORMAT_R8G8B8A8_UNORM,		sizeof(uint8_t) * 4, 1},
+		{VK_FORMAT_R8G8B8A8_SNORM,		sizeof(uint8_t) * 4, 1}
 	};
 
 	static VkImageAspectFlags VULKAN_STATIC_IMAGE_ASPECT_TYPE_TABLE[static_cast<size_t>(EViewAsType::E_VIEW_AS_TYPE_MAX)] =
