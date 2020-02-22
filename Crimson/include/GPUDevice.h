@@ -25,6 +25,12 @@ namespace Crimson
 		E_COMMAND_TYPE_MAX
 	};
 
+	enum class EMemoryBarrierType : uint8_t
+	{
+		E_ACCEL_STRUCTURE_BUILD_READ_WRITE = 0,
+		E_MAX
+	};
+
 	class GraphicsCommandBuffer
 	{
 	public:
@@ -52,6 +58,8 @@ namespace Crimson
 		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct, PGPUBuffer instance_buffer = nullptr, uint64_t instance_offset = 0, bool update = false) = 0;
 		virtual void BindRayTracer(PRayTracer raytracer) = 0;
 		virtual void BindRayTracingDescriptorSet(PDescriptorSet descriptor_set, uint32_t set_id) = 0;
+		virtual void StartRayTracing(PGPUBuffer raygen_table, uint64_t raygen_offset, uint64_t miss_offset, uint64_t hit_offset, uint32_t width, uint32_t height) = 0;
+		virtual void DeviceMemoryBarrier(EMemoryBarrierType barrier_type) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
 	protected:
@@ -112,6 +120,8 @@ namespace Crimson
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;
 		virtual void DestroyBatch(std::string const& batch_name) = 0;
 		virtual void ExecuteBatches(std::vector<std::string> const& batches) = 0;
+
+		virtual void WaitIdle() = 0;
 
 		virtual void PresentWindow(IWindow& window) = 0;
 	protected:

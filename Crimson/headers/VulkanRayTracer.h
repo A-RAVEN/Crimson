@@ -4,6 +4,15 @@
 
 namespace Crimson
 {
+
+	class ShaderTableData
+	{
+	public:
+		size_t m_RayGenShader;
+		size_t m_MissShader;
+		size_t m_HitShader;
+	};
+
 	class VulkanRayTracer : public RayTracer
 	{
 	public:

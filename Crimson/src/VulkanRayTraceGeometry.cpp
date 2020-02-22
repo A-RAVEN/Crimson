@@ -15,7 +15,10 @@ namespace Crimson
 		m_Geometry.sType = VK_STRUCTURE_TYPE_GEOMETRY_NV;
 		m_Geometry.pNext = nullptr;
 		m_Geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_GEOMETRY_TRIANGLES_NV;
+		m_Geometry.geometry.triangles.transformData = VK_NULL_HANDLE;
+		m_Geometry.geometry.triangles.transformOffset = 0;
 		m_Geometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_GEOMETRY_AABB_NV;
+		m_Geometry.flags = 0;
 	}
 	void VulkanRayTraceGeometry::SetVertexBuffer(PGPUBuffer vertex_buffer)
 	{

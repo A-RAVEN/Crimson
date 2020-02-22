@@ -52,7 +52,8 @@ namespace Crimson
 			char* dst = static_cast<char*>(copy_dst);
 			for (uint64_t i = 0; i < find->second.size(); ++i)
 			{
-				memcpy(dst + i * p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize, &m_Handles[find->second[i]], p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize);
+				uint32_t handle_size = p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize;
+				memcpy(dst + i * handle_size, &m_Handles[find->second[i] * handle_size], handle_size);
 			}
 		}
 	}
@@ -85,12 +86,15 @@ namespace Crimson
 				break;
 			case EShaderType::E_SHADER_TYPE_CLOSEHIT_NV:
 				itr_group_info.closestHitShader = shader_id;
+				itr_group_info.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_NV;
 				break;
 			case EShaderType::E_SHADER_TYPE_ANYHIT_NV:
 				itr_group_info.anyHitShader = shader_id;
+				itr_group_info.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_NV;
 				break;
 			case EShaderType::E_SHADER_TYPE_INTERSECTION_NV:
 				itr_group_info.intersectionShader = shader_id;
+				itr_group_info.type = VK_RAY_TRACING_SHADER_GROUP_TYPE_PROCEDURAL_HIT_GROUP_NV;
 				break;
 			}
 		}

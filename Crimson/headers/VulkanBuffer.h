@@ -21,6 +21,7 @@ namespace Crimson
 		virtual uint8_t* GetMappedPointer() override;
 		virtual void UnMapp() override;
 		inline VkBuffer GetVulkanBuffer() const { return m_Buffer; }
+
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VkBuffer			m_Buffer;

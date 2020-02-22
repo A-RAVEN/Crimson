@@ -45,3 +45,5 @@ RequiemEngine/Temp/x64/Debug/vc142.idb
 
 #Folders
 Profiler/
+*.iobj
+*.ipdb

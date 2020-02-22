@@ -139,6 +139,8 @@ namespace Crimson
 		virtual void ExecuteBatches(std::vector<std::string> const& batches);
 		virtual void PresentWindow(IWindow& window) override;
 
+		virtual void WaitIdle() override;
+
 		std::vector<VkCommandBuffer> CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance, std::deque<VulkanDescriptorSet*>& referenced_set);
 		std::vector<VkCommandBuffer> CollectBatchCommandBuffers(uint32_t batch_id, std::vector<VkSemaphore> &waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 		uint32_t GetQueueFamilyIdByCommandType(EExecutionCommandType command_type);

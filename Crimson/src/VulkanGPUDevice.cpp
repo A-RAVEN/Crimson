@@ -241,6 +241,10 @@ namespace Crimson
 			CHECK_VKRESULT(result, "Vulkan Present Issue!");
 		}
 	}
+	void VulkanGPUDevice::WaitIdle()
+	{
+		CHECK_VKRESULT(vkDeviceWaitIdle(m_LogicalDevice), "Vulkan Device Wait Idle Issue!");
+	}
 	std::vector<VkCommandBuffer> VulkanGPUDevice::CollectSubpassCommandBuffers(uint32_t subpass_id, VulkanRenderPassInstance* p_instance, std::deque<VulkanDescriptorSet*>& referenced_set)
 	{
 		std::vector<VkCommandBuffer> return_val;

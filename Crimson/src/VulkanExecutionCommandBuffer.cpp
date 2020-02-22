@@ -123,12 +123,44 @@ namespace Crimson
 	{
 		VulkanRayTracer* vulkan_raytracer = static_cast<VulkanRayTracer*>(raytracer);
 		vkCmdBindPipeline(m_CurrentCommandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_NV, vulkan_raytracer->m_Pipeline);
+		p_CurrentBoundedRayTracer = vulkan_raytracer;
 	}
 	void VulkanExecutionCommandBuffer::BindRayTracingDescriptorSet(PDescriptorSet descriptor_set, uint32_t set_id)
 	{
 		VulkanDescriptorSet* vulkan_set = static_cast<VulkanDescriptorSet*>(descriptor_set);
+		vulkan_set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 2);
 		vkCmdBindDescriptorSets(m_CurrentCommandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_NV, p_CurrentBoundedRayTracer->m_PipelineLayout,
 			set_id, 1, &vulkan_set->m_DescriptorSet, 0, nullptr);
+	}
+	void VulkanExecutionCommandBuffer::StartRayTracing(PGPUBuffer raygen_table, uint64_t raygen_offset, uint64_t miss_offset, uint64_t hit_offset, uint32_t width, uint32_t height)
+	{
+		uint32_t handle_size = p_OwningDevice->m_NVExtension.m_RayTracingProperties.shaderGroupHandleSize;
+		VulkanBufferObject* p_vulkan_buffer = static_cast<VulkanBufferObject*>(raygen_table);
+		p_OwningDevice->m_NVExtension.vkCmdTraceRaysNV(m_CurrentCommandBuffer,
+			p_vulkan_buffer->m_Buffer, raygen_offset * handle_size,
+			p_vulkan_buffer->m_Buffer, miss_offset * handle_size, handle_size,
+			p_vulkan_buffer->m_Buffer, hit_offset * handle_size, handle_size,
+			VK_NULL_HANDLE, 0, handle_size,
+			width, height, 1
+		);
+	}
+	void VulkanExecutionCommandBuffer::DeviceMemoryBarrier(EMemoryBarrierType barrier_type)
+	{
+		VkMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		barrier.pNext = nullptr;
+		switch (barrier_type)
+		{
+		case EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE:
+			barrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV;
+			barrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV;
+			vkCmdPipelineBarrier(m_CurrentCommandBuffer, 
+				VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV,
+				0, 1, &barrier, 0, nullptr, 0, nullptr);
+			break;
+		default:
+			break;
+		}
 	}
 	void VulkanExecutionCommandBuffer::StartCommand()
 	{

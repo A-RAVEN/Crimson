@@ -23,6 +23,10 @@ namespace Crimson
 		//virtual void RayTrace(PGPUBuffer shader_table_buffer, uint32_t raygen_id, uint32_t miss_id, uint32_t )
 		virtual void BindRayTracer(PRayTracer raytracer) override;
 		virtual void BindRayTracingDescriptorSet(PDescriptorSet descriptor_set, uint32_t set_id) override;
+		virtual void StartRayTracing(PGPUBuffer raygen_table, 
+			uint64_t raygen_offset, uint64_t miss_offset, uint64_t hit_offset, 
+			uint32_t width, uint32_t height) override;
+		virtual void DeviceMemoryBarrier(EMemoryBarrierType barrier_type) override;
 		virtual void StartCommand() override;
 		virtual void EndCommand() override;
 		void SetExecutionCommandBuffer(VulkanGPUDevice* p_device, VulkanGPUDeviceThread* p_thread, EExecutionCommandType command_type);

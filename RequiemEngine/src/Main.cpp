@@ -47,7 +47,10 @@ int main()
 	PRayTracer raytracer = MainDevice->CreateRayTracer();
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
 	PAccelerationStructure accel_struct = MainDevice->CreateAccelerationStructure();
-	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, 0, EDataType::EVEC3);
+	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, sizeof(VertexDataLightWeight), EDataType::EVEC3);
+	raytrace_geometry->SetIndexData(new_resource.m_IndexBuffer, 0, new_resource.m_IndexSize, EIndexType::E_INDEX_TYPE_32);
+	raytrace_geometry->SetGeometryFlags({ EGeometryFlags::E_GEOMETRY_OPAQUE });
+	raytrace_geometry->SetGeometryType(ERayTraceGeometryType::E_GEOMETRY_TYPE_TRIANGLES);
 	accel_struct->m_Geometries = { raytrace_geometry };
 	accel_struct->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV };
 	accel_struct->InitAS();
@@ -76,7 +79,7 @@ int main()
 	RayTraceGeometryInstance* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RayTraceGeometryInstance();
 	pGeometryInstance->m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
 	pGeometryInstance->m_InstanceId = 0;
-	pGeometryInstance->m_Mask = 0xff;
+	pGeometryInstance->m_Mask = 0x1;// 0xff;
 	pGeometryInstance->m_AccelerationStructureHandle = accel_struct->GetHandle();
 	*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance->m_TransformMatrix)) = 
 	{
@@ -127,7 +130,7 @@ int main()
 	rtlayout->m_Bindings[1].m_BindingPoint = 1;
 	rtlayout->m_Bindings[1].m_Num = 1;
 	rtlayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_ACCEL_STRUCT_NV;
-	rtlayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
+	rtlayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV, EShaderType::E_SHADER_TYPE_MISS_NV, EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
 
 	rtlayout->m_Bindings[2].m_BindingPoint = 2;
 	rtlayout->m_Bindings[2].m_Num = 1;
@@ -138,12 +141,6 @@ int main()
 	PDescriptorSet set = layout->AllocDescriptorSet();
 	set->WriteDescriptorSetBuffers(0, { camera_buffer }, { {0, sizeof(glm::mat4)} }, 0);
 	set->EndWriteDescriptorSet();
-
-	PDescriptorSet rtset = rtlayout->AllocDescriptorSet();
-	rtset->WriteDescriptorSetBuffers(0, { camera_buffer }, { {0, sizeof(glm::mat4)} }, 0);
-	rtset->WriteDescriptorSetAccelStructuresNV(1, { tlas });
-	rtset->WriteDescriptorSetImage(2, test_rtimg, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
-	rtset->EndWriteDescriptorSet();
 
 	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
 
@@ -210,8 +207,41 @@ int main()
 		auto binary = compiler->CompileGLSLShaderSource("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
 		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_RAYGEN_NV, "default");
 	}
+
+	{
+		std::ifstream shader_src("closehit.rchit");
+		std::string src;
+		if (shader_src.is_open())
+		{
+			std::string line;
+			while (std::getline(shader_src, line))
+			{
+				src += line + "\n";
+			}
+		}
+		src = compiler->PreprocessGLSLShader("closehit.rchit", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV);
+		std::cout << src << std::endl;
+		auto binary = compiler->CompileGLSLShaderSource("closehit.rchit", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV);
+		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_CLOSEHIT_NV, "default");
+	}
+	{
+		std::ifstream shader_src("miss.rmiss");
+		std::string src;
+		if (shader_src.is_open())
+		{
+			std::string line;
+			while (std::getline(shader_src, line))
+			{
+				src += line + "\n";
+			}
+		}
+		src = compiler->PreprocessGLSLShader("miss.rmiss", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_MISS_NV);
+		std::cout << src << std::endl;
+		auto binary = compiler->CompileGLSLShaderSource("miss.rmiss", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_MISS_NV);
+		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_MISS_NV, "default");
+	}
 	raytracer->m_DescriptorSetLayouts.push_back({ 0, rtlayout });
-	raytracer->m_MaxRecursionDepth = 1;
+	raytracer->m_MaxRecursionDepth = 5;
 	raytracer->Build();
 	PGPUBuffer shader_table = MainDevice->CreateBuffer(raytracer->GetShaderTableSize("default"), {EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV}, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	raytracer->CopyShaderTable(shader_table->GetMappedPointer(), "default");
@@ -253,7 +283,9 @@ int main()
 	load->StartCommand();
 	load->CopyBufferToImage(image_load_buffer, test_loaded_image);
 	load->BuildAccelerationStructure(accel_struct);
+	load->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 	load->BuildAccelerationStructure(tlas, geometry_instance_buffer);
+	load->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 	load->EndCommand();
 	test_thread->BindExecutionCommandBufferToBatch("GraphicsLoading", load, true);
 
@@ -268,18 +300,29 @@ int main()
 	//cmd->Draw(3, 1, 0, 0);
 	cmd->EndCommandBuffer();
 
+	MainDevice->ExecuteBatches({ "GraphicsLoading" });
+	MainDevice->WaitIdle();
+
+	PDescriptorSet rtset = rtlayout->AllocDescriptorSet();
+	rtset->WriteDescriptorSetBuffers(0, { camera_buffer }, { {0, sizeof(glm::mat4)} }, 0);
+	rtset->WriteDescriptorSetAccelStructuresNV(1, { tlas });
+	rtset->WriteDescriptorSetImage(2, test_rtimg, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
+	rtset->EndWriteDescriptorSet();
 
 	while (new_window.IsWindowRunning())
 	{
 		execution->StartCommand();
-		execution->ExecuteRenderPassInstance(render_pass_instance);
+		//execution->ExecuteRenderPassInstance(render_pass_instance);
+		execution->BindRayTracer(raytracer);
+		execution->BindRayTracingDescriptorSet(rtset, 0);
+		execution->StartRayTracing(shader_table, 0, 2, 1, 1024, 720);
 		execution->EndCommand();
 
 		present->StartCommand();
-		present->CopyToSwapchain_Dynamic(test_color, &new_window);
+		present->CopyToSwapchain_Dynamic(test_rtimg, &new_window);
 		present->EndCommand();
 
-		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
+		MainDevice->ExecuteBatches({ "Main Render", "Present" });
 
 		MainDevice->PresentWindow(new_window);
 		new_window.UpdateWindow();

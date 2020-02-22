@@ -43,7 +43,7 @@ namespace Crimson
 			p_Geometries[id] = static_cast<VulkanRayTraceGeometry*>(m_Geometries[id])->GetGeometry();
 		}
 		m_StructureInfo.pGeometries = p_Geometries.data();
-		m_StructureInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV | VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV;
+		m_StructureInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_NV; //VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV | VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV;
 		m_StructureInfo.type = top_level ? VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_NV : VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_NV;
 		m_StructureInfo.instanceCount = m_InstanceNumber;
 		create_info.info = m_StructureInfo;
