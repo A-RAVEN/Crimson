@@ -13,6 +13,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <headers/stb_image.h>
 #include <headers/VertexData.h>
+#include <headers/KeyboardController.h>
 
 struct Camera
 {
@@ -26,7 +27,7 @@ int main()
 {
 	Camera cam;
 	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	cam.proj = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
+	cam.proj = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
 	cam.viewInverse = glm::inverse(cam.view);
 	cam.projInverse = glm::inverse(cam.proj);
 
@@ -89,7 +90,7 @@ int main()
 	};
 
 	memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
-	camera_buffer->UnMapp();
+	//camera_buffer->UnMapp();
 
 	std::array<float, 9> triangle_data = {
 		1.0f, -1.0f, 0.1f,
@@ -309,17 +310,90 @@ int main()
 	rtset->WriteDescriptorSetImage(2, test_rtimg, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
 	rtset->EndWriteDescriptorSet();
 
+	KeyboardController inputs;
+
+	glm::vec2 angles(0.0f);
+	glm::vec3 position(-5.0f, 0.0f, 0.0f);
+
+	bool toggle = false;
+
 	while (new_window.IsWindowRunning())
 	{
+		inputs.UpdateController();
+		//for (int i = 0; i < 10; ++i)
+		//{
+		//	if (inputs.KeyTriggered(inputs.GetNumKey(i)))
+		//	{
+		//		std::cout << i << std::endl;
+		//	}
+		//}
+		//for (char itr_c = 'A'; itr_c <= 'Z'; ++itr_c)
+		//{
+		//	if (inputs.KeyTriggered(inputs.GetCharKey(itr_c)))
+		//	{
+		//		std::cout << itr_c << std::endl;
+		//	}
+		//}
+
+		if (inputs.KeyTriggered(inputs.GetCharKey('C')))
+		{
+			toggle = !toggle;
+		}
+
+		if (inputs.KeyState(VK_RBUTTON))
+		{
+			glm::vec2 movement = inputs.GetMouseMovement();
+			angles.x = (angles.x + movement.x * 0.01f);
+			angles.y = glm::clamp(angles.y + movement.y * 0.01f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
+			//std::cout << angles.x << " " << angles.y << std::endl;
+		}
+		glm::vec3 forward = glm::rotate(glm::mat4(1.0f), -angles.x, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), -angles.y, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+		if (inputs.KeyState(inputs.GetCharKey('W')))
+		{
+			position += forward * 0.005f;
+		}
+		if (inputs.KeyState(inputs.GetCharKey('S')))
+		{
+			position -= forward * 0.005f;
+		}
+		if (inputs.KeyState(inputs.GetCharKey('D')))
+		{
+			position += right * 0.005f;
+		}
+		if (inputs.KeyState(inputs.GetCharKey('A')))
+		{
+			position -= right * 0.005f;
+		}
+		{
+			cam.view = glm::lookAt(position, position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
+			cam.viewInverse = glm::inverse(cam.view);
+			memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
+		}
+
+
 		execution->StartCommand();
-		//execution->ExecuteRenderPassInstance(render_pass_instance);
-		execution->BindRayTracer(raytracer);
-		execution->BindRayTracingDescriptorSet(rtset, 0);
-		execution->StartRayTracing(shader_table, 0, 2, 1, 1024, 720);
+		if (toggle)
+		{
+			execution->ExecuteRenderPassInstance(render_pass_instance);
+		}
+		else
+		{
+			execution->BindRayTracer(raytracer);
+			execution->BindRayTracingDescriptorSet(rtset, 0);
+			execution->StartRayTracing(shader_table, 0, 2, 1, 1024, 720);
+		}
 		execution->EndCommand();
 
 		present->StartCommand();
-		present->CopyToSwapchain_Dynamic(test_rtimg, &new_window);
+		if (toggle)
+		{
+			present->CopyToSwapchain_Dynamic(test_color, &new_window);
+		}
+		else
+		{
+			present->CopyToSwapchain_Dynamic(test_rtimg, &new_window);
+		}
 		present->EndCommand();
 
 		MainDevice->ExecuteBatches({ "Main Render", "Present" });

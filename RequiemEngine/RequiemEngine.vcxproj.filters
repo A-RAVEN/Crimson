@@ -30,6 +30,9 @@
     <ClCompile Include="src\VertexData.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\KeyboardController.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -45,6 +48,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\VertexData.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\KeyboardController.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

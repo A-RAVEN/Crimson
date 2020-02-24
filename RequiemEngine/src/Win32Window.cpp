@@ -54,29 +54,29 @@ static LRESULT CALLBACK WindowsEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam,
 		//}
 		//return 0;
 	}
-	case WM_KEYDOWN:
-	case WM_SYSKEYDOWN:
-		if (wParam < 256)
-		{
-			//for (auto func : window->pKeyInputFunc)
-			//	func(uint8_t(wParam), true);
-		}
-		return 0;
-	case WM_KEYUP:
-	case WM_SYSKEYUP:
-		if (wParam < 256)
-		{
-			//for (auto func : window->pKeyInputFunc)
-			//	func(uint8_t(wParam), false);
-		}
-		return 0;
-	case WM_CHAR:
-		if (true)
-		{
-			//for (auto func : window->pCharInputFunc)
-			//	func(char(wParam));
-		}
-		return 0;
+	//case WM_KEYDOWN:
+	//case WM_SYSKEYDOWN:
+	//	if (wParam < 256)
+	//	{
+	//		//for (auto func : window->pKeyInputFunc)
+	//		//	func(uint8_t(wParam), true);
+	//	}
+	//	return 0;
+	//case WM_KEYUP:
+	//case WM_SYSKEYUP:
+	//	if (wParam < 256)
+	//	{
+	//		//for (auto func : window->pKeyInputFunc)
+	//		//	func(uint8_t(wParam), false);
+	//	}
+	//	return 0;
+	//case WM_CHAR:
+	//	if (true)
+	//	{
+	//		//for (auto func : window->pCharInputFunc)
+	//		//	func(char(wParam));
+	//	}
+	//	return 0;
 	default:
 		break;
 	}
@@ -153,7 +153,8 @@ void Win32Window::OnWindowResize(uint32_t new_width, uint32_t new_height)
 void Win32Window::UpdateWindow()
 {
 	MSG msg;
-	if (PeekMessage(&msg, m_Win32Window, 0, 0, PM_REMOVE))
+	//if (PeekMessage(&msg, m_Win32Window, 0, 0, PM_REMOVE))
+	if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);

@@ -164,6 +164,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\KeyboardController.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\MeshResource.cpp" />
     <ClCompile Include="src\stb_impl.cpp" />
@@ -171,6 +172,7 @@
     <ClCompile Include="src\Win32Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\KeyboardController.h" />
     <ClInclude Include="headers\MeshResource.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\stb_image_write.h" />

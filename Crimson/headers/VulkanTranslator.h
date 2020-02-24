@@ -294,6 +294,15 @@ namespace Crimson
 		VK_BLEND_OP_MULTIPLY_EXT,
 	};
 
+	static VkBuildAccelerationStructureFlagBitsNV VULKAN_BUILD_ACCEL_STRUCT_FLAG_NV_TABLE[static_cast<size_t>(EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_MAX)] =
+	{
+		VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV,
+		VK_BUILD_ACCELERATION_STRUCTURE_ALLOW_COMPACTION_BIT_NV,
+		VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV,
+		VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_BUILD_BIT_NV,
+		VK_BUILD_ACCELERATION_STRUCTURE_LOW_MEMORY_BIT_NV,
+	};
+
 	static inline VkFormat TranslateImageFormatToVulkan(EFormat format)
 	{
 		return VULKAN_STATIC_FORMAT_TABLE[static_cast<uint32_t>(format)];
@@ -484,5 +493,15 @@ namespace Crimson
 			break;
 		}
 		return VK_IMAGE_LAYOUT_GENERAL;
+	}
+
+	static inline VkBuildAccelerationStructureFlagsNV TranslateBuildAccelStructureFlags(std::vector<EBuildAccelerationStructureFlags> const& flags)
+	{
+		VkBuildAccelerationStructureFlagsNV return_val = 0;
+		for (auto flag : flags)
+		{
+			return_val |= VULKAN_BUILD_ACCEL_STRUCT_FLAG_NV_TABLE[static_cast<size_t>(flag)];
+		}
+		return return_val;
 	}
 }
