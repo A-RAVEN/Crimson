@@ -33,6 +33,12 @@
     <ClCompile Include="src\KeyboardController.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\GeometryInstanceManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="headers\MeshQueue.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -51,6 +57,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\KeyboardController.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\GeometryInstanceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\MeshQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\BufferVector.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

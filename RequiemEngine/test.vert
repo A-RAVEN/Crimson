@@ -6,6 +6,11 @@ layout(set = 0, binding = 0) uniform MATRIX
 	Camera cam;
 };
 
+layout(set = 0, binding = 1) buffer readonly TRANSFORMS
+{
+	mat4 transforms[];
+};
+
 layout(location = 0) in vec3 positioin;
 layout(location = 1) in vec2 texcoord;
 layout(location = 2) in vec4 normal_data;

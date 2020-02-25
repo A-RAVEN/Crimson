@@ -14,6 +14,8 @@
 #include <headers/stb_image.h>
 #include <headers/VertexData.h>
 #include <headers/KeyboardController.h>
+#include <headers/GeometryInstanceManager.h>
+#include <headers/BufferVector.h>
 
 struct Camera
 {
@@ -31,6 +33,7 @@ int main()
 	cam.viewInverse = glm::inverse(cam.view);
 	cam.projInverse = glm::inverse(cam.proj);
 
+
 	Assimp::Importer scene_importer;
 	const aiScene* scene = scene_importer.ReadFile("testslime.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
 	std::cout << "Start" << std::endl;
@@ -40,6 +43,15 @@ int main()
 	GPUDeviceManager::Get()->InitAPIContext(EAPIType::E_API_TYPE_VULKAN, true);
 	std::cout << "Create Device" << std::endl;
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
+
+	BufferQueue<int, 500> test_queue;
+	test_queue.Init(MainDevice, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	test_queue.PushBack(1);
+
+	TransformManager m_TransformManager;
+
+	TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
+	p_component->m_RawPointer->m_ModelTransform = glm::mat4(1.0f);
 
 	MeshResource new_resource;
 	new_resource.ProcessAiScene(scene);
