@@ -35,7 +35,7 @@ namespace Crimson
 	{
 	public:
 		virtual void EndCommandBuffer() = 0;
-		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets) = 0;
+		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets, uint32_t start_set = 0) = 0;
 		virtual void ViewPort(float x, float y, float width, float height) = 0;
 		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) = 0;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) = 0;

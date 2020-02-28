@@ -16,7 +16,7 @@ namespace Crimson
 		~VulkanGraphicsCommandBuffer();
 		virtual void EndCommandBuffer() override;
 		void StartCommandBuffer();
-		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets) override;
+		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets, uint32_t start_set) override;
 		virtual void ViewPort(float x, float y, float width, float height) override;
 		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) override;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) override;

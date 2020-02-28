@@ -19,15 +19,18 @@ public:
 		m_Usages = usages;
 		m_MemoryType = memory_type;
 	}
+	bool Inited() const { return p_Device != nullptr; }
 	void PushBack(T const& val);
 	void PopBack();
 	size_t Size() const;
 	void Clear();
 	T& operator[](size_t id);
 	T const& operator[](size_t id) const;
-	PGPUBuffer GetBufferSegment(size_t segment_id) { return m_Buffers[segment_id]; }
+	PGPUBuffer GetBufferSegment(size_t segment_id) { return m_Buffers[segment_id].second; }
 	size_t GetSegmentActiveUsage(size_t segment_id) const 
-	{ return (std::min)(m_CurrentLastId - segment_id * segment_size, segment_size)}
+	{
+		return (std::min)(m_CurrentLastId - segment_id * segment_size, segment_size);
+	}
 	size_t GetActiveSegmentNum() const { return m_CurrentLastId / segment_size + (m_CurrentLastId % segment_size > 0 ? 1 : 0); }
 private:
 	std::vector<EBufferUsage> m_Usages;

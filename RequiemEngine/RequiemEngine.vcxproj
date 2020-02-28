@@ -165,6 +165,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="headers\MeshQueue.cpp" />
+    <ClCompile Include="headers\ShaderProcessor.cpp" />
     <ClCompile Include="src\GeometryInstanceManager.cpp" />
     <ClCompile Include="src\KeyboardController.cpp" />
     <ClCompile Include="src\Main.cpp" />
@@ -179,8 +180,10 @@
     <ClInclude Include="headers\KeyboardController.h" />
     <ClInclude Include="headers\MeshQueue.h" />
     <ClInclude Include="headers\MeshResource.h" />
+    <ClInclude Include="headers\ShaderProcessor.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\stb_image_write.h" />
+    <ClInclude Include="headers\TimeManager.h" />
     <ClInclude Include="headers\VertexData.h" />
     <ClInclude Include="headers\Win32Window.h" />
   </ItemGroup>

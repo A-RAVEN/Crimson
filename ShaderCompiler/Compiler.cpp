@@ -99,14 +99,18 @@ namespace ShaderCompiler
 				m_Compiler.CompileGlslToSpv(shader_src, SHADER_KIND_TABLE[static_cast<uint32_t>(shader_type)], file_name.c_str(), m_Options);
 
 			if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
+				if (result.GetCompilationStatus() != shaderc_compilation_status_null_result_object)
+				{
 #ifdef _WIN32
-				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+					HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+					SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
 #endif
-				std::cerr << "Shader Processor Error: \n" << result.GetErrorMessage() << std::endl;
+					//std::cerr << result.GetCompilationStatus() << std::endl;
+					std::cerr << "Shader Processor Error: \n" << result.GetErrorMessage() << std::endl;
 #ifdef _WIN32
-				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+					SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 #endif
+				}
 				return std::vector<uint32_t>();
 			}
 

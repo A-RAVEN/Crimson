@@ -43,7 +43,7 @@ namespace Crimson
 		begin_info.pNext = nullptr;
 		CHECK_VKRESULT(vkBeginCommandBuffer(m_CommandBuffer, &begin_info), "Vulkan Start Graphics Command Buffer Issue!");
 	}
-	void VulkanGraphicsCommandBuffer::BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets)
+	void VulkanGraphicsCommandBuffer::BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets, uint32_t start_set)
 	{
 		CRIM_ASSERT(m_CurrentPipelineLayout != VK_NULL_HANDLE, "Vulkan Graphics Command Buffer Binding Descriptor Set Issue, Invalid Pipeline Layout!");
 		std::vector<VkDescriptorSet> sets(descriptor_sets.size());
@@ -53,7 +53,7 @@ namespace Crimson
 			sets[set_id] = p_vulkan_desc_set->m_DescriptorSet;
 			p_ReferencingDescriptorSets.push_back(p_vulkan_desc_set);
 		}
-		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_CurrentPipelineLayout, 0, descriptor_sets.size(), sets.data(), 0, nullptr);
+		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_CurrentPipelineLayout, start_set, descriptor_sets.size(), sets.data(), 0, nullptr);
 	}
 	void VulkanGraphicsCommandBuffer::ViewPort(float x, float y, float width, float height)
 	{

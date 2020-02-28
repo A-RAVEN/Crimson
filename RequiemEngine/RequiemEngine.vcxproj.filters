@@ -39,6 +39,9 @@
     <ClCompile Include="headers\MeshQueue.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="headers\ShaderProcessor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -66,6 +69,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\BufferVector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\TimeManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\ShaderProcessor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

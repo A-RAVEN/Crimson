@@ -31,6 +31,9 @@ class TransformManager
 public:
 	TransformManager();
 	TransformComponent* AllocateTransformComponent();
+	PDescriptorSetLayout GetSetLayout() const { return m_TransformSetLayout; }
+	PDescriptorSet GetSet(uint32_t batch_id) const { return m_TransformSets[batch_id]; }
+	uint32_t GetBatchCount() const { return m_MegaTransformBatchsBuffers.size(); }
 
 	struct TransformBufferData
 	{
@@ -49,4 +52,6 @@ public:
 private:
 	PGPUDevice m_Device;
 	std::deque<TransformBufferData> m_MegaTransformBatchsBuffers;
+	PDescriptorSetLayout m_TransformSetLayout;
+	std::vector<PDescriptorSet> m_TransformSets;
 };

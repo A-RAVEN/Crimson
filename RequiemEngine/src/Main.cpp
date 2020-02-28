@@ -16,6 +16,9 @@
 #include <headers/KeyboardController.h>
 #include <headers/GeometryInstanceManager.h>
 #include <headers/BufferVector.h>
+#include <headers/MeshQueue.h>
+#include <headers/TimeManager.h>
+#include <headers/ShaderProcessor.h>
 
 struct Camera
 {
@@ -55,6 +58,9 @@ int main()
 
 	MeshResource new_resource;
 	new_resource.ProcessAiScene(scene);
+	MeshInstanceQueue new_queue;
+	new_queue.m_Resource = &new_resource;
+	new_queue.PushInstance(p_component);
 
 	//Try Create Ray Tracing Structure
 	PRayTracer raytracer = MainDevice->CreateRayTracer();
@@ -159,49 +165,71 @@ int main()
 
 	PDescriptorSet test_set = layout->AllocDescriptorSet();
 
+	ShaderProcessor processor;
+	//{
+	//	auto binary = processor.Compile("test.vert");
+	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
+	//}
+
+	//{
+	//	auto binary = processor.Compile("test.frag");
+	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
+	//}
+	{
+		auto results = processor.MultiCompile("test.shaders");
+		for (auto& itr : results)
+		{
+			std::cout << static_cast<int>(itr.first) << std::endl;
+			pipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
+		}
+	}
 	auto compiler = ShaderCompiler::IShaderCompiler::GetCompiler();
 
-	{
-		std::ifstream shader_src("test.vert");
-		std::string src;
-		if (shader_src.is_open())
-		{
-			std::string line;
-			while (std::getline(shader_src, line))
-			{
-				src += line + "\n";
-			}
-		}
-		src = compiler->PreprocessGLSLShader("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
-		std::cout << src << std::endl;
-		auto binary = compiler->CompileGLSLShaderSource("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
-		pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
-	}
+	//{
+	//	std::ifstream shader_src("test.vert");
+	//	std::string src;
+	//	if (shader_src.is_open())
+	//	{
+	//		std::string line;
+	//		while (std::getline(shader_src, line))
+	//		{
+	//			src += line + "\n";
+	//		}
+	//	}
+	//	src = compiler->PreprocessGLSLShader("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
+	//	std::cout << src << std::endl;
+	//	auto binary = compiler->CompileGLSLShaderSource("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
+	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
+	//}
 
-	{
-		std::ifstream shader_src("test.frag");
-		std::string src;
-		if (shader_src.is_open())
-		{
-			std::string line;
-			while (std::getline(shader_src, line))
-			{
-				src += line + "\n";
-			}
-		}
-		src = compiler->PreprocessGLSLShader("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
-		std::cout << src << std::endl;
-		auto binary = compiler->CompileGLSLShaderSource("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
-		pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
-	}
-	pipeline->m_VertexInputs.resize(1);
+	//{
+	//	std::ifstream shader_src("test.frag");
+	//	std::string src;
+	//	if (shader_src.is_open())
+	//	{
+	//		std::string line;
+	//		while (std::getline(shader_src, line))
+	//		{
+	//			src += line + "\n";
+	//		}
+	//	}
+	//	src = compiler->PreprocessGLSLShader("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
+	//	std::cout << src << std::endl;
+	//	auto binary = compiler->CompileGLSLShaderSource("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
+	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
+	//}
+
+	pipeline->m_VertexInputs.resize(2);
 	//pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
 	//pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
 	pipeline->m_VertexInputs[0].m_DataTypes = VertexDataLightWeight::GetDataType();
 	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
+	pipeline->m_VertexInputs[1].m_DataTypes = { EDataType::EUINT };
+	pipeline->m_VertexInputs[1].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE;
 	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
 	pipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
 	pipeline->m_DescriptorSetLayouts.push_back({ 0, layout });
+	pipeline->m_DescriptorSetLayouts.push_back({ 1, m_TransformManager.GetSetLayout() });
 	test_renderpass->InstanciatePipeline(pipeline, 0);
 
 	{
@@ -307,9 +335,14 @@ int main()
 	cmd->Sissor(0, 0, 1024, 720);
 	cmd->BindSubpassPipeline(pipeline);
 	cmd->BindSubpassDescriptorSets({ set });
-	cmd->BindVertexInputeBuffer({ new_resource.m_VertexBuffer }, { 0 });
-	cmd->BindIndexBuffer(new_resource.m_IndexBuffer, 0);
-	cmd->DrawIndexed(new_resource.m_IndexSize, 1);
+	for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
+	{
+		cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
+		new_queue.CmdDrawInstances(cmd, i);
+	}
+	//cmd->BindVertexInputeBuffer({ new_resource.m_VertexBuffer }, { 0 });
+	//cmd->BindIndexBuffer(new_resource.m_IndexBuffer, 0);
+	//cmd->DrawIndexed(new_resource.m_IndexSize, 1);
 	//cmd->Draw(3, 1, 0, 0);
 	cmd->EndCommandBuffer();
 
@@ -328,24 +361,15 @@ int main()
 	glm::vec3 position(-5.0f, 0.0f, 0.0f);
 
 	bool toggle = false;
+	TimeManager time_manager;
 
 	while (new_window.IsWindowRunning())
 	{
+		time_manager.UpdateClock();
+		std::cout << time_manager.deltaTime() << std::endl;
 		inputs.UpdateController();
-		//for (int i = 0; i < 10; ++i)
-		//{
-		//	if (inputs.KeyTriggered(inputs.GetNumKey(i)))
-		//	{
-		//		std::cout << i << std::endl;
-		//	}
-		//}
-		//for (char itr_c = 'A'; itr_c <= 'Z'; ++itr_c)
-		//{
-		//	if (inputs.KeyTriggered(inputs.GetCharKey(itr_c)))
-		//	{
-		//		std::cout << itr_c << std::endl;
-		//	}
-		//}
+
+		p_component->m_RawPointer->m_ModelTransform = glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		if (inputs.KeyTriggered(inputs.GetCharKey('C')))
 		{
