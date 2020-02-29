@@ -13,6 +13,8 @@ namespace Crimson
 		VulkanAccelerationStructure(VulkanGPUDevice* device);
 		virtual void Dispose() override;
 		virtual void InitAS(bool top_level) override;
+		virtual void SetupScratchBuffer() override;
+		virtual void FreeScratchBuffer() override;
 		virtual uint64_t GetHandle() override;
 	private:
 		VulkanGPUDevice* p_OwningDevice;

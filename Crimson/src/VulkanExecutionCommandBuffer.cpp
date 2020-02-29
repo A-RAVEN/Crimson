@@ -117,7 +117,7 @@ namespace Crimson
 		{
 			vulkan_instance_buffer = static_cast<VulkanBufferObject*>(instance_buffer)->m_Buffer;
 		}
-		p_OwningDevice->m_NVExtension.vkCmdBuildAccelerationStructureNV(m_CurrentCommandBuffer, &vulkan_accel_struct->m_StructureInfo, vulkan_instance_buffer, instance_offset, update ? VK_TRUE : VK_FALSE, vulkan_accel_struct->m_Structure, VK_NULL_HANDLE, vulkan_accel_struct->p_ScratchBuffer->GetVulkanBuffer(), 0);
+		p_OwningDevice->m_NVExtension.vkCmdBuildAccelerationStructureNV(m_CurrentCommandBuffer, &vulkan_accel_struct->m_StructureInfo, vulkan_instance_buffer, instance_offset, update ? VK_TRUE : VK_FALSE, vulkan_accel_struct->m_Structure, update ? vulkan_accel_struct->m_Structure : VK_NULL_HANDLE, vulkan_accel_struct->p_ScratchBuffer->GetVulkanBuffer(), 0);
 	}
 	void VulkanExecutionCommandBuffer::BindRayTracer(PRayTracer raytracer)
 	{

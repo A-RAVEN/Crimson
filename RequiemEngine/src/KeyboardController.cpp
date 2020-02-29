@@ -86,7 +86,7 @@ void KeyboardController::UpdateController()
     {
         glm::vec2 new_pos(p.x, p.y);
         m_MouseMovement = new_pos - m_MousePos;
-        m_MouseMovement.y = -m_MouseMovement.y;
+        //m_MouseMovement.y = -m_MouseMovement.y;
         m_MousePos = new_pos;
     }
 }

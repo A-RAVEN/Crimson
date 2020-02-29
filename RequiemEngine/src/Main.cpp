@@ -33,6 +33,7 @@ int main()
 	Camera cam;
 	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	cam.proj = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+	cam.proj[1][1] *= -1.0f;
 	cam.viewInverse = glm::inverse(cam.view);
 	cam.projInverse = glm::inverse(cam.proj);
 
@@ -53,14 +54,24 @@ int main()
 
 	TransformManager m_TransformManager;
 
-	TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-	p_component->m_RawPointer->m_ModelTransform = glm::mat4(1.0f);
+
 
 	MeshResource new_resource;
 	new_resource.ProcessAiScene(scene);
 	MeshInstanceQueue new_queue;
 	new_queue.m_Resource = &new_resource;
-	new_queue.PushInstance(p_component);
+
+	std::vector<TransformComponent*> transforms;
+	for (int i = 0; i < 1; ++i)
+	{
+		for (int j = 0; j < 1; ++j)
+		{
+			TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
+			p_component->m_RawPointer->m_ModelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
+			new_queue.PushInstance(p_component);
+			transforms.push_back(p_component);
+		}
+	}
 
 	//Try Create Ray Tracing Structure
 	PRayTracer raytracer = MainDevice->CreateRayTracer();
@@ -73,11 +84,13 @@ int main()
 	accel_struct->m_Geometries = { raytrace_geometry };
 	accel_struct->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV };
 	accel_struct->InitAS();
+	accel_struct->SetupScratchBuffer();
 
 	PAccelerationStructure tlas = MainDevice->CreateAccelerationStructure();
 	tlas->m_InstanceNumber = 1;
-	tlas->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV };
+	tlas->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV, EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV };
 	tlas->InitAS(true);
+	tlas->SetupScratchBuffer();
 
 	//PGPUDevice HelperDevice = GPUDeviceManager::Get()->CreateDevice("HelperDevice", 1, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 	Win32Window new_window;
@@ -166,15 +179,6 @@ int main()
 	PDescriptorSet test_set = layout->AllocDescriptorSet();
 
 	ShaderProcessor processor;
-	//{
-	//	auto binary = processor.Compile("test.vert");
-	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
-	//}
-
-	//{
-	//	auto binary = processor.Compile("test.frag");
-	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
-	//}
 	{
 		auto results = processor.MultiCompile("test.shaders");
 		for (auto& itr : results)
@@ -184,40 +188,6 @@ int main()
 		}
 	}
 	auto compiler = ShaderCompiler::IShaderCompiler::GetCompiler();
-
-	//{
-	//	std::ifstream shader_src("test.vert");
-	//	std::string src;
-	//	if (shader_src.is_open())
-	//	{
-	//		std::string line;
-	//		while (std::getline(shader_src, line))
-	//		{
-	//			src += line + "\n";
-	//		}
-	//	}
-	//	src = compiler->PreprocessGLSLShader("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
-	//	std::cout << src << std::endl;
-	//	auto binary = compiler->CompileGLSLShaderSource("test.vert", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
-	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
-	//}
-
-	//{
-	//	std::ifstream shader_src("test.frag");
-	//	std::string src;
-	//	if (shader_src.is_open())
-	//	{
-	//		std::string line;
-	//		while (std::getline(shader_src, line))
-	//		{
-	//			src += line + "\n";
-	//		}
-	//	}
-	//	src = compiler->PreprocessGLSLShader("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
-	//	std::cout << src << std::endl;
-	//	auto binary = compiler->CompileGLSLShaderSource("test.frag", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
-	//	pipeline->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
-	//}
 
 	pipeline->m_VertexInputs.resize(2);
 	//pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
@@ -340,10 +310,6 @@ int main()
 		cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
 		new_queue.CmdDrawInstances(cmd, i);
 	}
-	//cmd->BindVertexInputeBuffer({ new_resource.m_VertexBuffer }, { 0 });
-	//cmd->BindIndexBuffer(new_resource.m_IndexBuffer, 0);
-	//cmd->DrawIndexed(new_resource.m_IndexSize, 1);
-	//cmd->Draw(3, 1, 0, 0);
 	cmd->EndCommandBuffer();
 
 	MainDevice->ExecuteBatches({ "GraphicsLoading" });
@@ -366,10 +332,9 @@ int main()
 	while (new_window.IsWindowRunning())
 	{
 		time_manager.UpdateClock();
-		std::cout << time_manager.deltaTime() << std::endl;
 		inputs.UpdateController();
 
-		p_component->m_RawPointer->m_ModelTransform = glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		transforms[0]->m_RawPointer->m_ModelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		if (inputs.KeyTriggered(inputs.GetCharKey('C')))
 		{
@@ -381,7 +346,6 @@ int main()
 			glm::vec2 movement = inputs.GetMouseMovement();
 			angles.x = (angles.x + movement.x * 0.01f);
 			angles.y = glm::clamp(angles.y + movement.y * 0.01f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
-			//std::cout << angles.x << " " << angles.y << std::endl;
 		}
 		glm::vec3 forward = glm::rotate(glm::mat4(1.0f), -angles.x, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), -angles.y, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -407,8 +371,11 @@ int main()
 			memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 		}
 
+		*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance->m_TransformMatrix)) = glm::transpose(transforms[0]->m_RawPointer->m_ModelTransform);
 
 		execution->StartCommand();
+		execution->BuildAccelerationStructure(tlas, geometry_instance_buffer, 0, true);
+		execution->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 		if (toggle)
 		{
 			execution->ExecuteRenderPassInstance(render_pass_instance);

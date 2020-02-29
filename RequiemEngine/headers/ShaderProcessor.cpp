@@ -4,8 +4,28 @@
 #include <array>
 #include <regex>
 #include <set>
+#include <map>
 
 using namespace ShaderCompiler;
+
+std::map<std::string, ECompileShaderType> ShaderTypeMap =
+{
+	{"vert", ECompileShaderType::E_SHADER_TYPE_VERTEX},
+	{"tesc", ECompileShaderType::E_SHADER_TYPE_TESSCTR},
+	{"tese", ECompileShaderType::E_SHADER_TYPE_TESSEVL},
+	{"geom", ECompileShaderType::E_SHADER_TYPE_GEOMETRY},
+	{"frag", ECompileShaderType::E_SHADER_TYPE_FRAGMENT},
+	{"comp", ECompileShaderType::E_SHADER_TYPE_COMPUTE},
+	{"task", ECompileShaderType::E_SHADER_TYPE_TASK_NV},
+	{"mesh", ECompileShaderType::E_SHADER_TYPE_MESH_NV},
+	{"rgen", ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV},
+	{"rahit", ECompileShaderType::E_SHADER_TYPE_ANYHIT_NV},
+	{"rchit", ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV},
+	{"rmiss", ECompileShaderType::E_SHADER_TYPE_MISS_NV},
+	{"rint", ECompileShaderType::E_SHADER_TYPE_INTERSECTION_NV},
+	{"rcall", ECompileShaderType::E_SHADER_TYPE_CALLABLE_NV},
+};
+
 ShaderProcessor::ShaderProcessor()
 {
 	p_Compiler = IShaderCompiler::GetCompiler();
@@ -42,22 +62,12 @@ std::vector<uint32_t> ShaderProcessor::Compile(std::string const& file_name)
 			//std::cout << src << std::endl;
 			return p_Compiler->CompileGLSLShaderSource(file_name, src, shader_type);
 		}
-		//switch (shader_type)
-		//{
-		//case ECompileShaderType::E_SHADER_TYPE_VERTEX:
-		//	p_Compiler->AddMacro("VERTEX_SHADER", "0");
-		//	break;
-		//case ECompileShaderType::E_SHADER_TYPE_FRAGMENT:
-		//	p_Compiler->AddMacro("FRAGMENT_SHADER", "0");
-		//	break;
-		//}
 	}
 	return std::vector<uint32_t>();
 }
 
 std::set<ECompileShaderType> FindCompileTockens(std::string const& src)
 {
-	//(?:\\s+(\\d+))
 	std::regex pattern("^\\s*#pragma\\s+multicompile\\s+(.+)+$");
 	std::smatch match_data;
 	std::string remain_str = src;
@@ -89,14 +99,7 @@ std::set<ECompileShaderType> FindCompileTockens(std::string const& src)
 		}
 		for (auto& itr_tk : token_vec)
 		{
-			if (itr_tk == "vert")
-			{
-				return_val.insert(ECompileShaderType::E_SHADER_TYPE_VERTEX);
-			}
-			else if (itr_tk == "frag")
-			{
-				return_val.insert(ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
-			}
+			return_val.insert(ShaderTypeMap[itr_tk]);
 		}
 		remain_str = match_data.suffix().str();
 	}
@@ -105,7 +108,7 @@ std::set<ECompileShaderType> FindCompileTockens(std::string const& src)
 
 CompileResult ShaderProcessor::MultiCompile(std::string const& file_name)
 {
-	ResetShaderTypeMacros();
+	//ResetShaderTypeMacros();
 	std::array<std::string, static_cast<int>(ECompileShaderType::E_SHADER_TYPE_MAX)> macros =
 	{
 		"VERTEX_SHADER",
@@ -113,8 +116,20 @@ CompileResult ShaderProcessor::MultiCompile(std::string const& file_name)
 		"TESSEVALUATION_SHADER",
 		"GEOMETRY_SHADER",
 		"FRAGMENT_SHADER",
-		"COMPUTE_SHADER"
+		"COMPUTE_SHADER",
+		"TASK_SHADER",
+		"MESH_SHADER",
+		"RAYGEN_SHADER",
+		"ANYHIT_SHADER",
+		"CLOSEHIT_SHADER",
+		"MISS_SHADER",
+		"INTERSECTION_SHADER",
+		"CALLABLE_SHADER"
 	};
+	for (auto& shader_macro : macros)
+	{
+		p_Compiler->AddMacro(shader_macro, "0");
+	}
 
 	std::ifstream shader_src(file_name);
 	std::string src;
@@ -127,6 +142,10 @@ CompileResult ShaderProcessor::MultiCompile(std::string const& file_name)
 			src += line + "\n";
 		}
 		auto tokens = FindCompileTockens(src);
+		if (tokens.empty())
+		{
+			
+		}
 		{
 			ECompileShaderType last_type = ECompileShaderType::E_SHADER_TYPE_MAX;
 			for (auto token : tokens)

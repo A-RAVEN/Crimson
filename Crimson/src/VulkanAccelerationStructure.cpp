@@ -3,6 +3,7 @@
 #include <headers/VulkanDebugLog.h>
 #include <headers/VulkanBuffer.h>
 #include <headers/VulkanTranslator.h>
+#include <algorithm>
 
 namespace Crimson
 {
@@ -52,23 +53,23 @@ namespace Crimson
 		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkCreateAccelerationStructureNV(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_Structure), 
 			"Vulkan Create Nvidia Ray Tracing Acceleration Structure Issue!");
 
-		{
-			VkAccelerationStructureMemoryRequirementsInfoNV memory_req{};
-			memory_req.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV;
-			memory_req.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_BUILD_SCRATCH_NV;
-			memory_req.accelerationStructure = m_Structure;
-			memory_req.pNext = nullptr;
-			VkMemoryRequirements2 scratch_mem_requirement{};
-			scratch_mem_requirement.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
-			scratch_mem_requirement.pNext = nullptr;
-			p_OwningDevice->m_NVExtension.vkGetAccelerationStructureMemoryRequirementsNV(p_OwningDevice->m_LogicalDevice, &memory_req, &scratch_mem_requirement);
-			p_ScratchBuffer = static_cast<VulkanBufferObject*>(p_OwningDevice->CreateBuffer(scratch_mem_requirement.memoryRequirements.size, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_DEVICE));
-		}
+		//{
+		//	VkAccelerationStructureMemoryRequirementsInfoNV memory_req{};
+		//	memory_req.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV;
+		//	memory_req.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_BUILD_SCRATCH_NV;
+		//	memory_req.accelerationStructure = m_Structure;
+		//	memory_req.pNext = nullptr;
+		//	VkMemoryRequirements2 scratch_mem_requirement{};
+		//	scratch_mem_requirement.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+		//	scratch_mem_requirement.pNext = nullptr;
+		//	p_OwningDevice->m_NVExtension.vkGetAccelerationStructureMemoryRequirementsNV(p_OwningDevice->m_LogicalDevice, &memory_req, &scratch_mem_requirement);
+		//	p_ScratchBuffer = static_cast<VulkanBufferObject*>(p_OwningDevice->CreateBuffer(scratch_mem_requirement.memoryRequirements.size, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_DEVICE));
+		//}
 
 		{
 			VkAccelerationStructureMemoryRequirementsInfoNV memory_req{};
 			memory_req.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV;
-			memory_req.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_BUILD_SCRATCH_NV;
+			memory_req.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_OBJECT_NV;
 			memory_req.accelerationStructure = m_Structure;
 			memory_req.pNext = nullptr;
 			VkMemoryRequirements2 mem_requirement{};
@@ -96,6 +97,54 @@ namespace Crimson
 			"Vulkan Bind Acceleration Structure Issue!");
 		CHECK_VKRESULT(p_OwningDevice->m_NVExtension.vkGetAccelerationStructureHandleNV(p_OwningDevice->m_LogicalDevice, m_Structure, sizeof(uint64_t), &m_Handle),
 			"Vulkan Get Acceleration Struct Handle Issue!");
+	}
+	void VulkanAccelerationStructure::SetupScratchBuffer()
+	{
+		FreeScratchBuffer();
+		bool can_update = false;
+		for (auto flag : m_BuildFlags)
+		{
+			if (flag == EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV)
+			{
+				can_update = true;
+				break;
+			}
+		}
+		{
+			VkAccelerationStructureMemoryRequirementsInfoNV memory_req{};
+			memory_req.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV;
+			memory_req.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_BUILD_SCRATCH_NV;
+			memory_req.accelerationStructure = m_Structure;
+			memory_req.pNext = nullptr;
+			VkMemoryRequirements2 scratch_mem_requirement{};
+			scratch_mem_requirement.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+			scratch_mem_requirement.pNext = nullptr;
+			p_OwningDevice->m_NVExtension.vkGetAccelerationStructureMemoryRequirementsNV(p_OwningDevice->m_LogicalDevice, &memory_req, &scratch_mem_requirement);
+			
+			if (can_update)
+			{
+				VkAccelerationStructureMemoryRequirementsInfoNV update_memory_req{};
+				update_memory_req.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV;
+				update_memory_req.type = VK_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_TYPE_UPDATE_SCRATCH_NV;
+				update_memory_req.accelerationStructure = m_Structure;
+				update_memory_req.pNext = nullptr;
+				VkMemoryRequirements2 update_scratch_mem_requirement{};
+				update_scratch_mem_requirement.sType = VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2;
+				update_scratch_mem_requirement.pNext = nullptr;
+				p_OwningDevice->m_NVExtension.vkGetAccelerationStructureMemoryRequirementsNV(p_OwningDevice->m_LogicalDevice, &update_memory_req, &update_scratch_mem_requirement);
+				
+				scratch_mem_requirement.memoryRequirements.size = (std::max)(scratch_mem_requirement.memoryRequirements.size, update_scratch_mem_requirement.memoryRequirements.size);
+			}
+			p_ScratchBuffer = static_cast<VulkanBufferObject*>(p_OwningDevice->CreateBuffer(scratch_mem_requirement.memoryRequirements.size, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_DEVICE));
+		}
+	}
+	void VulkanAccelerationStructure::FreeScratchBuffer()
+	{
+		if (p_ScratchBuffer)
+		{
+			p_ScratchBuffer->Dispose();
+			p_ScratchBuffer = nullptr;
+		}
 	}
 	uint64_t VulkanAccelerationStructure::GetHandle()
 	{
