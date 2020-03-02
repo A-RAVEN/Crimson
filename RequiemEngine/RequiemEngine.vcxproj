@@ -171,6 +171,7 @@
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\MeshResource.cpp" />
     <ClCompile Include="src\stb_impl.cpp" />
+    <ClCompile Include="src\ThreadManager.cpp" />
     <ClCompile Include="src\VertexData.cpp" />
     <ClCompile Include="src\Win32Window.cpp" />
   </ItemGroup>
@@ -183,6 +184,7 @@
     <ClInclude Include="headers\ShaderProcessor.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\stb_image_write.h" />
+    <ClInclude Include="headers\ThreadManager.h" />
     <ClInclude Include="headers\TimeManager.h" />
     <ClInclude Include="headers\VertexData.h" />
     <ClInclude Include="headers\Win32Window.h" />

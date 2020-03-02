@@ -19,6 +19,8 @@
 #include <headers/MeshQueue.h>
 #include <headers/TimeManager.h>
 #include <headers/ShaderProcessor.h>
+#include <headers/ThreadManager.h>
+#include <iostream>
 
 struct Camera
 {
@@ -26,6 +28,33 @@ struct Camera
 	glm::mat4 proj;
 	glm::mat4 viewInverse;
 	glm::mat4 projInverse;
+};
+
+class TestJob : public ThreadJob
+{
+public:
+	TestJob() : m_JobId(0) {}
+	virtual void Work(ThreadWorker const* this_worker) override
+	{
+		while (this_worker->Working())
+		{
+			//std::cout << "job " << m_JobId << " is working on thread " << this_worker->GetId() << std::endl;
+		}
+		std::cout << "terminate" << std::endl;
+	};
+	~TestJob() {};
+	uint32_t m_JobId;
+};
+
+class OneTimeTestJob : public ThreadJob
+{
+public:
+	OneTimeTestJob() {}
+	virtual void Work(ThreadWorker const* this_worker) override
+	{
+		std::cout << "one time job" << " is working on thread " << this_worker->GetId() << std::endl;
+	};
+	~OneTimeTestJob() {};
 };
 
 int main()
@@ -87,7 +116,7 @@ int main()
 	accel_struct->SetupScratchBuffer();
 
 	PAccelerationStructure tlas = MainDevice->CreateAccelerationStructure();
-	tlas->m_InstanceNumber = 1;
+	tlas->m_InstanceNumber = 10;
 	tlas->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV, EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV };
 	tlas->InitAS(true);
 	tlas->SetupScratchBuffer();
@@ -107,18 +136,18 @@ int main()
 
 	PGPUBuffer camera_buffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
-	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RayTraceGeometryInstance), { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-	RayTraceGeometryInstance* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RayTraceGeometryInstance();
-	pGeometryInstance->m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
-	pGeometryInstance->m_InstanceId = 0;
-	pGeometryInstance->m_Mask = 0x1;// 0xff;
-	pGeometryInstance->m_AccelerationStructureHandle = accel_struct->GetHandle();
-	*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance->m_TransformMatrix)) = 
+	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RayTraceGeometryInstance) * 5, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	RayTraceGeometryInstance* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RayTraceGeometryInstance[5];
+
+	for (int i = 0; i < 5; ++i)
 	{
-		1.0f, 0.0f, 0.0f, 0.0f,
-		0.0f, 1.0f, 0.0f, 0.0f,
-		0.0f, 0.0f, 1.0f, 0.0f,
-	};
+		pGeometryInstance[i].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
+		pGeometryInstance[i].m_InstanceId = 0;
+		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
+		pGeometryInstance[i].m_AccelerationStructureHandle = accel_struct->GetHandle();
+		*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance[i].m_TransformMatrix)) = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
+	}
+
 
 	memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 	//camera_buffer->UnMapp();
@@ -185,6 +214,13 @@ int main()
 		{
 			std::cout << static_cast<int>(itr.first) << std::endl;
 			pipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
+		}
+	}
+	{
+		auto results = processor.MultiCompile("raytracing.shaders");
+		for (auto& itr : results)
+		{
+			std::cout << static_cast<int>(itr.first) << std::endl;
 		}
 	}
 	auto compiler = ShaderCompiler::IShaderCompiler::GetCompiler();
@@ -329,16 +365,46 @@ int main()
 	bool toggle = false;
 	TimeManager time_manager;
 
+	ThreadManager thread_manager;
+	thread_manager.Init();
+	std::vector<TestJob> new_jobs(5);
+	uint32_t job_id = 0;
+	for (auto& job : new_jobs)
+	{
+		job.m_JobId = job_id++;
+		thread_manager.EnqueueJob(&job);
+	}
 	while (new_window.IsWindowRunning())
 	{
 		time_manager.UpdateClock();
 		inputs.UpdateController();
+
+		std::vector<OneTimeTestJob> one_time_jobs(10);
+		for (auto& job : one_time_jobs)
+		{
+			thread_manager.EnqueueJob(&job);
+		}
+		for (auto& job : one_time_jobs)
+		{
+			job.WaitJob();
+		}
 
 		transforms[0]->m_RawPointer->m_ModelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		if (inputs.KeyTriggered(inputs.GetCharKey('C')))
 		{
 			toggle = !toggle;
+		}
+		if (inputs.KeyTriggered(inputs.GetCharKey('V')))
+		{
+			if (pGeometryInstance[1].m_Mask != 0)
+			{
+				pGeometryInstance[1].m_Mask = 0;
+			}
+			else
+			{
+				pGeometryInstance[1].m_Mask = 1;
+			}
 		}
 
 		if (inputs.KeyState(VK_RBUTTON))
@@ -404,5 +470,6 @@ int main()
 		MainDevice->PresentWindow(new_window);
 		new_window.UpdateWindow();
 	}
+	thread_manager.Terminate();
 	return 0;
 }
