@@ -1,0 +1,45 @@
+#version 450
+
+#pragma multicompile vert frag
+
+#if VERTEX_SHADER
+//vertex shader
+#include "camera.gh"
+layout(set = 0, binding = 0) uniform MATRIX
+{
+	Camera cam;
+};
+
+layout(set = 1, binding = 0) buffer readonly TRANSFORMS
+{
+	mat4 transforms[];
+};
+
+layout(location = 0) in vec3 positioin;
+layout(location = 1) in vec2 texcoord;
+layout(location = 2) in vec4 normal_data;
+layout(location = 3) in vec4 tangent_data;
+
+layout(location = 4) in uint transform_id;
+
+layout(location = 0) out vec4 out_normal;
+
+void main()
+{
+	out_normal = transforms[transform_id] * vec4(normal_data.xyz, 0.0);
+	gl_Position = cam.proj * cam.view * transforms[transform_id] * vec4(positioin, 1.0);
+}
+#endif
+
+#if FRAGMENT_SHADER
+//fragment shader
+layout(location = 0) in vec4 in_normal;
+layout(location = 0) out vec4 color;
+
+layout(set = 0, binding = 1) uniform sampler2D test_img;
+
+void main()
+{
+    color = dot(normalize(in_normal.xyz), vec3(1.0, 1.0, 1.0)) * vec4(1.0);
+}
+#endif

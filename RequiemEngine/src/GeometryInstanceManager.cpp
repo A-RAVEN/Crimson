@@ -60,27 +60,115 @@ TransformManager::TransformManager()
 	m_TransformSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_TransformSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
 	m_TransformSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX };
+	m_TransformSetLayout->BuildLayout();
 }
 
-TransformComponent* TransformManager::AllocateTransformComponent()
+void TransformManager::ExtendBufferPages(uint32_t batch_id)
 {
-	TransformComponent* return_val = new TransformComponent();
-	for(uint32_t batch_id = 0; batch_id < m_MegaTransformBatchsBuffers.size(); ++batch_id)
+	if (batch_id >= m_MegaTransformBatchsBuffers.size())
 	{
-		if (!m_MegaTransformBatchsBuffers[batch_id].isFull())
+		for (int i = m_MegaTransformBatchsBuffers.size(); i <= batch_id; ++i)
 		{
-			return_val->m_BatchId = batch_id;
-			return_val->m_RawPointer = m_MegaTransformBatchsBuffers[batch_id].AllocateData(return_val->m_Offset);
+			m_MegaTransformBatchsBuffers.push_back(TransformBufferData{});
+
+			m_MegaTransformBatchsBuffers.back().Init(500, m_Device);
+
+			PDescriptorSet new_set = m_TransformSetLayout->AllocDescriptorSet();
+			new_set->WriteDescriptorSetBuffers(0, { m_MegaTransformBatchsBuffers.back().m_Buffer }, { BufferRange{0, m_MegaTransformBatchsBuffers.back().m_Buffer->GetSize()} }, 0);
+			new_set->EndWriteDescriptorSet();
+			m_TransformSets.push_back(new_set);
+		}
+	}
+}
+
+TransformData* TransformManager::GetData(uint32_t batch_id, uint32_t transform_id)
+{
+	return &m_MegaTransformBatchsBuffers[batch_id].p_Data[transform_id];
+}
+
+TransformComponent* TransformComponentAllocator::AllocateTransformComponent()
+{
+	if (!m_RecycledTransformComponent.empty())
+	{
+		TransformComponent* return_val = m_RecycledTransformComponent.front();
+		m_RecycledTransformComponent.pop_front();
+		m_UsingSet.insert(return_val);
+		return return_val;
+	}
+	m_TransformComponentPool.push_back(TransformComponent{});
+	TransformComponent* return_val = &(m_TransformComponentPool.back());
+
+	for(uint32_t batch_id = 0; batch_id < m_MegaTransformPages.size(); ++batch_id)
+	{
+		if (!m_MegaTransformPages[batch_id].isFull())
+		{
+			return_val->m_Info.m_BatchId = batch_id;
+			return_val->m_Info.m_TransformId = m_MegaTransformPages[batch_id].AllocateTransformId();
+			m_UsingSet.insert(return_val);
 			return return_val;
 		}
 	}
-	m_MegaTransformBatchsBuffers.push_back(TransformBufferData{});
-	return_val->m_BatchId = m_MegaTransformBatchsBuffers.size() - 1;
-	m_MegaTransformBatchsBuffers[return_val->m_BatchId].Init(1024, m_Device);
-	PDescriptorSet new_set = m_TransformSetLayout->AllocDescriptorSet();
-	new_set->WriteDescriptorSetBuffers(0, { m_MegaTransformBatchsBuffers[return_val->m_BatchId].m_Buffer }, { BufferRange{0, m_MegaTransformBatchsBuffers[return_val->m_BatchId].m_Buffer->GetSize()} }, 0);
-	new_set->EndWriteDescriptorSet();
-	m_TransformSets.push_back(new_set);
-	return_val->m_RawPointer = m_MegaTransformBatchsBuffers[return_val->m_BatchId].AllocateData(return_val->m_Offset);
+	m_MegaTransformPages.push_back(TransformIdPage{});
+	return_val->m_Info.m_BatchId = m_MegaTransformPages.size() - 1;
+	//m_MegaTransformPages[return_val->m_Info.m_BatchId].Init(1024, m_Device);
+	//PDescriptorSet new_set = m_TransformSetLayout->AllocDescriptorSet();
+	//new_set->WriteDescriptorSetBuffers(0, { m_MegaTransformBatchsBuffers[return_val->m_BatchId].m_Buffer }, { BufferRange{0, m_MegaTransformBatchsBuffers[return_val->m_BatchId].m_Buffer->GetSize()} }, 0);
+	//wwwwwwwwwnew_set->EndWriteDescriptorSet();
+	//m_TransformSets.push_back(new_set);
+	return_val->m_Info.m_TransformId = m_MegaTransformPages[return_val->m_Info.m_BatchId].AllocateTransformId();
+	//return_val->m_RawPointer = m_MegaTransformBatchsBuffers[return_val->m_BatchId].AllocateData(return_val->m_Offset);
+	m_UsingSet.insert(return_val);
 	return return_val;
+}
+
+void TransformComponentAllocator::RecycleTransformComponent(TransformComponent* transform_comp)
+{
+	if (m_UsingSet.erase(transform_comp))
+	{
+		m_RecycledTransformComponent.push_back(transform_comp);
+	}
+}
+
+void TransformComponentAllocator::GenerateGraphicsFrame(GraphicsFrame& frame)
+{
+	for (TransformComponent* component : m_UsingSet)
+	{
+		frame.m_TransoformUpdateInfo.push_back(component->m_Info);
+	}
+}
+
+TransformComponentAllocator::TransformIdPage::TransformIdPage() : 
+	m_MaxNum(500),
+	m_LastIndex(0)
+{
+}
+
+bool TransformComponentAllocator::TransformIdPage::isFull() const
+{
+	return m_AvailableIds.empty() && m_LastIndex == m_MaxNum;
+}
+
+uint32_t TransformComponentAllocator::TransformIdPage::AllocateTransformId()
+{
+	if (!m_AvailableIds.empty())
+	{
+		uint32_t front = m_AvailableIds.front();
+		m_AvailableIds.pop_front();
+		return front;
+	}
+	if (m_LastIndex < m_MaxNum)
+	{
+		return m_LastIndex++;
+	}
+	return std::numeric_limits<uint32_t>::max();
+}
+
+void TransformComponentAllocator::TransformIdPage::ReturnTransformIs(uint32_t id)
+{
+	if (m_LastIndex == (id + 1))
+	{
+		--m_LastIndex;
+		return;
+	}
+	m_AvailableIds.push_back(id);
 }

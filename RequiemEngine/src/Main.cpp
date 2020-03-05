@@ -3,7 +3,6 @@
 #include <headers/Win32Window.h>
 #include <Compiler.h>
 #include <fstream>
-#include <iostream>
 #include <array>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -21,14 +20,9 @@
 #include <headers/ShaderProcessor.h>
 #include <headers/ThreadManager.h>
 #include <iostream>
+#include <headers/Camera.h>
+#include <headers/RenderingSystem.h>
 
-struct Camera
-{
-	glm::mat4 view;
-	glm::mat4 proj;
-	glm::mat4 viewInverse;
-	glm::mat4 projInverse;
-};
 
 class TestJob : public ThreadJob
 {
@@ -57,6 +51,7 @@ public:
 	~OneTimeTestJob() {};
 };
 
+
 int main()
 {
 	Camera cam;
@@ -77,285 +72,33 @@ int main()
 	std::cout << "Create Device" << std::endl;
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 
-	BufferQueue<int, 500> test_queue;
-	test_queue.Init(MainDevice, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-	test_queue.PushBack(1);
 
-	TransformManager m_TransformManager;
-
-
-
-	MeshResource new_resource;
-	new_resource.ProcessAiScene(scene);
-	MeshInstanceQueue new_queue;
-	new_queue.m_Resource = &new_resource;
-
-	std::vector<TransformComponent*> transforms;
-	for (int i = 0; i < 1; ++i)
-	{
-		for (int j = 0; j < 1; ++j)
-		{
-			TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-			p_component->m_RawPointer->m_ModelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
-			new_queue.PushInstance(p_component);
-			transforms.push_back(p_component);
-		}
-	}
-
-	//Try Create Ray Tracing Structure
-	PRayTracer raytracer = MainDevice->CreateRayTracer();
-	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
-	PAccelerationStructure accel_struct = MainDevice->CreateAccelerationStructure();
-	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, sizeof(VertexDataLightWeight), EDataType::EVEC3);
-	raytrace_geometry->SetIndexData(new_resource.m_IndexBuffer, 0, new_resource.m_IndexSize, EIndexType::E_INDEX_TYPE_32);
-	raytrace_geometry->SetGeometryFlags({ EGeometryFlags::E_GEOMETRY_OPAQUE });
-	raytrace_geometry->SetGeometryType(ERayTraceGeometryType::E_GEOMETRY_TYPE_TRIANGLES);
-	accel_struct->m_Geometries = { raytrace_geometry };
-	accel_struct->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV };
-	accel_struct->InitAS();
-	accel_struct->SetupScratchBuffer();
-
-	PAccelerationStructure tlas = MainDevice->CreateAccelerationStructure();
-	tlas->m_InstanceNumber = 10;
-	tlas->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV, EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV };
-	tlas->InitAS(true);
-	tlas->SetupScratchBuffer();
-
-	//PGPUDevice HelperDevice = GPUDeviceManager::Get()->CreateDevice("HelperDevice", 1, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
 	MainDevice->RegisterWindow(new_window);
 
-	std::cout << "Window" << std::endl;
+	RenderingSystem rendering_system(&new_window);
 
+	TransformComponentAllocator m_TransformManager;
 
-	PGPUBuffer test_buffer = MainDevice->CreateBuffer(256, { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	test_buffer->Dispose();
+	MeshResource new_resource;
+	new_resource.ProcessAiScene(scene);
+	//MeshInstanceQueue new_queue;
+	//new_queue.m_Resource = &new_resource;
+
+	std::vector<TransformComponent*> transforms;
+	for (int i = 0; i < 10; ++i)
+	{
+		for (int j = 0; j < 10; ++j)
+		{
+			TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
+			p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
+			//new_queue.PushInstance(p_component);
+			transforms.push_back(p_component);
+		}
+	}
+
 	
-	PGPUBuffer vertex_buffer = MainDevice->CreateBuffer(sizeof(float) * 3 * 3, { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-
-	PGPUBuffer camera_buffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-
-	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RayTraceGeometryInstance) * 5, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-	RayTraceGeometryInstance* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RayTraceGeometryInstance[5];
-
-	for (int i = 0; i < 5; ++i)
-	{
-		pGeometryInstance[i].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
-		pGeometryInstance[i].m_InstanceId = 0;
-		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
-		pGeometryInstance[i].m_AccelerationStructureHandle = accel_struct->GetHandle();
-		*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance[i].m_TransformMatrix)) = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
-	}
-
-
-	memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
-	//camera_buffer->UnMapp();
-
-	std::array<float, 9> triangle_data = {
-		1.0f, -1.0f, 0.1f,
-		-1.0f, -1.0f, 0.1f,
-		0.0f, 1.0f, 0.1f
-	};
-
-	memcpy(vertex_buffer->GetMappedPointer(), triangle_data.data(), triangle_data.size() * sizeof(float));
-
-	PGPUImage test_color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	PGPUImage test_rtimg = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
-	test_renderpass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS} , { EFormat::E_FORMAT_D24_UNORM_S8_UINT, EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES }};
-	test_renderpass->m_Subpasses.resize(1);
-	test_renderpass->m_Subpasses[0].m_OutputAttachments = { 0 };
-	test_renderpass->m_Subpasses[0].m_DepthStencilAttachment = 1;
-	test_renderpass->BuildRenderPass();
-
-	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
-	layout->m_Bindings.resize(2);
-	layout->m_Bindings[0].m_BindingPoint = 0;
-	layout->m_Bindings[0].m_Num = 1;
-	layout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
-	layout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT };
-	layout->m_Bindings[1].m_BindingPoint = 1;
-	layout->m_Bindings[1].m_Num = 1;
-	layout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
-	layout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
-
-	PDescriptorSetLayout rtlayout = MainDevice->CreateDescriptorSetLayout();
-	rtlayout->m_Bindings.resize(3);
-	rtlayout->m_Bindings[0].m_BindingPoint = 0;
-	rtlayout->m_Bindings[0].m_Num = 1;
-	rtlayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
-	rtlayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
-
-	rtlayout->m_Bindings[1].m_BindingPoint = 1;
-	rtlayout->m_Bindings[1].m_Num = 1;
-	rtlayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_ACCEL_STRUCT_NV;
-	rtlayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV, EShaderType::E_SHADER_TYPE_MISS_NV, EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
-
-	rtlayout->m_Bindings[2].m_BindingPoint = 2;
-	rtlayout->m_Bindings[2].m_Num = 1;
-	rtlayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_IMAGE;
-	rtlayout->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
-	rtlayout->BuildLayout();
-
-	PDescriptorSet set = layout->AllocDescriptorSet();
-	set->WriteDescriptorSetBuffers(0, { camera_buffer }, { {0, sizeof(glm::mat4)} }, 0);
-	set->EndWriteDescriptorSet();
-
-	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
-
-	PDescriptorSet test_set = layout->AllocDescriptorSet();
-
-	ShaderProcessor processor;
-	{
-		auto results = processor.MultiCompile("test.shaders");
-		for (auto& itr : results)
-		{
-			std::cout << static_cast<int>(itr.first) << std::endl;
-			pipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
-		}
-	}
-	{
-		auto results = processor.MultiCompile("raytracing.shaders");
-		for (auto& itr : results)
-		{
-			std::cout << static_cast<int>(itr.first) << std::endl;
-		}
-	}
-	auto compiler = ShaderCompiler::IShaderCompiler::GetCompiler();
-
-	pipeline->m_VertexInputs.resize(2);
-	//pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
-	//pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
-	pipeline->m_VertexInputs[0].m_DataTypes = VertexDataLightWeight::GetDataType();
-	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
-	pipeline->m_VertexInputs[1].m_DataTypes = { EDataType::EUINT };
-	pipeline->m_VertexInputs[1].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE;
-	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
-	pipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
-	pipeline->m_DescriptorSetLayouts.push_back({ 0, layout });
-	pipeline->m_DescriptorSetLayouts.push_back({ 1, m_TransformManager.GetSetLayout() });
-	test_renderpass->InstanciatePipeline(pipeline, 0);
-
-	{
-		std::ifstream shader_src("raytrace.rgen");
-		std::string src;
-		if (shader_src.is_open())
-		{
-			std::string line;
-			while (std::getline(shader_src, line))
-			{
-				src += line + "\n";
-			}
-		}
-		src = compiler->PreprocessGLSLShader("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
-		std::cout << src << std::endl;
-		auto binary = compiler->CompileGLSLShaderSource("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
-		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_RAYGEN_NV, "default");
-	}
-
-	{
-		std::ifstream shader_src("closehit.rchit");
-		std::string src;
-		if (shader_src.is_open())
-		{
-			std::string line;
-			while (std::getline(shader_src, line))
-			{
-				src += line + "\n";
-			}
-		}
-		src = compiler->PreprocessGLSLShader("closehit.rchit", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV);
-		std::cout << src << std::endl;
-		auto binary = compiler->CompileGLSLShaderSource("closehit.rchit", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV);
-		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_CLOSEHIT_NV, "default");
-	}
-	{
-		std::ifstream shader_src("miss.rmiss");
-		std::string src;
-		if (shader_src.is_open())
-		{
-			std::string line;
-			while (std::getline(shader_src, line))
-			{
-				src += line + "\n";
-			}
-		}
-		src = compiler->PreprocessGLSLShader("miss.rmiss", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_MISS_NV);
-		std::cout << src << std::endl;
-		auto binary = compiler->CompileGLSLShaderSource("miss.rmiss", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_MISS_NV);
-		raytracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_MISS_NV, "default");
-	}
-	raytracer->m_DescriptorSetLayouts.push_back({ 0, rtlayout });
-	raytracer->m_MaxRecursionDepth = 5;
-	raytracer->Build();
-	PGPUBuffer shader_table = MainDevice->CreateBuffer(raytracer->GetShaderTableSize("default"), {EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV}, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-	raytracer->CopyShaderTable(shader_table->GetMappedPointer(), "default");
-
-	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
-	test_framebuffer->m_Images = { test_color, test_depth_stencil};
-
-	PRenderPassInstance render_pass_instance = MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
-
-	MainDevice->CreateBatch("GraphicsLoading", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
-	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
-	MainDevice->CreateBatch("Present", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
-
-	PGPUDeviceThread test_thread = MainDevice->CreateThread();
-
-	PExecutionCommandBuffer execution = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
-	test_thread->BindExecutionCommandBufferToBatch("Main Render", execution);
-
-	PExecutionCommandBuffer present = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
-	test_thread->BindExecutionCommandBufferToBatch("Present", present);
-
-	PGPUBuffer image_load_buffer;
-	PGPUImage test_loaded_image;
-	{
-		int w, h, channel_num;
-		auto data = stbi_load("testnormal1.jpg", &w, &h, &channel_num, 4);
-		image_load_buffer = MainDevice->CreateBuffer(w * h * sizeof(int), { EBufferUsage::E_BUFFER_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_HOST);
-		memcpy(image_load_buffer->GetMappedPointer(), data, w* h * sizeof(int));
-		stbi_image_free(data);
-		image_load_buffer->UnMapp();
-		test_loaded_image = MainDevice->CreateImage(EFormat::E_FORMAT_R8G8B8A8_UNORM, w, h, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_SAMPLE }
-		, EMemoryType::E_MEMORY_TYPE_DEVICE);
-
-		set->WriteDescriptorSetImage(1, test_loaded_image, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT);
-		set->EndWriteDescriptorSet();
-	}
-
-	PExecutionCommandBuffer load = test_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
-	load->StartCommand();
-	load->CopyBufferToImage(image_load_buffer, test_loaded_image);
-	load->BuildAccelerationStructure(accel_struct);
-	load->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
-	load->BuildAccelerationStructure(tlas, geometry_instance_buffer);
-	load->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
-	load->EndCommand();
-	test_thread->BindExecutionCommandBufferToBatch("GraphicsLoading", load, true);
-
-	PGraphicsCommandBuffer cmd = test_thread->StartSubpassCommand(render_pass_instance, 0);
-	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-	cmd->Sissor(0, 0, 1024, 720);
-	cmd->BindSubpassPipeline(pipeline);
-	cmd->BindSubpassDescriptorSets({ set });
-	for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
-	{
-		cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
-		new_queue.CmdDrawInstances(cmd, i);
-	}
-	cmd->EndCommandBuffer();
-
-	MainDevice->ExecuteBatches({ "GraphicsLoading" });
-	MainDevice->WaitIdle();
-
-	PDescriptorSet rtset = rtlayout->AllocDescriptorSet();
-	rtset->WriteDescriptorSetBuffers(0, { camera_buffer }, { {0, sizeof(glm::mat4)} }, 0);
-	rtset->WriteDescriptorSetAccelStructuresNV(1, { tlas });
-	rtset->WriteDescriptorSetImage(2, test_rtimg, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
-	rtset->EndWriteDescriptorSet();
 
 	KeyboardController inputs;
 
@@ -367,45 +110,46 @@ int main()
 
 	ThreadManager thread_manager;
 	thread_manager.Init();
-	std::vector<TestJob> new_jobs(5);
-	uint32_t job_id = 0;
-	for (auto& job : new_jobs)
-	{
-		job.m_JobId = job_id++;
-		thread_manager.EnqueueJob(&job);
-	}
+	thread_manager.EnqueueJob(&rendering_system);
+	//std::vector<TestJob> new_jobs(5);
+	//uint32_t job_id = 0;
+	//for (auto& job : new_jobs)
+	//{
+	//	job.m_JobId = job_id++;
+	//	thread_manager.EnqueueJob(&job);
+	//}
 	while (new_window.IsWindowRunning())
 	{
 		time_manager.UpdateClock();
 		inputs.UpdateController();
 
-		std::vector<OneTimeTestJob> one_time_jobs(10);
-		for (auto& job : one_time_jobs)
-		{
-			thread_manager.EnqueueJob(&job);
-		}
-		for (auto& job : one_time_jobs)
-		{
-			job.WaitJob();
-		}
+		//std::vector<OneTimeTestJob> one_time_jobs(10);
+		//for (auto& job : one_time_jobs)
+		//{
+		//	thread_manager.EnqueueJob(&job);
+		//}
+		//for (auto& job : one_time_jobs)
+		//{
+		//	job.WaitJob();
+		//}
 
-		transforms[0]->m_RawPointer->m_ModelTransform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		transforms[0]->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		if (inputs.KeyTriggered(inputs.GetCharKey('C')))
 		{
 			toggle = !toggle;
 		}
-		if (inputs.KeyTriggered(inputs.GetCharKey('V')))
-		{
-			if (pGeometryInstance[1].m_Mask != 0)
-			{
-				pGeometryInstance[1].m_Mask = 0;
-			}
-			else
-			{
-				pGeometryInstance[1].m_Mask = 1;
-			}
-		}
+		//if (inputs.KeyTriggered(inputs.GetCharKey('V')))
+		//{
+		//	if (pGeometryInstance[1].m_Mask != 0)
+		//	{
+		//		pGeometryInstance[1].m_Mask = 0;
+		//	}
+		//	else
+		//	{
+		//		pGeometryInstance[1].m_Mask = 1;
+		//	}
+		//}
 
 		if (inputs.KeyState(VK_RBUTTON))
 		{
@@ -434,40 +178,25 @@ int main()
 		{
 			cam.view = glm::lookAt(position, position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
 			cam.viewInverse = glm::inverse(cam.view);
-			memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
+			//memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 		}
-
-		*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance->m_TransformMatrix)) = glm::transpose(transforms[0]->m_RawPointer->m_ModelTransform);
-
-		execution->StartCommand();
-		execution->BuildAccelerationStructure(tlas, geometry_instance_buffer, 0, true);
-		execution->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
-		if (toggle)
+		GraphicsFrame new_frame{};
+		m_TransformManager.GenerateGraphicsFrame(new_frame);
+		for (auto& trans : transforms)
 		{
-			execution->ExecuteRenderPassInstance(render_pass_instance);
+			InstanceInfo new_info{};
+			new_info.m_BatchId = trans->m_Info.m_BatchId;
+			new_info.m_TransformId = trans->m_Info.m_TransformId;
+			new_info.p_Mesh = &new_resource;
+			new_frame.AddInstance(new_info);
 		}
-		else
-		{
-			execution->BindRayTracer(raytracer);
-			execution->BindRayTracingDescriptorSet(rtset, 0);
-			execution->StartRayTracing(shader_table, 0, 2, 1, 1024, 720);
-		}
-		execution->EndCommand();
+		new_frame.m_Camera = cam;
+		rendering_system.PushBackNewFrame(new_frame);
 
-		present->StartCommand();
-		if (toggle)
-		{
-			present->CopyToSwapchain_Dynamic(test_color, &new_window);
-		}
-		else
-		{
-			present->CopyToSwapchain_Dynamic(test_rtimg, &new_window);
-		}
-		present->EndCommand();
+		//*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance->m_TransformMatrix)) = glm::transpose(transforms[0]->m_Info.m_Matrix);
 
-		MainDevice->ExecuteBatches({ "Main Render", "Present" });
 
-		MainDevice->PresentWindow(new_window);
+
 		new_window.UpdateWindow();
 	}
 	thread_manager.Terminate();

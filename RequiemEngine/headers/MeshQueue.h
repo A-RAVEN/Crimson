@@ -17,6 +17,7 @@ class MeshInstanceQueue
 public:
 	MeshResource *m_Resource;
 	std::vector<BufferQueue<MeshInstanceData, 500>> MeshQueue;
-	void PushInstance(TransformComponent const* transforn);
+	void PushInstance(InstanceInfo const& instance_info);
+	void Clear();
 	void CmdDrawInstances(PGraphicsCommandBuffer commane_buffer, uint32_t transform_batch_id);
 };

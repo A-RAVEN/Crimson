@@ -1,0 +1,80 @@
+#version 460
+#pragma multicompile rgen rchit rmiss
+#extension GL_NV_ray_tracing : require
+
+#if RAYGEN_SHADER
+#include "camera.gh"
+layout(binding = 0, set = 0) uniform CAMERA
+{
+    Camera cam;
+};
+
+layout(binding = 1, set = 0) uniform accelerationStructureNV topLevelAS;
+
+layout(binding = 2, set = 0, rgba8) uniform image2D image;
+
+struct hitPayload
+{
+    vec3 hitValue;
+};
+
+layout(location = 0) rayPayloadNV vec3 prd;
+
+void main() 
+{
+    const vec2 pixelCenter = vec2(gl_LaunchIDNV.xy) + vec2(0.5);
+    const vec2 inUV = pixelCenter/vec2(gl_LaunchSizeNV.xy);
+    vec2 d = inUV * 2.0 - 1.0;
+    vec4 origin    = cam.viewInverse * vec4(0, 0, 0, 1);
+    vec4 target    = cam.projInverse * vec4(d.x, d.y, 1, 1);
+    vec4 direction = cam.viewInverse * vec4(normalize(target.xyz / target.w), 0);
+    //direction = vec4(-1.0, 0.0, 0.0, 0.0);
+    //origin = vec4(5.0, 0.0, 0.0, 1.0);
+    uint  rayFlags = gl_RayFlagsOpaqueNV;
+    float tMin     = 0.001;
+    float tMax     = 10000.0;
+    traceNV(topLevelAS,     // acceleration structure
+            rayFlags,       // rayFlags
+            0xFF,           // cullMask
+            0,              // sbtRecordOffset
+            0,              // sbtRecordStride
+            0,              // missIndex
+            origin.xyz,     // ray origin
+            tMin,           // ray min range
+            direction.xyz,  // ray direction
+            tMax,           // ray max range
+            0               // payload (location = 0)
+    );
+    imageStore(image, ivec2(gl_LaunchIDNV.xy), vec4(prd, 1.0));
+    //imageStore(image, ivec2(gl_LaunchIDNV.xy), vec4(1.0, 0.0, 0.0, 1.0));
+}
+#endif
+
+#if MISS_SHADER
+layout(location = 0) rayPayloadInNV vec3 hitValue;
+
+void main()
+{
+
+    hitValue = vec3(1.0, 1.0, 1.0);
+
+}
+#endif
+
+#if CLOSEHIT_SHADER
+#extension GL_EXT_nonuniform_qualifier : enable
+
+layout(location = 0) rayPayloadInNV vec3 hitValue;
+
+hitAttributeNV vec3 attribs;
+
+void main()
+{
+
+  const vec3 barycentricCoords = vec3(1.0f - attribs.x - attribs.y, attribs.x, attribs.y);
+
+  hitValue = barycentricCoords;
+
+}
+#endif
+

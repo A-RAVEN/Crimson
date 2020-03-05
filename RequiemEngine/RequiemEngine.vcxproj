@@ -164,7 +164,9 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="headers\GraphicsFrame.cpp" />
     <ClCompile Include="headers\MeshQueue.cpp" />
+    <ClCompile Include="headers\RenderingSystem.cpp" />
     <ClCompile Include="headers\ShaderProcessor.cpp" />
     <ClCompile Include="src\GeometryInstanceManager.cpp" />
     <ClCompile Include="src\KeyboardController.cpp" />
@@ -177,10 +179,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\BufferVector.h" />
+    <ClInclude Include="headers\Camera.h" />
     <ClInclude Include="headers\GeometryInstanceManager.h" />
+    <ClInclude Include="headers\GraphicsFrame.h" />
     <ClInclude Include="headers\KeyboardController.h" />
     <ClInclude Include="headers\MeshQueue.h" />
     <ClInclude Include="headers\MeshResource.h" />
+    <ClInclude Include="headers\RenderingSystem.h" />
     <ClInclude Include="headers\ShaderProcessor.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\stb_image_write.h" />

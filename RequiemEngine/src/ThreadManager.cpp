@@ -10,8 +10,8 @@ void ThreadWorker::Work()
 		if (new_job)
 		{
 			new_job->Work(this);
+			new_job->b_Finished = true;
 		}
-		new_job->b_Finished = true;
 	}
 }
 

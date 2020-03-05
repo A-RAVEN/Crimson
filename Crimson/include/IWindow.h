@@ -9,6 +9,7 @@ namespace Crimson
 	class IWindow
 	{
 	public:
+		virtual void UpdateWindow() = 0;
 		IWindow() : m_Name(L"") {}
 #ifdef _WIN32
 		virtual HINSTANCE	GetWin32Instance() = 0;

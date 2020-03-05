@@ -45,6 +45,12 @@
     <ClCompile Include="src\ThreadManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="headers\GraphicsFrame.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="headers\RenderingSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -81,6 +87,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\ThreadManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\GraphicsFrame.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\RenderingSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

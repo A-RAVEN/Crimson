@@ -2,6 +2,7 @@
 #include <IWindow.h>
 #include <string>
 #include <set>
+#include <atomic>
 
 using namespace Crimson;
 
@@ -27,12 +28,12 @@ public:
 	void CloseWindow();
 	void OnWindowResize(uint32_t new_width, uint32_t new_height);
 	bool IsWindowRunning() const { return !b_Closing; }
-	void UpdateWindow();
+	virtual void UpdateWindow() override;
 private:
 	uint32_t	m_Width;
 	uint32_t	m_Height;
 	HINSTANCE	m_Win32Instance;
 	HWND		m_Win32Window;
-	bool		b_Closing;
+	std::atomic_bool		b_Closing;
 #endif
 };

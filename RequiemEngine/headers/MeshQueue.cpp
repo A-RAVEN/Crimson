@@ -1,16 +1,24 @@
 #include "MeshQueue.h"
 
-void MeshInstanceQueue::PushInstance(TransformComponent const* transforn)
+void MeshInstanceQueue::PushInstance(InstanceInfo const& instance_info)
 {
-	if (MeshQueue.size() <= transforn->m_BatchId)
+	if (MeshQueue.size() <= instance_info.m_BatchId)
 	{
-		MeshQueue.resize(transforn->m_BatchId + 1);
+		MeshQueue.resize(instance_info.m_BatchId + 1);
 	}
-	if (!MeshQueue[transforn->m_BatchId].Inited())
+	if (!MeshQueue[instance_info.m_BatchId].Inited())
 	{
-		MeshQueue[transforn->m_BatchId].Init(GPUDeviceManager::Get()->GetDevice("MainDevice"), { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+		MeshQueue[instance_info.m_BatchId].Init(GPUDeviceManager::Get()->GetDevice("MainDevice"), { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	}
-	MeshQueue[transforn->m_BatchId].PushBack(MeshInstanceData{ transforn->m_Offset });
+	MeshQueue[instance_info.m_BatchId].PushBack(MeshInstanceData{ instance_info.m_TransformId });
+}
+
+void MeshInstanceQueue::Clear()
+{
+	for (auto& data : MeshQueue)
+	{
+		data.Clear();
+	}
 }
 
 void MeshInstanceQueue::CmdDrawInstances(PGraphicsCommandBuffer command_buffer, uint32_t transform_batch_id)
