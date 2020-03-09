@@ -180,6 +180,12 @@
   <ItemGroup>
     <ClInclude Include="headers\BufferVector.h" />
     <ClInclude Include="headers\Camera.h" />
+    <ClInclude Include="headers\Containers\ReaderWriterQueue\atomicops.h" />
+    <ClInclude Include="headers\Containers\ConcurrentQueue\blockingconcurrentqueue.h" />
+    <ClInclude Include="headers\Containers\ConcurrentQueue\concurrentqueue.h" />
+    <ClInclude Include="headers\Containers\ConcurrentQueue\lightweightsemaphore.h" />
+    <ClInclude Include="headers\Containers\LockFreeQueue.h" />
+    <ClInclude Include="headers\Containers\ReaderWriterQueue\readerwriterqueue.h" />
     <ClInclude Include="headers\GeometryInstanceManager.h" />
     <ClInclude Include="headers\GraphicsFrame.h" />
     <ClInclude Include="headers\KeyboardController.h" />

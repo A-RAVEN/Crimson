@@ -67,23 +67,30 @@ void ThreadManager::EnqueueJob(ThreadJob* job)
 		return;
 	}
 	job->b_Finished = false;
-	LockGuard guard(m_QueueMutex);
-	m_JobQueue.push_back(job);
-	m_QueueNotifier.notify_one();
+	m_JobQueue.enqueue(job);
+	//LockGuard guard(m_QueueMutex);
+	//m_JobQueue.push_back(job);
+	//m_QueueNotifier.notify_one();
 }
 
 ThreadJob* ThreadManager::DequeueJob()
 {
-	UniqueLock lock(m_QueueMutex);
-	while (m_JobQueue.empty())
+	ThreadJob* return_val = nullptr;
+	if (m_JobQueue.wait_dequeue_timed(return_val, std::chrono::milliseconds(10)))
 	{
-		if (!b_Working){return nullptr;}
-		m_QueueNotifier.wait(lock);
+		return return_val;
 	}
-	if (!b_Working) { return nullptr; }
-	ThreadJob* front = m_JobQueue.front();
-	m_JobQueue.pop_front();
-	return front;
+	return nullptr;
+	//UniqueLock lock(m_QueueMutex);
+	//while (m_JobQueue.empty())
+	//{
+	//	if (!b_Working){return nullptr;}
+	//	m_QueueNotifier.wait(lock);
+	//}
+	//if (!b_Working) { return nullptr; }
+	//ThreadJob* front = m_JobQueue.front();
+	//m_JobQueue.pop_front();
+	//return front;
 }
 
 void ThreadJob::WaitJob()

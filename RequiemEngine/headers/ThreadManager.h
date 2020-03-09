@@ -4,9 +4,12 @@
 #include <vector>
 #include <atomic>
 #include <list>
+#include <headers/Containers/ConcurrentQueue/blockingconcurrentqueue.h>
 
 using LockGuard = std::lock_guard<std::mutex>;
 using UniqueLock = std::unique_lock<std::mutex>;
+
+constexpr uint32_t STATIC_JOB_QUEUE_CAPACITY = 100;
 
 class ThreadManager;
 class ThreadWorker;
@@ -56,6 +59,7 @@ private:
 	std::vector<ThreadWorker*> m_Workers;
 	std::mutex m_QueueMutex;
 	std::condition_variable m_QueueNotifier;
-	std::list<ThreadJob*> m_JobQueue;
+	moodycamel::BlockingConcurrentQueue<ThreadJob*> m_JobQueue;
+	//std::list<ThreadJob*> m_JobQueue;
 	std::atomic_bool b_Working;
 };

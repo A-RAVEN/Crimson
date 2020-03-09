@@ -98,5 +98,23 @@
     <ClInclude Include="headers\Camera.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\Containers\LockFreeQueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Containers\ConcurrentQueue\blockingconcurrentqueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Containers\ConcurrentQueue\concurrentqueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Containers\ConcurrentQueue\lightweightsemaphore.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Containers\ReaderWriterQueue\readerwriterqueue.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Containers\ReaderWriterQueue\atomicops.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

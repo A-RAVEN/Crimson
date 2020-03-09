@@ -23,22 +23,9 @@
 #include <headers/Camera.h>
 #include <headers/RenderingSystem.h>
 
+//using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
+using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
 
-class TestJob : public ThreadJob
-{
-public:
-	TestJob() : m_JobId(0) {}
-	virtual void Work(ThreadWorker const* this_worker) override
-	{
-		while (this_worker->Working())
-		{
-			//std::cout << "job " << m_JobId << " is working on thread " << this_worker->GetId() << std::endl;
-		}
-		std::cout << "terminate" << std::endl;
-	};
-	~TestJob() {};
-	uint32_t m_JobId;
-};
 
 class OneTimeTestJob : public ThreadJob
 {
@@ -77,14 +64,11 @@ int main()
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
 	MainDevice->RegisterWindow(new_window);
 
-	RenderingSystem rendering_system(&new_window);
 
 	TransformComponentAllocator m_TransformManager;
 
 	MeshResource new_resource;
 	new_resource.ProcessAiScene(scene);
-	//MeshInstanceQueue new_queue;
-	//new_queue.m_Resource = &new_resource;
 
 	std::vector<TransformComponent*> transforms;
 	for (int i = 0; i < 10; ++i)
@@ -93,15 +77,44 @@ int main()
 		{
 			TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
 			p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
-			//new_queue.PushInstance(p_component);
 			transforms.push_back(p_component);
 		}
 	}
 
 	
+	///////////Setup Raytracing Resources
+	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
+	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, sizeof(VertexDataLightWeight), EDataType::EVEC3);
+	raytrace_geometry->SetIndexData(new_resource.m_IndexBuffer, 0, new_resource.m_IndexSize, EIndexType::E_INDEX_TYPE_32);
+	raytrace_geometry->SetGeometryFlags({ EGeometryFlags::E_GEOMETRY_OPAQUE });
+	raytrace_geometry->SetGeometryType(ERayTraceGeometryType::E_GEOMETRY_TYPE_TRIANGLES);
+
+	//Create Blas
+	PAccelerationStructure blas = MainDevice->CreateAccelerationStructure();
+	blas->m_Geometries = { raytrace_geometry };
+	blas->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV };
+	blas->InitAS();
+	blas->SetupScratchBuffer();
+	PAccelerationStructure tlas = MainDevice->CreateAccelerationStructure();
+	tlas->m_InstanceNumber = 10;
+	tlas->m_BuildFlags = { EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_NV, EBuildAccelerationStructureFlags::E_BUILD_ACCELERATION_STRUCTURE_ALLOW_UPDATE_BIT_NV };
+	tlas->InitAS(true);
+	tlas->SetupScratchBuffer();
+	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RaytraceGeometryType) * 5, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	RaytraceGeometryType* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RaytraceGeometryType[5];
+	for (int i = 0; i < 5; ++i)
+	{
+		pGeometryInstance[i].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
+		pGeometryInstance[i].m_InstanceId = 0;
+		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
+		pGeometryInstance[i].m_AccelerationStructureHandle = blas->GetHandle();
+		pGeometryInstance[i].m_TransformMatrix = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
+		//(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance[i].m_TransformMatrix)) = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
+	}
+
+	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer);
 
 	KeyboardController inputs;
-
 	glm::vec2 angles(0.0f);
 	glm::vec3 position(-5.0f, 0.0f, 0.0f);
 
@@ -111,13 +124,6 @@ int main()
 	ThreadManager thread_manager;
 	thread_manager.Init();
 	thread_manager.EnqueueJob(&rendering_system);
-	//std::vector<TestJob> new_jobs(5);
-	//uint32_t job_id = 0;
-	//for (auto& job : new_jobs)
-	//{
-	//	job.m_JobId = job_id++;
-	//	thread_manager.EnqueueJob(&job);
-	//}
 	while (new_window.IsWindowRunning())
 	{
 		time_manager.UpdateClock();
@@ -139,17 +145,6 @@ int main()
 		{
 			toggle = !toggle;
 		}
-		//if (inputs.KeyTriggered(inputs.GetCharKey('V')))
-		//{
-		//	if (pGeometryInstance[1].m_Mask != 0)
-		//	{
-		//		pGeometryInstance[1].m_Mask = 0;
-		//	}
-		//	else
-		//	{
-		//		pGeometryInstance[1].m_Mask = 1;
-		//	}
-		//}
 
 		if (inputs.KeyState(VK_RBUTTON))
 		{

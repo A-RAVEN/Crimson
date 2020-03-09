@@ -154,7 +154,7 @@ void Win32Window::UpdateWindow()
 {
 	MSG msg;
 	//if (PeekMessage(&msg, m_Win32Window, 0, 0, PM_REMOVE))
-	if (PeekMessageA(&msg, m_Win32Window, 0, 0, PM_REMOVE))
+	if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);

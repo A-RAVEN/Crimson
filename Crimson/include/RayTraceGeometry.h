@@ -61,10 +61,23 @@ namespace Crimson
 	};
 	using PRayTraceGeometry = RayTraceGeometry*;
 
-	struct RayTraceGeometryInstance
+	struct RayTraceGeometryInstanceOLD
 	{
 	public:
 		float m_TransformMatrix[12];
+		uint32_t m_InstanceId : 24;
+		uint32_t m_Mask : 8;
+		uint32_t m_InstanceOffset : 24;
+		uint32_t m_Flags : 8;
+		uint64_t m_AccelerationStructureHandle;
+	};
+
+	template <typename MATTYPE>
+	struct RayTraceGeometryInstance
+	{
+		static_assert(sizeof(MATTYPE) == sizeof(float) * 12, "Type of MATTYPE of RayTraceGeometryInstance<MATTYPE> must be a 3x4 float matrix type");
+	public:
+		MATTYPE m_TransformMatrix;
 		uint32_t m_InstanceId : 24;
 		uint32_t m_Mask : 8;
 		uint32_t m_InstanceOffset : 24;
