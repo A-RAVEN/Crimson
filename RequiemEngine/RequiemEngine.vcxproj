@@ -70,22 +70,22 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(IncludePath)</IncludePath>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
@@ -99,11 +99,12 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -116,11 +117,12 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -136,11 +138,12 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -156,11 +159,12 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"</Command>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -189,6 +193,7 @@
     <ClInclude Include="headers\GeometryInstanceManager.h" />
     <ClInclude Include="headers\GraphicsFrame.h" />
     <ClInclude Include="headers\KeyboardController.h" />
+    <ClInclude Include="headers\LuaInterface\LuaInterfaces.h" />
     <ClInclude Include="headers\MeshQueue.h" />
     <ClInclude Include="headers\MeshResource.h" />
     <ClInclude Include="headers\RenderingSystem.h" />

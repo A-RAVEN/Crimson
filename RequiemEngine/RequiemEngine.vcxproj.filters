@@ -116,5 +116,8 @@
     <ClInclude Include="headers\Containers\ReaderWriterQueue\atomicops.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\LuaInterface\LuaInterfaces.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
