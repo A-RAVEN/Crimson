@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <headers/Debug.h>
 extern "C"
 {
 #include"lua.h"
@@ -7,8 +8,8 @@ extern "C"
 #include "lualib.h" 
 }
 
-namespace lua_func
-{
+//namespace lua_func
+//{
 #define LUA_VOID_FUNC( FUNC_NAME , TYPE ,FUNC )\
 	int FUNC_NAME (lua_State *L)\
 	{\
@@ -43,6 +44,35 @@ namespace lua_func
 		lua_pop(L, 1);
 		return data;
 	}
+
+	template<typename T>
+	static void PushLuaData(lua_State* L, T data);
+
+	template<>
+	static void PushLuaData(lua_State* L, int data)
+	{
+		lua_pushinteger(L, data);
+	}
+
+	template<>
+	static void PushLuaData(lua_State* L, float data)
+	{
+		lua_pushnumber(L, data);
+	}
+
+	template<>
+	static void PushLuaData(lua_State* L, double data)
+	{
+		lua_pushnumber(L, data);
+	}
+
+	template<>
+	static void PushLuaData(lua_State* L, std::string const& data)
+	{
+		lua_pushstring(L, data.c_str());
+	}
+
+
 
 	template <typename T>
 	static T GetLuaData(lua_State* L, int id);
@@ -108,7 +138,7 @@ namespace lua_func
 	private:
 		template<int...Indices>
 		static int doit_impl(lua_State* L, int_pack<Indices...>) {
-			luaU_push<ReturnType>(L,
+			PushLuaData<ReturnType>(L,
 				(UnWrapPUserData<Clazz>(L, 1)->*PMF)(
 					GetLuaData<Args>(L, Indices)...
 					)
@@ -123,17 +153,35 @@ namespace lua_func
 	template<class ReturnType, class...Args, ReturnType(*PF)(Args...)>
 	struct lua_func_wrapper<ReturnType(*)(Args...), PF> {
 		static int doit(lua_State* L) {
-			return doit_impl(L, make_int_range<2, sizeof...(Args)>());
+			return doit_impl(L, make_int_range<1, sizeof...(Args)>());
 		}
 	private:
 		template<int...Indices>
 		static int doit_impl(lua_State* L, int_pack<Indices...>) {
-			luaU_push<ReturnType>(L,
-				(*PMF)(
+			PushLuaData<ReturnType>(L,
+				(*PF)(
 					GetLuaData<Args>(L, Indices)...
 					)
 				);
 			return 1;
 		}
 	};
+
+#define GET_MEM_FUN_WRAPPER(...) &lua_mem_func_wrapper<decltype(__VA_ARGS__),__VA_ARGS__>::doit
+#define GET_FUN_WRAPPER(...) &lua_func_wrapper<decltype(__VA_ARGS__),__VA_ARGS__>::doit
+//}
+
+#define CHECK_LUAERR(L, STATE) {CheckLuaErr(L, STATE, __LINE__, __FILE__);}
+static void CheckLuaErr(lua_State* L, int state, int line, std::string const& file)
+{
+	if (state != 0)
+	{
+		std::string msg = lua_tostring(L, -1);
+		if (msg.length() > 0) {
+			LogError("LUA ERROR:\n" + msg, line, file);
+			luaL_traceback(L, L, msg.c_str(), 1);
+			std::string trace = lua_tostring(L, -1);
+			LogError(trace, line, file);
+		}
+	}
 }

@@ -22,6 +22,8 @@
 #include <iostream>
 #include <headers/Camera.h>
 #include <headers/RenderingSystem.h>
+#include <headers/LuaInterface/LuaMachine.h>
+#include <headers/LuaInterface/LuaInterfaces.h>
 
 //using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
 using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
@@ -38,9 +40,25 @@ public:
 	~OneTimeTestJob() {};
 };
 
+int TestFunc(int input, std::string value, int input2)
+{
+	std::cout << "data from lua is " << input << " " << input2 << std::endl;
+	std::cout << value << std::endl;
+	return 0;
+}
 
 int main()
 {
+	LuaVM lua_machine;
+	lua_machine.InitVM();
+
+	std::vector<luaL_Reg> functions =
+	{
+		{"TestFunc", GET_FUN_WRAPPER(&TestFunc)}
+	};
+	lua_machine.RegisterFunctions(functions.data(), functions.size());
+	lua_machine.LoadScript("test.lua");
+
 	Camera cam;
 	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	cam.proj = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
