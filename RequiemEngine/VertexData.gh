@@ -1,0 +1,18 @@
+#ifndef VERTEX_DATA_H
+#define VERTEX_DATA_H
+
+struct VertexDataLight
+{
+    vec3 position;
+    vec3 texcoord;
+    vec3 normal;
+    vec4 tangent;
+};
+
+#define DEFINE_VERTEX_DATA_UNPACK_FUNCTION( RAW_DATA ) VertexDataLight UnPackVertexData(int index)\
+{\
+    VertexDataLight return_val;\
+    return return_val;\
+}\
+
+#endif

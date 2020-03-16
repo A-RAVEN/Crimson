@@ -5,7 +5,7 @@
 #include <headers/VertexData.h>
 
 using namespace glm;
-void MeshResource::ProcessAiScene(const aiScene* scene)
+void MeshResource::ProcessAiScene(const aiScene* scene, bool constant_buffer)
 {
 	std::vector<VertexDataLightWeight> vertices;
 	std::vector<vec3> positions;
@@ -50,8 +50,15 @@ void MeshResource::ProcessAiScene(const aiScene* scene)
 		size_t vertex_size = vertices.size() * sizeof(VertexDataLightWeight);
 		size_t index_size = indicies.size() * sizeof(uint32_t);
 
-		m_VertexBuffer = main_device->CreateBuffer(vertex_size, { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-		m_IndexBuffer = main_device->CreateBuffer(index_size, { EBufferUsage::E_BUFFER_USAGE_INDICIES }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+		std::vector<EBufferUsage> vertex_buffer_usages = { EBufferUsage::E_BUFFER_USAGE_VERTEX };
+		std::vector<EBufferUsage> index_buffer_usages = { EBufferUsage::E_BUFFER_USAGE_INDICIES };
+		if (constant_buffer)
+		{
+			vertex_buffer_usages.push_back(EBufferUsage::E_BUFFER_USAGE_STORAGE);
+			index_buffer_usages.push_back(EBufferUsage::E_BUFFER_USAGE_STORAGE);
+		}
+		m_VertexBuffer = main_device->CreateBuffer(vertex_size, vertex_buffer_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+		m_IndexBuffer = main_device->CreateBuffer(index_size, index_buffer_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
 		memcpy_s(m_VertexBuffer->GetMappedPointer(), vertex_size, vertices.data(), vertex_size);
 		memcpy_s(m_IndexBuffer->GetMappedPointer(), index_size, indicies.data(), index_size);

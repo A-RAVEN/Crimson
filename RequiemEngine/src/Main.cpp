@@ -130,7 +130,7 @@ int main()
 		//(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance[i].m_TransformMatrix)) = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
 	}
 
-	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer);
+	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource);
 
 	KeyboardController inputs;
 	glm::vec2 angles(0.0f);

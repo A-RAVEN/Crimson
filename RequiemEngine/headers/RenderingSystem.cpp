@@ -89,7 +89,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 	}
 }
 
-RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer) : p_Window(window)
+RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh) : p_Window(window)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
 
@@ -154,7 +154,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	//Try Create Ray Tracing Structure
 
 	m_RtSetLayout = MainDevice->CreateDescriptorSetLayout();
-	m_RtSetLayout->m_Bindings.resize(3);
+	m_RtSetLayout->m_Bindings.resize(5);
 	m_RtSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_RtSetLayout->m_Bindings[0].m_Num = 1;
 	m_RtSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
@@ -167,12 +167,24 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSetLayout->m_Bindings[2].m_Num = 1;
 	m_RtSetLayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_IMAGE;
 	m_RtSetLayout->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
+
+	m_RtSetLayout->m_Bindings[3].m_BindingPoint = 3;
+	m_RtSetLayout->m_Bindings[3].m_Num = 1;
+	m_RtSetLayout->m_Bindings[3].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
+	m_RtSetLayout->m_Bindings[3].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
+
+	m_RtSetLayout->m_Bindings[4].m_BindingPoint = 4;
+	m_RtSetLayout->m_Bindings[4].m_Num = 1;
+	m_RtSetLayout->m_Bindings[4].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
+	m_RtSetLayout->m_Bindings[4].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
 	m_RtSetLayout->BuildLayout();
 
 	m_RtSet = m_RtSetLayout->AllocDescriptorSet();
 	m_RtSet->WriteDescriptorSetBuffers(0, { m_CameraBuffer }, { {0, sizeof(glm::mat4)} }, 0);
 	m_RtSet->WriteDescriptorSetAccelStructuresNV(1, { tlas });
 	m_RtSet->WriteDescriptorSetImage(2, m_RTColor, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
+	m_RtSet->WriteDescriptorSetBuffers(3, { rt_mesh->m_VertexBuffer }, { {0, rt_mesh->m_VertexBuffer->GetSize()} }, 0);
+	m_RtSet->WriteDescriptorSetBuffers(4, { rt_mesh->m_IndexBuffer }, { {0, rt_mesh->m_IndexBuffer->GetSize()} }, 0);
 	m_RtSet->EndWriteDescriptorSet();
 
 	m_RayTracer = MainDevice->CreateRayTracer();
@@ -189,56 +201,6 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RayTracer->Build();
 	m_ShaderTable = MainDevice->CreateBuffer(m_RayTracer->GetShaderTableSize("default"), { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	m_RayTracer->CopyShaderTable(m_ShaderTable->GetMappedPointer(), "default");
-	//{
-	//	std::ifstream shader_src("raytrace.rgen");
-	//	std::string src;
-	//	if (shader_src.is_open())
-	//	{
-	//		std::string line;
-	//		while (std::getline(shader_src, line))
-	//		{
-	//			src += line + "\n";
-	//		}
-	//	}
-	//	src = compiler->PreprocessGLSLShader("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
-	//	std::cout << src << std::endl;
-	//	auto binary = compiler->CompileGLSLShaderSource("raytrace.rgen", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_RAYGEN_NV);
-	//	m_RayTracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_RAYGEN_NV, "default");
-	//}
-
-	//{
-	//	std::ifstream shader_src("closehit.rchit");
-	//	std::string src;
-	//	if (shader_src.is_open())
-	//	{
-	//		std::string line;
-	//		while (std::getline(shader_src, line))
-	//		{
-	//			src += line + "\n";
-	//		}
-	//	}
-	//	src = compiler->PreprocessGLSLShader("closehit.rchit", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV);
-	//	std::cout << src << std::endl;
-	//	auto binary = compiler->CompileGLSLShaderSource("closehit.rchit", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_CLOSEHIT_NV);
-	//	m_RayTracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_CLOSEHIT_NV, "default");
-	//}
-	//{
-	//	std::ifstream shader_src("miss.rmiss");
-	//	std::string src;
-	//	if (shader_src.is_open())
-	//	{
-	//		std::string line;
-	//		while (std::getline(shader_src, line))
-	//		{
-	//			src += line + "\n";
-	//		}
-	//	}
-	//	src = compiler->PreprocessGLSLShader("miss.rmiss", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_MISS_NV);
-	//	std::cout << src << std::endl;
-	//	auto binary = compiler->CompileGLSLShaderSource("miss.rmiss", src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_MISS_NV);
-	//	m_RayTracer->LoadShaderSource(reinterpret_cast<char*>(binary.data()), binary.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_MISS_NV, "default");
-	//}
-
 
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();

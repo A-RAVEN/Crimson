@@ -28,7 +28,7 @@ class RenderingSystem : public ThreadJob
 {
 public:
 	virtual void Work(ThreadWorker const* this_worker) override;
-	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer);
+	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh);
 	void PushBackNewFrame(GraphicsFrame &frame);
 	TransformManager m_TransformManager;
 	std::unordered_map<MeshResource*, MeshInstanceQueue> m_Instances;

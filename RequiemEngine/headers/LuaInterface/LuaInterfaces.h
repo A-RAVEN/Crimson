@@ -73,7 +73,6 @@ extern "C"
 	}
 
 
-
 	template <typename T>
 	static T GetLuaData(lua_State* L, int id);
 

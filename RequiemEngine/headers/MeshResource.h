@@ -6,7 +6,7 @@ using namespace Crimson;
 class MeshResource
 {
 public:
-	void ProcessAiScene(const aiScene* scene);
+	void ProcessAiScene(const aiScene* scene, bool constant_buffer = true);
 public:
 	PGPUBuffer m_VertexBuffer;
 	PGPUBuffer m_IndexBuffer;

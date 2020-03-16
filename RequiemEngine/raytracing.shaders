@@ -2,6 +2,19 @@
 #pragma multicompile rgen rchit rmiss
 #extension GL_NV_ray_tracing : require
 
+#if CLOSEHIT_SHADER
+#include "VertexData.gh"
+layout(binding = 3, set = 0) buffer readonly VERTICES 
+{
+    vec4 raw_vertices[];
+};
+layout(binding = 4, set = 0) buffer readonly INDICES
+{
+    uint indices[];
+};
+DEFINE_VERTEX_DATA_UNPACK_FUNCTION(raw_vertices)
+#endif
+
 #if RAYGEN_SHADER
 #include "camera.gh"
 layout(binding = 0, set = 0) uniform CAMERA
