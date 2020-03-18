@@ -41,6 +41,19 @@ public:
 	}
 };
 
+class VertexDataLightWeightUnpacked
+{
+public:
+	vec3 m_Position;
+	vec2 m_Texcoord;
+	vec3 m_Normal;
+	vec4 m_Tangent;
+	static std::vector<EDataType> GetDataType()
+	{
+		return { EDataType::EVEC3, EDataType::EVEC2, EDataType::EVEC3, EDataType::EVEC4 };
+	}
+};
+
 class VertexDataMinimun
 {
 public:

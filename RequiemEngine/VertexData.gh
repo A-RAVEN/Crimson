@@ -4,14 +4,20 @@
 struct VertexDataLight
 {
     vec3 position;
-    vec3 texcoord;
+    vec2 texcoord;
     vec3 normal;
     vec4 tangent;
 };
 
-#define DEFINE_VERTEX_DATA_UNPACK_FUNCTION( RAW_DATA ) VertexDataLight UnPackVertexData(int index)\
+#define DEFINE_VERTEX_DATA_LIGHT_UNPACK_FUNCTION( RAW_DATA ) VertexDataLight UnPackVertexData(int index)\
 {\
     VertexDataLight return_val;\
+    int vec_id = index * 3;\
+    return_val.position = RAW_DATA[vec_id].xyz;\
+    return_val.texcoord.x = RAW_DATA[vec_id].w;\
+    return_val.texcoord.y = RAW_DATA[vec_id + 1].x;\
+    return_val.normal = RAW_DATA[vec_id + 1].yzw;\
+    return_val.tangent = RAW_DATA[vec_id + 2];\
     return return_val;\
 }\
 

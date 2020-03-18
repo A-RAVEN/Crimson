@@ -8,11 +8,19 @@ layout(binding = 3, set = 0) buffer readonly VERTICES
 {
     vec4 raw_vertices[];
 };
+
 layout(binding = 4, set = 0) buffer readonly INDICES
 {
     uint indices[];
 };
-DEFINE_VERTEX_DATA_UNPACK_FUNCTION(raw_vertices)
+layout(binding = 5, set = 0) buffer readonly TRANSFORM_INDICES
+{
+    uint transform_indices[];
+};
+layout(binding = 0, set = 1) buffer readonly TRANSFORMS{
+	mat4 transforms[];
+};
+DEFINE_VERTEX_DATA_LIGHT_UNPACK_FUNCTION(raw_vertices)
 #endif
 
 #if RAYGEN_SHADER
@@ -81,13 +89,20 @@ layout(location = 0) rayPayloadInNV vec3 hitValue;
 
 hitAttributeNV vec3 attribs;
 
+
+
 void main()
 {
+    mat4 transform = transforms[transform_indices[gl_InstanceID]];
+    ivec3 this_indices = ivec3(indices[3 * gl_PrimitiveID], indices[3 * gl_PrimitiveID + 1], indices[3 * gl_PrimitiveID + 2]);
+    VertexDataLight v0 = UnPackVertexData(this_indices.x);
+    VertexDataLight v1 = UnPackVertexData(this_indices.y);
+    VertexDataLight v2 = UnPackVertexData(this_indices.z);
 
-  const vec3 barycentricCoords = vec3(1.0f - attribs.x - attribs.y, attribs.x, attribs.y);
+    const vec3 barycentricCoords = vec3(1.0f - attribs.x - attribs.y, attribs.x, attribs.y);
 
-  hitValue = barycentricCoords;
-
+    vec3 normal = normalize(v0.normal * barycentricCoords.x + v1.normal * barycentricCoords.y + v2.normal * barycentricCoords.z);
+    hitValue = (transform * vec4(normal, 0.0)).xyz;
 }
 #endif
 

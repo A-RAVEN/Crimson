@@ -59,7 +59,7 @@ TransformManager::TransformManager()
 	m_TransformSetLayout->m_Bindings[0].m_Num = 1;
 	m_TransformSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_TransformSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
-	m_TransformSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX };
+	m_TransformSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
 	m_TransformSetLayout->BuildLayout();
 }
 

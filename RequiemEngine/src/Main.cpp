@@ -61,14 +61,14 @@ int main()
 
 	Camera cam;
 	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	cam.proj = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+	cam.proj = glm::perspective(glm::radians(45.0f), 1024.0f / 720.0f, 0.1f, 100.0f);
 	cam.proj[1][1] *= -1.0f;
 	cam.viewInverse = glm::inverse(cam.view);
 	cam.projInverse = glm::inverse(cam.proj);
 
 
 	Assimp::Importer scene_importer;
-	const aiScene* scene = scene_importer.ReadFile("testslime.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+	const aiScene* scene = scene_importer.ReadFile("bunny.ply", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
 	std::cout << "Start" << std::endl;
 	using namespace Crimson;
 	GPUDeviceManager::Init();
@@ -86,23 +86,14 @@ int main()
 	TransformComponentAllocator m_TransformManager;
 
 	MeshResource new_resource;
-	new_resource.ProcessAiScene(scene);
+	new_resource.ProcessAiSceneLightWeight(scene, true, false);
 
-	std::vector<TransformComponent*> transforms;
-	for (int i = 0; i < 10; ++i)
-	{
-		for (int j = 0; j < 10; ++j)
-		{
-			TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-			p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
-			transforms.push_back(p_component);
-		}
-	}
+
 
 	
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
-	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, sizeof(VertexDataLightWeight), EDataType::EVEC3);
+	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, new_resource.GetVertexStride(), EDataType::EVEC3);
 	raytrace_geometry->SetIndexData(new_resource.m_IndexBuffer, 0, new_resource.m_IndexSize, EIndexType::E_INDEX_TYPE_32);
 	raytrace_geometry->SetGeometryFlags({ EGeometryFlags::E_GEOMETRY_OPAQUE });
 	raytrace_geometry->SetGeometryType(ERayTraceGeometryType::E_GEOMETRY_TYPE_TRIANGLES);
@@ -120,17 +111,33 @@ int main()
 	tlas->SetupScratchBuffer();
 	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RaytraceGeometryType) * 5, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	RaytraceGeometryType* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RaytraceGeometryType[5];
+
+	std::vector<TransformComponent*> transforms;
+	//for (int i = 0; i < 10; ++i)
+	//{
+	//	for (int j = 0; j < 10; ++j)
+	//	{
+	//		TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
+	//		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
+	//		transforms.push_back(p_component);
+	//	}
+	//}
+	BufferQueue<uint32_t, 10> transform_queue;
+	transform_queue.Init(MainDevice, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	for (int i = 0; i < 5; ++i)
 	{
 		pGeometryInstance[i].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
-		pGeometryInstance[i].m_InstanceId = 0;
+		pGeometryInstance[i].m_InstanceId = i;
 		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
 		pGeometryInstance[i].m_AccelerationStructureHandle = blas->GetHandle();
-		pGeometryInstance[i].m_TransformMatrix = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
-		//(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance[i].m_TransformMatrix)) = glm::transpose(glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)));
+		TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
+		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
+		pGeometryInstance[i].m_TransformMatrix = glm::transpose(p_component->m_Info.m_Matrix);
+		transforms.push_back(p_component);
+		transform_queue.PushBack(p_component->m_Info.m_TransformId);
 	}
 
-	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource);
+	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue);
 
 	KeyboardController inputs;
 	glm::vec2 angles(0.0f);
@@ -147,17 +154,7 @@ int main()
 		time_manager.UpdateClock();
 		inputs.UpdateController();
 
-		//std::vector<OneTimeTestJob> one_time_jobs(10);
-		//for (auto& job : one_time_jobs)
-		//{
-		//	thread_manager.EnqueueJob(&job);
-		//}
-		//for (auto& job : one_time_jobs)
-		//{
-		//	job.WaitJob();
-		//}
-
-		transforms[0]->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+		//transforms[0]->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		if (inputs.KeyTriggered(inputs.GetCharKey('C')))
 		{
@@ -174,24 +171,23 @@ int main()
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 		if (inputs.KeyState(inputs.GetCharKey('W')))
 		{
-			position += forward * 0.005f;
+			position += forward * 5.0f * time_manager.deltaTime();
 		}
 		if (inputs.KeyState(inputs.GetCharKey('S')))
 		{
-			position -= forward * 0.005f;
+			position -= forward * 5.0f * time_manager.deltaTime();
 		}
 		if (inputs.KeyState(inputs.GetCharKey('D')))
 		{
-			position += right * 0.005f;
+			position += right * 5.0f * time_manager.deltaTime();
 		}
 		if (inputs.KeyState(inputs.GetCharKey('A')))
 		{
-			position -= right * 0.005f;
+			position -= right * 5.0f * time_manager.deltaTime();
 		}
 		{
 			cam.view = glm::lookAt(position, position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
 			cam.viewInverse = glm::inverse(cam.view);
-			//memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 		}
 		GraphicsFrame new_frame{};
 		m_TransformManager.GenerateGraphicsFrame(new_frame);
@@ -205,10 +201,6 @@ int main()
 		}
 		new_frame.m_Camera = cam;
 		rendering_system.PushBackNewFrame(new_frame);
-
-		//*(reinterpret_cast<glm::mat3x4*>(&pGeometryInstance->m_TransformMatrix)) = glm::transpose(transforms[0]->m_Info.m_Matrix);
-
-
 
 		new_window.UpdateWindow();
 	}

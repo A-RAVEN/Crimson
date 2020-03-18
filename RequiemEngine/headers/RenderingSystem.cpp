@@ -76,6 +76,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 		//else
 		//{
 			m_ExecutionCmd->BindRayTracer(m_RayTracer);
+			m_ExecutionCmd->BindRayTracingDescriptorSet({ m_TransformManager.GetSet(0) }, 1);
 			m_ExecutionCmd->BindRayTracingDescriptorSet(m_RtSet, 0);
 			m_ExecutionCmd->StartRayTracing(m_ShaderTable, 0, 2, 1, 1024, 720);
 		//}
@@ -89,10 +90,10 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 	}
 }
 
-RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh) : p_Window(window)
+RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue) : p_Window(window)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
-
+	m_TransformManager.ExtendBufferPages(0);
 
 	m_CameraBuffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
@@ -140,7 +141,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 
 
 	m_Pipeline->m_VertexInputs.resize(2);
-	m_Pipeline->m_VertexInputs[0].m_DataTypes = VertexDataLightWeight::GetDataType();
+	m_Pipeline->m_VertexInputs[0].m_DataTypes = rt_mesh->GetDataType();
 	m_Pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
 	m_Pipeline->m_VertexInputs[1].m_DataTypes = { EDataType::EUINT };
 	m_Pipeline->m_VertexInputs[1].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE;
@@ -154,7 +155,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	//Try Create Ray Tracing Structure
 
 	m_RtSetLayout = MainDevice->CreateDescriptorSetLayout();
-	m_RtSetLayout->m_Bindings.resize(5);
+	m_RtSetLayout->m_Bindings.resize(6);
 	m_RtSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_RtSetLayout->m_Bindings[0].m_Num = 1;
 	m_RtSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
@@ -177,6 +178,11 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSetLayout->m_Bindings[4].m_Num = 1;
 	m_RtSetLayout->m_Bindings[4].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
 	m_RtSetLayout->m_Bindings[4].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
+
+	m_RtSetLayout->m_Bindings[5].m_BindingPoint = 5;
+	m_RtSetLayout->m_Bindings[5].m_Num = 1;
+	m_RtSetLayout->m_Bindings[5].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
+	m_RtSetLayout->m_Bindings[5].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
 	m_RtSetLayout->BuildLayout();
 
 	m_RtSet = m_RtSetLayout->AllocDescriptorSet();
@@ -185,6 +191,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSet->WriteDescriptorSetImage(2, m_RTColor, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
 	m_RtSet->WriteDescriptorSetBuffers(3, { rt_mesh->m_VertexBuffer }, { {0, rt_mesh->m_VertexBuffer->GetSize()} }, 0);
 	m_RtSet->WriteDescriptorSetBuffers(4, { rt_mesh->m_IndexBuffer }, { {0, rt_mesh->m_IndexBuffer->GetSize()} }, 0);
+	m_RtSet->WriteDescriptorSetBuffers(5, { transform_queue.GetBufferSegment(0) }, { {0, transform_queue.GetBufferSegment(0)->GetSize()} }, 0);
 	m_RtSet->EndWriteDescriptorSet();
 
 	m_RayTracer = MainDevice->CreateRayTracer();
@@ -197,6 +204,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 		}
 	}
 	m_RayTracer->m_DescriptorSetLayouts.push_back({ 0, m_RtSetLayout });
+	m_RayTracer->m_DescriptorSetLayouts.push_back({ 1, m_TransformManager.GetSetLayout() });
 	m_RayTracer->m_MaxRecursionDepth = 5;
 	m_RayTracer->Build();
 	m_ShaderTable = MainDevice->CreateBuffer(m_RayTracer->GetShaderTableSize("default"), { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
