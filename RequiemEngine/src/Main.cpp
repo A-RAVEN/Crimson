@@ -131,7 +131,7 @@ int main()
 		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
 		pGeometryInstance[i].m_AccelerationStructureHandle = blas->GetHandle();
 		TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
+		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
 		pGeometryInstance[i].m_TransformMatrix = glm::transpose(p_component->m_Info.m_Matrix);
 		transforms.push_back(p_component);
 		transform_queue.PushBack(p_component->m_Info.m_TransformId);
