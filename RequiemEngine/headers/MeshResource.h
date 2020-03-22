@@ -17,6 +17,7 @@ public:
 		std::vector<VertexType> vertices;
 		std::vector<vec3> positions;
 		std::vector<uint32_t> indicies;
+		uint32_t submesh_vertex_offset = 0;
 		for (uint64_t imesh = 0; imesh < scene->mNumMeshes; ++imesh)
 		{
 			const aiMesh* pmesh = scene->mMeshes[imesh];
@@ -50,9 +51,10 @@ public:
 				const aiFace& face = pmesh->mFaces[iface];
 				for (uint8_t iid = 0; iid < face.mNumIndices; ++iid)
 				{
-					indicies.push_back(face.mIndices[iid]);
+					indicies.push_back(face.mIndices[iid] + submesh_vertex_offset);
 				}
 			}
+			submesh_vertex_offset = vertices.size();
 		}
 		m_VertexSize = positions.size();
 		m_IndexSize = indicies.size();

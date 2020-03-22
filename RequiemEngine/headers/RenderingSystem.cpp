@@ -17,6 +17,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 {
 	while (this_worker->Working())
 	{
+		m_TimeManager.UpdateClock();
 		PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
 		//update frame
 		{
@@ -87,10 +88,11 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 
 		MainDevice->PresentWindow(*p_Window);
 		//p_Window->UpdateWindow();
+		m_AverageDeltaTime = (m_AverageDeltaTime + m_TimeManager.deltaTime()) * 0.5f;
 	}
 }
 
-RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue) : p_Window(window)
+RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue) : p_Window(window), m_AverageDeltaTime(0.0016f)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
 	m_TransformManager.ExtendBufferPages(0);
@@ -155,7 +157,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	//Try Create Ray Tracing Structure
 
 	m_RtSetLayout = MainDevice->CreateDescriptorSetLayout();
-	m_RtSetLayout->m_Bindings.resize(6);
+	m_RtSetLayout->m_Bindings.resize(7);
 	m_RtSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_RtSetLayout->m_Bindings[0].m_Num = 1;
 	m_RtSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
@@ -183,6 +185,11 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSetLayout->m_Bindings[5].m_Num = 1;
 	m_RtSetLayout->m_Bindings[5].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
 	m_RtSetLayout->m_Bindings[5].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
+
+	m_RtSetLayout->m_Bindings[6].m_BindingPoint = 6;
+	m_RtSetLayout->m_Bindings[6].m_Num = 1;
+	m_RtSetLayout->m_Bindings[6].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	m_RtSetLayout->m_Bindings[6].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV, EShaderType::E_SHADER_TYPE_MISS_NV };
 	m_RtSetLayout->BuildLayout();
 
 	m_RtSet = m_RtSetLayout->AllocDescriptorSet();
@@ -232,7 +239,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	PGPUImage test_loaded_image;
 	{
 		int w, h, channel_num;
-		auto data = stbi_load("testnormal1.jpg", &w, &h, &channel_num, 4);
+		auto data = stbi_load("MonValley_A_LookoutPoint_2k.hdr", &w, &h, &channel_num, 4);
 		image_load_buffer = MainDevice->CreateBuffer(w * h * sizeof(int), { EBufferUsage::E_BUFFER_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_HOST);
 		memcpy(image_load_buffer->GetMappedPointer(), data, w * h * sizeof(int));
 		stbi_image_free(data);
@@ -241,6 +248,8 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 		, EMemoryType::E_MEMORY_TYPE_DEVICE);
 		m_Set->WriteDescriptorSetImage(1, test_loaded_image, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT);
 		m_Set->EndWriteDescriptorSet();
+		m_RtSet->WriteDescriptorSetImage(6, test_loaded_image, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT);
+		m_RtSet->EndWriteDescriptorSet();
 	}
 
 	m_LoadingBuffer = m_RenderingThread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
@@ -258,13 +267,17 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 
 void RenderingSystem::PushBackNewFrame(GraphicsFrame &frame)
 {
-	m_FrameQueue.try_enqueue(std::move(frame));
+	if (m_FrameQueue.size_approx() < 2)
+	{
+		m_FrameQueue.enqueue(std::move(frame));
+	}
 	//LockGuard guard(m_FrameQueueLock);
 	//m_FrameQueue.push_back(frame);
 }
 
 bool RenderingSystem::TryPopFrame(GraphicsFrame& frame)
 {
+	//std::cout << m_FrameQueue.size_approx() << std::endl;
 	return m_FrameQueue.try_dequeue(frame);
 	//if (!m_FrameQueue.empty())
 	//{

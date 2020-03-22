@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 #include <string>
 #include <headers/Debug.h>
 extern "C"
@@ -163,6 +163,21 @@ extern "C"
 					)
 				);
 			return 1;
+		}
+	};
+
+	template<class...Args, void(*PF)(Args...)>
+	struct lua_func_wrapper<void(*)(Args...), PF> {
+		static int doit(lua_State* L) {
+			return doit_impl(L, make_int_range<1, sizeof...(Args)>());
+		}
+	private:
+		template<int...Indices>
+		static int doit_impl(lua_State* L, int_pack<Indices...>) {
+				(*PF)(
+					GetLuaData<Args>(L, Indices)...
+				);
+			return 0;
 		}
 	};
 

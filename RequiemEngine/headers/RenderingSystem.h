@@ -7,6 +7,7 @@
 #include <GPUDevice.h>
 #include <Pipeline.h>
 #include <mutex>
+#include <headers/TimeManager.h>
 #include <headers/Containers/ReaderWriterQueue/readerwriterqueue.h>
 
 using namespace Crimson;
@@ -32,11 +33,16 @@ public:
 	void PushBackNewFrame(GraphicsFrame &frame);
 	TransformManager m_TransformManager;
 	std::unordered_map<MeshResource*, MeshInstanceQueue> m_Instances;
+	float DeltaTimeApprox() const { return m_AverageDeltaTime; }
 	friend class RenderingSubThread;
 private:
 	bool TryPopFrame(GraphicsFrame& frame);
 	std::mutex m_FrameQueueLock;
 	moodycamel::ReaderWriterQueue<GraphicsFrame, 2> m_FrameQueue;
+
+	TimeManager m_TimeManager;
+
+	float m_AverageDeltaTime;
 
 	PExecutionCommandBuffer m_LoadingBuffer;
 

@@ -40,9 +40,15 @@ public:
 	~OneTimeTestJob() {};
 };
 
-int TestFunc(int input, std::string value, int input2)
+void TestFunc(int input, std::string value, int input2)
 {
-	std::cout << "data from lua is " << input << " " << input2 << std::endl;
+	std::cout << "data0 from lua is " << input << " " << input2 << std::endl;
+	std::cout << value << std::endl;
+}
+
+int TestFunc1(int input, std::string value, int input2)
+{
+	std::cout << "data1 from lua is " << input << " " << input2 << std::endl;
 	std::cout << value << std::endl;
 	return 0;
 }
@@ -54,7 +60,8 @@ int main()
 
 	std::vector<luaL_Reg> functions =
 	{
-		{"TestFunc", GET_FUN_WRAPPER(&TestFunc)}
+		{"TestFunc", GET_FUN_WRAPPER(&TestFunc)},
+		{"TestFunc1", GET_FUN_WRAPPER(&TestFunc1)}
 	};
 	lua_machine.RegisterFunctions(functions.data(), functions.size());
 	lua_machine.LoadScript("test.lua");
@@ -68,7 +75,7 @@ int main()
 
 
 	Assimp::Importer scene_importer;
-	const aiScene* scene = scene_importer.ReadFile("bunny.ply", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
+	const aiScene* scene = scene_importer.ReadFile("sponza.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
 	std::cout << "Start" << std::endl;
 	using namespace Crimson;
 	GPUDeviceManager::Init();
@@ -87,9 +94,6 @@ int main()
 
 	MeshResource new_resource;
 	new_resource.ProcessAiSceneLightWeight(scene, true, false);
-
-
-
 	
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
@@ -124,14 +128,14 @@ int main()
 	//}
 	BufferQueue<uint32_t, 10> transform_queue;
 	transform_queue.Init(MainDevice, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < 1; ++i)
 	{
 		pGeometryInstance[i].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
 		pGeometryInstance[i].m_InstanceId = i;
 		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
 		pGeometryInstance[i].m_AccelerationStructureHandle = blas->GetHandle();
 		TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(10.0f));
+		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 		pGeometryInstance[i].m_TransformMatrix = glm::transpose(p_component->m_Info.m_Matrix);
 		transforms.push_back(p_component);
 		transform_queue.PushBack(p_component->m_Info.m_TransformId);
@@ -149,6 +153,7 @@ int main()
 	ThreadManager thread_manager;
 	thread_manager.Init();
 	thread_manager.EnqueueJob(&rendering_system);
+	float wait_time = 0.0f;
 	while (new_window.IsWindowRunning())
 	{
 		time_manager.UpdateClock();
@@ -164,26 +169,26 @@ int main()
 		if (inputs.KeyState(VK_RBUTTON))
 		{
 			glm::vec2 movement = inputs.GetMouseMovement();
-			angles.x = (angles.x + movement.x * 0.01f);
-			angles.y = glm::clamp(angles.y + movement.y * 0.01f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
+			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 50.0f);
+			angles.y = glm::clamp(angles.y + movement.y * time_manager.deltaTime() * 50.0f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
 		}
 		glm::vec3 forward = glm::rotate(glm::mat4(1.0f), -angles.x, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), -angles.y, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 		if (inputs.KeyState(inputs.GetCharKey('W')))
 		{
-			position += forward * 5.0f * time_manager.deltaTime();
+			position += forward * 15.0f * time_manager.deltaTime();
 		}
 		if (inputs.KeyState(inputs.GetCharKey('S')))
 		{
-			position -= forward * 5.0f * time_manager.deltaTime();
+			position -= forward * 15.0f * time_manager.deltaTime();
 		}
 		if (inputs.KeyState(inputs.GetCharKey('D')))
 		{
-			position += right * 5.0f * time_manager.deltaTime();
+			position += right * 15.0f * time_manager.deltaTime();
 		}
 		if (inputs.KeyState(inputs.GetCharKey('A')))
 		{
-			position -= right * 5.0f * time_manager.deltaTime();
+			position -= right * 15.0f * time_manager.deltaTime();
 		}
 		{
 			cam.view = glm::lookAt(position, position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -203,6 +208,13 @@ int main()
 		rendering_system.PushBackNewFrame(new_frame);
 
 		new_window.UpdateWindow();
+		//std::cout << rendering_system.DeltaTimeApprox() << std::endl;
+
+		wait_time = rendering_system.DeltaTimeApprox() - time_manager.deltaTime();
+		if (wait_time > 0.0f)
+		{
+			std::this_thread::sleep_for(std::chrono::duration<float>(wait_time * 0.8f));
+		}
 	}
 	thread_manager.Terminate();
 	return 0;
