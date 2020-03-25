@@ -29,11 +29,14 @@ public:
 	void OnWindowResize(uint32_t new_width, uint32_t new_height);
 	bool IsWindowRunning() const { return !b_Closing; }
 	virtual void UpdateWindow() override;
+	void SetFocus(bool focus) { m_Focused = focus; }
+	bool Focused() { return m_Focused; }
 private:
 	uint32_t	m_Width;
 	uint32_t	m_Height;
 	HINSTANCE	m_Win32Instance;
 	HWND		m_Win32Window;
 	std::atomic_bool		b_Closing;
+	bool m_Focused = false;
 #endif
 };

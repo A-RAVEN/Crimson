@@ -36,6 +36,7 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanGPUDevice;
+		friend class VulkanGraphicsCommandBuffer;
 		VulkanGPUDeviceThread();
 		~VulkanGPUDeviceThread();
 		virtual void Dispose() override;

@@ -22,6 +22,9 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 		//update frame
 		{
 			GraphicsFrame new_frame{};
+			memcpy(m_LastCameraBuffer->GetMappedPointer(), m_CameraBuffer->GetMappedPointer(), sizeof(Camera));
+			float elapsed = m_TimeManager.elapsedTime();
+			memcpy(m_TimeBuffer->GetMappedPointer(), &elapsed, sizeof(float));
 			if (TryPopFrame(new_frame))
 			{
 				for (auto& list : m_Instances)
@@ -68,6 +71,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 
 
 		m_ExecutionCmd->StartCommand();
+		m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
 		//m_ExecutionCmd->BuildAccelerationStructure(tlas, geometry_instance_buffer, 0, true);
 		//m_ExecutionCmd->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 		m_ExecutionCmd->ExecuteRenderPassInstance(m_RenderPassInstance);
@@ -98,11 +102,13 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_TransformManager.ExtendBufferPages(0);
 
 	m_CameraBuffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-
+	m_LastCameraBuffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	m_TimeBuffer = MainDevice->CreateBuffer(sizeof(float), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
 	//memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 
 	m_Color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	m_RTColorOld = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_RTColor = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
@@ -157,7 +163,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	//Try Create Ray Tracing Structure
 
 	m_RtSetLayout = MainDevice->CreateDescriptorSetLayout();
-	m_RtSetLayout->m_Bindings.resize(7);
+	m_RtSetLayout->m_Bindings.resize(10);
 	m_RtSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_RtSetLayout->m_Bindings[0].m_Num = 1;
 	m_RtSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
@@ -190,15 +196,36 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSetLayout->m_Bindings[6].m_Num = 1;
 	m_RtSetLayout->m_Bindings[6].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
 	m_RtSetLayout->m_Bindings[6].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV, EShaderType::E_SHADER_TYPE_MISS_NV };
+
+	//old camera matrix
+	m_RtSetLayout->m_Bindings[7].m_BindingPoint = 7;
+	m_RtSetLayout->m_Bindings[7].m_Num = 1;
+	m_RtSetLayout->m_Bindings[7].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	m_RtSetLayout->m_Bindings[7].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
+	//old results
+	m_RtSetLayout->m_Bindings[8].m_BindingPoint = 8;
+	m_RtSetLayout->m_Bindings[8].m_Num = 1;
+	m_RtSetLayout->m_Bindings[8].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	m_RtSetLayout->m_Bindings[8].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
+
+	m_RtSetLayout->m_Bindings[9].m_BindingPoint = 9;
+	m_RtSetLayout->m_Bindings[9].m_Num = 1;
+	m_RtSetLayout->m_Bindings[9].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	m_RtSetLayout->m_Bindings[9].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
 	m_RtSetLayout->BuildLayout();
 
 	m_RtSet = m_RtSetLayout->AllocDescriptorSet();
-	m_RtSet->WriteDescriptorSetBuffers(0, { m_CameraBuffer }, { {0, sizeof(glm::mat4)} }, 0);
+	m_RtSet->WriteDescriptorSetBuffers(0, { m_CameraBuffer }, { {0, sizeof(Camera)} }, 0);
 	m_RtSet->WriteDescriptorSetAccelStructuresNV(1, { tlas });
 	m_RtSet->WriteDescriptorSetImage(2, m_RTColor, EFilterMode::E_FILTER_MODE_NEAREST, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
 	m_RtSet->WriteDescriptorSetBuffers(3, { rt_mesh->m_VertexBuffer }, { {0, rt_mesh->m_VertexBuffer->GetSize()} }, 0);
 	m_RtSet->WriteDescriptorSetBuffers(4, { rt_mesh->m_IndexBuffer }, { {0, rt_mesh->m_IndexBuffer->GetSize()} }, 0);
 	m_RtSet->WriteDescriptorSetBuffers(5, { transform_queue.GetBufferSegment(0) }, { {0, transform_queue.GetBufferSegment(0)->GetSize()} }, 0);
+
+	m_RtSet->WriteDescriptorSetBuffers(7, { m_LastCameraBuffer }, { {0, sizeof(Camera)} }, 0);
+	m_RtSet->WriteDescriptorSetImage(8, m_RTColorOld, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
+	m_RtSet->WriteDescriptorSetBuffers(9, { m_TimeBuffer }, { {0, sizeof(float)} }, 0);
+
 	m_RtSet->EndWriteDescriptorSet();
 
 	m_RayTracer = MainDevice->CreateRayTracer();

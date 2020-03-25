@@ -1,15 +1,17 @@
+#ifndef TEST_H
+#define TEST_H
 
-
-#if VERTEX_SHADER | FRAGMENT_SHADER
-layout(binding = 0) uniform CameraData
+#if VERTEX_SHADER
+#include "camera.gh"
+layout(set = 0, binding = 0) uniform MATRIX
 {
-	mat4 m_CameraMatrix;
+	Camera cam;
+};
+
+layout(set = 1, binding = 0) buffer readonly TRANSFORMS
+{
+	mat4 transforms[];
 };
 #endif
 
-#if VERTEX_SHADER
-layout(binding = 1) buffer readonly TransformData
-{
-	mat4 m_TransformMatrices[];
-};
 #endif

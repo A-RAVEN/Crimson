@@ -6,6 +6,14 @@ static LRESULT CALLBACK WindowsEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam,
 
 	switch (uMsg)
 	{
+	case WM_SETFOCUS:
+		p_window->SetFocus(true);
+		break;
+
+	case WM_KILLFOCUS:
+		p_window->SetFocus(false);
+
+		break;
 	case WM_CLOSE:
 		p_window->CloseWindow();
 		return 0;

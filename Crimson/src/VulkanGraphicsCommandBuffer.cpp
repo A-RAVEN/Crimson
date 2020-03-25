@@ -104,6 +104,10 @@ namespace Crimson
 	{
 		vkCmdDraw(m_CommandBuffer, vertex_count, instance_count, first_vertex, first_instance_id);
 	}
+	void VulkanGraphicsCommandBuffer::DrawMeshShading(uint32_t task_count, uint32_t first_task_id)
+	{
+		p_OwningThread->p_OwningDevice->m_NVExtension.vkCmdDrawMeshTasksNV(m_CommandBuffer, task_count, first_task_id);
+	}
 	void VulkanGraphicsCommandBuffer::SetGraphicsCommandBuffer(VulkanGPUDeviceThread* p_owning_thread, 
 		VulkanRenderPass* p_owning_render_pass, VulkanRenderPassInstance* p_owning_instance, uint32_t subpass, VkCommandBuffer cmd_buffer)
 	{

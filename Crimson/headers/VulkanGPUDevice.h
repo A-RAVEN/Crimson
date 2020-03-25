@@ -54,7 +54,14 @@ namespace Crimson
 
 		PFN_vkCmdTraceRaysNV vkCmdTraceRaysNV;
 
+		PFN_vkCmdDrawMeshTasksNV vkCmdDrawMeshTasksNV;
+
+		PFN_vkCmdDrawMeshTasksIndirectNV vkCmdDrawMeshTasksIndirectNV;
+
+		PFN_vkCmdDrawMeshTasksIndirectCountNV vkCmdDrawMeshTasksIndirectCountNV;
+
 		VkPhysicalDeviceRayTracingPropertiesNV m_RayTracingProperties;
+		VkPhysicalDeviceMeshShaderPropertiesNV m_MeshShadingProperties;
 		NVExtension() :
 			vkCreateAccelerationStructureNV(nullptr),
 			vkDestroyAccelerationStructureNV(nullptr),
@@ -65,7 +72,11 @@ namespace Crimson
 			vkCreateRayTracingPipelinesNV(nullptr),
 			vkGetRayTracingShaderGroupHandlesNV(nullptr),
 			vkCmdTraceRaysNV(nullptr),
-			m_RayTracingProperties{}
+			vkCmdDrawMeshTasksNV(nullptr),
+			vkCmdDrawMeshTasksIndirectNV(nullptr),
+			vkCmdDrawMeshTasksIndirectCountNV(nullptr),
+			m_RayTracingProperties{},
+			m_MeshShadingProperties{}
 		{}
 		void InitExtensions(VkDevice device, VkPhysicalDevice physical_device);
 	};

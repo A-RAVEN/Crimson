@@ -47,7 +47,9 @@ private:
 	PExecutionCommandBuffer m_LoadingBuffer;
 
 	PGPUDeviceThread m_RenderingThread;
+	PGPUBuffer m_LastCameraBuffer;
 	PGPUBuffer m_CameraBuffer;
+	PGPUBuffer m_TimeBuffer;
 	PDescriptorSetLayout m_SetLayout;
 	PDescriptorSet m_Set;
 	PGraphicsPipeline m_Pipeline;
@@ -61,4 +63,5 @@ private:
 	PDescriptorSet m_RtSet;
 	PGPUBuffer m_ShaderTable;
 	PGPUImage m_RTColor;
+	PGPUImage m_RTColorOld;
 };

@@ -511,11 +511,16 @@ namespace Crimson
 		GET_EXTENSION_FUNC(vkCreateRayTracingPipelinesNV);
 		GET_EXTENSION_FUNC(vkGetRayTracingShaderGroupHandlesNV);
 		GET_EXTENSION_FUNC(vkCmdTraceRaysNV);
+		GET_EXTENSION_FUNC(vkCmdDrawMeshTasksNV);
+		GET_EXTENSION_FUNC(vkCmdDrawMeshTasksIndirectNV);
+		GET_EXTENSION_FUNC(vkCmdDrawMeshTasksIndirectCountNV);
 
 		m_RayTracingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PROPERTIES_NV;
+		m_MeshShadingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_NV;
 		VkPhysicalDeviceProperties2 deviceProps2{};
 		deviceProps2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
 		deviceProps2.pNext = &m_RayTracingProperties;
+		m_RayTracingProperties.pNext = &m_MeshShadingProperties;
 		vkGetPhysicalDeviceProperties2(physical_device, &deviceProps2);
 	}
 }

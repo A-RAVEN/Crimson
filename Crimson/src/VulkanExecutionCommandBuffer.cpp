@@ -84,6 +84,21 @@ namespace Crimson
 
 		vkCmdCopyBufferToImage(m_CurrentCommandBuffer, vulkan_buffer->m_Buffer, vulkan_image->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 	}
+	void VulkanExecutionCommandBuffer::CopyImageToImage(PGPUImage srd_image, PGPUImage dst_image)
+	{
+		VulkanImageObject* src_vulkan_image = static_cast<VulkanImageObject*>(srd_image);
+		VulkanImageObject* dst_vulkan_image = static_cast<VulkanImageObject*>(dst_image);
+		src_vulkan_image->CmdChangeOverallLayout(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		dst_vulkan_image->CmdChangeOverallLayout(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+		
+		VkImageCopy image_copy{};
+		image_copy.srcOffset = { 0, 0, 0 };
+		image_copy.dstOffset = { 0, 0, 0 };
+		image_copy.srcSubresource = src_vulkan_image->GetFullSubresourceLayers();
+		image_copy.dstSubresource = dst_vulkan_image->GetFullSubresourceLayers();
+		image_copy.extent = { (std::min)(src_vulkan_image->m_Width, dst_vulkan_image->m_Width), (std::min)(src_vulkan_image->m_Height, dst_vulkan_image->m_Height), 1 };
+		vkCmdCopyImage(m_CurrentCommandBuffer, src_vulkan_image->m_Image, src_vulkan_image->m_OverallImageLayout, dst_vulkan_image->m_Image, dst_vulkan_image->m_OverallImageLayout, 1, &image_copy);
+	}
 	void VulkanExecutionCommandBuffer::CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window)
 	{
 		auto find = p_OwningDevice->m_SurfaceContexts.find(p_window->GetName());

@@ -44,6 +44,7 @@ namespace Crimson
 		virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count,
 			uint32_t first_index = 0, uint32_t first_vertex = 0, uint32_t first_instance_id = 0) = 0;
 		virtual void Draw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance_id) = 0;
+		virtual void DrawMeshShading(uint32_t task_count, uint32_t first_task_id) = 0;
 	};
 	using PGraphicsCommandBuffer = GraphicsCommandBuffer*;
 
@@ -54,6 +55,7 @@ namespace Crimson
 		virtual void ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance) = 0;
 		virtual void CopyBufferToImage(PGPUBuffer buffer, PGPUImage image,
 			uint64_t buffer_offset = 0, uint32_t mip_level = 0, uint32_t base_layer = 0, uint32_t layer_count = 1) = 0;
+		virtual void CopyImageToImage(PGPUImage srd_image, PGPUImage dst_image) = 0;
 		virtual void CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window) = 0;
 		virtual void BuildAccelerationStructure(PAccelerationStructure accel_struct, PGPUBuffer instance_buffer = nullptr, uint64_t instance_offset = 0, bool update = false) = 0;
 		virtual void BindRayTracer(PRayTracer raytracer) = 0;

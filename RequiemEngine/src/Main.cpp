@@ -24,6 +24,7 @@
 #include <headers/RenderingSystem.h>
 #include <headers/LuaInterface/LuaMachine.h>
 #include <headers/LuaInterface/LuaInterfaces.h>
+#include <headers/NetworkManager.h>
 
 //using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
 using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
@@ -151,6 +152,8 @@ int main()
 	TimeManager time_manager;
 
 	ThreadManager thread_manager;
+	NetworkManager network_manager;
+	bool net_inited = false;
 	thread_manager.Init();
 	thread_manager.EnqueueJob(&rendering_system);
 	float wait_time = 0.0f;
@@ -169,26 +172,41 @@ int main()
 		if (inputs.KeyState(VK_RBUTTON))
 		{
 			glm::vec2 movement = inputs.GetMouseMovement();
-			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 50.0f);
-			angles.y = glm::clamp(angles.y + movement.y * time_manager.deltaTime() * 50.0f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
+			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 10.0f);
+			angles.y = glm::clamp(angles.y + movement.y * time_manager.deltaTime() * 10.0f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
 		}
 		glm::vec3 forward = glm::rotate(glm::mat4(1.0f), -angles.x, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), -angles.y, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-		if (inputs.KeyState(inputs.GetCharKey('W')))
+		if (new_window.Focused())
 		{
-			position += forward * 15.0f * time_manager.deltaTime();
-		}
-		if (inputs.KeyState(inputs.GetCharKey('S')))
-		{
-			position -= forward * 15.0f * time_manager.deltaTime();
-		}
-		if (inputs.KeyState(inputs.GetCharKey('D')))
-		{
-			position += right * 15.0f * time_manager.deltaTime();
-		}
-		if (inputs.KeyState(inputs.GetCharKey('A')))
-		{
-			position -= right * 15.0f * time_manager.deltaTime();
+			if (inputs.KeyState(inputs.GetCharKey('W')))
+			{
+				position += forward * 15.0f * time_manager.deltaTime();
+			}
+			if (inputs.KeyState(inputs.GetCharKey('S')))
+			{
+				position -= forward * 15.0f * time_manager.deltaTime();
+			}
+			if (inputs.KeyState(inputs.GetCharKey('D')))
+			{
+				position += right * 15.0f * time_manager.deltaTime();
+			}
+			if (inputs.KeyState(inputs.GetCharKey('A')))
+			{
+				position -= right * 15.0f * time_manager.deltaTime();
+			}
+			if (inputs.KeyTriggered(inputs.GetCharKey('C')) && !net_inited)
+			{
+				network_manager.CreateAgent();
+				thread_manager.EnqueueJob(&network_manager);
+				net_inited = true;
+			}
+			else if (inputs.KeyTriggered(inputs.GetCharKey('V')) && !net_inited)
+			{
+				network_manager.CreateAgent(true, 4);
+				thread_manager.EnqueueJob(&network_manager);
+				net_inited = true;
+			}
 		}
 		{
 			cam.view = glm::lookAt(position, position + forward, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -211,10 +229,10 @@ int main()
 		//std::cout << rendering_system.DeltaTimeApprox() << std::endl;
 
 		wait_time = rendering_system.DeltaTimeApprox() - time_manager.deltaTime();
-		if (wait_time > 0.0f)
-		{
-			std::this_thread::sleep_for(std::chrono::duration<float>(wait_time * 0.8f));
-		}
+		//if (wait_time > 0.0f)
+		//{
+		//	std::this_thread::sleep_for(std::chrono::duration<float>(wait_time * 0.5f));
+		//}
 	}
 	thread_manager.Terminate();
 	return 0;
