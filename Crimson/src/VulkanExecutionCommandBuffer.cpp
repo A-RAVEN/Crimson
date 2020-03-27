@@ -164,6 +164,20 @@ namespace Crimson
 				VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV, VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV,
 				0, 1, &barrier, 0, nullptr, 0, nullptr);
 			break;
+		case EMemoryBarrierType::E_VERTEX_SHADER_READ_WRITE:
+			barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+			vkCmdPipelineBarrier(m_CurrentCommandBuffer,
+				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+				0, 1, &barrier, 0, nullptr, 0, nullptr);
+			break;
+		case EMemoryBarrierType::E_HOST_READ_WRITE:
+			barrier.srcAccessMask = VK_ACCESS_HOST_READ_BIT | VK_ACCESS_HOST_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+			vkCmdPipelineBarrier(m_CurrentCommandBuffer,
+				VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+				0, 1, &barrier, 0, nullptr, 0, nullptr);
+			break;
 		default:
 			break;
 		}

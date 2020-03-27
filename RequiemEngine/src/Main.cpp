@@ -69,7 +69,7 @@ int main()
 
 	Camera cam;
 	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	cam.proj = glm::perspective(glm::radians(45.0f), 1024.0f / 720.0f, 0.1f, 100.0f);
+	cam.proj = glm::perspective(glm::radians(45.0f), 1024.0f / 720.0f, 0.1f, 1000.0f);
 	cam.proj[1][1] *= -1.0f;
 	cam.viewInverse = glm::inverse(cam.view);
 	cam.projInverse = glm::inverse(cam.proj);

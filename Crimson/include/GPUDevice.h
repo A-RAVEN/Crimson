@@ -28,6 +28,8 @@ namespace Crimson
 	enum class EMemoryBarrierType : uint8_t
 	{
 		E_ACCEL_STRUCTURE_BUILD_READ_WRITE = 0,
+		E_VERTEX_SHADER_READ_WRITE,
+		E_HOST_READ_WRITE,
 		E_MAX
 	};
 

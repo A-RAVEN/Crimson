@@ -27,6 +27,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 			memcpy(m_TimeBuffer->GetMappedPointer(), &elapsed, sizeof(float));
 			if (TryPopFrame(new_frame))
 			{
+				MainDevice->WaitIdle();
 				bool should_update = false;
 				for (auto& list : m_Instances)
 				{
@@ -72,6 +73,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 					cmd->EndCommandBuffer();
 
 					m_ExecutionCmd->StartCommand();
+					m_ExecutionCmd->DeviceMemoryBarrier(EMemoryBarrierType::E_HOST_READ_WRITE);
 					m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
 					m_ExecutionCmd->ExecuteRenderPassInstance(m_RenderPassInstance);
 					m_ExecutionCmd->BindRayTracer(m_RayTracer);
@@ -86,8 +88,8 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 		m_ExecutionCmd->LoadCache();
 
 		m_PresentCmd->StartCommand();
-		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
-		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
+		m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
+		//m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
 		m_PresentCmd->EndCommand();
 		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
 
@@ -111,7 +113,8 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_Color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_RTColorOld = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_RTColor = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D24_UNORM_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	PGPUImage test_normal_buffer = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
 	test_renderpass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS} , { EFormat::E_FORMAT_D24_UNORM_S8_UINT, EAttachmentClearType::E_ATTACHMENT_CLEAR_ONES } };
 	test_renderpass->m_Subpasses.resize(1);
@@ -164,7 +167,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	//Try Create Ray Tracing Structure
 
 	m_RtSetLayout = MainDevice->CreateDescriptorSetLayout();
-	m_RtSetLayout->m_Bindings.resize(10);
+	m_RtSetLayout->m_Bindings.resize(11);
 	m_RtSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_RtSetLayout->m_Bindings[0].m_Num = 1;
 	m_RtSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
@@ -213,6 +216,11 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSetLayout->m_Bindings[9].m_Num = 1;
 	m_RtSetLayout->m_Bindings[9].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
 	m_RtSetLayout->m_Bindings[9].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_CLOSEHIT_NV };
+
+	m_RtSetLayout->m_Bindings[10].m_BindingPoint = 10;
+	m_RtSetLayout->m_Bindings[10].m_Num = 1;
+	m_RtSetLayout->m_Bindings[10].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	m_RtSetLayout->m_Bindings[10].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_RAYGEN_NV };
 	m_RtSetLayout->BuildLayout();
 
 	m_RtSet = m_RtSetLayout->AllocDescriptorSet();
@@ -226,6 +234,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_RtSet->WriteDescriptorSetBuffers(7, { m_LastCameraBuffer }, { {0, sizeof(Camera)} }, 0);
 	m_RtSet->WriteDescriptorSetImage(8, m_RTColorOld, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_COLOR);
 	m_RtSet->WriteDescriptorSetBuffers(9, { m_TimeBuffer }, { {0, sizeof(float)} }, 0);
+	m_RtSet->WriteDescriptorSetImage(10, test_depth_stencil, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MIRRORED_REPEAT, EViewAsType::E_VIEW_AS_DEPTH);
 
 	m_RtSet->EndWriteDescriptorSet();
 
