@@ -52,20 +52,6 @@ void NetworkManager::Work(ThreadWorker const* this_worker)
 			{
 				LOG_ERR("Peer Creation Failed");
 			}
-			/* Wait up to 5 seconds for the connection attempt to succeed. */
-			//if (enet_host_service(p_Agent, &event, 5000) > 0 &&
-			//	event.type == ENET_EVENT_TYPE_CONNECT)
-			//{
-			//	LOG_ERR("Connect Succeed");
-			//}
-			//else
-			//{
-			//	/* Either the 5 seconds are up or a disconnect event was */
-			//	/* received. Reset the peer in the event the 5 seconds   */
-			//	/* had run out without any significant event.            */
-			//	enet_peer_reset(peer);
-			//	LOG_ERR("Connect Failed");
-			//}
 		}
 
 		std::cout << "Poll" << std::endl;

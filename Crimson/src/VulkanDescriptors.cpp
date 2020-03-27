@@ -2,7 +2,6 @@
 #include <headers/VulkanDebugLog.h>
 #include <headers/VulkanTranslator.h>
 #include <headers/VulkanBuffer.h>
-#include <headers/VulkanImage.h>
 #include <headers/VulkanAccelerationStructure.h>
 
 namespace Crimson
@@ -124,7 +123,7 @@ namespace Crimson
 		}
 	}
 
-	void VulkanDescriptorSet::CmdBarrierDescriptorSet(VkCommandBuffer cmd_buffer, uint32_t queue_family, uint32_t type)
+	void VulkanDescriptorSet::CmdBarrierDescriptorSet(VkCommandBuffer cmd_buffer, uint32_t queue_family, uint32_t type, std::map<VulkanImageObject*, VulkanImageLayoutCache>& image_layout_cache)
 	{
 		uint32_t id = 0;
 		for (auto& binding : p_OwningSetLayout->m_Bindings)
@@ -133,18 +132,31 @@ namespace Crimson
 			{
 				for (auto image : m_ReferencedImages[m_ResourceReference[id]])
 				{
-					VkPipelineStageFlags flags = p_OwningSetLayout->GetReferenceStageRanges(id, type);
-					image->CmdChangeOverallLayout(cmd_buffer, queue_family,
-						TranslateShaderResourceTypeToVulkanImageLayout(binding.m_ResourceType, image->m_Format),
-						flags, flags);
+					if (!image->IsStaticLayout())
+					{
+						VkPipelineStageFlags flags = p_OwningSetLayout->GetReferenceStageRanges(id, type);
+						VkImageLayout new_layout = TranslateShaderResourceTypeToVulkanImageLayout(binding.m_ResourceType, image->m_Format);
+						image->CmdChangeOverallLayout(cmd_buffer, queue_family,
+							new_layout,
+							flags, flags);
+
+						auto find = image_layout_cache.find(image);
+						if (find == image_layout_cache.end())
+						{
+							//VulkanImageLayoutCache new_cache;
+							//new_cache.m_PielineStages = flags;
+							//new_cache.m_EndLayout = new_layout;
+							image_layout_cache.insert(std::make_pair(image, image->GetCurrentLayoutCache()));
+						}
+						else
+						{
+							//find->second.m_PielineStages = flags;
+							//find->second.m_EndLayout = new_layout;
+							find->second = image->GetCurrentLayoutCache();
+						}
+					}
 				}
 			}
-			//else if (IsImageResourceType(binding.m_ResourceType))
-			//{
-			//}
-			//else
-			//{
-			//}
 			++id;
 		}
 	}

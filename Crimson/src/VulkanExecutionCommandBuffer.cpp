@@ -33,7 +33,7 @@ namespace Crimson
 		begin_info.renderArea = vulkan_framebuffer->GetRenderArea();
 		begin_info.pNext = nullptr;
 		//recording commands
-		vulkan_framebuffer->ImageBarriers(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType));
+		vulkan_framebuffer->CmdImageBarriers(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), m_ImageLayoutCaches);
 
 		std::vector<std::vector<VkCommandBuffer>> subpass_cmd_buffers(vulkan_renderpass->m_Subpasses.size());
 		std::deque<VulkanDescriptorSet*> referenced_sets;
@@ -43,18 +43,10 @@ namespace Crimson
 			subpass_cmd_buffers[subpass_id] = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance, referenced_sets);
 			for (auto set : referenced_sets)
 			{
-				//NOTICE: Currently, Render Pass Is Only Used For Graphics Use
-				set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 0);
+				set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 0, m_ImageLayoutCaches);
 			}
 		}
 		{
-			//std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(0, vulkan_renderpass_instance, referenced_sets);
-			//for (auto set : referenced_sets)
-			//{
-			//	//NOTICE: Currently, Render Pass Is Only Used For Graphics Use
-			//	set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 0);
-			//}
-
 			vkCmdBeginRenderPass(m_CurrentCommandBuffer, &begin_info, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 			vkCmdExecuteCommands(m_CurrentCommandBuffer, subpass_cmd_buffers[0].size(), subpass_cmd_buffers[0].data());
 		}
@@ -62,7 +54,6 @@ namespace Crimson
 		{
 			referenced_sets.clear();
 			vkCmdNextSubpass(m_CurrentCommandBuffer, VkSubpassContents::VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-			//std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectSubpassCommandBuffers(subpass_id, vulkan_renderpass_instance, referenced_sets);
 			vkCmdExecuteCommands(m_CurrentCommandBuffer, subpass_cmd_buffers[subpass_id].size(), subpass_cmd_buffers[subpass_id].data());
 		}
 		vkCmdEndRenderPass(m_CurrentCommandBuffer);
@@ -143,7 +134,7 @@ namespace Crimson
 	void VulkanExecutionCommandBuffer::BindRayTracingDescriptorSet(PDescriptorSet descriptor_set, uint32_t set_id)
 	{
 		VulkanDescriptorSet* vulkan_set = static_cast<VulkanDescriptorSet*>(descriptor_set);
-		vulkan_set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 2);
+		vulkan_set->CmdBarrierDescriptorSet(m_CurrentCommandBuffer, p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType), 2, m_ImageLayoutCaches);
 		vkCmdBindDescriptorSets(m_CurrentCommandBuffer, VK_PIPELINE_BIND_POINT_RAY_TRACING_NV, p_CurrentBoundedRayTracer->m_PipelineLayout,
 			set_id, 1, &vulkan_set->m_DescriptorSet, 0, nullptr);
 	}
@@ -191,6 +182,7 @@ namespace Crimson
 		CHECK_VKRESULT(vkBeginCommandBuffer(m_CurrentCommandBuffer, &begin_info), "Vulkan Begin Primary Command Buffer Issue!");
 		m_AdditionialWaitingSemaphores.clear();
 		m_AdditionalWaitingStages.clear();
+		m_ImageLayoutCaches.clear();
 	}
 	void VulkanExecutionCommandBuffer::EndCommand()
 	{
@@ -202,6 +194,14 @@ namespace Crimson
 		p_OwningThread = p_thread;
 		m_CommandType = command_type;
 		m_CurrentCommandBuffer = p_OwningThread->AllocExecutionVkCommandBuffer(m_CommandType);
+	}
+	void VulkanExecutionCommandBuffer::LoadCache()
+	{
+		uint32_t queue_family = p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType);
+		for (auto& cache : m_ImageLayoutCaches)
+		{
+			cache.first->ApplyLayoutCache(queue_family, cache.second);
+		}
 	}
 	void VulkanExecutionCommandBuffer::TransitionSwapchainImageToCopyDst(VkImage swapchain_image, VulkanSurfaceContext* surface_context, bool initialized)
 	{

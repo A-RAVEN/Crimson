@@ -260,4 +260,22 @@ namespace Crimson
 		m_CurrentAccessMask = VkTranslateLayoutToAccessFlags(dst_layout);
 		m_LastUsingStage = finished_stage;
 	}
+	VulkanImageLayoutCache VulkanImageObject::GetCurrentLayoutCache() const
+	{
+		VulkanImageLayoutCache return_val;
+		return_val.m_EndLayout = m_OverallImageLayout;
+		return_val.m_PielineStages = m_LastUsingStage;
+		return return_val;
+	}
+	void VulkanImageObject::ApplyLayoutCache(uint32_t queue_family, VulkanImageLayoutCache const& cache)
+	{
+		m_OverallImageLayout = cache.m_EndLayout;
+		m_CurrentAccessMask = VkTranslateLayoutToAccessFlags(m_OverallImageLayout);
+		m_LastUsingStage = cache.m_PielineStages;
+	}
+	void VulkanImageLayoutCache::UpdateLayout(VkImageLayout new_layout)
+	{
+		CRIM_ASSERT(new_layout != VK_IMAGE_LAYOUT_UNDEFINED, "Invalid Image Layout");
+		m_EndLayout = new_layout;
+	}
 }

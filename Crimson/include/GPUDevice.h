@@ -31,6 +31,28 @@ namespace Crimson
 		E_MAX
 	};
 
+	enum class EMemoryOP : uint8_t
+	{
+		SHADER_READ = 0,
+		SHADER_WRITE,
+		ACCEL_STRUCTURE_READ,
+		ACCEL_STRUCTURE_WRITE,
+	};
+
+	enum class EGPUStage : uint16_t
+	{
+		VERTEX_INPUT,
+		VERTEX_SHADER,
+		TESSCTR_SHADER,
+		TESSEVL_SHADER,
+		GEOMETRY_SHADER,
+		FRAGMENT_SHADER,
+		COMPUTE_SHADER,
+		TASK_SHADER,
+		MESH_SHADER,
+		RAYTRACING,
+	};
+
 	class GraphicsCommandBuffer
 	{
 	public:
@@ -64,6 +86,7 @@ namespace Crimson
 		virtual void DeviceMemoryBarrier(EMemoryBarrierType barrier_type) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
+		virtual void LoadCache() = 0;
 	protected:
 		EExecutionCommandType m_CommandType;
 	};

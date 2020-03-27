@@ -206,6 +206,7 @@
     <ClInclude Include="include\PipelineEnums.h" />
     <ClInclude Include="include\RayTraceGeometry.h" />
     <ClInclude Include="include\RayTracer.h" />
+    <ClInclude Include="include\ResourceBarrier.h" />
     <ClInclude Include="include\Version.h" />
   </ItemGroup>
   <ItemGroup>

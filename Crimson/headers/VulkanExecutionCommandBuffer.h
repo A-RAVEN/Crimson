@@ -5,6 +5,7 @@
 #include <headers/VulkanGPUDevice.h>
 #include <headers/VulkanGPUDeviceThread.h>
 #include <headers/VulkanBatch.h>
+#include <headers/VulkanImage.h>
 #include <headers/VulkanAccelerationStructure.h>
 
 namespace Crimson
@@ -30,6 +31,7 @@ namespace Crimson
 		virtual void DeviceMemoryBarrier(EMemoryBarrierType barrier_type) override;
 		virtual void StartCommand() override;
 		virtual void EndCommand() override;
+		virtual void LoadCache() override;
 		void SetExecutionCommandBuffer(VulkanGPUDevice* p_device, VulkanGPUDeviceThread* p_thread, EExecutionCommandType command_type);
 	private:
 		void TransitionSwapchainImageToCopyDst(VkImage swapchain_image, VulkanSurfaceContext* surface_context, bool initialized);
@@ -44,5 +46,7 @@ namespace Crimson
 
 		//ray tracing
 		VulkanRayTracer* p_CurrentBoundedRayTracer;
+
+		std::map<VulkanImageObject*, VulkanImageLayoutCache> m_ImageLayoutCaches;
 	};
 }

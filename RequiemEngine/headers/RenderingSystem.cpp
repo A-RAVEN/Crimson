@@ -27,6 +27,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 			memcpy(m_TimeBuffer->GetMappedPointer(), &elapsed, sizeof(float));
 			if (TryPopFrame(new_frame))
 			{
+				//MainDevice->WaitIdle();
 				for (auto& list : m_Instances)
 				{
 					list.second.Clear();
@@ -72,8 +73,6 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 
 		m_ExecutionCmd->StartCommand();
 		m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
-		//m_ExecutionCmd->BuildAccelerationStructure(tlas, geometry_instance_buffer, 0, true);
-		//m_ExecutionCmd->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 		m_ExecutionCmd->ExecuteRenderPassInstance(m_RenderPassInstance);
 		//if (toggle)
 		//{
@@ -289,6 +288,15 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_LoadingBuffer->EndCommand();
 	m_RenderingThread->BindExecutionCommandBufferToBatch("GraphicsLoading", m_LoadingBuffer, true);
 
+
+}
+
+void RenderingSystem::SetupSystem()
+{
+}
+
+void RenderingSystem::UnInstallSystem()
+{
 
 }
 

@@ -138,6 +138,9 @@
     <ClInclude Include="include\PipelineEnums.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="include\ResourceBarrier.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">

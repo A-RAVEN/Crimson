@@ -14,6 +14,18 @@ namespace Crimson
 
 	};
 
+	class VulkanImageLayoutCache
+	{
+	public:
+		VkPipelineStageFlags m_PielineStages;
+		VkImageLayout m_EndLayout;
+		VulkanImageLayoutCache() :
+			m_PielineStages(0),
+			m_EndLayout(VK_IMAGE_LAYOUT_UNDEFINED)
+		{}
+		void UpdateLayout(VkImageLayout new_layout);
+	};
+
 	class VulkanImageObject : public IGPUImage
 	{
 	public:
@@ -39,6 +51,8 @@ namespace Crimson
 		VkSampler GetSampler(EFilterMode filter_mode, EAddrMode address_mode);
 		EViewAsType GetDefaultViewAsType() { return m_DefaultViewAsType; }
 		void CmdChangeOverallLayout(VkCommandBuffer cmd_buffer, uint32_t queue_family, VkImageLayout dst_layout, VkPipelineStageFlags dst_stage, VkPipelineStageFlags finished_stage);
+		VulkanImageLayoutCache GetCurrentLayoutCache() const;
+		void ApplyLayoutCache(uint32_t queue_family, VulkanImageLayoutCache const& cache);
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VkImage				m_Image;
@@ -58,4 +72,6 @@ namespace Crimson
 		std::array<std::array<VkSampler, static_cast<size_t>(EAddrMode::E_ADDR_MAX)>,
 			static_cast<size_t>(EFilterMode::E_FILTER_MODE_MAX)> m_Samplers;
 	};
+
+
 }

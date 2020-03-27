@@ -278,8 +278,11 @@ namespace Crimson
 		inline uint32_t GetImageWidth() const { return m_Width; }
 		inline uint32_t GetImageHeight() const { return m_Height; }
 		inline uint32_t GetImageLayerNum() const { return m_LayerNum; }
+		void SetStaticLayout(bool static_layout) { m_StaticLayout = static_layout; }
+		bool IsStaticLayout() const { return m_StaticLayout; }
 	protected:
 		IGPUImage() :
+			m_StaticLayout(false),
 			m_Format(EFormat::E_FORMAT_MAX),
 			m_Width(0),
 			m_Height(0),
@@ -290,6 +293,7 @@ namespace Crimson
 			m_ImageUsages()
 		{}
 		virtual ~IGPUImage() {}
+		bool						m_StaticLayout;
 		EFormat						m_Format;
 		uint32_t					m_Width;
 		uint32_t					m_Height;

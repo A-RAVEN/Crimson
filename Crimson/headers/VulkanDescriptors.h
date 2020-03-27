@@ -4,6 +4,7 @@
 #include <include/RayTraceGeometry.h>
 #include <set>
 #include <array>
+#include <headers/VulkanImage.h>
 
 namespace Crimson
 {
@@ -35,7 +36,7 @@ namespace Crimson
 		virtual void EndWriteDescriptorSet() override;
 		void SetVulkanDescriptorSet(VulkanGPUDevice* device, VkDescriptorSet set, VulkanDescriptorSetLayout* p_layout);
 		//type : 0 normal 1 mesh 2 ray tracing
-		void CmdBarrierDescriptorSet(VkCommandBuffer cmd_buffer, uint32_t queue_family, uint32_t type);
+		void CmdBarrierDescriptorSet(VkCommandBuffer cmd_buffer, uint32_t queue_family, uint32_t type, std::map<VulkanImageObject*, VulkanImageLayoutCache> &image_layout_cache);
 	private:
 		VulkanGPUDevice*	p_OwningDevice;
 		VulkanDescriptorSetLayout* p_OwningSetLayout;

@@ -2,6 +2,7 @@
 #include <include/Generals.h>
 #include <headers/VulkanHeader.h>
 #include <headers/VulkanGPUDevice.h>
+#include <headers/VulkanImage.h>
 
 namespace Crimson
 {
@@ -19,7 +20,7 @@ namespace Crimson
 		uint32_t GetLayers();
 		VkRect2D& GetRenderArea();
 
-		void ImageBarriers(VkCommandBuffer cmd_buffer, uint32_t cmd_queue_family);
+		void CmdImageBarriers(VkCommandBuffer cmd_buffer, uint32_t cmd_queue_family, std::map<VulkanImageObject*, VulkanImageLayoutCache>& image_layout_cache);
 		std::vector<VkImageMemoryBarrier> m_ImageMemoryBarriers;
 	private:
 		VulkanGPUDevice* p_OwningDevice;
