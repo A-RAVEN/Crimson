@@ -132,8 +132,8 @@ void main()
         final_color += SampleSkybox(prd.hitValue) * accumulated_attenuation;
     }
 
-    float old_val = old_value.w * 20.0;
-    vec4 return_color = vec4((old_value.xyz * old_val + final_color) / (old_val + 1), min(old_val + 1, 20.0) / 20.0);
+    float old_val = old_value.w * 12.0;
+    vec4 return_color = vec4((old_value.xyz * old_val + final_color) / (old_val + 1), min(old_val + 1, 12.0) / 12.0);
     //vec4 return_color = vec4(final_color, min(old_val + 1, 10.0) / 10.0);
     imageStore(image, ivec2(gl_LaunchIDNV.xy), return_color);
     //imageStore(image, ivec2(gl_LaunchIDNV.xy), vec4(final_color, 1.0));
@@ -179,9 +179,9 @@ void main()
 	vec3 TangentY = normalize(cross( normal, TangentX ));
 
     float f0 = rand_zero_one(prd.index * 2 + int(time * 1000.0));
-    float f1 = rand_zero_one(prd.index * 2 + int(time * 1000.0));
+    float f1 = rand_zero_one(prd.index * 2 + int(time * 1000.0) + 1000);
 
-    vec3 half_view = importance_sample_GGX(f0, f1, 0.5, normal, TangentX, TangentY);
+    vec3 half_view = importance_sample_GGX(f0, f1, 0.1, normal, TangentX, TangentY);
     vec3 light_dir = 2 * dot( -prd.hitValue, half_view ) * half_view + prd.hitValue;
 
     prd.hitPosition = (transform * vec4(position, 1.0)).xyz;

@@ -48,6 +48,7 @@ private:
 
 	PExecutionCommandBuffer m_LoadingBuffer;
 
+	int m_Inited = 2;
 	PGPUDeviceThread m_RenderingThread;
 	PGPUBuffer m_LastCameraBuffer;
 	PGPUBuffer m_CameraBuffer;
@@ -57,6 +58,7 @@ private:
 	PGraphicsPipeline m_Pipeline;
 	PRenderPassInstance m_RenderPassInstance;
 	PExecutionCommandBuffer m_ExecutionCmd;
+	PExecutionCommandBuffer m_PresentCmd;
 	PGPUImage m_Color;
 	IWindow* p_Window;
 

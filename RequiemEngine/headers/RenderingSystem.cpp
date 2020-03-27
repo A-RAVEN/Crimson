@@ -27,7 +27,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 			memcpy(m_TimeBuffer->GetMappedPointer(), &elapsed, sizeof(float));
 			if (TryPopFrame(new_frame))
 			{
-				//MainDevice->WaitIdle();
+				bool should_update = false;
 				for (auto& list : m_Instances)
 				{
 					list.second.Clear();
@@ -52,42 +52,44 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 					m_TransformManager.GetData(update.m_BatchId, update.m_TransformId)->m_ModelTransform = update.m_Matrix;
 				}
 				memcpy(m_CameraBuffer->GetMappedPointer(), &new_frame.m_Camera, sizeof(Camera));
+
+				if (m_Inited > 0)
+				{
+					m_Inited--;
+					PGraphicsCommandBuffer cmd = m_RenderingThread->StartSubpassCommand(m_RenderPassInstance, 0);
+					cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+					cmd->Sissor(0, 0, 1024, 720);
+					cmd->BindSubpassPipeline(m_Pipeline);
+					cmd->BindSubpassDescriptorSets({ m_Set });
+					for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
+					{
+						cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
+						for (auto& pair : m_Instances)
+						{
+							pair.second.CmdDrawInstances(cmd, i);
+						}
+					}
+					cmd->EndCommandBuffer();
+
+					m_ExecutionCmd->StartCommand();
+					m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
+					m_ExecutionCmd->ExecuteRenderPassInstance(m_RenderPassInstance);
+					m_ExecutionCmd->BindRayTracer(m_RayTracer);
+					m_ExecutionCmd->BindRayTracingDescriptorSet({ m_TransformManager.GetSet(0) }, 1);
+					m_ExecutionCmd->BindRayTracingDescriptorSet(m_RtSet, 0);
+					m_ExecutionCmd->StartRayTracing(m_ShaderTable, 0, 2, 1, 1024, 720);
+					m_ExecutionCmd->EndCommand();
+				}
 			}
 		}
 
-		PGraphicsCommandBuffer cmd = m_RenderingThread->StartSubpassCommand(m_RenderPassInstance, 0);
-		cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-		cmd->Sissor(0, 0, 1024, 720);
-		cmd->BindSubpassPipeline(m_Pipeline);
-		cmd->BindSubpassDescriptorSets({ m_Set });
-		for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
-		{
-			cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
-			for (auto& pair : m_Instances)
-			{
-				pair.second.CmdDrawInstances(cmd, i);
-			}
-		}
-		cmd->EndCommandBuffer();
+		m_ExecutionCmd->LoadCache();
 
-
-		m_ExecutionCmd->StartCommand();
-		m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
-		m_ExecutionCmd->ExecuteRenderPassInstance(m_RenderPassInstance);
-		//if (toggle)
-		//{
-		//}
-		//else
-		//{
-			m_ExecutionCmd->BindRayTracer(m_RayTracer);
-			m_ExecutionCmd->BindRayTracingDescriptorSet({ m_TransformManager.GetSet(0) }, 1);
-			m_ExecutionCmd->BindRayTracingDescriptorSet(m_RtSet, 0);
-			m_ExecutionCmd->StartRayTracing(m_ShaderTable, 0, 2, 1, 1024, 720);
-		//}
-		//m_ExecutionCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
-		m_ExecutionCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
-		m_ExecutionCmd->EndCommand();
-		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render" });
+		m_PresentCmd->StartCommand();
+		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
+		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
+		m_PresentCmd->EndCommand();
+		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
 
 		MainDevice->PresentWindow(*p_Window);
 		//p_Window->UpdateWindow();
@@ -251,15 +253,15 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 
 	MainDevice->CreateBatch("GraphicsLoading", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
-	//MainDevice->CreateBatch("Present", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
+	MainDevice->CreateBatch("Present", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 
 	m_RenderingThread = MainDevice->CreateThread();
 
 	m_ExecutionCmd = m_RenderingThread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
 	m_RenderingThread->BindExecutionCommandBufferToBatch("Main Render", m_ExecutionCmd);
 
-	//PExecutionCommandBuffer present = m_RenderingThread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
-	//m_RenderingThread->BindExecutionCommandBufferToBatch("Present", present);
+	m_PresentCmd = m_RenderingThread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS);
+	m_RenderingThread->BindExecutionCommandBufferToBatch("Present", m_PresentCmd);
 
 	PGPUBuffer image_load_buffer;
 	PGPUImage test_loaded_image;
