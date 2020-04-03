@@ -147,6 +147,7 @@ namespace Crimson
 		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) = 0;
 		virtual void DestroyBatch(std::string const& batch_name) = 0;
 		virtual void ExecuteBatches(std::vector<std::string> const& batches) = 0;
+		virtual void WaitBatches(std::vector<std::string> const& batches) = 0;
 
 		virtual void WaitIdle() = 0;
 

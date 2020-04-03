@@ -25,6 +25,8 @@
 #include <headers/LuaInterface/LuaMachine.h>
 #include <headers/LuaInterface/LuaInterfaces.h>
 #include <headers/NetworkManager.h>
+#include <headers/Entity/World.h>
+#include <headers/Components/TransformComponent.h>
 
 //using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
 using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
@@ -54,8 +56,19 @@ int TestFunc1(int input, std::string value, int input2)
 	return 0;
 }
 
+class MeshInstance
+{
+public:
+	TransformComponent* transform;
+	MeshResource* mesh;
+};
+
 int main()
 {
+	World world;
+	EntityId entity = world.AllocateEntity();
+	TransformComp* transform = static_cast<TransformComp*>(world.AddEntityComponent(entity, world.GetComponentManagerId("TransformComponent")));
+
 	LuaVM lua_machine;
 	lua_machine.InitVM();
 
@@ -95,6 +108,10 @@ int main()
 
 	MeshResource new_resource;
 	new_resource.ProcessAiSceneLightWeight(scene, true, false);
+
+	const aiScene* bunnymesh = scene_importer.ReadFile("bunny.ply", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
+	MeshResource bunny_resource;
+	bunny_resource.ProcessAiSceneLightWeight(bunnymesh, true, false);
 	
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
@@ -117,29 +134,31 @@ int main()
 	PGPUBuffer geometry_instance_buffer = MainDevice->CreateBuffer(sizeof(RaytraceGeometryType) * 5, { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	RaytraceGeometryType* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RaytraceGeometryType[5];
 
-	std::vector<TransformComponent*> transforms;
-	//for (int i = 0; i < 10; ++i)
-	//{
-	//	for (int j = 0; j < 10; ++j)
-	//	{
-	//		TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-	//		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, j * 2.0f));
-	//		transforms.push_back(p_component);
-	//	}
-	//}
+	std::vector<MeshInstance> instances;
+
 	BufferQueue<uint32_t, 10> transform_queue;
 	transform_queue.Init(MainDevice, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-	for (int i = 0; i < 1; ++i)
 	{
-		pGeometryInstance[i].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
-		pGeometryInstance[i].m_InstanceId = i;
-		pGeometryInstance[i].m_Mask = 0x1;// 0xff;
-		pGeometryInstance[i].m_AccelerationStructureHandle = blas->GetHandle();
-		TransformComponent* p_component = m_TransformManager.AllocateTransformComponent();
-		p_component->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
-		pGeometryInstance[i].m_TransformMatrix = glm::transpose(p_component->m_Info.m_Matrix);
-		transforms.push_back(p_component);
-		transform_queue.PushBack(p_component->m_Info.m_TransformId);
+		MeshInstance sponza;
+		sponza.mesh = &new_resource;
+		sponza.transform = m_TransformManager.AllocateTransformComponent();
+
+		pGeometryInstance[0].m_Flags = static_cast<uint32_t>(EGeometryInstanceFlags::E_GEOMETRY_INSTANCE_TRIANGLE_CULL_DISABLE);
+		pGeometryInstance[0].m_InstanceId = 0;
+		pGeometryInstance[0].m_Mask = 0x1;// 0xff;
+		pGeometryInstance[0].m_AccelerationStructureHandle = blas->GetHandle();
+		sponza.transform->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+		pGeometryInstance[0].m_TransformMatrix = glm::transpose(sponza.transform->m_Info.m_Matrix);
+		transform_queue.PushBack(sponza.transform->m_Info.m_TransformId);
+
+		instances.push_back(sponza);
+	}
+	{
+		MeshInstance bunny;
+		bunny.mesh = &bunny_resource;
+		bunny.transform = m_TransformManager.AllocateTransformComponent();
+		bunny.transform->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
+		instances.push_back(bunny);
 	}
 
 	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue);
@@ -214,12 +233,12 @@ int main()
 		}
 		GraphicsFrame new_frame{};
 		m_TransformManager.GenerateGraphicsFrame(new_frame);
-		for (auto& trans : transforms)
+		for (auto& trans : instances)
 		{
 			InstanceInfo new_info{};
-			new_info.m_BatchId = trans->m_Info.m_BatchId;
-			new_info.m_TransformId = trans->m_Info.m_TransformId;
-			new_info.p_Mesh = &new_resource;
+			new_info.m_BatchId = trans.transform->m_Info.m_BatchId;
+			new_info.m_TransformId = trans.transform->m_Info.m_TransformId;
+			new_info.p_Mesh = trans.mesh;
 			new_frame.AddInstance(new_info);
 		}
 		new_frame.m_Camera = cam;

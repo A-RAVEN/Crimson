@@ -60,6 +60,7 @@ private:
 	PExecutionCommandBuffer m_ExecutionCmd;
 	PExecutionCommandBuffer m_PresentCmd;
 	PGPUImage m_Color;
+	PGPUImage m_Normal;
 	IWindow* p_Window;
 
 	PRayTracer m_RayTracer;

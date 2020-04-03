@@ -311,7 +311,7 @@ namespace Crimson
 		EFormat					m_Format;
 		EAttachmentClearType	m_ClearType;
 		uint32_t				m_SampleCount;
-		RenderPassAttachment(EFormat format, EAttachmentClearType clear_type, uint32_t sample_count = 1) : 
+		RenderPassAttachment(EFormat format = EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType clear_type = EAttachmentClearType::E_ATTACHMENT_NOT_CLEAR, uint32_t sample_count = 1) : 
 			m_Format(format),
 			m_ClearType(clear_type),
 			m_SampleCount(sample_count)

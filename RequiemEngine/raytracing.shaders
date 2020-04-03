@@ -5,6 +5,9 @@
 #extension GL_EXT_nonuniform_qualifier : enable
 #endif
 
+#include "BRDF.gh"
+#include "rand.gh"
+
 struct hitPayload
 {
     vec3 hitValue;//next tracing direction
@@ -45,13 +48,29 @@ vec3 SampleSkybox(vec3 ray)
 }
 #endif
 
+#if RAYGEN_SHADER | CLOSEHIT_SHADER
+layout(binding = 9, set = 0) uniform TIME
+{
+    float time;
+};
+
+vec3 RandSampelGGX( float _roughness, float _time, uint _rand_seed, in vec3 _normal, in vec3 view_dir )
+{
+    vec3 UpVector = abs(_normal.z) < 0.99 ? vec3(0,0,1) : vec3(1,0,0);
+	vec3 TangentX = normalize( cross( UpVector, _normal ) );
+	vec3 TangentY = normalize(cross( _normal, TangentX ));
+    float f0 = rand_zero_one(_rand_seed * 2 + int(_time * 1000.0));
+    float f1 = rand_zero_one(_rand_seed * 2 + int(_time * 1000.0) + 1000);
+    vec3 half_view = importance_sample_GGX(f0, f1, _roughness, _normal, TangentX, TangentY);
+    return normalize((2.0 * dot( view_dir, half_view )) * half_view - view_dir);
+}
+#endif
+
 #if RAYGEN_SHADER
 layout(location = 0) rayPayloadNV hitPayload prd;
 #elif CLOSEHIT_SHADER | MISS_SHADER
 layout(location = 0) rayPayloadInNV hitPayload prd;
 #endif
-
-
 
 #if RAYGEN_SHADER
 #include "camera.gh"
@@ -70,33 +89,48 @@ layout(binding = 7, set = 0) uniform OLDCAMERA
 };
 
 layout(binding = 8, set = 0) uniform sampler2D oldSampler;
-//layout(location = 0) rayPayloadNV hitPayload prd;
+layout(binding = 10, set = 0) uniform sampler2D depthSampler;
+layout(binding = 11, set = 0) uniform sampler2D normalSampler;
 
+vec3 ProjectionInverse(in mat4 _inv_camera, in vec3 _screen_space_val)
+{
+    vec4 ws_raw = _inv_camera * vec4(_screen_space_val, 1.0);
+    return ws_raw.xyz / ws_raw.w;
+}
+#define TEMP_ROUGHNESS 0.4
 void main() 
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDNV.xy) + vec2(0.5);
     const vec2 inUV = pixelCenter/vec2(gl_LaunchSizeNV.xy);
     prd.index = uint(gl_LaunchIDNV.x + gl_LaunchIDNV.y * gl_LaunchSizeNV.x);
     vec2 d = inUV * 2.0 - 1.0;
-    vec4 origin    = cam.viewInverse * vec4(0, 0, 0, 1);
+    //vec4 origin    = cam.viewInverse * vec4(0, 0, 0, 1);
     vec4 target    = cam.projInverse * vec4(d.x, d.y, 1, 1);
     vec4 direction = cam.viewInverse * vec4(normalize(target.xyz / target.w), 0);
 
+    //first time ray selected using roughness
+    float depth = texture(depthSampler, inUV).x;
+    vec3 position = ProjectionInverse(cam.projInverse, vec3(d, depth));
+    vec4 origin = (cam.viewInverse * vec4(position, 1.0));
+    vec3 view = (cam.viewInverse * vec4(position, 0.0)).xyz;
+    vec3 normal = normalize(texture(normalSampler, inUV).xyz * 2.0 - 1.0);
+
+    vec3 trace_dir = RandSampelGGX(TEMP_ROUGHNESS, time, prd.index, normal, -view);
+
+    //reprojected value
     vec4 reprojected = cam.viewInverse * target;
     reprojected /= reprojected.w;
     reprojected = oldCam.proj * oldCam.view * reprojected;
     reprojected /= reprojected.w;
-
     vec2 reproj_uv = reprojected.xy * 0.5 + 0.5;
-
     vec4 old_value = texture(oldSampler, reproj_uv);
 
-    prd.hitValue = direction.xyz;
+    prd.hitValue = trace_dir.xyz;
     prd.hitColor = vec3(0.0);
     uint  rayFlags = gl_RayFlagsOpaqueNV;
-    float tMin     = 0.001;
+    float tMin     = 0.05;
     float tMax     = 10000.0;
-    int trace_times = 3;
+    int trace_times = 2;
     vec3 final_color = vec3(0.0);
     vec3 accumulated_attenuation = vec3(1.0);
     while(trace_times > 0)
@@ -109,7 +143,7 @@ void main()
                 0,              // missIndex
                 origin.xyz,     // ray origin
                 tMin,           // ray min range
-                direction.xyz,  // ray direction
+                trace_dir.xyz,  // ray direction
                 tMax,           // ray max range
                 0               // payload (location = 0)
         );
@@ -123,7 +157,7 @@ void main()
             final_color += prd.hitColor * accumulated_attenuation;
             accumulated_attenuation *= prd.hitAttenuation;
             origin.xyz = prd.hitPosition;
-            direction.xyz = prd.hitValue;
+            trace_dir.xyz = prd.hitValue;
         }
         --trace_times;
     }
@@ -132,11 +166,9 @@ void main()
         final_color += SampleSkybox(prd.hitValue) * accumulated_attenuation;
     }
 
-    float old_val = old_value.w * 12.0;
-    vec4 return_color = vec4((old_value.xyz * old_val + final_color) / (old_val + 1), min(old_val + 1, 12.0) / 12.0);
-    //vec4 return_color = vec4(final_color, min(old_val + 1, 10.0) / 10.0);
+    float old_val = old_value.w * 6.0;
+    vec4 return_color = vec4((old_value.xyz * old_val + final_color) / (old_val + 1), min(old_val + 1, 6.0) / 6.0);
     imageStore(image, ivec2(gl_LaunchIDNV.xy), return_color);
-    //imageStore(image, ivec2(gl_LaunchIDNV.xy), vec4(final_color, 1.0));
 }
 #endif
 
@@ -149,15 +181,9 @@ void main()
 }
 #endif
 
-#if CLOSEHIT_SHADER
-#include "BRDF.gh"
-#include "rand.gh"
-//#extension GL_EXT_nonuniform_qualifier : enable
 
-layout(binding = 9, set = 0) uniform TIME
-{
-    float time;
-};
+
+#if CLOSEHIT_SHADER
 
 hitAttributeNV vec3 attribs;
 void main()

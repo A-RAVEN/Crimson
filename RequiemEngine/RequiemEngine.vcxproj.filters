@@ -57,6 +57,15 @@
     <ClCompile Include="src\NetworkManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\Editor\ImGuiContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entity\World.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Entity\Entity.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -135,6 +144,27 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\NetworkManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Editor\ImGuiContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Physics\RigidBody.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Components\TransformComponent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Components\IComponent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Entity\Entity.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Entity\World.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Components\IComponentManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

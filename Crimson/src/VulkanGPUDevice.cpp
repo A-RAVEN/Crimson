@@ -221,6 +221,22 @@ namespace Crimson
 			}
 		}
 	}
+	void VulkanGPUDevice::WaitBatches(std::vector<std::string> const& batches)
+	{
+		std::vector<VkFence> fences;
+		for (auto& batch_name : batches)
+		{
+			auto batch_find = m_Batches.find(batch_name);
+			if (batch_find != m_Batches.end())
+			{
+				fences.push_back(batch_find->second->m_Fence);
+			}
+		}
+		if (!fences.empty())
+		{
+			CHECK_VKRESULT(vkWaitForFences(m_LogicalDevice, fences.size(), fences.data(), VK_TRUE, UINT_MAX), "Vulkan Batch Wait For Fence Issue!");
+		}
+	}
 	void VulkanGPUDevice::PresentWindow(IWindow& window)
 	{
 		auto find = m_SurfaceContexts.find(window.GetName());
