@@ -27,6 +27,8 @@
 #include <headers/NetworkManager.h>
 #include <headers/Entity/World.h>
 #include <headers/Components/TransformComponent.h>
+#include <headers/Components/MeshRenderComp.h>
+#include <headers/Components/HierarchyComp.h>
 
 //using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
 using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
@@ -63,11 +65,16 @@ public:
 	MeshResource* mesh;
 };
 
+
 int main()
 {
 	World world;
 	EntityId entity = world.AllocateEntity();
-	TransformComp* transform = static_cast<TransformComp*>(world.AddEntityComponent(entity, world.GetComponentManagerId("TransformComponent")));
+	//TransformComp* transform = static_cast<TransformComp*>(world.AddEntityComponent(entity, world.GetComponentManagerId("TransformComponent")));
+	TransformComp* transform = world.AddEntityComponent<TransformComp>(entity);
+	HierarchyComp* hierarchy = world.AddEntityComponent<HierarchyComp>(entity);
+	MeshRenderComp* meshRenderer = world.AddEntityComponent<MeshRenderComp>(entity);
+	world.AddEntity(entity);
 
 	LuaVM lua_machine;
 	lua_machine.InitVM();

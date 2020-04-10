@@ -184,6 +184,8 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClCompile Include="src\MeshResource.cpp" />
     <ClCompile Include="src\NetworkManager.cpp" />
     <ClCompile Include="src\stb_impl.cpp" />
+    <ClCompile Include="src\System\System.cpp" />
+    <ClCompile Include="src\System\TransformSystem.cpp" />
     <ClCompile Include="src\ThreadManager.cpp" />
     <ClCompile Include="src\VertexData.cpp" />
     <ClCompile Include="src\Win32Window.cpp" />
@@ -191,8 +193,10 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
   <ItemGroup>
     <ClInclude Include="headers\BufferVector.h" />
     <ClInclude Include="headers\Camera.h" />
+    <ClInclude Include="headers\Components\HierarchyComp.h" />
     <ClInclude Include="headers\Components\IComponent.h" />
     <ClInclude Include="headers\Components\IComponentManager.h" />
+    <ClInclude Include="headers\Components\MeshRenderComp.h" />
     <ClInclude Include="headers\Components\TransformComponent.h" />
     <ClInclude Include="headers\Containers\ReaderWriterQueue\atomicops.h" />
     <ClInclude Include="headers\Containers\ConcurrentQueue\blockingconcurrentqueue.h" />
@@ -218,6 +222,8 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClInclude Include="headers\ShaderProcessor.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\stb_image_write.h" />
+    <ClInclude Include="headers\System\System.h" />
+    <ClInclude Include="headers\System\TransformSystem.h" />
     <ClInclude Include="headers\ThreadManager.h" />
     <ClInclude Include="headers\TimeManager.h" />
     <ClInclude Include="headers\VertexData.h" />

@@ -66,6 +66,12 @@
     <ClCompile Include="src\Entity\Entity.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\System\TransformSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\System\System.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -165,6 +171,18 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\Components\IComponentManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Components\MeshRenderComp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\System\System.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\System\TransformSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Components\HierarchyComp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

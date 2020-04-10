@@ -17,7 +17,8 @@ public:
 	}
 
 	virtual size_t AllocateComponentId() = 0;
-	virtual size_t FreeComponentId(size_t id) = 0;
+	virtual void FreeComponentId(size_t id) = 0;
+	virtual std::string GetName() = 0;
 protected:
 	virtual IComponent* GetIComponent(uint32_t id) = 0;
 };
@@ -45,10 +46,13 @@ public:
 		return m_Components.size() - 1;
 	}
 
-	virtual size_t FreeComponentId(size_t id) override
+	virtual void FreeComponentId(size_t id) override
 	{
 		m_AvailableComponentIds.push_back(id);
 	}
+
+	virtual std::string GetName() override { return std::string(typeid(T).name()); }
+
 protected:
 	virtual IComponent* GetIComponent(uint32_t id) override
 	{
