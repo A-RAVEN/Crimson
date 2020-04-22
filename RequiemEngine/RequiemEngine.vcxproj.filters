@@ -72,6 +72,18 @@
     <ClCompile Include="src\System\System.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\System\MeshRenderSystem.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Graphics\GraphicsRenderPipeline.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LuaInterfaces\LuaWGraphicsContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LuaInterfaces\GraphicsLuaMachine.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -183,6 +195,24 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\Components\HierarchyComp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Manager\ResourceManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Components\CameraComponent.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Graphics\GraphicsRenderPipeline.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\System\MeshRenderSystem.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaInterfaces\LuaWGraphicsContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\LuaInterface\GraphicsLuaMachine.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

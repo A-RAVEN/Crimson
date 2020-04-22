@@ -7,12 +7,14 @@
 #include <map>
 #include <set>
 #include <bitset>
+#include <headers/KeyboardController.h>
+#include <headers/TimeManager.h>
 
 class ISystem;
 class World
 {
 public:
-	World();
+	World(TimeManager &time_manager, KeyboardController &controller);
 	~World();
 	void EnqueueComponentManager(IComponentManager* new_manager);
 	void EnqueueSystem(ISystem* new_system);
@@ -28,6 +30,11 @@ public:
 	IComponent* AddEntityComponent(EntityId entity_id, uint32_t comp_manager_id);
 	IComponent* GetEntityComponent(EntityId entity_id, uint32_t comp_manager_id) const;
 	IComponent* GetComponent(uint32_t comp_manager_id, uint32_t comp_id) const;
+
+	TimeManager* GetTimeManager() { return m_TimeManager; }
+	KeyboardController* GetController() {
+		return m_Controller;
+	}
 
 	template <typename T>
 	T* AddEntityComponent(EntityId entity_id)
@@ -90,6 +97,9 @@ public:
 		return bits;
 	}
 private:
+	KeyboardController* m_Controller;
+	TimeManager* m_TimeManager;
+
 	std::unordered_map<ComponentBits, size_t> m_EntityFilterReferences;
 	std::deque<std::set<EntityId>> m_FilteredEntityLists;
 

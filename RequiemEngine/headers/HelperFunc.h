@@ -16,3 +16,14 @@ static std::string LoadStringFile(std::string file_source)
 	}
 	return result;
 }
+
+#define MAKE_ENUM_PAIR( ENUM ) (MakeEnumFunc( #ENUM , uint32_t( ENUM ) ))
+static std::pair<std::string, uint32_t> MakeEnumFunc(std::string name, uint32_t enum_num)
+{
+	auto find = name.find_first_of("::");
+	if (find != std::string::npos)
+	{
+		name = name.substr(find + 2);
+	}
+	return std::make_pair(name, enum_num);
+}

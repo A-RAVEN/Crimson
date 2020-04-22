@@ -178,12 +178,16 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClCompile Include="src\Entity\Entity.cpp" />
     <ClCompile Include="src\Entity\World.cpp" />
     <ClCompile Include="src\GeometryInstanceManager.cpp" />
+    <ClCompile Include="src\Graphics\GraphicsRenderPipeline.cpp" />
     <ClCompile Include="src\KeyboardController.cpp" />
+    <ClCompile Include="src\LuaInterfaces\GraphicsLuaMachine.cpp" />
+    <ClCompile Include="src\LuaInterfaces\LuaWGraphicsContext.cpp" />
     <ClCompile Include="src\LuaMachine.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\MeshResource.cpp" />
     <ClCompile Include="src\NetworkManager.cpp" />
     <ClCompile Include="src\stb_impl.cpp" />
+    <ClCompile Include="src\System\MeshRenderSystem.cpp" />
     <ClCompile Include="src\System\System.cpp" />
     <ClCompile Include="src\System\TransformSystem.cpp" />
     <ClCompile Include="src\ThreadManager.cpp" />
@@ -193,6 +197,7 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
   <ItemGroup>
     <ClInclude Include="headers\BufferVector.h" />
     <ClInclude Include="headers\Camera.h" />
+    <ClInclude Include="headers\Components\CameraComponent.h" />
     <ClInclude Include="headers\Components\HierarchyComp.h" />
     <ClInclude Include="headers\Components\IComponent.h" />
     <ClInclude Include="headers\Components\IComponentManager.h" />
@@ -210,10 +215,14 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClInclude Include="headers\Entity\World.h" />
     <ClInclude Include="headers\GeometryInstanceManager.h" />
     <ClInclude Include="headers\GraphicsFrame.h" />
+    <ClInclude Include="headers\Graphics\GraphicsRenderPipeline.h" />
     <ClInclude Include="headers\HelperFunc.h" />
     <ClInclude Include="headers\KeyboardController.h" />
+    <ClInclude Include="headers\LuaInterfaces\LuaWGraphicsContext.h" />
+    <ClInclude Include="headers\LuaInterface\GraphicsLuaMachine.h" />
     <ClInclude Include="headers\LuaInterface\LuaInterfaces.h" />
     <ClInclude Include="headers\LuaInterface\LuaMachine.h" />
+    <ClInclude Include="headers\Manager\ResourceManager.h" />
     <ClInclude Include="headers\MeshQueue.h" />
     <ClInclude Include="headers\MeshResource.h" />
     <ClInclude Include="headers\NetworkManager.h" />
@@ -222,6 +231,7 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClInclude Include="headers\ShaderProcessor.h" />
     <ClInclude Include="headers\stb_image.h" />
     <ClInclude Include="headers\stb_image_write.h" />
+    <ClInclude Include="headers\System\MeshRenderSystem.h" />
     <ClInclude Include="headers\System\System.h" />
     <ClInclude Include="headers\System\TransformSystem.h" />
     <ClInclude Include="headers\ThreadManager.h" />

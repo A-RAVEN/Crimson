@@ -29,6 +29,7 @@
 #include <headers/Components/TransformComponent.h>
 #include <headers/Components/MeshRenderComp.h>
 #include <headers/Components/HierarchyComp.h>
+#include <headers/LuaInterface/GraphicsLuaMachine.h>
 
 //using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
 using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
@@ -68,9 +69,10 @@ public:
 
 int main()
 {
-	World world;
+	TimeManager time_manager;
+	KeyboardController inputs;
+	World world(time_manager, inputs);
 	EntityId entity = world.AllocateEntity();
-	//TransformComp* transform = static_cast<TransformComp*>(world.AddEntityComponent(entity, world.GetComponentManagerId("TransformComponent")));
 	TransformComp* transform = world.AddEntityComponent<TransformComp>(entity);
 	HierarchyComp* hierarchy = world.AddEntityComponent<HierarchyComp>(entity);
 	MeshRenderComp* meshRenderer = world.AddEntityComponent<MeshRenderComp>(entity);
@@ -86,6 +88,8 @@ int main()
 	};
 	lua_machine.RegisterFunctions(functions.data(), functions.size());
 	lua_machine.LoadScript("test.lua");
+
+
 
 	Camera cam;
 	cam.view = glm::lookAt(glm::vec3(5.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -110,6 +114,10 @@ int main()
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
 	MainDevice->RegisterWindow(new_window);
 
+	GraphicsLuaMachine machine;
+	machine.InitVM();
+	GraphicsContext newContext(MainDevice);
+	machine.RegisterGraphicsContext(&newContext, "testgraphics.lua");
 
 	TransformComponentAllocator m_TransformManager;
 
@@ -170,12 +178,11 @@ int main()
 
 	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue);
 
-	KeyboardController inputs;
+
 	glm::vec2 angles(0.0f);
 	glm::vec3 position(-5.0f, 0.0f, 0.0f);
 
 	bool toggle = false;
-	TimeManager time_manager;
 
 	ThreadManager thread_manager;
 	NetworkManager network_manager;
@@ -187,6 +194,7 @@ int main()
 	{
 		time_manager.UpdateClock();
 		inputs.UpdateController();
+		world.Update();
 
 		//transforms[0]->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 

@@ -1,6 +1,7 @@
  #pragma once
 #include <string>
 #include <headers/Debug.h>
+#include <vector>
 extern "C"
 {
 #include"lua.h"
@@ -8,6 +9,15 @@ extern "C"
 #include "lualib.h" 
 }
 
+
+union Ptr64
+{
+	uint64_t uintT;
+	double doubleT;
+	void* voidPT;
+	static Ptr64 WrapUint(uint64_t input) { Ptr64 return_val; return_val.uintT = input; return return_val; }
+	static Ptr64 WrapDouble(double input){ Ptr64 return_val; return_val.doubleT = input; return return_val; }
+};
 //namespace lua_func
 //{
 #define LUA_VOID_FUNC( FUNC_NAME , TYPE ,FUNC )\
@@ -24,7 +34,15 @@ extern "C"
 	{
 		lua_newtable(L);
 		lua_pushlightuserdata(L, &data);
-		lua_setfield(L, -1, "pdata");
+		lua_setfield(L, -2, "pdata");
+	}
+
+	template <typename T>
+	static	void WrapPUserData(lua_State* L, T* data)
+	{
+		lua_newtable(L);
+		lua_pushlightuserdata(L, data);
+		lua_setfield(L, -2, "pdata");
 	}
 
 	template <typename T>
@@ -37,7 +55,7 @@ extern "C"
 	}
 
 	template <typename T>
-	static	T& UnWrapPUserData(lua_State* L, int id)
+	static	T* UnWrapPUserData(lua_State* L, int id)
 	{
 		lua_getfield(L, id, "pdata");
 		T* data = reinterpret_cast<T*>(lua_touserdata(L, -1));
@@ -47,6 +65,12 @@ extern "C"
 
 	template<typename T>
 	static void PushLuaData(lua_State* L, T data);
+
+	template<>
+	static void PushLuaData(lua_State* L, Ptr64 data)
+	{
+		lua_pushnumber(L, data.doubleT);
+	}
 
 	template<>
 	static void PushLuaData(lua_State* L, int data)
@@ -77,6 +101,12 @@ extern "C"
 	static T GetLuaData(lua_State* L, int id);
 
 	template<>
+	static Ptr64 GetLuaData(lua_State* L, int id)
+	{
+		return Ptr64::WrapDouble(lua_tonumber(L, id));
+	}
+
+	template<>
 	static int GetLuaData(lua_State* L, int id)
 	{
 		return lua_tointeger(L, id);
@@ -104,6 +134,29 @@ extern "C"
 	static bool GetLuaData(lua_State* L, int id)
 	{
 		return lua_toboolean(L, id);
+	}
+
+	template<>
+	static std::vector<Ptr64> const& GetLuaData(lua_State* L, int id)
+	{
+		std::vector<Ptr64> return_val;
+		int adjustedId = id;
+		if (id < 0)
+		{
+			adjustedId -= 1;
+		}
+		if (lua_istable(L, id))
+		{
+			lua_pushnil(L);
+			while (lua_next(L, adjustedId) != 0)
+			{
+				Ptr64 new_id;
+				new_id.doubleT = lua_tonumber(L, -1);
+				return_val.push_back(new_id);
+				lua_pop(L, 1);
+			}
+		}
+		return return_val;
 	}
 
 	template<int...Ints>
@@ -145,6 +198,22 @@ extern "C"
 			return 1;
 		}
 	};
+
+	template<class Clazz, class...Args, void(Clazz:: * PMF)(Args...)>
+	struct lua_mem_func_wrapper<void(Clazz::*)(Args...), PMF> {
+		static int doit(lua_State* L) {
+			return doit_impl(L, make_int_range<2, sizeof...(Args)>());
+		}
+	private:
+		template<int...Indices>
+		static int doit_impl(lua_State* L, int_pack<Indices...>) {
+				(UnWrapPUserData<Clazz>(L, 1)->*PMF)(
+					GetLuaData<Args>(L, Indices)...
+				);
+			return 0;
+		}
+	};
+
 
 	template<class FunPtrType, FunPtrType PF>
 	struct lua_func_wrapper;

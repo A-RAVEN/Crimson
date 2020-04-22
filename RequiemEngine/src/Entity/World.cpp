@@ -5,7 +5,7 @@
 #include <headers/Components/HierarchyComp.h>
 #include <headers/System/System.h>
 #include <headers/System/TransformSystem.h>
-World::World()
+World::World(TimeManager& time_manager, KeyboardController& controller) : m_Controller(&controller), m_TimeManager(&time_manager)
 {
 	//Enqueue components
 	EnqueueComponentManager(new BuiltInComponentManager<TransformComp>());

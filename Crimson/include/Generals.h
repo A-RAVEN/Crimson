@@ -349,7 +349,7 @@ namespace Crimson
 	};
 	using PRenderPass = RenderPass*;
 
-	class Framebuffer : IObject
+	class Framebuffer : public IObject
 	{
 	public:
 		std::vector<PGPUImage>	m_Images;

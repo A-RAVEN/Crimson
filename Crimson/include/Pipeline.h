@@ -32,7 +32,7 @@ namespace Crimson
 		}
 	};
 
-	class GraphicsPipeline : IObject
+	class GraphicsPipeline : public IObject
 	{
 	public:
 		virtual void LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type) = 0;
