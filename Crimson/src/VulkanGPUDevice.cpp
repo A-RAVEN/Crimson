@@ -14,6 +14,7 @@
 #include <headers/VulkanRayTraceGeometry.h>
 #include <headers/VulkanAccelerationStructure.h>
 #include <headers/VulkanBatch.h>
+#include <headers/VulkanShaderModule.h>
 #include <headers/vk_mem_alloc.h>
 #include <algorithm>
 #include <limits>
@@ -125,6 +126,25 @@ namespace Crimson
 	void VulkanGPUDevice::HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout)
 	{
 		delete p_set_layout;
+	}
+	PShaderModule VulkanGPUDevice::CreateShaderModule(void* data, size_t size)
+	{
+		VulkanShaderModule* return_val = new VulkanShaderModule();
+		VkShaderModule new_shader_module = VK_NULL_HANDLE;
+		VkShaderModuleCreateInfo create_info{};
+		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		create_info.pCode = reinterpret_cast<const uint32_t*>(data);
+		create_info.codeSize = size;
+		create_info.flags = 0;
+		CHECK_VKRESULT(vkCreateShaderModule(m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &new_shader_module),
+			"Vulkan Creat Shader Module Issue!");
+		return_val->Init(this, new_shader_module);
+		return return_val;
+	}
+	void VulkanGPUDevice::HandleDIsposedShaderModule(VulkanShaderModule* p_module)
+	{
+		vkDestroyShaderModule(m_LogicalDevice, p_module->m_ShaderModule, VULKAN_ALLOCATOR_POINTER);
+		delete p_module;
 	}
 	PGraphicsPipeline VulkanGPUDevice::CreateGraphicsPipeline()
 	{
@@ -425,6 +445,7 @@ namespace Crimson
 
 			VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
 			VK_NV_RAY_TRACING_EXTENSION_NAME,
+			VK_NV_MESH_SHADER_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE3_EXTENSION_NAME,
 		});
 
@@ -518,6 +539,7 @@ namespace Crimson
 #ifndef GET_EXTENSION_FUNC
 #define GET_EXTENSION_FUNC(func_name) {func_name = reinterpret_cast<PFN_##func_name>(vkGetDeviceProcAddr(device, #func_name));}
 #endif
+
 		GET_EXTENSION_FUNC(vkCreateAccelerationStructureNV);
 		GET_EXTENSION_FUNC(vkDestroyAccelerationStructureNV);
 		GET_EXTENSION_FUNC(vkBindAccelerationStructureMemoryNV);
@@ -527,6 +549,7 @@ namespace Crimson
 		GET_EXTENSION_FUNC(vkCreateRayTracingPipelinesNV);
 		GET_EXTENSION_FUNC(vkGetRayTracingShaderGroupHandlesNV);
 		GET_EXTENSION_FUNC(vkCmdTraceRaysNV);
+
 		GET_EXTENSION_FUNC(vkCmdDrawMeshTasksNV);
 		GET_EXTENSION_FUNC(vkCmdDrawMeshTasksIndirectNV);
 		GET_EXTENSION_FUNC(vkCmdDrawMeshTasksIndirectCountNV);

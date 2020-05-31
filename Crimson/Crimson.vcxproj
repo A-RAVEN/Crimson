@@ -195,6 +195,7 @@
     <ClInclude Include="headers\VulkanRayTracer.h" />
     <ClInclude Include="headers\VulkanRenderPass.h" />
     <ClInclude Include="headers\VulkanRenderPassInstance.h" />
+    <ClInclude Include="headers\VulkanShaderModule.h" />
     <ClInclude Include="headers\VulkanSurfaceContext.h" />
     <ClInclude Include="headers\VulkanTranslator.h" />
     <ClInclude Include="include\Configuration.h" />
@@ -230,6 +231,7 @@
     <ClCompile Include="src\VulkanRayTracer.cpp" />
     <ClCompile Include="src\VulkanRenderPass.cpp" />
     <ClCompile Include="src\VulkanRenderPassInstance.cpp" />
+    <ClCompile Include="src\VulkanShaderModuel.cpp" />
     <ClCompile Include="src\VulkanSurfaceContext.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <array>
 #include <assimp/scene.h>
+#include <headers/Resources/MeshletResource.h>
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include <headers/MeshResource.h>
@@ -124,9 +125,14 @@ int main()
 	MeshResource new_resource;
 	new_resource.ProcessAiSceneLightWeight(scene, true, false);
 
+
+
 	const aiScene* bunnymesh = scene_importer.ReadFile("bunny.ply", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
 	MeshResource bunny_resource;
 	bunny_resource.ProcessAiSceneLightWeight(bunnymesh, true, false);
+
+	MeshletGroupResource new_meshlet;
+	new_meshlet.LoadMeshRaw(bunnymesh);
 	
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();

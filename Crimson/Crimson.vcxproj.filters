@@ -141,6 +141,9 @@
     <ClInclude Include="include\ResourceBarrier.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\VulkanShaderModule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -204,6 +207,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\VulkanAccelerationStructure.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VulkanShaderModuel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

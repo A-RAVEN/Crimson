@@ -16,6 +16,7 @@ namespace Crimson
 	class VulkanImageObject;
 	class VulkanRenderPass;
 	class VulkanDescriptorSetLayout;
+	class VulkanShaderModule;
 	class VulkanGraphicsPipeline;
 	class VulkanRayTracer;
 	class VulkanFramebuffer;
@@ -35,7 +36,7 @@ namespace Crimson
 	class NVExtension
 	{
 	public:
-
+		//ray tracing extensions for NV
 		PFN_vkCreateAccelerationStructureNV vkCreateAccelerationStructureNV;
 
 		PFN_vkDestroyAccelerationStructureNV vkDestroyAccelerationStructureNV;
@@ -54,6 +55,7 @@ namespace Crimson
 
 		PFN_vkCmdTraceRaysNV vkCmdTraceRaysNV;
 
+		//mesh shader extensions for NV
 		PFN_vkCmdDrawMeshTasksNV vkCmdDrawMeshTasksNV;
 
 		PFN_vkCmdDrawMeshTasksIndirectNV vkCmdDrawMeshTasksIndirectNV;
@@ -89,6 +91,7 @@ namespace Crimson
 		friend class VulkanSurfaceContext;
 		friend class VulkanRenderPass;
 		friend class VulkanDescriptorSetLayout;
+		friend class VulkanShaderModule;
 		friend class VulkanGraphicsPipeline;
 		friend class VulkanImageObject;
 		friend class VulkanBufferObject;
@@ -122,6 +125,10 @@ namespace Crimson
 		//Descriptor Set Layout Managing
 		virtual PDescriptorSetLayout CreateDescriptorSetLayout() override;
 		void HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout);
+
+		//Shader Managing
+		virtual PShaderModule CreateShaderModule(void* data, size_t size) override;
+		void HandleDIsposedShaderModule(VulkanShaderModule* p_module);
 
 		//Pipeline Managing
 		virtual PGraphicsPipeline CreateGraphicsPipeline() override;

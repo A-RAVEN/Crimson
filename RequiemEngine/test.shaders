@@ -1,5 +1,21 @@
 #version 450
 
+PIPELINE_CONFIG
+{
+	"color_blend" : {
+		"src_factor" : ["SRC_ALPHA"],
+		"dst_factor" : ["ONE_MINUS_SRC_ALPHA"],
+		"operation" : ["ADD"]
+	},
+	"vertex_type" : ["LIGhTWEIGHT", "LIGHTWEIGHT_UNPACK"],
+	"attributes" : ["VERTEX", "TRANSFORM_ID"],
+	"set_reference" : {
+		"GLOBAL_SAMPLER_SET" : 1
+	}
+
+}
+PIPELINE_CONFIG
+
 #pragma multicompile vert frag
 
 #if VERTEX_SHADER

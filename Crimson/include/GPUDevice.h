@@ -125,6 +125,9 @@ namespace Crimson
 		//Descriptor Set Layout Managing
 		virtual PDescriptorSetLayout CreateDescriptorSetLayout() = 0;
 
+		//Shader Managing
+		virtual PShaderModule CreateShaderModule(void* data, size_t size) = 0;
+
 		//Pipeline Managing
 		virtual PGraphicsPipeline CreateGraphicsPipeline() = 0;
 

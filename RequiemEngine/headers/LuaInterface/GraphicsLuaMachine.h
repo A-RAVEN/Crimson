@@ -10,5 +10,6 @@ public:
 	void RegisterGraphicsContext(GraphicsContext* context, std::string const& context_script);
 	//void AddFunctionTable(std::string const& name, )
 private:
+	void RegisterEnums();
 	lua_State* m_VM;
 };

@@ -32,6 +32,13 @@ namespace Crimson
 		}
 	};
 
+	class ShaderModule : public IObject
+	{
+	public:
+	};
+
+	using PShaderModule = ShaderModule*;
+
 	class GraphicsPipeline : public IObject
 	{
 	public:
@@ -53,8 +60,6 @@ namespace Crimson
 		uint32_t m_TesselationPatchSize;
 		uint32_t m_MultiSampleShadingNum;
 
-		//uint32_t m_PushConstantSize = 0;
-		//ShaderTypes m_PushConstantShaderTypes = 0;
 	protected:
 		GraphicsPipeline() :
 			m_CullMode(ECullMode::E_CULL_NONE),
@@ -70,4 +75,39 @@ namespace Crimson
 
 	};
 	using PGraphicsPipeline = GraphicsPipeline*;
+
+	class GraphicsPipelineInstanciationInfo
+	{
+	public:
+		std::vector<std::pair<uint32_t, PDescriptorSetLayout>>		m_DescriptorSetLayouts;
+		std::vector<VertexInputDescriptor>		m_VertexInputs;
+		std::vector<BlendSetting>				m_ColorBlendSettings;
+		std::vector<BlendSetting>				m_AlphaBlendSettings;
+		std::vector <std::pair<EShaderType, PShaderModule>> m_Shaders;
+
+		ECullMode								m_CullMode;
+		EPolygonMode							m_PolygonMode;
+		ETopology								m_Topology;
+
+		EDepthTestRule							m_DepthRule;
+		ECompareMode							m_DepthCompareMode;
+		EStencilRule							m_StencilRule;
+
+		uint32_t m_SubpassInputAttachmentBindPoint;
+		uint32_t m_TesselationPatchSize;
+		uint32_t m_MultiSampleShadingNum;
+
+		GraphicsPipelineInstanciationInfo() :
+			m_CullMode(ECullMode::E_CULL_NONE),
+			m_PolygonMode(EPolygonMode::E_POLYGON_MODE_FILL),
+			m_Topology(ETopology::E_TOPOLOGY_TRIANGLE_LIST),
+			m_DepthRule(EDepthTestRule::E_DEPTH_TEST_DISABLED),
+			m_DepthCompareMode(ECompareMode::E_COMPARE_MODE_LESS),
+			m_StencilRule(EStencilRule::E_STENCIL_DISABLED),
+			m_SubpassInputAttachmentBindPoint(0),
+			m_TesselationPatchSize(0),
+			m_MultiSampleShadingNum(0)
+		{}
+	protected:
+	};
 }
