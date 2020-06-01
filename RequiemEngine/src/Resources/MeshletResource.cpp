@@ -134,12 +134,14 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 
 		std::vector<EBufferUsage> vertex_buffer_usages = { EBufferUsage::E_BUFFER_USAGE_VERTEX, EBufferUsage::E_BUFFER_USAGE_STORAGE };
 
-		std::vector<EBufferUsage> meshlet_vert_indices_usages = { EBufferUsage::E_BUFFER_USAGE_STORAGE };
-		std::vector<EBufferUsage> meshlet_prim_indices_usages = { EBufferUsage::E_BUFFER_USAGE_STORAGE };
+		std::vector<EBufferUsage> meshlet_vert_indices_usages = { EBufferUsage::E_BUFFER_USAGE_STORAGE_TEXEL };
+		std::vector<EBufferUsage> meshlet_prim_indices_usages = { EBufferUsage::E_BUFFER_USAGE_STORAGE_TEXEL };
 
 		m_VertexBuffer = main_device->CreateBuffer(vertex_size, vertex_buffer_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 		m_MeshletVertexIndexBuffer = main_device->CreateBuffer(meshlet_vertex_id_size, meshlet_vert_indices_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+		m_MeshletVertexIndexBuffer->InitTexelBufferView("default", EFormat::E_FORMAT_R32_UINT);
 		m_MeshletPrimitiveIndexBuffer = main_device->CreateBuffer(meshlet_prim_id_size, meshlet_prim_indices_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+		m_MeshletPrimitiveIndexBuffer->InitTexelBufferView("default", EFormat::E_FORMAT_R8_UINT);
 
 		memcpy_s(m_VertexBuffer->GetMappedPointer(), vertex_size, vertices.data(), vertex_size);
 		memcpy_s(m_MeshletVertexIndexBuffer->GetMappedPointer(), meshlet_vertex_id_size, meshlet_vertices.data(), meshlet_vertex_id_size);

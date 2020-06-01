@@ -506,7 +506,7 @@ namespace Crimson
 	}
 	void VulkanGPUDevice::InitDescriptorPool()
 	{
-		std::vector<VkDescriptorPoolSize> pool_sizes(6);
+		std::vector<VkDescriptorPoolSize> pool_sizes(8);
 		// Uniform Buffer Max Size
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		pool_sizes[0].descriptorCount = 5000;
@@ -525,6 +525,12 @@ namespace Crimson
 		// Acceleration Structure Max Size
 		pool_sizes[5].type = VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV;
 		pool_sizes[5].descriptorCount = 100;
+		// Uniform Texel Buffer Max Size
+		pool_sizes[6].type = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+		pool_sizes[6].descriptorCount = 100;
+		// Storage Texel Buffer Max Size
+		pool_sizes[7].type = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+		pool_sizes[7].descriptorCount = 100;
 		VkDescriptorPoolCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		create_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;

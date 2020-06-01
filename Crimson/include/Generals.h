@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <memory>
 #include <vector>
+#include <string>
 
 namespace Crimson
 {
@@ -140,6 +141,8 @@ namespace Crimson
 		E_BUFFER_USAGE_UNIFORM,
 		E_BUFFER_USAGE_STORAGE,
 		E_BUFFER_USAGE_INDIRECT_DRAW,
+		E_BUFFER_USAGE_UNIFORM_TEXEL,
+		E_BUFFER_USAGE_STORAGE_TEXEL,
 		E_BUFFER_USAGE_RAYTRACING_NV,
 		E_BUFFER_USAGE_MAX,
 	};
@@ -262,6 +265,7 @@ namespace Crimson
 		virtual uint8_t* GetMappedPointer() = 0;
 		virtual void UnMapp() = 0;
 		uint64_t GetSize() const { return m_BufferSize; }
+		virtual void InitTexelBufferView(std::string const& name, EFormat format, uint64_t offset = 0, uint64_t range = 0) = 0;
 	protected:
 		IGPUBuffer() : m_BufferSize(0), m_MemoryType(EMemoryType::E_MEMORY_TYPE_MAX), m_BufferUsages(0){}
 		virtual ~IGPUBuffer() {}

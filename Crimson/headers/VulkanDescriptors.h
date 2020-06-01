@@ -29,6 +29,7 @@ namespace Crimson
 		//	PGPUBuffer buffer, uint64_t buffer_offset, uint64_t write_size) override;
 		virtual void WriteDescriptorSetBuffers(uint32_t binding_point,
 			std::vector<PGPUBuffer> const& buffers, std::vector<BufferRange> const& buffer_ranges, uint32_t start_array_id) override;
+		virtual void WriteDescriptorSetTexelBufferView(uint32_t binding_point, PGPUBuffer buffer, std::string const& view_name, uint32_t array_id) override;
 		virtual void WriteDescriptorSetImage(uint32_t binding_point,
 			PGPUImage image, EFilterMode filter_mode, EAddrMode addr_mode, EViewAsType view_as = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t array_id = 0) override;
 		virtual void WriteDescriptorSetAccelStructuresNV(uint32_t binding_point,
@@ -42,6 +43,7 @@ namespace Crimson
 		VulkanDescriptorSetLayout* p_OwningSetLayout;
 		VkDescriptorSet		m_DescriptorSet;
 		std::deque<std::vector<VkDescriptorBufferInfo>> m_BufferWriteInfoCache;
+		std::deque<VkBufferView> m_WritingBufferViews;
 		std::deque<VkDescriptorImageInfo> m_ImageWriteInfo;
 		std::deque<std::vector<VkAccelerationStructureNV>> m_AccelStructureListCache;
 		std::deque<VkWriteDescriptorSetAccelerationStructureNV> m_AccelStructWriteInfoCache;

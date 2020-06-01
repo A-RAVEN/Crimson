@@ -128,8 +128,11 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	test_renderpass->m_Subpasses[0].m_DepthStencilAttachment = 2;
 	test_renderpass->BuildRenderPass();
 
+	PGPUBuffer test_texel_buffer = MainDevice->CreateBuffer(24, { EBufferUsage::E_BUFFER_USAGE_STORAGE_TEXEL }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+	test_texel_buffer->InitTexelBufferView("default", EFormat::E_FORMAT_R32_UINT);
+
 	m_SetLayout = MainDevice->CreateDescriptorSetLayout();
-	m_SetLayout->m_Bindings.resize(2);
+	m_SetLayout->m_Bindings.resize(3);
 	m_SetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_SetLayout->m_Bindings[0].m_Num = 1;
 	m_SetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
@@ -139,10 +142,15 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_SetLayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
 	m_SetLayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
 
+	m_SetLayout->m_Bindings[2].m_BindingPoint = 2;
+	m_SetLayout->m_Bindings[2].m_Num = 1;
+	m_SetLayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
+	m_SetLayout->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX };
 
 
 	m_Set = m_SetLayout->AllocDescriptorSet();
 	m_Set->WriteDescriptorSetBuffers(0, { m_CameraBuffer }, { {0, sizeof(glm::mat4)} }, 0);
+	m_Set->WriteDescriptorSetTexelBufferView(2, test_texel_buffer, "default", 0);
 	m_Set->EndWriteDescriptorSet();
 
 	m_Pipeline = MainDevice->CreateGraphicsPipeline();

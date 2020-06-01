@@ -133,7 +133,7 @@ int main()
 
 	MeshletGroupResource new_meshlet;
 	new_meshlet.LoadMeshRaw(bunnymesh);
-	
+	 
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
 	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, new_resource.GetVertexStride(), EDataType::EVEC3);

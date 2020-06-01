@@ -17,6 +17,8 @@ namespace Crimson
 
 		VulkanBufferObject();
 		void SetVulkanBuffer(VulkanGPUDevice* p_device, VkBuffer buffer, VmaAllocation allocation_info, uint64_t size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type);
+		VkBufferView GetVulkanBufferView(std::string const& name);
+		virtual void InitTexelBufferView(std::string const& name, EFormat format, uint64_t offset, uint64_t range) override;
 		virtual void Dispose() override;
 		virtual uint8_t* GetMappedPointer() override;
 		virtual void UnMapp() override;
@@ -28,5 +30,7 @@ namespace Crimson
 		VmaAllocation		m_Allocation;
 		uint32_t			m_CurrentQueueFamily;
 		uint8_t*			p_Mapped;
+
+		std::map<std::string, VkBufferView> m_BufferViews;
 	};
 }

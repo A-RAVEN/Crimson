@@ -3,6 +3,7 @@
 #include <headers/VulkanTranslator.h>
 #include <headers/VulkanBuffer.h>
 #include <headers/VulkanAccelerationStructure.h>
+#include <headers/GeneralDebug.h>
 
 namespace Crimson
 {
@@ -41,6 +42,23 @@ namespace Crimson
 		new_write.dstBinding = binding_point;
 		new_write.dstSet = m_DescriptorSet;
 		new_write.pBufferInfo = new_buffer_infos.data();
+		m_WriteCache.push_back(new_write);
+	}
+	void VulkanDescriptorSet::WriteDescriptorSetTexelBufferView(uint32_t binding_point, PGPUBuffer buffer, std::string const& view_name, uint32_t array_id)
+	{
+		VulkanBufferObject* vulkan_buffer = static_cast<VulkanBufferObject*>(buffer);
+		VkBufferView buffer_view = vulkan_buffer->GetVulkanBufferView(view_name);
+		CRIM_ASSERT_AND_RETURN_VOID(buffer_view != nullptr, "Unfounded Buffer View With Name " + view_name);
+		m_WritingBufferViews.push_back(buffer_view);
+		VkWriteDescriptorSet new_write{};
+		new_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		new_write.descriptorCount = 1;
+			//TODO: Change To Translation Function
+		new_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+		new_write.dstArrayElement = array_id;
+		new_write.dstBinding = binding_point;
+		new_write.dstSet = m_DescriptorSet;
+		new_write.pTexelBufferView = &m_WritingBufferViews.back();
 		m_WriteCache.push_back(new_write);
 	}
 	void VulkanDescriptorSet::WriteDescriptorSetImage(uint32_t binding_point, PGPUImage image, EFilterMode filter_mode, EAddrMode addr_mode, EViewAsType view_as, uint32_t array_id)
@@ -94,6 +112,7 @@ namespace Crimson
 		vkUpdateDescriptorSets(p_OwningDevice->m_LogicalDevice, m_WriteCache.size(), m_WriteCache.data(), 0, nullptr);
 		m_WriteCache.clear();
 		m_BufferWriteInfoCache.clear();
+		m_WritingBufferViews.clear();
 		m_ImageWriteInfo.clear();
 		m_AccelStructWriteInfoCache.clear();
 		m_AccelStructureListCache.clear();
