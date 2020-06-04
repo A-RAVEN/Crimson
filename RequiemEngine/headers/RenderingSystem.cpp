@@ -274,6 +274,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_ShaderTable = MainDevice->CreateBuffer(m_RayTracer->GetShaderTableSize("default"), { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	m_RayTracer->CopyShaderTable(m_ShaderTable->GetMappedPointer(), "default");
 
+	SetupMeshletPipeline(MainDevice);
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
 	test_framebuffer->m_Images = { m_Color, m_Normal, test_depth_stencil };
@@ -329,6 +330,18 @@ void RenderingSystem::SetupSystem()
 void RenderingSystem::UnInstallSystem()
 {
 
+}
+
+void RenderingSystem::SetupMeshletPipeline(PGPUDevice device)
+{
+	m_MeshletPipeline = device->CreateGraphicsPipeline();
+	ShaderProcessor processor;
+	CompileResult results = processor.MultiCompile("test_mesh.shaders");
+	for (auto& itr : results)
+	{
+		std::cout << static_cast<int>(itr.first) << std::endl;
+		m_MeshletPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
+	}
 }
 
 void RenderingSystem::PushBackNewFrame(GraphicsFrame &frame)

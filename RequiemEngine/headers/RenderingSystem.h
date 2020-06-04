@@ -32,6 +32,7 @@ public:
 	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue);
 	void SetupSystem();
 	void UnInstallSystem();
+	void SetupMeshletPipeline(PGPUDevice device);
 	void PushBackNewFrame(GraphicsFrame &frame);
 	TransformManager m_TransformManager;
 	std::unordered_map<MeshResource*, MeshInstanceQueue> m_Instances;
@@ -56,6 +57,7 @@ private:
 	PDescriptorSetLayout m_SetLayout;
 	PDescriptorSet m_Set;
 	PGraphicsPipeline m_Pipeline;
+	PGraphicsPipeline m_MeshletPipeline;
 	PRenderPassInstance m_RenderPassInstance;
 	PExecutionCommandBuffer m_ExecutionCmd;
 	PExecutionCommandBuffer m_PresentCmd;

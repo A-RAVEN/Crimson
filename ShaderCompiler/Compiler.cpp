@@ -39,6 +39,8 @@ namespace ShaderCompiler
 	public:
 		Compiler_Impl()
 		{
+			m_Options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+			m_Options.SetTargetSpirv(shaderc_spirv_version_1_3);
 			m_Options.SetIncluder(std::unique_ptr<shaderc::CompileOptions::IncluderInterface>(&m_Includer));
 		}
 		~Compiler_Impl()
