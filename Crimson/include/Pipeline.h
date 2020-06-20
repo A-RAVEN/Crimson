@@ -37,6 +37,16 @@ namespace Crimson
 	public:
 	};
 
+	class PushConstantRange
+	{
+	public:
+		std::vector<EShaderType> m_ShaderTypes;
+		uint64_t m_Offset;
+		uint64_t m_Size;
+		PushConstantRange() : m_Offset(0), m_Size(0) {}
+		PushConstantRange(std::vector<EShaderType> const& shader_type, uint64_t offset, uint64_t size) : m_ShaderTypes(shader_type), m_Offset(offset), m_Size(size) {}
+	};
+
 	using PShaderModule = ShaderModule*;
 
 	class GraphicsPipeline : public IObject
@@ -47,6 +57,7 @@ namespace Crimson
 		std::vector<VertexInputDescriptor>		m_VertexInputs;
 		std::vector<BlendSetting>				m_ColorBlendSettings;
 		std::vector<BlendSetting>				m_AlphaBlendSettings;
+		std::vector<PushConstantRange>			m_PushConstants;
 
 		ECullMode								m_CullMode;
 		EPolygonMode							m_PolygonMode;

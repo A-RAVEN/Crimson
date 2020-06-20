@@ -9,6 +9,7 @@
 #include <mutex>
 #include <headers/TimeManager.h>
 #include <headers/Containers/ReaderWriterQueue/readerwriterqueue.h>
+#include  <headers/Resources/MeshletResource.h>
 
 using namespace Crimson;
 class RenderingSystem;
@@ -29,10 +30,10 @@ class RenderingSystem : public ThreadJob
 {
 public:
 	virtual void Work(ThreadWorker const* this_worker) override;
-	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue);
+	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue, MeshletGroupResource* p_meshlets);
 	void SetupSystem();
 	void UnInstallSystem();
-	void SetupMeshletPipeline(PGPUDevice device);
+	void SetupMeshletPipeline(PGPUDevice device, MeshletGroupResource *meshlet, PRenderPass renderpass);
 	void PushBackNewFrame(GraphicsFrame &frame);
 	TransformManager m_TransformManager;
 	std::unordered_map<MeshResource*, MeshInstanceQueue> m_Instances;
@@ -57,6 +58,8 @@ private:
 	PDescriptorSetLayout m_SetLayout;
 	PDescriptorSet m_Set;
 	PGraphicsPipeline m_Pipeline;
+	PDescriptorSetLayout m_MeshletSetLayout;
+	PDescriptorSet m_MeshletSet;
 	PGraphicsPipeline m_MeshletPipeline;
 	PRenderPassInstance m_RenderPassInstance;
 	PExecutionCommandBuffer m_ExecutionCmd;
@@ -71,4 +74,7 @@ private:
 	PGPUBuffer m_ShaderTable;
 	PGPUImage m_RTColor;
 	PGPUImage m_RTColorOld;
+
+	MeshletGroupResource* p_MeshletMesh;
+	PGPUBuffer MeshletTransform;
 };

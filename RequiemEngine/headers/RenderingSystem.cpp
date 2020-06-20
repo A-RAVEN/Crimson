@@ -12,6 +12,7 @@
 #include <headers/ShaderProcessor.h>
 #include <headers/VertexData.h>
 #include <headers/stb_image.h>
+#include <glm/glm.hpp>
 
 void RenderingSystem::Work(ThreadWorker const* this_worker)
 {
@@ -49,6 +50,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 						m_TransformManager.ExtendBufferPages(itr.m_BatchId);
 					}
 				}
+
 				for (auto& update : new_frame.m_TransoformUpdateInfo)
 				{
 					m_TransformManager.GetData(update.m_BatchId, update.m_TransformId)->m_ModelTransform = update.m_Matrix;
@@ -62,6 +64,8 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 					cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
 					cmd->Sissor(0, 0, 1024, 720);
 					cmd->BindSubpassPipeline(m_Pipeline);
+					vec3 testColor(1.0f, 0.0f, 1.0f);
+					cmd->PushConstants({ EShaderType::E_SHADER_TYPE_FRAGMENT }, 0, sizeof(vec3), &testColor);
 					cmd->BindSubpassDescriptorSets({ m_Set });
 					for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
 					{
@@ -71,6 +75,10 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 							pair.second.CmdDrawInstances(cmd, i);
 						}
 					}
+
+					cmd->BindSubpassPipeline(m_MeshletPipeline);
+					cmd->BindSubpassDescriptorSets({ m_Set });
+					cmd->DrawMeshShading(p_MeshletMesh->m_MeshletSize, 0);
 					cmd->EndCommandBuffer();
 
 					m_ExecutionCmd->StartCommand();
@@ -80,7 +88,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 					m_ExecutionCmd->BindRayTracer(m_RayTracer);
 					m_ExecutionCmd->BindRayTracingDescriptorSet({ m_TransformManager.GetSet(0) }, 1);
 					m_ExecutionCmd->BindRayTracingDescriptorSet(m_RtSet, 0);
-					m_ExecutionCmd->StartRayTracing(m_ShaderTable, 0, 2, 1, 1024 / 2, 720 / 2);
+					m_ExecutionCmd->StartRayTracing(m_ShaderTable, 0, 2, 1, 1024, 720);
 					m_ExecutionCmd->EndCommand();
 				}
 			}
@@ -92,6 +100,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Normal, p_Window);
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
 		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
+		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
 		m_PresentCmd->EndCommand();
 		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
 
@@ -101,9 +110,13 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 	}
 }
 
-RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue) : p_Window(window), m_AverageDeltaTime(0.0016f)
+RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue, MeshletGroupResource* p_meshlets) : p_Window(window), m_AverageDeltaTime(0.0016f), p_MeshletMesh(p_meshlets)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
+
+	MeshletTransform = MainDevice->CreateBuffer(sizeof(mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+
+
 	m_TransformManager.ExtendBufferPages(0);
 
 	m_CameraBuffer = MainDevice->CreateBuffer(sizeof(Camera), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
@@ -113,8 +126,8 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	//memcpy(camera_buffer->GetMappedPointer(), &cam, sizeof(Camera));
 
 	m_Color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	m_RTColorOld = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024 / 2, 720 / 2, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
-	m_RTColor = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024 / 2, 720 / 2, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	m_RTColorOld = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	m_RTColor = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D32_SFLOAT_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_Normal = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
@@ -175,6 +188,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_Pipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
 	m_Pipeline->m_DescriptorSetLayouts.push_back({ 0, m_SetLayout });
 	m_Pipeline->m_DescriptorSetLayouts.push_back({ 1, m_TransformManager.GetSetLayout() });
+	m_Pipeline->m_PushConstants.push_back({{EShaderType::E_SHADER_TYPE_FRAGMENT}, 0, sizeof(vec3) });
 	test_renderpass->InstanciatePipeline(m_Pipeline, 0);
 
 
@@ -274,7 +288,7 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 	m_ShaderTable = MainDevice->CreateBuffer(m_RayTracer->GetShaderTableSize("default"), { EBufferUsage::E_BUFFER_USAGE_RAYTRACING_NV }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 	m_RayTracer->CopyShaderTable(m_ShaderTable->GetMappedPointer(), "default");
 
-	SetupMeshletPipeline(MainDevice);
+	SetupMeshletPipeline(MainDevice, p_MeshletMesh, test_renderpass);
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
 	test_framebuffer->m_Images = { m_Color, m_Normal, test_depth_stencil };
@@ -332,8 +346,44 @@ void RenderingSystem::UnInstallSystem()
 
 }
 
-void RenderingSystem::SetupMeshletPipeline(PGPUDevice device)
+void RenderingSystem::SetupMeshletPipeline(PGPUDevice device, MeshletGroupResource* meshlet, PRenderPass renderpass)
 {
+	m_MeshletSetLayout = device->CreateDescriptorSetLayout();
+	m_MeshletSetLayout->m_Bindings.resize(5);
+	m_MeshletSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	m_MeshletSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	m_MeshletSetLayout->m_Bindings[0].m_BindingPoint = 0;
+	m_MeshletSetLayout->m_Bindings[0].m_Num = 1;
+
+	m_MeshletSetLayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_TEXEL_BUFFER;
+	m_MeshletSetLayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	m_MeshletSetLayout->m_Bindings[1].m_BindingPoint = 1;
+	m_MeshletSetLayout->m_Bindings[1].m_Num = 1;
+
+	m_MeshletSetLayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_TEXEL_BUFFER;
+	m_MeshletSetLayout->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	m_MeshletSetLayout->m_Bindings[2].m_BindingPoint = 2;
+	m_MeshletSetLayout->m_Bindings[2].m_Num = 1;
+
+	m_MeshletSetLayout->m_Bindings[3].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_TEXEL_BUFFER;
+	m_MeshletSetLayout->m_Bindings[3].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	m_MeshletSetLayout->m_Bindings[3].m_BindingPoint = 3;
+	m_MeshletSetLayout->m_Bindings[3].m_Num = 1;
+
+	m_MeshletSetLayout->m_Bindings[4].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
+	m_MeshletSetLayout->m_Bindings[4].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	m_MeshletSetLayout->m_Bindings[4].m_BindingPoint = 4;
+	m_MeshletSetLayout->m_Bindings[4].m_Num = 1;
+	m_MeshletSetLayout->BuildLayout();
+
+	m_MeshletSet = m_MeshletSetLayout->AllocDescriptorSet();
+	m_MeshletSet->WriteDescriptorSetBuffers(0, { m_CameraBuffer }, { m_CameraBuffer->GetRange() }, 0);
+	m_MeshletSet->WriteDescriptorSetTexelBufferView(1, meshlet->m_MeshletVertexIndexBuffer, "default", 0);
+	m_MeshletSet->WriteDescriptorSetTexelBufferView(2, meshlet->m_MeshletPrimitiveIndexBuffer, "default", 0);
+	m_MeshletSet->WriteDescriptorSetTexelBufferView(3, meshlet->m_VertexBuffer, "default", 0);
+	m_MeshletSet->WriteDescriptorSetBuffers(4, { meshlet->m_MeshletDescriptorBuffer }, { meshlet->m_MeshletDescriptorBuffer->GetRange() }, 0);
+	m_MeshletSet->EndWriteDescriptorSet();
+
 	m_MeshletPipeline = device->CreateGraphicsPipeline();
 	ShaderProcessor processor;
 	CompileResult results = processor.MultiCompile("test_mesh.shaders");
@@ -342,6 +392,23 @@ void RenderingSystem::SetupMeshletPipeline(PGPUDevice device)
 		std::cout << static_cast<int>(itr.first) << std::endl;
 		m_MeshletPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
 	}
+
+	results = processor.MultiCompile("testmesh.mesh");
+	for (auto& itr : results)
+	{
+		std::cout << static_cast<int>(itr.first) << std::endl;
+		m_MeshletPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
+	}
+
+	m_MeshletPipeline->m_DescriptorSetLayouts = {std::make_pair(0, m_MeshletSetLayout) };
+	m_MeshletPipeline->m_PushConstants.resize(1);
+	m_MeshletPipeline->m_PushConstants[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	m_MeshletPipeline->m_PushConstants[0].m_Offset = 0;
+	m_MeshletPipeline->m_PushConstants[0].m_Size = sizeof(mat4);
+	m_MeshletPipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
+	m_MeshletPipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
+
+	renderpass->InstanciatePipeline(m_MeshletPipeline, 0);
 }
 
 void RenderingSystem::PushBackNewFrame(GraphicsFrame &frame)

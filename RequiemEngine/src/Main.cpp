@@ -182,7 +182,7 @@ int main()
 		instances.push_back(bunny);
 	}
 
-	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue);
+	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue, &new_meshlet);
 
 
 	glm::vec2 angles(0.0f);

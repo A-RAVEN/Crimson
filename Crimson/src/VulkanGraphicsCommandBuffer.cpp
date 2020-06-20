@@ -4,6 +4,7 @@
 #include <headers/VulkanBuffer.h>
 #include <headers/VulkanRenderPassInstance.h>
 #include <headers/VulkanDebugLog.h>
+#include <headers/VulkanTranslator.h>
 
 namespace Crimson
 {
@@ -54,6 +55,16 @@ namespace Crimson
 			p_ReferencingDescriptorSets.push_back(p_vulkan_desc_set);
 		}
 		vkCmdBindDescriptorSets(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_CurrentPipelineLayout, start_set, descriptor_sets.size(), sets.data(), 0, nullptr);
+	}
+	void VulkanGraphicsCommandBuffer::PushConstants(std::vector<EShaderType> const& shader_stages, uint32_t offset, uint32_t size, void const* p_data)
+	{
+		CRIM_ASSERT(m_CurrentPipelineLayout != VK_NULL_HANDLE, "Vulkan Graphics Command Buffer Pushing Constants Issue, Invalid Pipeline Layout!");
+		VkShaderStageFlags stage_flags = 0;
+		for (auto shader_type : shader_stages)
+		{
+			stage_flags |= TranslateShaderTypeToVulkan(shader_type);
+		}
+		vkCmdPushConstants(m_CommandBuffer, m_CurrentPipelineLayout, stage_flags, offset, size, p_data);
 	}
 	void VulkanGraphicsCommandBuffer::ViewPort(float x, float y, float width, float height)
 	{

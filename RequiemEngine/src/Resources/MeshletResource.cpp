@@ -4,7 +4,7 @@
 
 void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 {
-	std::vector<VertexDataLightWeight> vertices;
+	std::vector<VertexDataLightWeightUnpacked> vertices;
 	std::vector<uint32_t> indicies;
 	std::vector<vec3> positions;
 	std::vector<uint32_t> meshlet_vertices;
@@ -16,7 +16,7 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 		const aiMesh* pmesh = scene->mMeshes[imesh];
 		for (uint64_t ivertex = 0; ivertex < pmesh->mNumVertices; ++ivertex)
 		{
-			VertexDataLightWeight new_vertex{};
+			VertexDataLightWeightUnpacked new_vertex{};
 			new_vertex.m_Position = vec3(pmesh->mVertices[ivertex].x, pmesh->mVertices[ivertex].y, pmesh->mVertices[ivertex].z);
 			vec3 i_normal = vec3(pmesh->mNormals[ivertex].x, pmesh->mNormals[ivertex].y, pmesh->mNormals[ivertex].z);
 			new_vertex.m_Normal = vec3(pmesh->mNormals[ivertex].x, pmesh->mNormals[ivertex].y, pmesh->mNormals[ivertex].z);
@@ -119,6 +119,7 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 		}
 	}
 
+	m_MeshletSize = meshlet_descs.size();
 	m_VertexSize = positions.size();
 	m_IndexSize = indicies.size();
 	m_VertexStride = sizeof(VertexDataLightWeight);
@@ -131,23 +132,28 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 		size_t vertex_size = vertices.size() * sizeof(VertexDataLightWeight);
 		size_t meshlet_vertex_id_size = meshlet_vertices.size() * sizeof(uint32_t);
 		size_t meshlet_prim_id_size = primitives.size() * sizeof(uint8_t);
+		size_t meshlet_desc_size = m_MeshletSize * sizeof(MeshletDescriptor);
 
-		std::vector<EBufferUsage> vertex_buffer_usages = { EBufferUsage::E_BUFFER_USAGE_VERTEX, EBufferUsage::E_BUFFER_USAGE_STORAGE };
+		std::vector<EBufferUsage> vertex_buffer_usages = { EBufferUsage::E_BUFFER_USAGE_VERTEX, EBufferUsage::E_BUFFER_USAGE_STORAGE, EBufferUsage::E_BUFFER_USAGE_STORAGE_TEXEL };
 
 		std::vector<EBufferUsage> meshlet_vert_indices_usages = { EBufferUsage::E_BUFFER_USAGE_STORAGE_TEXEL };
 		std::vector<EBufferUsage> meshlet_prim_indices_usages = { EBufferUsage::E_BUFFER_USAGE_STORAGE_TEXEL };
 
-		m_VertexBuffer = main_device->CreateBuffer(vertex_size, vertex_buffer_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+		m_VertexBuffer = main_device->CreateBuffer(vertex_size, vertex_buffer_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE); 
+		m_VertexBuffer->InitTexelBufferView("default", EFormat::E_FORMAT_R32G32B32A32_SFLOAT);
 		m_MeshletVertexIndexBuffer = main_device->CreateBuffer(meshlet_vertex_id_size, meshlet_vert_indices_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 		m_MeshletVertexIndexBuffer->InitTexelBufferView("default", EFormat::E_FORMAT_R32_UINT);
 		m_MeshletPrimitiveIndexBuffer = main_device->CreateBuffer(meshlet_prim_id_size, meshlet_prim_indices_usages, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 		m_MeshletPrimitiveIndexBuffer->InitTexelBufferView("default", EFormat::E_FORMAT_R8_UINT);
+		m_MeshletDescriptorBuffer = main_device->CreateBuffer(meshlet_desc_size, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
 		memcpy_s(m_VertexBuffer->GetMappedPointer(), vertex_size, vertices.data(), vertex_size);
 		memcpy_s(m_MeshletVertexIndexBuffer->GetMappedPointer(), meshlet_vertex_id_size, meshlet_vertices.data(), meshlet_vertex_id_size);
 		memcpy_s(m_MeshletPrimitiveIndexBuffer->GetMappedPointer(), meshlet_prim_id_size, primitives.data(), meshlet_prim_id_size);
+		memcpy_s(m_MeshletDescriptorBuffer->GetMappedPointer(), meshlet_desc_size, meshlet_descs.data(), meshlet_desc_size);
 		m_VertexBuffer->UnMapp();
 		m_MeshletVertexIndexBuffer->UnMapp();
 		m_MeshletPrimitiveIndexBuffer->UnMapp();
+		m_MeshletDescriptorBuffer->UnMapp();
 	}
 }

@@ -266,6 +266,7 @@ namespace Crimson
 		virtual void UnMapp() = 0;
 		uint64_t GetSize() const { return m_BufferSize; }
 		virtual void InitTexelBufferView(std::string const& name, EFormat format, uint64_t offset = 0, uint64_t range = 0) = 0;
+		BufferRange GetRange() { return { 0, m_BufferSize }; }
 	protected:
 		IGPUBuffer() : m_BufferSize(0), m_MemoryType(EMemoryType::E_MEMORY_TYPE_MAX), m_BufferUsages(0){}
 		virtual ~IGPUBuffer() {}

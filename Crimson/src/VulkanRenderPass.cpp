@@ -710,8 +710,19 @@ namespace Crimson
 		pipelineLayoutInfo.pSetLayouts = pipelineLayoutInfo.setLayoutCount > 0 ? set_layouts.data() : nullptr;
 
 		VkPushConstantRange push_constant_range{};
-		pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-		pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+		pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(vulkan_pipeline->m_PushConstants.size()); // Optional
+		std::vector<VkPushConstantRange> ranges(pipelineLayoutInfo.pushConstantRangeCount);
+		for (uint32_t i = 0; i < pipelineLayoutInfo.pushConstantRangeCount; ++i)
+		{
+			ranges[i].stageFlags = 0;
+			for (auto typeflag : vulkan_pipeline->m_PushConstants[i].m_ShaderTypes)
+			{
+				ranges[i].stageFlags |= TranslateShaderTypeToVulkan(typeflag);
+			}
+			ranges[i].offset = vulkan_pipeline->m_PushConstants[i].m_Offset;
+			ranges[i].size = vulkan_pipeline->m_PushConstants[i].m_Size;
+		}
+		pipelineLayoutInfo.pPushConstantRanges = pipelineLayoutInfo.pushConstantRangeCount > 0 ? ranges.data() : nullptr; // Optional
 		CHECK_VKRESULT(vkCreatePipelineLayout(p_OwningDevice->m_LogicalDevice, &pipelineLayoutInfo, nullptr, &new_pipeline_layout), "Vulkan Pipeline Layout Creation Issue!");
 
 

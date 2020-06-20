@@ -18,11 +18,12 @@ class MeshletGroupResource
 public:
 	void LoadMeshRaw(const aiScene* scene);
 
-private:
     PGPUBuffer m_VertexBuffer;
     PGPUBuffer m_MeshletDescriptorBuffer;
     PGPUBuffer m_MeshletVertexIndexBuffer;//index of vertex used by each meshlet
     PGPUBuffer m_MeshletPrimitiveIndexBuffer;//local triangle indicies of each meshlet
+
+    uint32_t m_MeshletSize;
 
     uint32_t m_VertexSize;
     uint32_t m_IndexSize;
