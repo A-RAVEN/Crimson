@@ -43,22 +43,26 @@ namespace Crimson
 
 	VulkanInstance::VulkanInstance(bool enable_debug_extension) : m_DebugReportCallBack(VK_NULL_HANDLE)
 	{
-		std::vector<char const*> instance_extension_names = GetFilteredInstanceExtensions(
+		std::vector<char const*> instance_extension_names =
 		{
 			VK_KHR_SURFACE_EXTENSION_NAME,
 			CURRENT_VULKAN_SURFACE_EXTENSION_NAME,
 
 			VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
-		});
+		};
 
 		if (enable_debug_extension)
 		{
 			instance_extension_names.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+			instance_extension_names.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
+
+		instance_extension_names = GetFilteredInstanceExtensions(instance_extension_names);
 
 		std::array<char const*, 1> instance_validation_names =
 		{
-			"VK_LAYER_LUNARG_standard_validation"
+			//"VK_LAYER_LUNARG_standard_validation"
+			"VK_LAYER_KHRONOS_validation"
 		};
 
 		//Create application info
@@ -146,19 +150,45 @@ namespace Crimson
 		extensions.resize(extension_num);
 		vkEnumerateInstanceExtensionProperties(nullptr, &extension_num, extensions.data());
 
-		VkDebugReportCallbackCreateInfoEXT callback_createInfo = {};
-		callback_createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-		callback_createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_INFORMATION_BIT_EXT;
-		callback_createInfo.pfnCallback = VulkanDebug::VulkanDebugCallback;
+		// (legacy) debug report callback
+		{
+			VkDebugReportCallbackCreateInfoEXT callback_createInfo = {};
+			callback_createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+			callback_createInfo.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+			callback_createInfo.pfnCallback = VulkanDebug::VulkanDebugCallback;
 
-		auto p_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_VulkanInstance, "vkCreateDebugReportCallbackEXT");
-		if (p_vkCreateDebugReportCallbackEXT != nullptr)
-		{
-			CHECK_VKRESULT(p_vkCreateDebugReportCallbackEXT(m_VulkanInstance, &callback_createInfo, VULKAN_ALLOCATOR_POINTER, &m_DebugReportCallBack), "Vulkan Debug Callback Creation Failed!");
+			auto p_vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_VulkanInstance, "vkCreateDebugReportCallbackEXT");
+			if (p_vkCreateDebugReportCallbackEXT != nullptr)
+			{
+				CHECK_VKRESULT(p_vkCreateDebugReportCallbackEXT(m_VulkanInstance, &callback_createInfo, VULKAN_ALLOCATOR_POINTER, &m_DebugReportCallBack), "Vulkan Debug Callback Creation Failed!");
+			}
+			else
+			{
+				//TODO: Report Error
+			}
 		}
-		else
+
+		// (new) debug util messenger
 		{
-			//TODO: Report Error
+			VkDebugUtilsMessengerCreateInfoEXT messenger_createInfo = {};
+			messenger_createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+			messenger_createInfo.flags = 0;
+			messenger_createInfo.messageSeverity =
+				VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+				VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+			messenger_createInfo.messageType =
+				VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+				VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+			messenger_createInfo.pfnUserCallback = VulkanDebug::VulkanDebugUtilCallback;
+			messenger_createInfo.pUserData = NULL;
+			auto p_vkCreateDebugUtilsMessengerEXT = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VulkanInstance, "vkCreateDebugUtilsMessengerEXT");
+			if (p_vkCreateDebugUtilsMessengerEXT != nullptr)
+			{
+				CHECK_VKRESULT(p_vkCreateDebugUtilsMessengerEXT(m_VulkanInstance, &messenger_createInfo, VULKAN_ALLOCATOR_POINTER, &m_DebugUtilsMessenger), "Vulkan Debug Util Messenger Creation Failed!");
+			}
+			else
+			{
+			}
 		}
 	}
 	void VulkanInstance::DestroyDebugCallback()
@@ -168,6 +198,14 @@ namespace Crimson
 			auto p_vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(m_VulkanInstance, "vkDestroyDebugReportCallbackEXT");
 			if (p_vkDestroyDebugReportCallbackEXT != nullptr) {
 				p_vkDestroyDebugReportCallbackEXT(m_VulkanInstance, m_DebugReportCallBack, VULKAN_ALLOCATOR_POINTER);
+			}
+		}
+
+		if (m_DebugUtilsMessenger != VK_NULL_HANDLE)
+		{
+			auto p_vkDestroyDebugUtilsMessengerEXT = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_VulkanInstance, "vkDestroyDebugUtilsMessengerEXT");
+			if (p_vkDestroyDebugUtilsMessengerEXT != nullptr) {
+				p_vkDestroyDebugUtilsMessengerEXT(m_VulkanInstance, m_DebugUtilsMessenger, VULKAN_ALLOCATOR_POINTER);
 			}
 		}
 	}

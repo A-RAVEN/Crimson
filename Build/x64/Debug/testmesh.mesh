@@ -1,0 +1,191 @@
+#version 450
+
+#pragma multicompile mesh frag
+
+#if MESH_SHADER
+
+#extension GL_NV_mesh_shader : require
+
+#extension GL_KHX_shader_explicit_arithmetic_types_int8 : enable
+#extension GL_EXT_shader_explicit_arithmetic_types_int8 : enable
+
+#extension GL_EXT_gpu_shader5 : enable
+
+layout(local_size_x = 32) in;
+layout(triangles, max_vertices = 64, max_primitives = 126) out;
+
+#define GROUP_SIZE 32
+#define VERTEX_RUN 2
+
+
+//-------------------------------------
+// transform_ub: Uniform buffer for transformations
+//
+layout (std140, binding = 0) uniform UNIFORM_CAM
+{ 
+	mat4 view;
+	mat4 proj;
+	mat4 viewInverse;
+	mat4 projInverse;
+} camera_ub;
+
+
+
+  layout(binding = 1,  set=0)  uniform usamplerBuffer meshletVertexIndicesBuffer;
+  layout(binding = 2,  set=0)  uniform usamplerBuffer primitiveIndicesBuffer;
+  layout(binding = 3,  set=0)  uniform samplerBuffer  vertexBuffer;
+
+layout (push_constant) uniform UNIFORM_TRANS
+{ 
+	mat4 modle;
+};
+
+
+//-------------------------------------
+// mbuf: storage buffer for meshlets.
+//
+
+struct MeshletDescription
+{
+  uint m_VertexCount;
+  uint m_PrimitiveCount;
+  uint m_VertexBegin;
+  uint m_PrimitiveBegin;
+};
+
+layout (std430, binding = 4) buffer readonly _meshlets
+{
+	MeshletDescription meshlets[];
+} meshletData;
+
+
+taskNV in Task {
+  uint    baseID;
+  uint8_t subIDs[GROUP_SIZE];
+} IN;
+// gl_WorkGroupID.x runs from [0 .. parentTask.gl_TaskCountNV - 1]
+uint meshletID = IN.baseID + IN.subIDs[gl_WorkGroupID.x];
+uint laneID = gl_LocalInvocationID.x;
+
+
+// Mesh shader output block.
+//
+layout (location = 0) out PerVertexData
+{
+  vec4 out_normals;
+  vec3 out_color;
+} v_out[];   // [max_vertices]
+
+
+
+
+// Color table for drawing each meshlet with a different color.
+//
+#define MAX_COLORS 10
+vec3 meshletcolors[MAX_COLORS] = {
+  vec3(1,0,0), 
+  vec3(0,1,0),
+  vec3(0,0,1),
+  vec3(1,1,0),
+  vec3(1,0,1),
+  vec3(0,1,1),
+  vec3(1,0.5,0),
+  vec3(0.5,1,0),
+  vec3(0,0.5,1),
+  vec3(1,1,1)
+  };
+
+
+void decodeMeshlet(in MeshletDescription desc, out uint vertCount, out uint primCount, out uint vertBegin, out uint primBegin)
+{
+  vertCount = desc.m_VertexCount;
+  primCount = desc.m_PrimitiveCount;
+  vertBegin = desc.m_VertexBegin;
+  primBegin = desc.m_PrimitiveBegin;
+}
+
+void procVert(uint vert, uint vidx)
+{
+  uint offsetId = vidx * 4;
+  vec4 raw0 = texelFetch(vertexBuffer, int(offsetId)).xyzw;
+  vec4 raw1 = texelFetch(vertexBuffer, int(offsetId + 1)).xyzw;
+  vec4 raw2 = texelFetch(vertexBuffer, int(offsetId + 2)).xyzw;
+
+  vec3 pos = raw0.xyz;
+  vec3 normal = raw1.yzw;
+
+  v_out[vert].out_normals = modle * vec4(normal, 0.0);
+  v_out[vert].out_color = vec3(1.0);
+
+  gl_MeshVerticesNV[vert].gl_Position = camera_ub.proj * camera_ub.view * modle * vec4(pos, 1.0);
+}
+
+
+void main()
+{
+  MeshletDescription desc = meshletData.meshlets[meshletID];
+  uint vertCount;
+  uint primCount;
+  uint vertBegin;
+  uint primBegin;
+  decodeMeshlet(desc, vertCount, primCount, vertBegin, primBegin);
+
+  uint vertMax = vertCount - 1;
+  uint primMax = primCount - 1;
+
+  for (uint i = 0; i < uint(VERTEX_RUN); i++) {
+    
+    uint vert = laneID + i * GROUP_SIZE;
+    
+    //clearVertexUsed( vert );
+    
+    // Use "min" to avoid branching
+    // this ensures the compiler can batch loads
+    // prior writes/processing
+    //
+    // Most of the time we will have fully saturated vertex utilization,
+    // but we may compute the last vertex redundantly.
+    {
+      uint vidx = texelFetch(meshletVertexIndicesBuffer, int(vertBegin + min(vert,vertMax))).x;
+      procVert(vert, vidx);
+    }
+  }
+
+  memoryBarrierShared();
+  barrier();
+
+  const uint primRuns = (primCount + GROUP_SIZE - 1) / GROUP_SIZE;
+  uint primStart = primBegin * 3;
+  for(uint i = 0; i < primRuns; ++i)
+  {
+    uint id0 = (laneID + GROUP_SIZE * i) * 3;
+    uint index0 = texelFetch(primitiveIndicesBuffer, int(primStart + id0)).x;
+    gl_PrimitiveIndicesNV[id0] = uint(index0);
+    gl_PrimitiveIndicesNV[id0 + 1] = uint(texelFetch(primitiveIndicesBuffer, int(primStart + id0 + 1)).x);
+    gl_PrimitiveIndicesNV[id0 + 2] = uint(texelFetch(primitiveIndicesBuffer, int(primStart + id0 + 2)).x);
+  }
+
+  if(laneID == 0)
+  {
+      gl_PrimitiveCountNV = primCount;
+  }
+}
+
+#endif
+
+#if FRAGMENT_SHADER
+layout(location = 0) in PerFragmentData
+{
+  vec4 in_normal;
+  vec3 in_color;
+};
+
+layout(location = 0) out vec4 color;
+layout(location = 1) out vec4 normal;
+
+void main()
+{
+  color = vec4(in_color, 1.0);
+  normal = in_normal;
+}
+#endif

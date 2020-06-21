@@ -11,7 +11,7 @@
 #endif
 #endif
 
-#define CURRENT_VULKAN_VERSION VK_API_VERSION_1_0
+#define CURRENT_VULKAN_VERSION VK_API_VERSION_1_2
 
 #include <vulkan/vulkan.h>
 #include <limits>

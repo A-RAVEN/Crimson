@@ -29,6 +29,7 @@ namespace Crimson
 
 		VkDebugReportCallbackEXT m_DebugReportCallBack;
 
+		VkDebugUtilsMessengerEXT m_DebugUtilsMessenger;
 
 		static VulkanInstance* p_Singleton;
 	};

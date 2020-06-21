@@ -26,8 +26,8 @@ void main()
     vec4 origin    = cam.viewInverse * vec4(0, 0, 0, 1);
     vec4 target    = cam.projInverse * vec4(d.x, d.y, 1, 1);
     vec4 direction = cam.viewInverse * vec4(normalize(target.xyz / target.w), 0);
-    direction = vec4(-1.0, 0.0, 0.0, 0.0);
-    origin = vec4(5.0, 0.0, 0.0, 1.0);
+    //direction = vec4(-1.0, 0.0, 0.0, 0.0);
+    //origin = vec4(5.0, 0.0, 0.0, 1.0);
     uint  rayFlags = gl_RayFlagsOpaqueNV;
     float tMin     = 0.001;
     float tMax     = 10000.0;

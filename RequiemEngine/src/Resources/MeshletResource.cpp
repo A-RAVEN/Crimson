@@ -122,14 +122,14 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 	m_MeshletSize = meshlet_descs.size();
 	m_VertexSize = positions.size();
 	m_IndexSize = indicies.size();
-	m_VertexStride = sizeof(VertexDataLightWeight);
-	m_VertexDataType = VertexDataLightWeight::GetDataType();
+	m_VertexStride = sizeof(VertexDataLightWeightUnpacked);
+	m_VertexDataType = VertexDataLightWeightUnpacked::GetDataType();
 
 	//change to device injection later
 	PGPUDevice main_device = GPUDeviceManager::Get()->GetDevice("MainDevice");
 	if (main_device)
 	{
-		size_t vertex_size = vertices.size() * sizeof(VertexDataLightWeight);
+		size_t vertex_size = vertices.size() * sizeof(VertexDataLightWeightUnpacked);
 		size_t meshlet_vertex_id_size = meshlet_vertices.size() * sizeof(uint32_t);
 		size_t meshlet_prim_id_size = primitives.size() * sizeof(uint8_t);
 		size_t meshlet_desc_size = m_MeshletSize * sizeof(MeshletDescriptor);

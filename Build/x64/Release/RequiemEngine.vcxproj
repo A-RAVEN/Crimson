@@ -1,0 +1,290 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{1F1D488A-4F54-4586-8C8A-66B57362B787}</ProjectGuid>
+    <RootNamespace>RequiemEngine</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(SolutionDir)\ExternalLib\ENet\include;$(IncludePath)</IncludePath>
+    <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(SolutionDir)\ExternalLib\ENet\include;$(IncludePath)</IncludePath>
+    <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(SolutionDir)\ExternalLib\ENet\include;$(IncludePath)</IncludePath>
+    <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(SolutionDir)Crimson\include;$(ProjectDir);$(SolutionDir)\ShaderCompiler\include;$(SolutionDir)\ExternalLib\assimp\include;$(SolutionDir)\ExternalLib\glm;$(SolutionDir)\ExternalLib\lua53\include;$(SolutionDir)\ExternalLib\ENet\include;$(IncludePath)</IncludePath>
+    <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)\Build\$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;$(SolutionDir)\ExternalLib\ENet\lib\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;enet.lib;ws2_32.lib;winmm.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;$(SolutionDir)\ExternalLib\ENet\lib\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;enet.lib;ws2_32.lib;winmm.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;$(SolutionDir)\ExternalLib\ENet\lib\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;enet.lib;ws2_32.lib;winmm.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;%(PreprocessorDefinitions);WIN32_LEAN_AND_MEAN</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(SolutionDir)\Lib\Crimson\$(Platform)\$(Configuration)\;$(SolutionDir)\Lib\ShaderCompiler\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\;$(SolutionDir)\ExternalLib\lua53\;$(SolutionDir)\ExternalLib\ENet\lib\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Crimson.lib;ShaderCompiler.lib;lua53.lib;enet.lib;ws2_32.lib;winmm.lib;assimp-vc142-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "$(SolutionDir)\ExternalLib\assimp\lib\$(Platform)\$(Configuration)\*.dll" "$(OutputPath)"
+copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="headers\GraphicsFrame.cpp" />
+    <ClCompile Include="headers\MeshQueue.cpp" />
+    <ClCompile Include="headers\RenderingSystem.cpp" />
+    <ClCompile Include="headers\ShaderProcessor.cpp" />
+    <ClCompile Include="src\Editor\ImGuiContext.cpp" />
+    <ClCompile Include="src\Entity\Entity.cpp" />
+    <ClCompile Include="src\Entity\World.cpp" />
+    <ClCompile Include="src\GeometryInstanceManager.cpp" />
+    <ClCompile Include="src\Graphics\GraphicsRenderPipeline.cpp" />
+    <ClCompile Include="src\Graphics\ShaderGroup.cpp" />
+    <ClCompile Include="src\KeyboardController.cpp" />
+    <ClCompile Include="src\LuaInterfaces\GraphicsLuaMachine.cpp" />
+    <ClCompile Include="src\LuaInterfaces\LuaWGraphicsContext.cpp" />
+    <ClCompile Include="src\LuaMachine.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Manager\ResourceManager.cpp" />
+    <ClCompile Include="src\MeshResource.cpp" />
+    <ClCompile Include="src\NetworkManager.cpp" />
+    <ClCompile Include="src\Resources\MeshletResource.cpp" />
+    <ClCompile Include="src\stb_impl.cpp" />
+    <ClCompile Include="src\System\MeshRenderSystem.cpp" />
+    <ClCompile Include="src\System\System.cpp" />
+    <ClCompile Include="src\System\TransformSystem.cpp" />
+    <ClCompile Include="src\ThreadManager.cpp" />
+    <ClCompile Include="src\VertexData.cpp" />
+    <ClCompile Include="src\Win32Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="external\rapidjson\allocators.h" />
+    <ClInclude Include="external\rapidjson\cursorstreamwrapper.h" />
+    <ClInclude Include="external\rapidjson\document.h" />
+    <ClInclude Include="external\rapidjson\encodedstream.h" />
+    <ClInclude Include="external\rapidjson\encodings.h" />
+    <ClInclude Include="external\rapidjson\error\en.h" />
+    <ClInclude Include="external\rapidjson\error\error.h" />
+    <ClInclude Include="external\rapidjson\filereadstream.h" />
+    <ClInclude Include="external\rapidjson\filewritestream.h" />
+    <ClInclude Include="external\rapidjson\fwd.h" />
+    <ClInclude Include="external\rapidjson\internal\biginteger.h" />
+    <ClInclude Include="external\rapidjson\internal\clzll.h" />
+    <ClInclude Include="external\rapidjson\internal\diyfp.h" />
+    <ClInclude Include="external\rapidjson\internal\dtoa.h" />
+    <ClInclude Include="external\rapidjson\internal\ieee754.h" />
+    <ClInclude Include="external\rapidjson\internal\itoa.h" />
+    <ClInclude Include="external\rapidjson\internal\meta.h" />
+    <ClInclude Include="external\rapidjson\internal\pow10.h" />
+    <ClInclude Include="external\rapidjson\internal\regex.h" />
+    <ClInclude Include="external\rapidjson\internal\stack.h" />
+    <ClInclude Include="external\rapidjson\internal\strfunc.h" />
+    <ClInclude Include="external\rapidjson\internal\strtod.h" />
+    <ClInclude Include="external\rapidjson\internal\swap.h" />
+    <ClInclude Include="external\rapidjson\istreamwrapper.h" />
+    <ClInclude Include="external\rapidjson\memorybuffer.h" />
+    <ClInclude Include="external\rapidjson\memorystream.h" />
+    <ClInclude Include="external\rapidjson\msinttypes\inttypes.h" />
+    <ClInclude Include="external\rapidjson\msinttypes\stdint.h" />
+    <ClInclude Include="external\rapidjson\ostreamwrapper.h" />
+    <ClInclude Include="external\rapidjson\pointer.h" />
+    <ClInclude Include="external\rapidjson\prettywriter.h" />
+    <ClInclude Include="external\rapidjson\rapidjson.h" />
+    <ClInclude Include="external\rapidjson\reader.h" />
+    <ClInclude Include="external\rapidjson\schema.h" />
+    <ClInclude Include="external\rapidjson\stream.h" />
+    <ClInclude Include="external\rapidjson\stringbuffer.h" />
+    <ClInclude Include="external\rapidjson\writer.h" />
+    <ClInclude Include="headers\BufferVector.h" />
+    <ClInclude Include="headers\Camera.h" />
+    <ClInclude Include="headers\Components\CameraComponent.h" />
+    <ClInclude Include="headers\Components\HierarchyComp.h" />
+    <ClInclude Include="headers\Components\IComponent.h" />
+    <ClInclude Include="headers\Components\IComponentManager.h" />
+    <ClInclude Include="headers\Components\MeshRenderComp.h" />
+    <ClInclude Include="headers\Components\TransformComponent.h" />
+    <ClInclude Include="headers\Containers\ReaderWriterQueue\atomicops.h" />
+    <ClInclude Include="headers\Containers\ConcurrentQueue\blockingconcurrentqueue.h" />
+    <ClInclude Include="headers\Containers\ConcurrentQueue\concurrentqueue.h" />
+    <ClInclude Include="headers\Containers\ConcurrentQueue\lightweightsemaphore.h" />
+    <ClInclude Include="headers\Containers\LockFreeQueue.h" />
+    <ClInclude Include="headers\Containers\ReaderWriterQueue\readerwriterqueue.h" />
+    <ClInclude Include="headers\Debug.h" />
+    <ClInclude Include="headers\Editor\ImGuiContext.h" />
+    <ClInclude Include="headers\Entity\Entity.h" />
+    <ClInclude Include="headers\Entity\World.h" />
+    <ClInclude Include="headers\GeometryInstanceManager.h" />
+    <ClInclude Include="headers\GraphicsFrame.h" />
+    <ClInclude Include="headers\Graphics\GraphicsRenderPipeline.h" />
+    <ClInclude Include="headers\Resources\IResource.h" />
+    <ClInclude Include="headers\Resources\MeshletResource.h" />
+    <ClInclude Include="headers\Resources\ResourceDependency.h" />
+    <ClInclude Include="headers\Resources\ShaderGroup.h" />
+    <ClInclude Include="headers\HelperFunc.h" />
+    <ClInclude Include="headers\KeyboardController.h" />
+    <ClInclude Include="headers\LuaInterfaces\LuaWGraphicsContext.h" />
+    <ClInclude Include="headers\LuaInterface\GraphicsLuaMachine.h" />
+    <ClInclude Include="headers\LuaInterface\LuaInterfaces.h" />
+    <ClInclude Include="headers\LuaInterface\LuaMachine.h" />
+    <ClInclude Include="headers\Manager\ResourceManager.h" />
+    <ClInclude Include="headers\MeshQueue.h" />
+    <ClInclude Include="headers\MeshResource.h" />
+    <ClInclude Include="headers\NetworkManager.h" />
+    <ClInclude Include="headers\Physics\RigidBody.h" />
+    <ClInclude Include="headers\RenderingSystem.h" />
+    <ClInclude Include="headers\Resources\PipelineResource.h" />
+    <ClInclude Include="headers\ShaderProcessor.h" />
+    <ClInclude Include="headers\stb_image.h" />
+    <ClInclude Include="headers\stb_image_write.h" />
+    <ClInclude Include="headers\System\MeshRenderSystem.h" />
+    <ClInclude Include="headers\System\System.h" />
+    <ClInclude Include="headers\System\TransformSystem.h" />
+    <ClInclude Include="headers\ThreadManager.h" />
+    <ClInclude Include="headers\TimeManager.h" />
+    <ClInclude Include="headers\VertexData.h" />
+    <ClInclude Include="headers\Win32Window.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

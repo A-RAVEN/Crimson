@@ -13,6 +13,7 @@
 #include <headers/VertexData.h>
 #include <headers/stb_image.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 void RenderingSystem::Work(ThreadWorker const* this_worker)
 {
@@ -61,11 +62,20 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 				{
 					m_Inited--;
 					PGraphicsCommandBuffer cmd = m_RenderingThread->StartSubpassCommand(m_RenderPassInstance, 0);
+
+					cmd->BindSubpassPipeline(m_MeshletPipeline);
 					cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
 					cmd->Sissor(0, 0, 1024, 720);
+					glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+					cmd->PushConstants({ EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV }, 0, sizeof(mat4), &(transform[0][0]));
+					cmd->BindSubpassDescriptorSets({ m_MeshletSet });
+					cmd->DrawMeshShading(p_MeshletMesh->m_MeshletSize, 0);
+
 					cmd->BindSubpassPipeline(m_Pipeline);
+					cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+					cmd->Sissor(0, 0, 1024, 720);
 					vec3 testColor(1.0f, 0.0f, 1.0f);
-					cmd->PushConstants({ EShaderType::E_SHADER_TYPE_FRAGMENT }, 0, sizeof(vec3), &testColor);
+					//cmd->PushConstants({ EShaderType::E_SHADER_TYPE_FRAGMENT }, 0, sizeof(vec3), &testColor);
 					cmd->BindSubpassDescriptorSets({ m_Set });
 					for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
 					{
@@ -76,9 +86,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 						}
 					}
 
-					cmd->BindSubpassPipeline(m_MeshletPipeline);
-					cmd->BindSubpassDescriptorSets({ m_Set });
-					cmd->DrawMeshShading(p_MeshletMesh->m_MeshletSize, 0);
+
 					cmd->EndCommandBuffer();
 
 					m_ExecutionCmd->StartCommand();
@@ -98,8 +106,8 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 
 		m_PresentCmd->StartCommand();
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Normal, p_Window);
-		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
-		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
+		m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
+		//m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
 		m_PresentCmd->EndCommand();
 		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
@@ -407,7 +415,7 @@ void RenderingSystem::SetupMeshletPipeline(PGPUDevice device, MeshletGroupResour
 	m_MeshletPipeline->m_PushConstants[0].m_Size = sizeof(mat4);
 	m_MeshletPipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
 	m_MeshletPipeline->m_StencilRule = EStencilRule::E_STENCIL_WRITE;
-
+	//m_MeshletPipeline->m_PolygonMode = EPolygonMode::E_POLYGON_MODE_LINE;
 	renderpass->InstanciatePipeline(m_MeshletPipeline, 0);
 }
 

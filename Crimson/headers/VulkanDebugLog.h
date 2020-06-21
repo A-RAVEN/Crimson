@@ -3,6 +3,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <assert.h>
 
 namespace Crimson
 {
@@ -91,6 +92,83 @@ namespace Crimson
 			SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 #endif
 			return false;
+		}
+
+		//new Vulkan Debug Callback
+		
+		static VKAPI_ATTR VkBool32 VKAPI_CALL VulkanDebugUtilCallback(
+			VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+			VkDebugUtilsMessageTypeFlagsEXT messageType,
+			const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+			void* userData)
+		{
+				char prefix[64];
+				char* message = (char*)malloc(strlen(callbackData->pMessage) + 500);
+				assert(message);
+				if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
+					strcpy(prefix, "VERBOSE : ");
+				}
+				else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+					strcpy(prefix, "INFO : ");
+				}
+				else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+					strcpy(prefix, "WARNING : ");
+				}
+				else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
+					strcpy(prefix, "ERROR : ");
+				}
+				if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) {
+					strcat(prefix, "GENERAL");
+				}
+				else {
+					if (messageType & VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT) {
+						strcat(prefix, "PERF");
+					}
+				}
+				sprintf(message,
+					"%s - Message ID Number %d, Message ID String :\n%s",
+					prefix,
+					callbackData->messageIdNumber,
+					callbackData->pMessageIdName,
+					callbackData->pMessage);
+				if (callbackData->objectCount > 0) {
+					//char tmp_message[500];
+					//sprintf(tmp_message, "\n Objects - %d\n", callbackData->objectCount);
+					//strcat(message, tmp_message);
+					//for (uint32_t object = 0; object < callbackData->objectCount; ++object) {
+					//	sprintf(tmp_message,
+					//		" Object[%d] - Type %s, Value %p, Name \"%s\"\n",
+					//		Object,
+					//		DebugAnnotObjectToString(
+					//			callbackData->pObjects[object].objectType),
+					//			(void*)(callbackData->pObjects[object].objectHandle),
+					//		callbackData->pObjects[object].pObjectName);
+					//	strcat(message, tmp_message);
+					//}
+				}
+				if (callbackData->cmdBufLabelCount > 0) {
+					//char tmp_message[500];
+					//sprintf(tmp_message,
+					//	"\n Command Buffer Labels - %d\n",
+					//	callbackData->cmdBufLabelCount);
+					//strcat(message, tmp_message);
+					//for (uint32_t label = 0; label < callbackData->cmdBufLabelCount; ++label) {
+					//	sprintf(tmp_message,
+					//		" Label[%d] - %s { %f, %f, %f, %f}\n",
+					//		Label,
+					//		callbackData->pCmdBufLabels[label].pLabelName,
+					//		callbackData->pCmdBufLabels[label].color[0],
+					//		callbackData->pCmdBufLabels[label].color[1],
+					//		callbackData->pCmdBufLabels[label].color[2],
+					//		callbackData->pCmdBufLabels[label].color[3]);
+					//	strcat(message, tmp_message);
+					//}
+				}
+				printf("%s\n", message);
+				fflush(stdout);
+				free(message);
+				// Don't bail out, but keep going.
+				return false;
 		}
 	}
 }

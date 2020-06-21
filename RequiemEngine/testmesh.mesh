@@ -38,7 +38,7 @@ layout (std140, binding = 0) uniform UNIFORM_CAM
 layout (push_constant) uniform UNIFORM_TRANS
 { 
 	mat4 modle;
-} transform_ub;
+};
 
 
 //-------------------------------------
@@ -106,7 +106,7 @@ void decodeMeshlet(in MeshletDescription desc, out uint vertCount, out uint prim
 
 void procVert(uint vert, uint vidx)
 {
-  uint offsetId = vidx * 4;
+  uint offsetId = vidx * 3;
   vec4 raw0 = texelFetch(vertexBuffer, int(offsetId)).xyzw;
   vec4 raw1 = texelFetch(vertexBuffer, int(offsetId + 1)).xyzw;
   vec4 raw2 = texelFetch(vertexBuffer, int(offsetId + 2)).xyzw;
@@ -114,10 +114,10 @@ void procVert(uint vert, uint vidx)
   vec3 pos = raw0.xyz;
   vec3 normal = raw1.yzw;
 
-  v_out[vert].out_normals = transform_ub.modle * vec4(normal, 0.0);
-  v_out[vert].out_color = vec3(1.0);
+  v_out[vert].out_normals = modle * vec4(normal, 0.0);
+  v_out[vert].out_color = meshletcolors[meshletID % MAX_COLORS];
 
-  gl_MeshVerticesNV[vert].gl_Position = camera_ub.proj * camera_ub.view * transform_ub.modle * vec4(pos, 1.0);
+  gl_MeshVerticesNV[vert].gl_Position = camera_ub.proj * camera_ub.view * modle * vec4(pos, 1.0);
 }
 
 
@@ -158,7 +158,7 @@ void main()
   uint primStart = primBegin * 3;
   for(uint i = 0; i < primRuns; ++i)
   {
-    uint id0 = laneID + GROUP_SIZE * i;
+    uint id0 = (laneID + GROUP_SIZE * i) * 3;
     uint index0 = texelFetch(primitiveIndicesBuffer, int(primStart + id0)).x;
     gl_PrimitiveIndicesNV[id0] = uint(index0);
     gl_PrimitiveIndicesNV[id0 + 1] = uint(texelFetch(primitiveIndicesBuffer, int(primStart + id0 + 1)).x);
@@ -178,7 +178,7 @@ layout(location = 0) in PerFragmentData
 {
   vec4 in_normal;
   vec3 in_color;
-}
+};
 
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 normal;

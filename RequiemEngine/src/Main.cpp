@@ -110,6 +110,8 @@ int main()
 	std::cout << "Create Device" << std::endl;
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 
+	MeshletGroupResource new_meshlet;
+	new_meshlet.LoadMeshRaw(scene);
 
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
@@ -131,8 +133,7 @@ int main()
 	MeshResource bunny_resource;
 	bunny_resource.ProcessAiSceneLightWeight(bunnymesh, true, false);
 
-	MeshletGroupResource new_meshlet;
-	new_meshlet.LoadMeshRaw(bunnymesh);
+
 	 
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
@@ -172,7 +173,7 @@ int main()
 		pGeometryInstance[0].m_TransformMatrix = glm::transpose(sponza.transform->m_Info.m_Matrix);
 		transform_queue.PushBack(sponza.transform->m_Info.m_TransformId);
 
-		instances.push_back(sponza);
+		//instances.push_back(sponza);
 	}
 	{
 		MeshInstance bunny;

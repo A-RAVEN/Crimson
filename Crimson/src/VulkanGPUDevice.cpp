@@ -437,8 +437,22 @@ namespace Crimson
 			}
 		}
 
-		VkPhysicalDeviceFeatures device_features{};
-		vkGetPhysicalDeviceFeatures(devices[physical_device_index], &device_features);
+		VkPhysicalDeviceFeatures2 features{};
+		features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		vkGetPhysicalDeviceFeatures(devices[physical_device_index], &features.features);
+
+		VkPhysicalDeviceMeshShaderFeaturesNV mesh_shader_feature{};
+		mesh_shader_feature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_NV;
+		mesh_shader_feature.meshShader = VK_TRUE;
+		mesh_shader_feature.taskShader = VK_TRUE;
+		features.pNext = &mesh_shader_feature;
+
+		VkPhysicalDeviceFloat16Int8FeaturesKHR float_int_feature{};
+		float_int_feature.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT16_INT8_FEATURES_KHR;
+		float_int_feature.shaderFloat16 = VK_TRUE;
+		float_int_feature.shaderInt8 = VK_TRUE;
+
+		mesh_shader_feature.pNext = &float_int_feature;
 
 		std::vector<char const*> device_extension_names = GetFilteredDeviceExtensions(devices[physical_device_index], {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -447,19 +461,21 @@ namespace Crimson
 			VK_NV_RAY_TRACING_EXTENSION_NAME,
 			VK_NV_MESH_SHADER_EXTENSION_NAME,
 			VK_KHR_MAINTENANCE3_EXTENSION_NAME,
+			VK_KHR_SHADER_FLOAT16_INT8_EXTENSION_NAME,
 		});
+
 
 
 		VkDeviceCreateInfo logical_device_create_info = {};
 		logical_device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		logical_device_create_info.pNext = nullptr;
+		logical_device_create_info.pNext = &features;
 		logical_device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
 		logical_device_create_info.pQueueCreateInfos = queue_create_infos.data();
 		logical_device_create_info.enabledExtensionCount = static_cast<uint32_t>(device_extension_names.size());
 		logical_device_create_info.ppEnabledExtensionNames = device_extension_names.data();
 		logical_device_create_info.enabledLayerCount = 0;
 		logical_device_create_info.ppEnabledLayerNames = nullptr;
-		logical_device_create_info.pEnabledFeatures = &device_features;
+		//logical_device_create_info.pEnabledFeatures = &device_features;
 
 		CHECK_VKRESULT(vkCreateDevice(devices[physical_device_index], &logical_device_create_info, VULKAN_ALLOCATOR_POINTER, &m_LogicalDevice), "Vulkan Logical Device Creation Error!");
 		std::swap(m_QueueNumbers, queue_numbers);
