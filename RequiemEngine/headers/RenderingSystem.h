@@ -10,6 +10,8 @@
 #include <headers/TimeManager.h>
 #include <headers/Containers/ReaderWriterQueue/readerwriterqueue.h>
 #include  <headers/Resources/MeshletResource.h>
+#include <headers/AccelStructs/BVH.h>
+#include <headers/BufferVector.h>
 
 using namespace Crimson;
 class RenderingSystem;
@@ -30,11 +32,12 @@ class RenderingSystem : public ThreadJob
 {
 public:
 	virtual void Work(ThreadWorker const* this_worker) override;
-	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue, MeshletGroupResource* p_meshlets);
+	RenderingSystem(IWindow* window, PAccelerationStructure blas,  PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue, MeshletGroupResource* p_meshlets, MeshResource* p_cube);
 	void SetupSystem();
 	void UnInstallSystem();
 	void SetupMeshletPipeline(PGPUDevice device, MeshletGroupResource *meshlet, PRenderPass renderpass);
 	void PushBackNewFrame(GraphicsFrame &frame);
+	void ParseBVH(BVH& bvh);
 	TransformManager m_TransformManager;
 	std::unordered_map<MeshResource*, MeshInstanceQueue> m_Instances;
 	float DeltaTimeApprox() const { return m_AverageDeltaTime; }
@@ -77,4 +80,9 @@ private:
 
 	MeshletGroupResource* p_MeshletMesh;
 	PGPUBuffer MeshletTransform;
+
+	BVH TestBVH;
+
+	MeshResource *p_CubeResource;
+	BufferQueue<mat4, sizeof(mat4) * 20> m_CubeTransforms;
 };

@@ -93,6 +93,12 @@
     <ClCompile Include="src\Resources\MeshletResource.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\AccelStructs\BVH.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AccelStructs\AABB.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Win32Window.h">
@@ -348,6 +354,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="headers\Resources\MeshletResource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\AccelStructs\AABB.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\AccelStructs\BVH.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

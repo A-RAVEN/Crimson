@@ -5,6 +5,7 @@
 #include <headers/VertexData.h>
 #include <PipelineEnums.h>
 #include <glm/glm.hpp>
+#include <headers/AccelStructs/AABB.h>
 
 using namespace Crimson;
 using namespace glm;
@@ -56,6 +57,17 @@ public:
 			}
 			submesh_vertex_offset = vertices.size();
 		}
+
+		if (!positions.empty())
+		{
+			m_InitialBoundingBox.m_LowerBound = m_InitialBoundingBox.m_UpperBound = positions[0];
+			for (int i = 1; i < positions.size(); ++i)
+			{
+				m_InitialBoundingBox.m_LowerBound = (glm::min)(m_InitialBoundingBox.m_LowerBound, positions[i]);
+				m_InitialBoundingBox.m_UpperBound = (glm::max)(m_InitialBoundingBox.m_UpperBound, positions[i]);
+			}
+		}
+
 		m_VertexSize = positions.size();
 		m_IndexSize = indicies.size();
 		PGPUDevice main_device = GPUDeviceManager::Get()->GetDevice("MainDevice");
@@ -87,6 +99,8 @@ public:
 
 	std::vector<EDataType> const& GetDataType() { return m_VertexDataType; }
 	uint64_t GetVertexStride() { return m_VertexStride; }
+
+	AABB GetBox(mat4 transform);
 public:
 	PGPUBuffer m_VertexBuffer;
 	PGPUBuffer m_IndexBuffer;
@@ -95,4 +109,6 @@ public:
 
 	uint64_t m_VertexStride;
 	std::vector<EDataType> m_VertexDataType;
+
+	AABB m_InitialBoundingBox;
 };

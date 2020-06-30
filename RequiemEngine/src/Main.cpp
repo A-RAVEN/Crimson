@@ -133,8 +133,10 @@ int main()
 	MeshResource bunny_resource;
 	bunny_resource.ProcessAiSceneLightWeight(bunnymesh, true, false);
 
+	const aiScene* cube = scene_importer.ReadFile("cube.obj", aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
+	MeshResource cube_resource;
+	cube_resource.ProcessAiSceneLightWeight(cube, true, false);
 
-	 
 	///////////Setup Raytracing Resources
 	PRayTraceGeometry raytrace_geometry = MainDevice->CreateRayTraceGeometry();
 	raytrace_geometry->SetVertexData(new_resource.m_VertexBuffer, 0, new_resource.m_VertexSize, new_resource.GetVertexStride(), EDataType::EVEC3);
@@ -157,6 +159,9 @@ int main()
 	RaytraceGeometryType* pGeometryInstance = new (geometry_instance_buffer->GetMappedPointer()) RaytraceGeometryType[5];
 
 	std::vector<MeshInstance> instances;
+	std::vector<size_t> volumes;
+
+	BVH test_bvh;
 
 	BufferQueue<uint32_t, 10> transform_queue;
 	transform_queue.Init(MainDevice, { EBufferUsage::E_BUFFER_USAGE_STORAGE }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
@@ -175,15 +180,22 @@ int main()
 
 		//instances.push_back(sponza);
 	}
+
+	for(int i = 0; i < 4; ++i)
 	{
 		MeshInstance bunny;
 		bunny.mesh = &bunny_resource;
 		bunny.transform = m_TransformManager.AllocateTransformComponent();
-		bunny.transform->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
+		bunny.transform->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 10.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
 		instances.push_back(bunny);
-	}
 
-	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue, &new_meshlet);
+		size_t volume_id = test_bvh.AllocVolume();
+		volumes.push_back(volume_id);
+		auto vol = test_bvh[volume_id];
+		vol.box = bunny.mesh->GetBox(bunny.transform->m_Info.m_Matrix);
+	}
+	test_bvh.UpdateTree();
+	RenderingSystem rendering_system(&new_window, blas, tlas, geometry_instance_buffer, &new_resource, transform_queue, &new_meshlet, &cube_resource);
 
 
 	glm::vec2 angles(0.0f);
@@ -202,6 +214,15 @@ int main()
 		time_manager.UpdateClock();
 		inputs.UpdateController();
 		world.Update();
+
+		for (int i = 0; i < 4; ++i)
+		{
+			MeshInstance &bunny = instances[i];
+			bunny.transform->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 10.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
+			auto vol = test_bvh[volumes[i]];
+			vol.box = bunny.mesh->GetBox(bunny.transform->m_Info.m_Matrix);
+		}
+
 
 		//transforms[0]->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 

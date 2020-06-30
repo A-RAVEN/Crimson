@@ -118,12 +118,12 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 	}
 }
 
-RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue, MeshletGroupResource* p_meshlets) : p_Window(window), m_AverageDeltaTime(0.0016f), p_MeshletMesh(p_meshlets)
+RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, PAccelerationStructure tlas, PGPUBuffer instance_buffer, MeshResource* rt_mesh, BufferQueue<uint32_t, 10> const& transform_queue, MeshletGroupResource* p_meshlets, MeshResource* p_cube) : p_Window(window), m_AverageDeltaTime(0.0016f), p_MeshletMesh(p_meshlets),
+p_CubeResource(p_cube)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
 
 	MeshletTransform = MainDevice->CreateBuffer(sizeof(mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
-
 
 	m_TransformManager.ExtendBufferPages(0);
 
@@ -427,6 +427,15 @@ void RenderingSystem::PushBackNewFrame(GraphicsFrame &frame)
 	}
 	//LockGuard guard(m_FrameQueueLock);
 	//m_FrameQueue.push_back(frame);
+}
+
+void RenderingSystem::ParseBVH(BVH& bvh)
+{
+	auto& volumes = bvh.GetActiveVolumes();
+	for (size_t id : volumes)
+	{
+		auto& volume = bvh[id];
+	}
 }
 
 bool RenderingSystem::TryPopFrame(GraphicsFrame& frame)

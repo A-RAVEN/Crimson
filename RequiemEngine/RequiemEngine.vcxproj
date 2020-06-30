@@ -170,6 +170,8 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AccelStructs\AABB.cpp" />
+    <ClCompile Include="src\AccelStructs\BVH.cpp" />
     <ClCompile Include="headers\GraphicsFrame.cpp" />
     <ClCompile Include="headers\MeshQueue.cpp" />
     <ClCompile Include="headers\RenderingSystem.cpp" />
@@ -235,6 +237,8 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClInclude Include="external\rapidjson\stream.h" />
     <ClInclude Include="external\rapidjson\stringbuffer.h" />
     <ClInclude Include="external\rapidjson\writer.h" />
+    <ClInclude Include="headers\AccelStructs\AABB.h" />
+    <ClInclude Include="headers\AccelStructs\BVH.h" />
     <ClInclude Include="headers\BufferVector.h" />
     <ClInclude Include="headers\Camera.h" />
     <ClInclude Include="headers\Components\CameraComponent.h" />
