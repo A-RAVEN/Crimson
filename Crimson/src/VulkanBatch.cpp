@@ -46,6 +46,28 @@ namespace Crimson
 
 		CHECK_VKRESULT(vkQueueSubmit(m_Queue, 1, &submit_info, m_Fence), "Vulkan Queue Submit Batch Issue!");
 	}
+	void VulkanBatch::SubmitCommands(VkQueue queue)
+	{
+		//TODO Find a better way for submission like double buffer
+		CHECK_VKRESULT(vkWaitForFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence, VK_TRUE, UINT_MAX), "Vulkan Batch Wait For Fence Issue Before Submit!");
+		CHECK_VKRESULT(vkResetFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence), "Vulkan Batch Reset Fence Issue Before Submit!");
+		std::vector<VkSemaphore> waiting_semaphores;
+		std::vector<VkPipelineStageFlags> waiting_stages;
+		std::vector<VkCommandBuffer> cmd_buffers = p_OwningDevice->CollectBatchCommandBuffers(m_BatchID, waiting_semaphores, waiting_stages);
+		VkSubmitInfo submit_info{};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.commandBufferCount = cmd_buffers.size();
+		submit_info.pCommandBuffers = cmd_buffers.data();
+		//TODO: Further extensions
+		submit_info.pWaitDstStageMask = waiting_stages.size() > 0 ? waiting_stages.data() : nullptr;
+		submit_info.pWaitSemaphores = waiting_semaphores.size() > 0 ? waiting_semaphores.data() : nullptr;
+		submit_info.waitSemaphoreCount = waiting_semaphores.size();
+		submit_info.signalSemaphoreCount = 0;
+		submit_info.pSignalSemaphores = nullptr;
+		submit_info.pNext = nullptr;
+
+		CHECK_VKRESULT(vkQueueSubmit(queue, 1, &submit_info, m_Fence), "Vulkan Queue Submit Batch Issue!");
+	}
 	void VulkanBatch::DestroyBatch()
 	{
 		CHECK_VKRESULT(vkWaitForFences(p_OwningDevice->m_LogicalDevice, 1, &m_Fence, VK_TRUE, UINT_MAX), "Vulkan Batch Wait For Fence Issue On Destroy!");

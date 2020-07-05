@@ -85,4 +85,6 @@ private:
 
 	MeshResource *p_CubeResource;
 	BufferQueue<mat4, sizeof(mat4) * 20> m_CubeTransforms;
+
+	PGraphicsPipeline FilterPipeline;
 };

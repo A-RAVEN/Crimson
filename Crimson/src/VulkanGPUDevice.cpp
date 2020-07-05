@@ -241,6 +241,31 @@ namespace Crimson
 			}
 		}
 	}
+	void VulkanGPUDevice::ExecuteBatches(std::vector<std::string> const& batches, EExecutionCommandType command_type, uint32_t queue_id)
+	{
+		uint32_t queue_family_id = 0;
+		switch (command_type)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			queue_family_id = m_GraphicsDedicateFamily;
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			queue_family_id = m_ComputeDedicateFamily;
+			break;
+		default:
+			break;
+		}
+		VkQueue target_queue = nullptr;
+		vkGetDeviceQueue(m_LogicalDevice, queue_family_id, queue_id, &target_queue);
+		for (auto& batch_name : batches)
+		{
+			auto batch_find = m_Batches.find(batch_name);
+			if (batch_find != m_Batches.end())
+			{
+				batch_find->second->SubmitCommands(target_queue);
+			}
+		}
+	}
 	void VulkanGPUDevice::WaitBatches(std::vector<std::string> const& batches)
 	{
 		std::vector<VkFence> fences;

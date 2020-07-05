@@ -106,11 +106,11 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 
 		m_PresentCmd->StartCommand();
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Normal, p_Window);
-		m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
-		//m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
+		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
+		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
 		m_PresentCmd->EndCommand();
-		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" });
+		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" }, EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 1);
 
 		MainDevice->PresentWindow(*p_Window);
 		//p_Window->UpdateWindow();
@@ -174,9 +174,21 @@ p_CubeResource(p_cube)
 	m_Set->WriteDescriptorSetTexelBufferView(2, test_texel_buffer, "default", 0);
 	m_Set->EndWriteDescriptorSet();
 
+	ShaderProcessor processor;
+
+
+	FilterPipeline = MainDevice->CreateGraphicsPipeline();
+	{
+		auto results = processor.MultiCompile("bilateral_filter.shaders");
+		for (auto& itr : results)
+		{
+			std::cout << static_cast<int>(itr.first) << std::endl;
+			FilterPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
+		}
+	}
+
 	m_Pipeline = MainDevice->CreateGraphicsPipeline();
 
-	ShaderProcessor processor;
 	{
 		auto results = processor.MultiCompile("test.shaders");
 		for (auto& itr : results)
@@ -363,17 +375,17 @@ void RenderingSystem::SetupMeshletPipeline(PGPUDevice device, MeshletGroupResour
 	m_MeshletSetLayout->m_Bindings[0].m_BindingPoint = 0;
 	m_MeshletSetLayout->m_Bindings[0].m_Num = 1;
 
-	m_MeshletSetLayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_TEXEL_BUFFER;
+	m_MeshletSetLayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
 	m_MeshletSetLayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
 	m_MeshletSetLayout->m_Bindings[1].m_BindingPoint = 1;
 	m_MeshletSetLayout->m_Bindings[1].m_Num = 1;
 
-	m_MeshletSetLayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_TEXEL_BUFFER;
+	m_MeshletSetLayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
 	m_MeshletSetLayout->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
 	m_MeshletSetLayout->m_Bindings[2].m_BindingPoint = 2;
 	m_MeshletSetLayout->m_Bindings[2].m_Num = 1;
 
-	m_MeshletSetLayout->m_Bindings[3].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_TEXEL_BUFFER;
+	m_MeshletSetLayout->m_Bindings[3].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
 	m_MeshletSetLayout->m_Bindings[3].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
 	m_MeshletSetLayout->m_Bindings[3].m_BindingPoint = 3;
 	m_MeshletSetLayout->m_Bindings[3].m_Num = 1;
