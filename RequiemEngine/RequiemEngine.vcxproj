@@ -180,6 +180,7 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClCompile Include="src\Entity\Entity.cpp" />
     <ClCompile Include="src\Entity\World.cpp" />
     <ClCompile Include="src\GeometryInstanceManager.cpp" />
+    <ClCompile Include="src\Graphics\FillScreenRect.cpp" />
     <ClCompile Include="src\Graphics\GraphicsRenderPipeline.cpp" />
     <ClCompile Include="src\Graphics\ShaderGroup.cpp" />
     <ClCompile Include="src\KeyboardController.cpp" />
@@ -259,6 +260,7 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClInclude Include="headers\Entity\World.h" />
     <ClInclude Include="headers\GeometryInstanceManager.h" />
     <ClInclude Include="headers\GraphicsFrame.h" />
+    <ClInclude Include="headers\Graphics\FillScreenRect.h" />
     <ClInclude Include="headers\Graphics\GraphicsRenderPipeline.h" />
     <ClInclude Include="headers\Resources\IResource.h" />
     <ClInclude Include="headers\Resources\MeshletResource.h" />
