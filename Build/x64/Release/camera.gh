@@ -7,4 +7,10 @@ struct Camera
     mat4 viewInverse;
     mat4 projInverse;
 };
+
+vec3 ProjectionInverse(in mat4 _inv_camera, in vec3 _screen_space_val)
+{
+    vec4 ws_raw = _inv_camera * vec4(_screen_space_val, 1.0);
+    return ws_raw.xyz / ws_raw.w;
+}
 #endif

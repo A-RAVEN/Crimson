@@ -234,7 +234,7 @@ int main()
 		if (inputs.KeyState(VK_RBUTTON))
 		{
 			glm::vec2 movement = inputs.GetMouseMovement();
-			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 10.0f);
+			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 30.0f);
 			angles.y = glm::clamp(angles.y + movement.y * time_manager.deltaTime() * 10.0f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
 		}
 		glm::vec3 forward = glm::rotate(glm::mat4(1.0f), -angles.x, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), -angles.y, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);

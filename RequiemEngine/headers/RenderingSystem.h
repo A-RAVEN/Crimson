@@ -12,6 +12,7 @@
 #include  <headers/Resources/MeshletResource.h>
 #include <headers/AccelStructs/BVH.h>
 #include <headers/BufferVector.h>
+#include <headers/Graphics/FillScreenRect.h>
 
 using namespace Crimson;
 class RenderingSystem;
@@ -77,6 +78,7 @@ private:
 	PGPUBuffer m_ShaderTable;
 	PGPUImage m_RTColor;
 	PGPUImage m_RTColorOld;
+	PGPUImage m_RTColorAcc;
 
 	MeshletGroupResource* p_MeshletMesh;
 	PGPUBuffer MeshletTransform;
@@ -86,5 +88,12 @@ private:
 	MeshResource *p_CubeResource;
 	BufferQueue<mat4, sizeof(mat4) * 20> m_CubeTransforms;
 
+	PRenderPass FilterRenderPass;
+	PFramebuffer FilterFrameBuffer;
+	PRenderPassInstance FilterRenderPassInstance;
 	PGraphicsPipeline FilterPipeline;
+	PDescriptorSetLayout FilterSetLayout;
+	PDescriptorSet FilterSet;
+
+	FillScreenRect Rect;
 };

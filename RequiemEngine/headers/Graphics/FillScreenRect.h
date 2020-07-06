@@ -8,6 +8,7 @@ class FillScreenRect
 public:
 	void Init(PGPUDevice p_device);
 	void Draw(PGraphicsCommandBuffer cmdBuffer);
+	std::vector<EDataType> GetDataType() { return { EDataType::EVEC2 }; }
 private:
 	PGPUDevice p_Device;
 	PGPUBuffer m_VertexBuffer;

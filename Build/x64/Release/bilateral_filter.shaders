@@ -45,7 +45,7 @@ vec3 Reproject(in Camera from_camera, in Camera to_camera, in vec3 from_clip_spa
 
 #define PI 3.1415926
 
-#define TEMPORAL_ACC 6.0
+#define TEMPORAL_ACC 10.0
 
 void main()
 {
@@ -113,8 +113,6 @@ void main()
     else
     {
         outColor = vec4(result.xyz, 0.1);
-        //outColor = vec4(0.0);
-
     }
 }
 #endif

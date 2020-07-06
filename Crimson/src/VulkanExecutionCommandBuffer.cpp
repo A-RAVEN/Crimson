@@ -74,6 +74,16 @@ namespace Crimson
 		region.imageSubresource = vulkan_image->GetSubresourceLayers(EViewAsType::E_VIEW_AS_TYPE_MAX, mip_level, base_layer, layer_count);
 
 		vkCmdCopyBufferToImage(m_CurrentCommandBuffer, vulkan_buffer->m_Buffer, vulkan_image->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+		auto find = m_ImageLayoutCaches.find(vulkan_image);
+		if (find == m_ImageLayoutCaches.end())
+		{
+			m_ImageLayoutCaches.insert(std::make_pair(vulkan_image, vulkan_image->GetCurrentLayoutCache()));
+		}
+		else
+		{
+			find->second = vulkan_image->GetCurrentLayoutCache();
+		}
 	}
 	void VulkanExecutionCommandBuffer::CopyImageToImage(PGPUImage srd_image, PGPUImage dst_image)
 	{
@@ -89,6 +99,26 @@ namespace Crimson
 		image_copy.dstSubresource = dst_vulkan_image->GetFullSubresourceLayers();
 		image_copy.extent = { (std::min)(src_vulkan_image->m_Width, dst_vulkan_image->m_Width), (std::min)(src_vulkan_image->m_Height, dst_vulkan_image->m_Height), 1 };
 		vkCmdCopyImage(m_CurrentCommandBuffer, src_vulkan_image->m_Image, src_vulkan_image->m_OverallImageLayout, dst_vulkan_image->m_Image, dst_vulkan_image->m_OverallImageLayout, 1, &image_copy);
+
+		auto find = m_ImageLayoutCaches.find(src_vulkan_image);
+		if (find == m_ImageLayoutCaches.end())
+		{
+			m_ImageLayoutCaches.insert(std::make_pair(src_vulkan_image, src_vulkan_image->GetCurrentLayoutCache()));
+		}
+		else
+		{
+			find->second = src_vulkan_image->GetCurrentLayoutCache();
+		}
+
+		find = m_ImageLayoutCaches.find(dst_vulkan_image);
+		if (find == m_ImageLayoutCaches.end())
+		{
+			m_ImageLayoutCaches.insert(std::make_pair(dst_vulkan_image, dst_vulkan_image->GetCurrentLayoutCache()));
+		}
+		else
+		{
+			find->second = dst_vulkan_image->GetCurrentLayoutCache();
+		}
 	}
 	void VulkanExecutionCommandBuffer::CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window)
 	{

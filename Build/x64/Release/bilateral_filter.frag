@@ -1,21 +1,9 @@
 #version 450
 
-#pragma multicompile vert frag
 
-#if VERTEX_SHADER
-layout(location = 0) in vec2 inFillRectPos;
+#include <camera.gh>
+#include <encoding.gh>
 
-layout(location = 0) out vec2 outFillRectPos;
-
-void main()
-{
-    outFillRectPos = inFillRectPos;
-    gl_Position = vec4(inFillRectPos, 0.0, 1.0);
-}
-#endif
-
-#if FRAGMENT_SHADER
-#include "camera.gh"
 
 layout(location = 0) in vec2 inFillRectPos;
 layout(location = 0) out vec4 outColor;
@@ -26,26 +14,10 @@ layout(binding = 2) uniform sampler2D src_normal;
 layout(binding = 3) uniform sampler2D acc_img;
 layout(binding = 4) uniform CAMERA
 {
-    Camera CameraData;
+    SCameraData CameraData;
 };
-
-layout(binding = 5) uniform OLD_CAMERA
-{
-    Camera oldCam;
-};
-
-vec3 Reproject(in Camera from_camera, in Camera to_camera, in vec3 from_clip_space_pos)
-{
-    vec4 reproj_pos = vec4(ProjectionInverse(from_camera.projInverse, from_clip_space_pos), 1.0);
-    reproj_pos = from_camera.viewInverse * reproj_pos;
-    reproj_pos = to_camera.proj * to_camera.view * reproj_pos;
-    reproj_pos /= reproj_pos.w;
-    return reproj_pos.xyz;
-}
 
 #define PI 3.1415926
-
-#define TEMPORAL_ACC 6.0
 
 void main()
 {
@@ -65,7 +37,7 @@ void main()
     vec4 final_val = vec4(0.0);
     float weight = 0.0;
 
-    vec4 result = vec4(0.0);
+    float result = 0;
     for(float i = -half_size; i <= half_size; ++i)
     {
         for(float j = -half_size; j <= half_size; ++j)
@@ -87,16 +59,18 @@ void main()
     }
     if(weight <= 0.0)
     {
-        result = texture(src_img, this_uv);
+        //outColor = vec4(1.0);
+        result = 1.0;
     }
     else
     {
-        result = final_val / weight;
+	    //outColor = final_val / weight;
+        result = final_val.x / weight;
     }
 
-    vec4 reproj_pos = vec4(ProjectionInverse(CameraData.projInverse, vec3(inFillRectPos, this_depth)), 1.0);
-    reproj_pos = CameraData.viewInverse * reproj_pos;
-    reproj_pos = oldCam.proj * oldCam.view * reproj_pos;
+    vec4 reproj_pos = vec4(ProjectionInverse(CameraData.mInverseMat, vec3(inFillRectPos, this_depth)), 1.0);
+    reproj_pos = CameraData.mInverseViewMat * reproj_pos;
+    reproj_pos = CameraData.mLastInverseMat * reproj_pos;
     reproj_pos /= reproj_pos.w;
 
     vec2 absreproj = abs(reproj_pos.xy);
@@ -104,17 +78,15 @@ void main()
     {
         vec2 last_uv = reproj_pos.xy * 0.5 + 0.5;
 
-        vec4 old_value = texture(acc_img, last_uv);
-        float old_val = old_value.w * TEMPORAL_ACC;
-        vec4 return_color = vec4((old_value.xyz * old_val + result.xyz) / (old_val + 1), min(old_val + 1, TEMPORAL_ACC) / TEMPORAL_ACC);
+        vec2 sampled_value = texture(acc_img, last_uv).xw;
+        sampled_value.y *= 10;
+        sampled_value.x = (sampled_value.x * sampled_value.y + result) / (sampled_value.y + 1);
+        sampled_value.y = min(6, sampled_value.y + 1) * 0.1;
 
-        outColor = return_color;
+        outColor = vec4(sampled_value.x, sampled_value.x, sampled_value.x, sampled_value.y);
     }
     else
     {
-        outColor = vec4(result.xyz, 0.1);
-        //outColor = vec4(0.0);
-
+        outColor = vec4(result, result, result, 0.1);
     }
 }
-#endif

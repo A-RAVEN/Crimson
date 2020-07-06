@@ -107,9 +107,9 @@ void decodeMeshlet(in MeshletDescription desc, out uint vertCount, out uint prim
 void procVert(uint vert, uint vidx)
 {
   uint offsetId = vidx * 3;
-  vec4 raw0 = imageLoad(vertexBuffer, int(offsetId)).xyzw;
-  vec4 raw1 = imageLoad(vertexBuffer, int(offsetId + 1)).xyzw;
-  vec4 raw2 = imageLoad(vertexBuffer, int(offsetId + 2)).xyzw;
+  vec4 raw0 = texelFetch(vertexBuffer, int(offsetId)).xyzw;
+  vec4 raw1 = texelFetch(vertexBuffer, int(offsetId + 1)).xyzw;
+  vec4 raw2 = texelFetch(vertexBuffer, int(offsetId + 2)).xyzw;
 
   vec3 pos = raw0.xyz;
   vec3 normal = raw1.yzw;
@@ -146,7 +146,7 @@ void main()
     // Most of the time we will have fully saturated vertex utilization,
     // but we may compute the last vertex redundantly.
     {
-      uint vidx = imageLoad(meshletVertexIndicesBuffer, int(vertBegin + min(vert,vertMax))).x;
+      uint vidx = texelFetch(meshletVertexIndicesBuffer, int(vertBegin + min(vert,vertMax))).x;
       procVert(vert, vidx);
     }
   }
@@ -159,10 +159,10 @@ void main()
   for(uint i = 0; i < primRuns; ++i)
   {
     uint id0 = (laneID + GROUP_SIZE * i) * 3;
-    uint index0 = imageLoad(primitiveIndicesBuffer, int(primStart + id0)).x;
+    uint index0 = texelFetch(primitiveIndicesBuffer, int(primStart + id0)).x;
     gl_PrimitiveIndicesNV[id0] = uint(index0);
-    gl_PrimitiveIndicesNV[id0 + 1] = uint(imageLoad(primitiveIndicesBuffer, int(primStart + id0 + 1)).x);
-    gl_PrimitiveIndicesNV[id0 + 2] = uint(imageLoad(primitiveIndicesBuffer, int(primStart + id0 + 2)).x);
+    gl_PrimitiveIndicesNV[id0 + 1] = uint(texelFetch(primitiveIndicesBuffer, int(primStart + id0 + 1)).x);
+    gl_PrimitiveIndicesNV[id0 + 2] = uint(texelFetch(primitiveIndicesBuffer, int(primStart + id0 + 2)).x);
   }
 
   if(laneID == 0)
@@ -186,6 +186,6 @@ layout(location = 1) out vec4 normal;
 void main()
 {
   color = vec4(in_color, 1.0);
-  normal = vec4(normalize(in_normal.xyz) * 0.5 + 0.5, 1.0);
+  normal = in_normal;
 }
 #endif

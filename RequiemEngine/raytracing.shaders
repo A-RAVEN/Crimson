@@ -97,7 +97,7 @@ layout(binding = 11, set = 0) uniform sampler2D normalSampler;
 
 #define TEMPORAL_ACC 4.0
 
-#define TEMP_ROUGHNESS 0.2
+#define TEMP_ROUGHNESS 0.05
 void main() 
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDNV.xy) + vec2(0.5);
@@ -168,7 +168,7 @@ void main()
 
     float old_val = old_value.w * TEMPORAL_ACC;
     vec4 return_color = vec4((old_value.xyz * old_val + final_color) / (old_val + 1), min(old_val + 1, TEMPORAL_ACC) / TEMPORAL_ACC);
-    imageStore(image, ivec2(gl_LaunchIDNV.xy), return_color);
+    imageStore(image, ivec2(gl_LaunchIDNV.xy), vec4(final_color, 1.0));
 }
 #endif
 

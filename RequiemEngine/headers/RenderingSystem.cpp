@@ -91,12 +91,15 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 
 					m_ExecutionCmd->StartCommand();
 					m_ExecutionCmd->DeviceMemoryBarrier(EMemoryBarrierType::E_HOST_READ_WRITE);
-					m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
+					//m_ExecutionCmd->CopyImageToImage(m_RTColor, m_RTColorOld);
 					m_ExecutionCmd->ExecuteRenderPassInstance(m_RenderPassInstance);
 					m_ExecutionCmd->BindRayTracer(m_RayTracer);
 					m_ExecutionCmd->BindRayTracingDescriptorSet({ m_TransformManager.GetSet(0) }, 1);
 					m_ExecutionCmd->BindRayTracingDescriptorSet(m_RtSet, 0);
 					m_ExecutionCmd->StartRayTracing(m_ShaderTable, 0, 2, 1, 1024, 720);
+					m_ExecutionCmd->DeviceMemoryBarrier(EMemoryBarrierType::E_HOST_READ_WRITE);
+					m_ExecutionCmd->ExecuteRenderPassInstance(FilterRenderPassInstance);
+					m_ExecutionCmd->CopyImageToImage(m_RTColorAcc, m_RTColorOld);
 					m_ExecutionCmd->EndCommand();
 				}
 			}
@@ -107,7 +110,7 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 		m_PresentCmd->StartCommand();
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Normal, p_Window);
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
-		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColor, p_Window);
+		m_PresentCmd->CopyToSwapchain_Dynamic(m_RTColorAcc, p_Window);
 		//m_PresentCmd->CopyToSwapchain_Dynamic(m_Color, p_Window);
 		m_PresentCmd->EndCommand();
 		MainDevice->ExecuteBatches({ "GraphicsLoading", "Main Render", "Present" }, EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 1);
@@ -123,6 +126,7 @@ p_CubeResource(p_cube)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
 
+	Rect.Init(MainDevice);
 	MeshletTransform = MainDevice->CreateBuffer(sizeof(mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
 
 	m_TransformManager.ExtendBufferPages(0);
@@ -136,6 +140,7 @@ p_CubeResource(p_cube)
 	m_Color = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_RTColorOld = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_DST, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_RTColor = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_STORAGE, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	m_RTColorAcc = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COPY_SRC, EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PGPUImage test_depth_stencil = MainDevice->CreateImage(EFormat::E_FORMAT_D32_SFLOAT_S8_UINT, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	m_Normal = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_UNORM, 1024, 720, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_SAMPLE, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
 	PRenderPass test_renderpass = MainDevice->CreateRenderPass();
@@ -176,8 +181,61 @@ p_CubeResource(p_cube)
 
 	ShaderProcessor processor;
 
+	FilterRenderPass = MainDevice->CreateRenderPass();
+	FilterRenderPass->m_Attachments = {
+		{EFormat::E_FORMAT_B8G8R8A8_SRGB, EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS},
+	};
+	FilterRenderPass->m_Subpasses.resize(1);
+	FilterRenderPass->m_Subpasses[0].m_OutputAttachments = { 0 };
+	FilterRenderPass->BuildRenderPass();
+
+	FilterFrameBuffer = MainDevice->CreateFramebuffer();
+	FilterFrameBuffer->m_Images = { m_RTColorAcc };
+	FilterRenderPassInstance = MainDevice->CreateRenderPassInstance(FilterRenderPass, FilterFrameBuffer);
+
+	FilterSetLayout = MainDevice->CreateDescriptorSetLayout();
+	FilterSetLayout->m_Bindings.resize(6);
+	FilterSetLayout->m_Bindings[0].m_BindingPoint = 0;
+	FilterSetLayout->m_Bindings[0].m_Num = 1;
+	FilterSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	FilterSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
+	FilterSetLayout->m_Bindings[1].m_BindingPoint = 1;
+	FilterSetLayout->m_Bindings[1].m_Num = 1;
+	FilterSetLayout->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	FilterSetLayout->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
+	FilterSetLayout->m_Bindings[2].m_BindingPoint = 2;
+	FilterSetLayout->m_Bindings[2].m_Num = 1;
+	FilterSetLayout->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	FilterSetLayout->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
+	FilterSetLayout->m_Bindings[3].m_BindingPoint = 3;
+	FilterSetLayout->m_Bindings[3].m_Num = 1;
+	FilterSetLayout->m_Bindings[3].m_ResourceType = EShaderResourceType::E_SHADER_IMAGE_SAMPLER;
+	FilterSetLayout->m_Bindings[3].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
+	FilterSetLayout->m_Bindings[4].m_BindingPoint = 4;
+	FilterSetLayout->m_Bindings[4].m_Num = 1;
+	FilterSetLayout->m_Bindings[4].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	FilterSetLayout->m_Bindings[4].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
+	FilterSetLayout->m_Bindings[5].m_BindingPoint = 5;
+	FilterSetLayout->m_Bindings[5].m_Num = 1;
+	FilterSetLayout->m_Bindings[5].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	FilterSetLayout->m_Bindings[5].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_FRAGMENT };
+
+	FilterSet = FilterSetLayout->AllocDescriptorSet();
+
+	FilterSet->WriteDescriptorSetImage(0, m_RTColor, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MODE_CLAMP_TO_BORDER);
+	FilterSet->WriteDescriptorSetImage(1, test_depth_stencil, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MODE_CLAMP_TO_BORDER, EViewAsType::E_VIEW_AS_DEPTH);
+	FilterSet->WriteDescriptorSetImage(2, m_Normal, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MODE_CLAMP_TO_BORDER);
+	FilterSet->WriteDescriptorSetImage(3, m_RTColorOld, EFilterMode::E_FILTER_MODE_LINEAR, EAddrMode::E_ADDR_MODE_CLAMP_TO_BORDER);
+	FilterSet->WriteDescriptorSetBuffers(4, { m_CameraBuffer }, { {0, sizeof(Camera)} }, 0);
+	FilterSet->WriteDescriptorSetBuffers(5, { m_LastCameraBuffer }, { {0, sizeof(Camera)} }, 0);
+	FilterSet->EndWriteDescriptorSet();
 
 	FilterPipeline = MainDevice->CreateGraphicsPipeline();
+	FilterPipeline->m_VertexInputs.resize(1);
+	FilterPipeline->m_VertexInputs[0].m_DataTypes = Rect.GetDataType();
+	FilterPipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
+	FilterPipeline->m_DescriptorSetLayouts = { {0, FilterSetLayout} };
+	FilterPipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_DISABLED;
 	{
 		auto results = processor.MultiCompile("bilateral_filter.shaders");
 		for (auto& itr : results)
@@ -186,6 +244,8 @@ p_CubeResource(p_cube)
 			FilterPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
 		}
 	}
+	FilterRenderPass->InstanciatePipeline(FilterPipeline, 0);
+
 
 	m_Pipeline = MainDevice->CreateGraphicsPipeline();
 
@@ -354,7 +414,15 @@ p_CubeResource(p_cube)
 	m_LoadingBuffer->EndCommand();
 	m_RenderingThread->BindExecutionCommandBufferToBatch("GraphicsLoading", m_LoadingBuffer, true);
 
-
+	{
+		PGraphicsCommandBuffer cmd = m_RenderingThread->StartSubpassCommand(FilterRenderPassInstance, 0);
+		cmd->BindSubpassPipeline(FilterPipeline);
+		cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+		cmd->Sissor(0, 0, 1024, 720);
+		cmd->BindSubpassDescriptorSets({ FilterSet });
+		Rect.Draw(cmd);
+		cmd->EndCommandBuffer();
+	}
 }
 
 void RenderingSystem::SetupSystem()
