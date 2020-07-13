@@ -3,25 +3,41 @@
 
 namespace Crimson
 {
+	D3D12Instance* D3D12Instance::p_Singleton = nullptr;
+
 	void D3D12Instance::Init(bool enable_debug_extension)
 	{
 
+	}
+	void D3D12Instance::Dispose()
+	{
+	}
+	D3D12Instance* D3D12Instance::Get()
+	{
+		return p_Singleton;
 	}
 	D3D12Instance::D3D12Instance(bool enable_debug_extension)
 	{
 		UINT createFractoryFlags = 0;
 		if (enable_debug_extension)
 		{
-			createFractoryFlags = DXGI_CREATE_FACTORY_DEBUG;
+			SetupDebugLayer();
+			createFractoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
 		CreateDXGIFactory2(createFractoryFlags, IID_PPV_ARGS(&dxgiFactory));
 
 		EnumeratePhysicalDevices();
 	}
+	D3D12Instance::~D3D12Instance()
+	{
+	}
 	void D3D12Instance::SetupDebugLayer()
 	{
-		D3D12Debug::CheckResult(D3D12GetDebugInterface(IID_PPV_ARGS(&m_DebugInterface)), "D3D12 Get Debug Interface Issue!");
+		CHECK_DXRESULT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_DebugInterface)), "D3D12 Get Debug Interface Issue!");
 		m_DebugInterface->EnableDebugLayer();
+	}
+	void D3D12Instance::DestroyDebugLayer()
+	{
 	}
 	void D3D12Instance::EnumeratePhysicalDevices()
 	{
@@ -45,9 +61,14 @@ namespace Crimson
 					dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
 				{
 					maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;
-					D3D12Debug::CheckResult(dxgiAdapter1.As(&dxgiAdapter4), "D3D12 Get Adapter4 Issue!");
+					CHECK_DXRESULT(dxgiAdapter1.As(&dxgiAdapter4), "D3D12 Get Adapter4 Issue!");
+					m_PhysicalDevices.push_back(dxgiAdapter4);
 				}
 			}
 		}
+	}
+	void D3D12Instance::ClearPhysicalDevices()
+	{
+		m_PhysicalDevices.clear();
 	}
 }

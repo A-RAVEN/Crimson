@@ -10,6 +10,7 @@ namespace Crimson
 		static void Init(bool enable_debug_extension);
 		static void Dispose();
 		static D3D12Instance* Get();
+		std::vector<ComPtr<IDXGIAdapter4>>& GetPhysicalDevices() { return m_PhysicalDevices; }
 	private:
 		D3D12Instance(bool enable_debug_extension);
 		~D3D12Instance();
@@ -26,5 +27,6 @@ namespace Crimson
 		ComPtr<ID3D12Debug> m_DebugInterface;
 		ComPtr<IDXGIFactory4> dxgiFactory;
 
+		std::vector<ComPtr<IDXGIAdapter4>> m_PhysicalDevices;
 	};
 }

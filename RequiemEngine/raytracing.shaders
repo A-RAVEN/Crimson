@@ -97,7 +97,7 @@ layout(binding = 11, set = 0) uniform sampler2D normalSampler;
 
 #define TEMPORAL_ACC 4.0
 
-#define TEMP_ROUGHNESS 0.05
+#define TEMP_ROUGHNESS 0.2
 void main() 
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDNV.xy) + vec2(0.5);

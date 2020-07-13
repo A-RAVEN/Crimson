@@ -144,6 +144,15 @@
     <ClInclude Include="headers\VulkanShaderModule.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\D3D12GPUDeviceThread.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\D3D12ExecutionCommandBuffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\D3D12Buffer.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -210,6 +219,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\VulkanShaderModuel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12GPUDeviceThread.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12Buffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

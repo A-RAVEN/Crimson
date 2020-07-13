@@ -95,6 +95,7 @@ namespace Crimson
 	};
 	using PExecutionCommandBuffer = ExecutionCommandBuffer*;
 
+	//instance with its own thread-safe command buffer management
 	class IGPUDeviceThread : public IObject
 	{
 	public:
@@ -177,7 +178,7 @@ namespace Crimson
 		GPUDeviceManager();
 		~GPUDeviceManager();
 		PGPUDevice CreateVulkanDevice(uint32_t physics_device_id, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
-
+		PGPUDevice CreateD3D12Device(uint32_t physics_device_id, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
 		static GPUDeviceManager*		p_Singleton;
 		std::map<std::string, size_t>	m_DeviceMap;
 		std::vector<PGPUDevice>			m_DeviceList;

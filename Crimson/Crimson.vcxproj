@@ -171,8 +171,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="headers\Containers.h" />
+    <ClInclude Include="headers\D3D12Buffer.h" />
     <ClInclude Include="headers\D3D12DebugLog.h" />
+    <ClInclude Include="headers\D3D12ExecutionCommandBuffer.h" />
     <ClInclude Include="headers\D3D12GPUDevice.h" />
+    <ClInclude Include="headers\D3D12GPUDeviceThread.h" />
     <ClInclude Include="headers\D3D12Header.h" />
     <ClInclude Include="headers\D3D12Instance.h" />
     <ClInclude Include="headers\D3D12SurfaceContext.h" />
@@ -215,7 +218,9 @@
     <ClInclude Include="include\Version.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\D3D12Buffer.cpp" />
     <ClCompile Include="src\D3D12GPUDevice.cpp" />
+    <ClCompile Include="src\D3D12GPUDeviceThread.cpp" />
     <ClCompile Include="src\D3D12Instance.cpp" />
     <ClCompile Include="src\GPUDevice.cpp" />
     <ClCompile Include="src\vk_mem_alloc.cpp" />

@@ -6,7 +6,9 @@ namespace Crimson
 {
 	namespace D3D12Debug
 	{
-		static inline void CheckResult(HRESULT result, std::string const& error_string)
+#define CHECK_DXRESULT( hresult , _error_string ) {D3D12Debug::CheckDXResultWithLine(hresult, _error_string, __LINE__, __FILE__);} 
+
+		static inline void CheckDXResultWithLine(HRESULT result, std::string const& error_string, int line, std::string const& file)
 		{
 			if (FAILED(result))
 			{
@@ -14,7 +16,8 @@ namespace Crimson
 				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
 #endif
-				std::cerr << "D3D12 Runtime Error:\n" << error_string << std::endl;
+				std::string out = "D3D12 Runtime Error:\n" + error_string + "\nLine: " + std::to_string(line) + "\nFile: " + file + "\n";
+				std::cerr << out << std::endl;
 #ifdef _WIN32
 				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 #endif
