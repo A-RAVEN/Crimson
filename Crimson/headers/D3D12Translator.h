@@ -172,6 +172,13 @@ namespace Crimson
 		D3D12_FILL_MODE_SOLID,
 	};
 
+	static D3D12_COMPARISON_FUNC D3D12_STATIC_COMPARISON_MODE_TABLE[static_cast<uint32_t>(ECompareMode::E_COMPARE_MODE_MAX)]
+	{
+		D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_LESS,
+		D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_LESS_EQUAL,
+		D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_GREATER,
+	};
+
 	static D3D12_COMMAND_LIST_TYPE D3D12ExecutionCommandTypeToCommandListType(EExecutionCommandType srcType)
 	{
 		return D3D12_STATIC_COMMAND_LIST_TYPE_TABLE[static_cast<uint32_t>(srcType)];
@@ -191,26 +198,31 @@ namespace Crimson
 		return D3D12_STATIC_FORMAT_TYPE_TABLE[static_cast<uint32_t>(format)];
 	}
 
-	static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12TopologyType(ETopology topology)
+	inline static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12TopologyType(ETopology topology)
 	{
 		CRIM_ASSERT(topology != ETopology::E_TOPOLOGY_TRIANGLE_STRIP, "DXGI does not support Triangle Strip Topology, Fallback to Triangles");
 		return D3D12_STATIC_TOPOLOGY_TYPE_TABLE[static_cast<uint32_t>(topology)];
 	}
 
-	static D3D12VertexInputDataTypeInfo const& D3D12VertexInputDataType(EDataType dataType)
+	inline static D3D12VertexInputDataTypeInfo const& D3D12VertexInputDataType(EDataType dataType)
 	{
 		return D3D12_STATIC_DATATYPE_TO_FORMAT_TABLE[static_cast<uint32_t>(dataType)];
 	}
 
-	static D3D12_CULL_MODE D3D12CullMode(ECullMode cull_mode)
+	inline static D3D12_CULL_MODE D3D12CullMode(ECullMode cull_mode)
 	{
 		CRIM_ASSERT(cull_mode != ECullMode::E_CULL_FRONT_BACK, "DXGI does not support Cull Mode Front Back, Fallback to Cull Front");
 		return D3D12_STATIC_CULL_MODE_TABLE[static_cast<uint32_t>(cull_mode)];
 	}
 
-	static D3D12_FILL_MODE D3D12FillMode(EPolygonMode polygon_mode)
+	inline static D3D12_FILL_MODE D3D12FillMode(EPolygonMode polygon_mode)
 	{
 		CRIM_ASSERT(polygon_mode != EPolygonMode::E_POLYGON_MODE_POINT, "DXGI does not support Polygon Mode Point, Fallback to Polygon Mode Fill");
 		return D3D12_STATIC_FILL_MODE_TABLE[static_cast<uint32_t>(polygon_mode)];
+	}
+
+	inline static D3D12_COMPARISON_FUNC D3D12ComparisonFunc(ECompareMode compare_mode)
+	{
+		return D3D12_STATIC_COMPARISON_MODE_TABLE[static_cast<uint32_t>(compare_mode)];
 	}
 }

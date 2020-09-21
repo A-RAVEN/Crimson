@@ -13,6 +13,7 @@ namespace Crimson
 	}
 	void D3D12GraphicsPipeline::BuildPipeline()
 	{
+		m_PipelineStateStreamingData.Clear();
 		CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY topology = D3D12TopologyType(m_Topology);
 		m_PipelineStateStreamingData.PushData(topology);
 		//push attribute inputs
@@ -52,14 +53,58 @@ namespace Crimson
 		CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout = D3D12_INPUT_LAYOUT_DESC{ m_VertexInputDescriptors.data(), static_cast<UINT>(m_VertexInputDescriptors.size())};
 		m_PipelineStateStreamingData.PushData(inputLayout);
 		//push rasterizer settings
-		CD3DX12_RASTERIZER_DESC rasterizer_desc{};
-		rasterizer_desc.CullMode = D3D12CullMode(m_CullMode);
-		rasterizer_desc.FillMode = D3D12FillMode(m_PolygonMode);
-		rasterizer_desc.ForcedSampleCount = m_MultiSampleShadingNum;
-		CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER rasterizer_stream = rasterizer_desc;
-		m_PipelineStateStreamingData.PushData(rasterizer_stream);
-		CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL depth_stencil_stream;
-		m_PipelineStateStreamingData.PushData(depth_stencil_stream);
+		{
+			CD3DX12_RASTERIZER_DESC rasterizer_desc{};
+			rasterizer_desc.CullMode = D3D12CullMode(m_CullMode);
+			rasterizer_desc.FillMode = D3D12FillMode(m_PolygonMode);
+			rasterizer_desc.ForcedSampleCount = m_MultiSampleShadingNum;
+			CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER rasterizer_stream = rasterizer_desc;
+			m_PipelineStateStreamingData.PushData(rasterizer_stream);
+		}
+		//depth stencil settings
+		{
+			CD3DX12_DEPTH_STENCIL_DESC depth_stencil_desc{};
+			depth_stencil_desc.DepthEnable = m_DepthRule != EDepthTestRule::E_DEPTH_TEST_DISABLED;
+			depth_stencil_desc.StencilEnable = m_StencilRule != EStencilRule::E_STENCIL_DISABLED;
+			depth_stencil_desc.DepthFunc == D3D12ComparisonFunc(m_DepthCompareMode);
+			depth_stencil_desc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+			switch (m_StencilRule)
+			{
+			case EStencilRule::E_STENCIL_DISABLED:
+				depth_stencil_desc.FrontFace = {};
+				depth_stencil_desc.BackFace = {};
+				break;
+			case EStencilRule::E_STENCIL_WRITE:
+				depth_stencil_desc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+				depth_stencil_desc.FrontFace.StencilPassOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_REPLACE;
+				depth_stencil_desc.FrontFace.StencilFailOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.StencilReadMask = 0xFF;
+				depth_stencil_desc.StencilWriteMask = 0xFF;
+				depth_stencil_desc.BackFace = depth_stencil_desc.FrontFace;
+				break;
+			case EStencilRule::E_STENCIL_TEST:
+				depth_stencil_desc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_EQUAL;
+				depth_stencil_desc.FrontFace.StencilPassOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.FrontFace.StencilFailOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.StencilReadMask = 0xff;
+				depth_stencil_desc.StencilWriteMask = 0x0;
+				depth_stencil_desc.BackFace = depth_stencil_desc.FrontFace;
+				break;
+			case EStencilRule::E_STENCIL_INVTEST:
+				depth_stencil_desc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_NOT_EQUAL;
+				depth_stencil_desc.FrontFace.StencilPassOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.FrontFace.StencilFailOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP::D3D12_STENCIL_OP_KEEP;
+				depth_stencil_desc.StencilReadMask = 0xFF;
+				depth_stencil_desc.StencilWriteMask = 0x0;
+				depth_stencil_desc.BackFace = depth_stencil_desc.FrontFace;
+				break;
+			}
+			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL depth_stencil_stream = depth_stencil_desc;
+			m_PipelineStateStreamingData.PushData(depth_stencil_stream);
+		}
 		//push shaders
 		for (auto p_module : m_ShaderModules)
 		{
