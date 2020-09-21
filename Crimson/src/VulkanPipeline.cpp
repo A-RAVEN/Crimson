@@ -1,5 +1,6 @@
 #include <headers/VulkanPipeline.h>
 #include <headers/VulkanDebugLog.h>
+#include <headers/VulkanShaderModule.h>
 #include <vector>
 
 namespace Crimson
@@ -20,6 +21,11 @@ namespace Crimson
 			"Vulkan Creat Shader Module Issue!");
 		m_Shaders.push_back(std::make_pair(new_shader_module, shader_type));
 	}
+	void VulkanGraphicsPipeline::LoadShaderModule(PShaderModule shader_module)
+	{
+		VulkanShaderModule* vulkan_shader_module = static_cast<VulkanShaderModule*>(shader_module);
+		m_ShaderModules.push_back(vulkan_shader_module);
+	}
 	void VulkanGraphicsPipeline::Dispose()
 	{
 		for (auto& pair : m_Shaders)
@@ -27,6 +33,7 @@ namespace Crimson
 			vkDestroyShaderModule(p_OwningDevice->m_LogicalDevice, pair.first, VULKAN_ALLOCATOR_POINTER);
 		}
 		m_Shaders.clear();
+		m_ShaderModules.clear();
 		p_OwningDevice->HandleDisposedGraphicsPipeline(this);
 	}
 }

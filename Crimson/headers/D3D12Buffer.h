@@ -17,12 +17,12 @@ namespace Crimson
 
 		D3D12BufferObject();
 		void SetD3D12Buffer(D3D12GPUDevice* p_device, uint64_t size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type);
-		VkBufferView GetVulkanBufferView(std::string const& name);
-		virtual void InitTexelBufferView(std::string const& name, EFormat format, uint64_t offset, uint64_t range) override;
+		//VkBufferView GetVulkanBufferView(std::string const& name);
+		virtual void InitTexelBufferView(std::string const& name, EFormat format, uint64_t offset, uint64_t range) override {};
 		virtual void Dispose() override;
 		virtual uint8_t* GetMappedPointer() override;
 		virtual void UnMapp() override;
-		inline VkBuffer GetVulkanBuffer() const { return m_Buffer; }
+		inline ComPtr<ID3D12Resource> GetD3D12BufferBuffer() const { return m_Buffer; }
 
 	private:
 		D3D12GPUDevice* p_OwningDevice;

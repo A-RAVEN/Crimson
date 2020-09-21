@@ -1,0 +1,13 @@
+{
+    "Pipelines" = [
+        {
+            "Batch" = "Opaque",
+            "Cull" = "CullBack"
+            "Shaders" = "test.shader"
+        },
+        {
+            "Batch" = "Shadow"
+            "Ref" = "OpaqueShadow.material"
+        }
+    ] 
+}

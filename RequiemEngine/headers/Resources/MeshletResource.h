@@ -16,6 +16,7 @@ using namespace Crimson;
 class MeshletGroupResource
 {
 public:
+    MeshletGroupResource(PGPUDevice device, PDescriptorSetLayout setLayout);
 	void LoadMeshRaw(const aiScene* scene);
 
     PGPUBuffer m_VertexBuffer;
@@ -30,4 +31,16 @@ public:
 
     uint64_t m_VertexStride;
     std::vector<EDataType> m_VertexDataType;
+
+
+    static PDescriptorSetLayout CreateSharedSetLayout(PGPUDevice srcDevice);
+
+    PDescriptorSet GetDescriptorSet() const { return meshletSet; }
+    PDescriptorSetLayout GetDescriptorSetLayout() const { return sharedSetLayout; }
+
+private:
+    PGPUDevice pDevice;
+    PDescriptorSetLayout sharedSetLayout;
+
+    PDescriptorSet meshletSet;
 };

@@ -34,7 +34,7 @@ struct MeshletDescription
   uint m_PrimitiveBegin;
 };
 
-layout(std430, binding = 4) buffer readonly MESHLET_DESCS
+layout(std430, binding = 3, set = 1) buffer readonly MESHLET_DESCS
 {
   MeshletDescription meshletDescs[];
 };

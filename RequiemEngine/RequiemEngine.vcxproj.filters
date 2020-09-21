@@ -368,5 +368,20 @@
     <ClInclude Include="headers\Graphics\FillScreenRect.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\Graphics\GraphicsRenderPass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Graphics\RenderingContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Graphics\ShaderPack.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\Graphics\SphericalHarmonics3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\GlobalStaticPointers.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -22,6 +22,7 @@ namespace Crimson
 		E_COMMAND_TYPE_GENERAL = 0,
 		E_COMMAND_TYPE_GRAPHICS,
 		E_COMMAND_TYPE_COMPUTE,
+		E_COMMAND_TYPE_COPY,
 		E_COMMAND_TYPE_MAX
 	};
 
@@ -87,6 +88,7 @@ namespace Crimson
 		virtual void BindRayTracingDescriptorSet(PDescriptorSet descriptor_set, uint32_t set_id) = 0;
 		virtual void StartRayTracing(PGPUBuffer raygen_table, uint64_t raygen_offset, uint64_t miss_offset, uint64_t hit_offset, uint32_t width, uint32_t height) = 0;
 		virtual void DeviceMemoryBarrier(EMemoryBarrierType barrier_type) = 0;
+		virtual void BufferBarrier(std::vector<PGPUBuffer> const& buffers, EMemoryBarrierType barrier_type) = 0;
 		virtual void StartCommand() = 0;
 		virtual void EndCommand() = 0;
 		virtual void LoadCache() = 0;
@@ -128,7 +130,7 @@ namespace Crimson
 		virtual PDescriptorSetLayout CreateDescriptorSetLayout() = 0;
 
 		//Shader Managing
-		virtual PShaderModule CreateShaderModule(void* data, size_t size) = 0;
+		virtual PShaderModule CreateShaderModule(void* data, size_t size, EShaderType shader_type) = 0;
 
 		//Pipeline Managing
 		virtual PGraphicsPipeline CreateGraphicsPipeline() = 0;

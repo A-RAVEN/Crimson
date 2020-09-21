@@ -79,6 +79,29 @@ namespace Crimson
 		EDATA_TYPE_MAX,
 	};
 
+	enum class EVertexInputSematic : uint8_t
+	{
+		EPOSITION = 0,
+		ECOLOR,
+		EBLENDINDICES,
+		EBLENDWEIGHT,
+		ETEXCOORD,
+		ENORMAL,
+		ETANGENT,
+		ESEMATIC_MAX,
+	};
+
+	static std::string STATIC_SEMATIC_TABLE[static_cast<uint32_t>(EVertexInputSematic::ESEMATIC_MAX)] =
+	{
+		"POSITION",
+		"COLOR",
+		"BLENDINDICES",
+		"BLENDWEIGHT",
+		"TEXCOORD",
+		"NORMAL",
+		"TANGENT",
+	};
+
 	enum class EBlendFactor : uint8_t
 	{
 		E_ONE = 0,
@@ -152,5 +175,10 @@ namespace Crimson
 			return true;
 		}
 		return false;
+	}
+
+	static inline std::string const& BuiltInSematics(EVertexInputSematic sematic)
+	{
+		return STATIC_SEMATIC_TABLE[static_cast<uint32_t>(sematic)];
 	}
 }

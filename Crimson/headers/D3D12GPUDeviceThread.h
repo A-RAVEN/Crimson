@@ -16,18 +16,16 @@ namespace Crimson
 		D3D12GPUDeviceThread();
 		~D3D12GPUDeviceThread();
 		virtual void Dispose() override;
-		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
-		//void HandleDisposedGraphicsCommandBuffer(VulkanGraphicsCommandBuffer* cmd_buffer);
-		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override;
-		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time) override;
+		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override { return nullptr; }
 
-		//void OnGraphicsCommandBufferFinished(VulkanGraphicsCommandBuffer* cmd_buffer);
+		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override { return nullptr; }
+		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time) override {}
+
 		void InitGPUDeviceThread(D3D12GPUDevice* device);
-		//void PushBackSubpassCommandBuffer(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t renderpass_instance_id, uint32_t subpass_id, std::deque<VulkanDescriptorSet*>& referenced_sets);
-		//void PushBackExecutionCommandBuffers(std::vector<VkCommandBuffer>& cmd_buffers, uint32_t batch_unique_id, std::vector<VkSemaphore>& waiting_semaphores, std::vector<VkPipelineStageFlags>& waiting_stages);
 
-		//VkCommandBuffer AllocExecutionVkCommandBuffer(EExecutionCommandType cmd_type);
-		//void RecycleExecutionVkCommandBuffer(VkCommandBuffer cmd_buffer, EExecutionCommandType cmd_type);
+		//accessed by execution command buffer
+		ComPtr<ID3D12GraphicsCommandList> AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, ComPtr<ID3D12CommandAllocator>& ownerAllocator);
+		void RecycleExecutionD3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmd_buffer, EExecutionCommandType cmd_type);
 	private:
 		void InitCommandAllocators();
 

@@ -2,6 +2,8 @@
 #include <glm/glm.hpp>
 #include <stdint.h>
 #include <deque>
+#include <vector>
+#include <headers/AccelStructs/BVH.h>
 #include <headers/MeshResource.h>
 #include <headers/Camera.h>
 #include <map>
@@ -36,5 +38,6 @@ public:
 	std::deque<TransformInfo> m_TransoformUpdateInfo;
 	std::deque<InstanceInfo> m_RemovedInstances;
 	std::map<MeshResource*, std::deque<InstanceInfo>> m_InstanceList;
+	std::vector<BVHVolume> debugVolumes;
 	Camera m_Camera;
 };

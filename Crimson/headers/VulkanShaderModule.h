@@ -8,6 +8,8 @@ namespace Crimson
 	{
 	public:
 		friend class VulkanGPUDevice;
+		friend class VulkanGraphicsPipeline;
+		friend class VulkanRenderPass;
 		void Init(VulkanGPUDevice* p_device, VkShaderModule shader_module);
 		virtual void Dispose() override;
 	private:

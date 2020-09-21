@@ -7,7 +7,10 @@ namespace Crimson
 
 	void D3D12Instance::Init(bool enable_debug_extension)
 	{
-
+		if (p_Singleton == nullptr)
+		{
+			p_Singleton = new D3D12Instance(enable_debug_extension);
+		}
 	}
 	void D3D12Instance::Dispose()
 	{

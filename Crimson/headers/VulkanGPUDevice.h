@@ -127,7 +127,7 @@ namespace Crimson
 		void HandleDisposedDescriptorSetLayout(VulkanDescriptorSetLayout* p_set_layout);
 
 		//Shader Managing
-		virtual PShaderModule CreateShaderModule(void* data, size_t size) override;
+		virtual PShaderModule CreateShaderModule(void* data, size_t size, EShaderType shader_type) override;
 		void HandleDIsposedShaderModule(VulkanShaderModule* p_module);
 
 		//Pipeline Managing

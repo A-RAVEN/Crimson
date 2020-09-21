@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -22,7 +22,7 @@
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{AA8D8664-5069-4290-940B-6BF751498E88}</ProjectGuid>
     <RootNamespace>Crimson</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -106,7 +106,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -123,7 +123,7 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <Lib>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -145,7 +145,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -166,7 +166,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -177,8 +177,12 @@
     <ClInclude Include="headers\D3D12GPUDevice.h" />
     <ClInclude Include="headers\D3D12GPUDeviceThread.h" />
     <ClInclude Include="headers\D3D12Header.h" />
+    <ClInclude Include="headers\D3D12Image.h" />
     <ClInclude Include="headers\D3D12Instance.h" />
+    <ClInclude Include="headers\D3D12Pipeline.h" />
+    <ClInclude Include="headers\D3D12ShaderModule.h" />
     <ClInclude Include="headers\D3D12SurfaceContext.h" />
+    <ClInclude Include="headers\D3D12Translator.h" />
     <ClInclude Include="headers\d3dx12.h" />
     <ClInclude Include="headers\Debug.h" />
     <ClInclude Include="headers\GeneralDebug.h" />
@@ -219,9 +223,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\D3D12Buffer.cpp" />
+    <ClCompile Include="src\D3D12ExecutionCommandBuffer.cpp" />
     <ClCompile Include="src\D3D12GPUDevice.cpp" />
     <ClCompile Include="src\D3D12GPUDeviceThread.cpp" />
+    <ClCompile Include="src\D3D12Image.cpp" />
     <ClCompile Include="src\D3D12Instance.cpp" />
+    <ClCompile Include="src\D3D12Pipeline.cpp" />
+    <ClCompile Include="src\D3D12ShaderModule.cpp" />
+    <ClCompile Include="src\D3D12SurfaceContext.cpp" />
     <ClCompile Include="src\GPUDevice.cpp" />
     <ClCompile Include="src\vk_mem_alloc.cpp" />
     <ClCompile Include="src\VulkanAccelerationStructure.cpp" />

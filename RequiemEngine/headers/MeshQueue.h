@@ -19,5 +19,5 @@ public:
 	std::vector<BufferQueue<MeshInstanceData, 500>> MeshQueue;
 	void PushInstance(InstanceInfo const& instance_info);
 	void Clear();
-	void CmdDrawInstances(PGraphicsCommandBuffer commane_buffer, uint32_t transform_batch_id);
+	void CmdDrawInstances(PGraphicsCommandBuffer commane_buffer, uint32_t transform_batch_id) const;
 };

@@ -161,12 +161,18 @@ namespace Crimson
 	enum class EMemoryType : uint8_t
 	{
 		//Staging buffers, quick access on CPU, slow on GPU
+		//VMA_MEMORY_USAGE_CPU_ONLY
+		//D3D12_HEAP_TYPE_UPLOAD
 		E_MEMORY_TYPE_HOST = 0,
 		//May be invisible to host, GPU access fast
+		//VMA_MEMORY_USAGE_GPU_ONLY
+		//D3D12_HEAP_TYPE_DEFAULT
 		E_MEMORY_TYPE_DEVICE,
 		//May be accessed fast both by CPU and GPU
 		E_MEMORY_TYPE_HOST_TO_DEVICE,
 		//Read back from GPU
+		//VMA_MEMORY_USAGE_GPU_TO_CPU
+		//D3D12_HEAP_TYPE_READBACK
 		E_MEMORY_TYPE_DEVICE_TO_HOST,
 		E_MEMORY_TYPE_MAX,
 	};

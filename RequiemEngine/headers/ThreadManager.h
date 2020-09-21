@@ -4,7 +4,7 @@
 #include <vector>
 #include <atomic>
 #include <list>
-#include <headers/Containers/ConcurrentQueue/blockingconcurrentqueue.h>
+#include <headers/Containers/ConcurrentQueue/concurrentqueue.h>
 
 using LockGuard = std::lock_guard<std::mutex>;
 using UniqueLock = std::unique_lock<std::mutex>;
@@ -40,10 +40,13 @@ public:
 	void End();
 	bool Working() const;
 	uint32_t GetId() const;
+	friend class ThreadManager;
 private:
 	ThreadManager* p_OwningManager;
 	uint32_t m_ThreadId;
 	std::thread m_WorkerThread;
+	moodycamel::ProducerToken* producerToken;
+	moodycamel::ConsumerToken* consumerToken;
 };
 
 class ThreadManager
@@ -53,13 +56,14 @@ public:
 	void Init();
 	void Terminate();
 	void EnqueueJob(ThreadJob* job);
+	void EnqueueJob(ThreadWorker const* srcWorker, ThreadJob* job);
 	ThreadJob* DequeueJob();
 	friend class ThreadWorker;
 private:
 	std::vector<ThreadWorker*> m_Workers;
 	std::mutex m_QueueMutex;
 	std::condition_variable m_QueueNotifier;
-	moodycamel::BlockingConcurrentQueue<ThreadJob*> m_JobQueue;
+	moodycamel::ConcurrentQueue<ThreadJob*> m_JobQueue;
 	//std::list<ThreadJob*> m_JobQueue;
 	std::atomic_bool b_Working;
 };

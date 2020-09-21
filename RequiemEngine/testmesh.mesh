@@ -21,7 +21,7 @@ layout(triangles, max_vertices = 64, max_primitives = 126) out;
 //-------------------------------------
 // transform_ub: Uniform buffer for transformations
 //
-layout (std140, binding = 0) uniform UNIFORM_CAM
+layout (std140, binding = 0, set = 0) uniform UNIFORM_CAM
 { 
 	mat4 view;
 	mat4 proj;
@@ -31,9 +31,9 @@ layout (std140, binding = 0) uniform UNIFORM_CAM
 
 
 
-  layout(binding = 1,  set=0, r32ui)  uniform readonly uimageBuffer meshletVertexIndicesBuffer;
-  layout(binding = 2,  set=0, r32ui)  uniform readonly uimageBuffer primitiveIndicesBuffer;
-  layout(binding = 3,  set=0, rgba32f)  uniform readonly imageBuffer  vertexBuffer;
+  layout(binding = 0,  set=1, r32ui)  uniform readonly uimageBuffer meshletVertexIndicesBuffer;
+  layout(binding = 1,  set=1, r32ui)  uniform readonly uimageBuffer primitiveIndicesBuffer;
+  layout(binding = 2,  set=1, rgba32f)  uniform readonly imageBuffer  vertexBuffer;
 
 layout (push_constant) uniform UNIFORM_TRANS
 { 
@@ -53,7 +53,7 @@ struct MeshletDescription
   uint m_PrimitiveBegin;
 };
 
-layout (std430, binding = 4) buffer readonly _meshlets
+layout (std430, binding = 3, set = 1) buffer readonly _meshlets
 {
 	MeshletDescription meshlets[];
 } meshletData;

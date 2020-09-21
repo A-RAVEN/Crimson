@@ -153,6 +153,18 @@
     <ClInclude Include="headers\D3D12Buffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\D3D12Translator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\D3D12Image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\D3D12Pipeline.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\D3D12ShaderModule.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -225,6 +237,21 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\D3D12Buffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12SurfaceContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12ExecutionCommandBuffer.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12Image.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12Pipeline.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12ShaderModule.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

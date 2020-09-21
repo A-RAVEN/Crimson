@@ -1,0 +1,17 @@
+#ifndef TEST_H
+#define TEST_H
+
+#if VERTEX_SHADER
+#include "camera.gh"
+layout(set = 0, binding = 0) uniform MATRIX
+{
+	Camera cam;
+};
+
+layout(set = 1, binding = 0) buffer readonly TRANSFORMS
+{
+	mat4 transforms[];
+};
+#endif
+
+#endif

@@ -21,7 +21,7 @@ void MeshInstanceQueue::Clear()
 	}
 }
 
-void MeshInstanceQueue::CmdDrawInstances(PGraphicsCommandBuffer command_buffer, uint32_t transform_batch_id)
+void MeshInstanceQueue::CmdDrawInstances(PGraphicsCommandBuffer command_buffer, uint32_t transform_batch_id) const
 {
 	if (transform_batch_id < MeshQueue.size() && MeshQueue[transform_batch_id].Size() > 0)
 	{

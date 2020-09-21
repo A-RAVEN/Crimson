@@ -7,11 +7,11 @@
 
 namespace Crimson
 {
-	class VulkanImageTransitionData
+	class VulkanImageQueueTransferData
 	{
 	public:
-		VulkanImageObject* p_image;
-
+		uint32_t srcQueueFamily;
+		uint32_t dstQueueFamily;
 	};
 
 	class VulkanImageLayoutCache
@@ -25,6 +25,15 @@ namespace Crimson
 		{}
 		void UpdateLayout(VkImageLayout new_layout);
 	};
+
+	struct VulkanImageSubresourceData
+	{
+	public:
+		uint32_t width;
+		uint32_t height;
+		VkImageLayout layout;
+	};
+
 
 	class VulkanImageObject : public IGPUImage
 	{
@@ -68,6 +77,8 @@ namespace Crimson
 		std::array<int8_t, static_cast<size_t>(EViewAsType::E_VIEW_AS_TYPE_MAX)> m_ImageViewMap;
 		std::vector<VkImageView> m_ImageViews;
 		EViewAsType m_DefaultViewAsType;
+
+		std::vector<VulkanImageSubresourceData> m_SubresourceData;
 
 		std::array<std::array<VkSampler, static_cast<size_t>(EAddrMode::E_ADDR_MAX)>,
 			static_cast<size_t>(EFilterMode::E_FILTER_MODE_MAX)> m_Samplers;

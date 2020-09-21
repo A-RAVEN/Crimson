@@ -32,6 +32,16 @@ namespace Crimson
 		virtual void StartCommand() override;
 		virtual void EndCommand() override;
 		virtual void LoadCache() override;
+
+		//buffer barriers
+		virtual void BufferBarrier(std::vector<PGPUBuffer> const& buffers, EMemoryBarrierType barrier_type) override;
+		void RecieveBuffers(std::vector<PGPUBuffer> const& buffers, EExecutionCommandType srcCommandType);
+		void SendBuffers(std::vector<PGPUBuffer> const& buffers, EExecutionCommandType dstCommandType);
+		//image barriers
+		void RecieveImages(std::vector<PGPUImage> const& images, EExecutionCommandType srcCommandType);
+		void SendImages(std::vector<PGPUImage> const& images, EExecutionCommandType dstCommandType);
+
+
 		void SetExecutionCommandBuffer(VulkanGPUDevice* p_device, VulkanGPUDeviceThread* p_thread, EExecutionCommandType command_type);
 	private:
 		void TransitionSwapchainImageToCopyDst(VkImage swapchain_image, VulkanSurfaceContext* surface_context, bool initialized);

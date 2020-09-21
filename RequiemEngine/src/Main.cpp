@@ -31,8 +31,8 @@
 #include <headers/Components/MeshRenderComp.h>
 #include <headers/Components/HierarchyComp.h>
 #include <headers/LuaInterface/GraphicsLuaMachine.h>
+#include <headers/GlobalStaticPointers.h>
 
-//using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat4>;
 using RaytraceGeometryType = RayTraceGeometryInstance<glm::mat3x4>;
 
 
@@ -70,6 +70,10 @@ public:
 
 int main()
 {
+	ThreadManager *thread_manager = new ThreadManager();
+	thread_manager->Init();
+	GLOBAL::GlobalStaticManager = thread_manager;
+	NetworkManager network_manager;
 	TimeManager time_manager;
 	KeyboardController inputs;
 	World world(time_manager, inputs);
@@ -110,7 +114,7 @@ int main()
 	std::cout << "Create Device" << std::endl;
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_VULKAN, 3, 1, 1);
 
-	MeshletGroupResource new_meshlet;
+	MeshletGroupResource new_meshlet(MainDevice, MeshletGroupResource::CreateSharedSetLayout(MainDevice));
 	new_meshlet.LoadMeshRaw(scene);
 
 	Win32Window new_window;
@@ -203,11 +207,9 @@ int main()
 
 	bool toggle = false;
 
-	ThreadManager thread_manager;
-	NetworkManager network_manager;
+
 	bool net_inited = false;
-	thread_manager.Init();
-	thread_manager.EnqueueJob(&rendering_system);
+	thread_manager->EnqueueJob(&rendering_system);
 	float wait_time = 0.0f;
 	while (new_window.IsWindowRunning())
 	{
@@ -219,9 +221,11 @@ int main()
 		{
 			MeshInstance &bunny = instances[i];
 			bunny.transform->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(i * 10.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(50.0f));
-			auto vol = test_bvh[volumes[i]];
+			auto& vol = test_bvh[volumes[i]];
 			vol.box = bunny.mesh->GetBox(bunny.transform->m_Info.m_Matrix);
+			test_bvh.VolumeDirty(volumes[i]);
 		}
+		//test_bvh.UpdateTree();
 
 
 		//transforms[0]->m_Info.m_Matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, glm::sin(time_manager.elapsedTime()), 0.0f)) * glm::rotate(glm::mat4(1.0f), time_manager.elapsedTime() * glm::pi<float>() * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
@@ -234,8 +238,8 @@ int main()
 		if (inputs.KeyState(VK_RBUTTON))
 		{
 			glm::vec2 movement = inputs.GetMouseMovement();
-			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 30.0f);
-			angles.y = glm::clamp(angles.y + movement.y * time_manager.deltaTime() * 10.0f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
+			angles.x = (angles.x + movement.x * time_manager.deltaTime() * 1.0f);
+			angles.y = glm::clamp(angles.y + movement.y * time_manager.deltaTime() * 1.0f, -glm::pi<float>() * 0.49999f, glm::pi<float>() * 0.49999f);
 		}
 		glm::vec3 forward = glm::rotate(glm::mat4(1.0f), -angles.x, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), -angles.y, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
 		glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
@@ -260,13 +264,13 @@ int main()
 			if (inputs.KeyTriggered(inputs.GetCharKey('C')) && !net_inited)
 			{
 				network_manager.CreateAgent();
-				thread_manager.EnqueueJob(&network_manager);
+				thread_manager->EnqueueJob(&network_manager);
 				net_inited = true;
 			}
 			else if (inputs.KeyTriggered(inputs.GetCharKey('V')) && !net_inited)
 			{
 				network_manager.CreateAgent(true, 4);
-				thread_manager.EnqueueJob(&network_manager);
+				thread_manager->EnqueueJob(&network_manager);
 				net_inited = true;
 			}
 		}
@@ -285,17 +289,19 @@ int main()
 			new_frame.AddInstance(new_info);
 		}
 		new_frame.m_Camera = cam;
+		auto& volumes = test_bvh.GetActiveVolumes();
+		for (auto& vol : volumes)
+		{
+			new_frame.debugVolumes.push_back(test_bvh[vol]);
+		}
+		
 		rendering_system.PushBackNewFrame(new_frame);
 
 		new_window.UpdateWindow();
-		//std::cout << rendering_system.DeltaTimeApprox() << std::endl;
 
 		wait_time = rendering_system.DeltaTimeApprox() - time_manager.deltaTime();
-		//if (wait_time > 0.0f)
-		//{
-		//	std::this_thread::sleep_for(std::chrono::duration<float>(wait_time * 0.5f));
-		//}
 	}
-	thread_manager.Terminate();
+	thread_manager->Terminate();
+	delete thread_manager;
 	return 0;
 }

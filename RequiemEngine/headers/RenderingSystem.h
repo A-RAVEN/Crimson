@@ -13,21 +13,59 @@
 #include <headers/AccelStructs/BVH.h>
 #include <headers/BufferVector.h>
 #include <headers/Graphics/FillScreenRect.h>
+#include <headers/ShaderProcessor.h>
 
 using namespace Crimson;
 class RenderingSystem;
-class RenderingSubThread : public ThreadJob
+class RenderingSubpassThread : public ThreadJob
 {
 public:
 	virtual void Work(ThreadWorker const* this_worker) override;
-	void Init(RenderingSystem const*  rendering_system, PGPUDevice device);
+	void Init(RenderingSystem const*  rendering_system, PGPUDevice device, PRenderPassInstance renderPassInstance, uint32_t subpassId, PGraphicsPipeline pipeline, std::vector<PDescriptorSet> const& sets);
 	void PushInstanceQueue(MeshResource*, InstanceInfo const& info);
+	void PushFrame();
 private:
 	RenderingSystem const* p_RenderingSystem;
 	PGPUDevice m_Device;
 	PGPUDeviceThread m_DeviceThreadHandle;
+	TransformManager const* p_transformManager;
 	std::unordered_map<MeshResource*, MeshInstanceQueue> m_Instances;
+	PRenderPassInstance pInstance;
+	uint32_t subpassId;
+	PGraphicsPipeline usingPipeline;
+	std::vector<PDescriptorSet> descSets;
 };
+
+class CameraCombinedSet
+{
+public:
+	PDescriptorSetLayout cameraSetLayout;
+	PDescriptorSet cameraSet;
+	void Init(PGPUDevice device);
+	void WriteCameraBuffer(PGPUBuffer buffer);
+};
+
+class RenderingSubpassMeshletThread : public ThreadJob
+{
+public:
+	virtual void Work(ThreadWorker const* this_worker) override;
+	void Init(RenderingSystem const* rendering_system, PGPUDevice device, PRenderPassInstance renderPassInstance, uint32_t subpassId, PGraphicsPipeline pipeline, std::vector<PDescriptorSet> const& sets, CameraCombinedSet const* cameraSet);
+	void SetCameraCombinedSet(CameraCombinedSet const* combinedCamera);
+	void AddSingleMesh(MeshletGroupResource* meshlet, std::vector<glm::mat4> const& transforms);
+private:
+	RenderingSystem const* p_RenderingSystem;
+	PGPUDevice m_Device;
+	PGPUDeviceThread m_DeviceThreadHandle;
+	TransformManager const* p_transformManager;
+	std::unordered_map<MeshletGroupResource*, std::vector<glm::mat4>> m_Instances;
+	PRenderPassInstance pInstance;
+	uint32_t subpassId;
+	PGraphicsPipeline usingPipeline;
+	std::vector<PDescriptorSet> descSets;
+	CameraCombinedSet const* pCameraCombinedSet;
+};
+
+
 
 class RenderingSystem : public ThreadJob
 {
@@ -37,6 +75,8 @@ public:
 	void SetupSystem();
 	void UnInstallSystem();
 	void SetupMeshletPipeline(PGPUDevice device, MeshletGroupResource *meshlet, PRenderPass renderpass);
+	void SetupDebugPipeline(PGPUDevice device, PGPUImage renderTarget);
+	void RecordDebugFrame(PGPUDeviceThread thread, GraphicsFrame const& frame);
 	void PushBackNewFrame(GraphicsFrame &frame);
 	void ParseBVH(BVH& bvh);
 	TransformManager m_TransformManager;
@@ -95,5 +135,19 @@ private:
 	PDescriptorSetLayout FilterSetLayout;
 	PDescriptorSet FilterSet;
 
+	PRenderPass DebuglineRenderPass;
+	PFramebuffer DebuglineFramebuffer;
+	PRenderPassInstance DebuglineRenderpassInstance;
+	PDescriptorSetLayout debugLineDescriptorSetLayout;
+	PDescriptorSet debuglineDescriptorSet;
+	PGraphicsPipeline debuglinePipeline;
+
 	FillScreenRect Rect;
+
+	ShaderProcessor shaderProcessor;
+
+	PDescriptorSetLayout cameraDataLayout;
+	PDescriptorSet cameraDataSet;
+
+	CameraCombinedSet cameraCombinedSet;
 };

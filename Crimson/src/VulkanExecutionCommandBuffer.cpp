@@ -7,6 +7,7 @@
 #include <headers/VulkanImage.h>
 #include <headers/VulkanRayTracer.h>
 #include <headers/VulkanDescriptors.h>
+#include <headers/VulkanTranslator.h>
 
 namespace Crimson
 {
@@ -246,6 +247,159 @@ namespace Crimson
 		{
 			cache.first->ApplyLayoutCache(queue_family, cache.second);
 		}
+	}
+
+	void VulkanExecutionCommandBuffer::BufferBarrier(std::vector<PGPUBuffer> const& buffers, EMemoryBarrierType barrier_type)
+	{
+		uint32_t queue_family = p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType);
+		VkBufferMemoryBarrier bufferBarrier{};
+		bufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+		bufferBarrier.pNext = nullptr;
+		bufferBarrier.srcQueueFamilyIndex = bufferBarrier.dstQueueFamilyIndex = queue_family;
+		VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		switch (barrier_type)
+		{
+		case EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE:
+			bufferBarrier.srcAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV;
+			bufferBarrier.dstAccessMask = VK_ACCESS_ACCELERATION_STRUCTURE_READ_BIT_NV | VK_ACCESS_ACCELERATION_STRUCTURE_WRITE_BIT_NV;
+			srcStage = VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV;
+			dstStage = VK_PIPELINE_STAGE_ACCELERATION_STRUCTURE_BUILD_BIT_NV;
+			break;
+		case EMemoryBarrierType::E_VERTEX_SHADER_READ_WRITE:
+			bufferBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+			bufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+			srcStage = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+			dstStage = VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+			break;
+		case EMemoryBarrierType::E_HOST_READ_WRITE:
+			bufferBarrier.srcAccessMask = VK_ACCESS_HOST_READ_BIT | VK_ACCESS_HOST_WRITE_BIT;
+			bufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+			srcStage = VK_PIPELINE_STAGE_HOST_BIT;
+			dstStage = VK_PIPELINE_STAGE_HOST_BIT;
+			break;
+		default:
+			break;
+		}
+		std::vector<VkBufferMemoryBarrier> barriers;
+		barriers.resize(buffers.size());
+		std::fill(barriers.begin(), barriers.end(), bufferBarrier);
+		for (uint32_t i = 0; i < buffers.size(); ++i)
+		{
+			auto& barrier = barriers[i];
+			VulkanBufferObject* pbuffer = static_cast<VulkanBufferObject*>(buffers[i]);
+			barrier.buffer = pbuffer->m_Buffer;
+			barrier.size = pbuffer->m_BufferSize;
+			barrier.offset = 0;
+		}
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, srcStage, dstStage, 0, 0, nullptr, barriers.size(), barriers.data(), 0, nullptr);
+
+	}
+
+	void VulkanExecutionCommandBuffer::RecieveBuffers(std::vector<PGPUBuffer> const& buffers, EExecutionCommandType srcCommandType)
+	{
+		uint32_t queue_family = p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType);
+		uint32_t src_family = p_OwningDevice->GetQueueFamilyIdByCommandType(srcCommandType);
+		if (queue_family == src_family) { return; }
+
+		VkPipelineStageFlags srcStages = 0;
+
+		std::vector<VkBufferMemoryBarrier> barriers;
+		barriers.resize(buffers.size());
+		for (int i = 0; i < buffers.size(); ++i)
+		{
+			auto& barrier = barriers[i];
+			VulkanBufferObject* vulkanBuffer = static_cast<VulkanBufferObject*>(buffers[i]);
+			barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = 0;
+			barrier.srcQueueFamilyIndex = src_family;
+			barrier.dstQueueFamilyIndex = queue_family;
+			barrier.buffer = vulkanBuffer->m_Buffer;
+			barrier.size = vulkanBuffer->m_BufferSize;
+			barrier.offset = 0;
+			barrier.pNext = nullptr;
+		}
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, barriers.size(), barriers.data(), 0, nullptr);
+	}
+
+	void VulkanExecutionCommandBuffer::SendBuffers(std::vector<PGPUBuffer> const& buffers, EExecutionCommandType dstCommandType)
+	{
+		uint32_t queue_family = p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType);
+		uint32_t dst_family = p_OwningDevice->GetQueueFamilyIdByCommandType(dstCommandType);
+		if (queue_family == dst_family) { return; }
+
+
+		std::vector<VkBufferMemoryBarrier> barriers;
+		barriers.resize(buffers.size());
+		for (int i = 0; i < buffers.size(); ++i)
+		{
+			auto& barrier = barriers[i];
+			VulkanBufferObject* vulkanBuffer = static_cast<VulkanBufferObject*>(buffers[i]);
+			barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			barrier.srcAccessMask = 0;
+			barrier.dstAccessMask = 0;
+			barrier.srcQueueFamilyIndex = queue_family;
+			barrier.dstQueueFamilyIndex = dst_family;
+			barrier.buffer = vulkanBuffer->m_Buffer;
+			barrier.size = vulkanBuffer->m_BufferSize;
+			barrier.offset = 0;
+			barrier.pNext = nullptr;
+		}
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, barriers.size(), barriers.data(), 0, nullptr);
+	}
+
+	void VulkanExecutionCommandBuffer::RecieveImages(std::vector<PGPUImage> const& images, EExecutionCommandType srcCommandType)
+	{
+		uint32_t queue_family = p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType);
+		uint32_t src_family = p_OwningDevice->GetQueueFamilyIdByCommandType(srcCommandType);
+		if (queue_family == src_family) { return; }
+
+		VkPipelineStageFlags srcStages = 0;
+
+		std::vector<VkImageMemoryBarrier> barriers;
+		barriers.resize(images.size());
+		for (int i = 0; i < images.size(); ++i)
+		{
+			auto& barrier = barriers[i];
+			VulkanImageObject* vulkanImage = static_cast<VulkanImageObject*>(images[i]);
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.srcAccessMask = barrier.dstAccessMask = vulkanImage->m_CurrentAccessMask;
+			barrier.oldLayout = barrier.newLayout = vulkanImage->m_OverallImageLayout;
+			barrier.subresourceRange = vulkanImage->GetFullSubresourceRange();
+			barrier.srcQueueFamilyIndex = src_family;
+			barrier.dstQueueFamilyIndex = queue_family;
+			barrier.pNext = nullptr;
+			srcStages |= vulkanImage->m_LastUsingStage;
+			vulkanImage->m_LastUsingStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, srcStages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
+	}
+	void VulkanExecutionCommandBuffer::SendImages(std::vector<PGPUImage> const& images, EExecutionCommandType dstCommandType)
+	{
+		uint32_t queue_family = p_OwningDevice->GetQueueFamilyIdByCommandType(m_CommandType);
+		uint32_t dst_family = p_OwningDevice->GetQueueFamilyIdByCommandType(dstCommandType);
+		if (queue_family == dst_family) { return; }
+
+		VkPipelineStageFlags srcStages = 0;
+
+		std::vector<VkImageMemoryBarrier> barriers;
+		barriers.resize(images.size());
+		for (int i = 0; i < images.size(); ++i)
+		{
+			auto& barrier = barriers[i];
+			VulkanImageObject* vulkanImage = static_cast<VulkanImageObject*>(images[i]);
+			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			barrier.srcAccessMask = barrier.dstAccessMask = vulkanImage->m_CurrentAccessMask;
+			barrier.oldLayout = barrier.newLayout = vulkanImage->m_OverallImageLayout;
+			barrier.subresourceRange = vulkanImage->GetFullSubresourceRange();
+			barrier.srcQueueFamilyIndex = queue_family;
+			barrier.dstQueueFamilyIndex = dst_family;
+			barrier.pNext = nullptr;
+			srcStages |= vulkanImage->m_LastUsingStage;
+			vulkanImage->m_LastUsingStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}
+		vkCmdPipelineBarrier(m_CurrentCommandBuffer, srcStages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
 	}
 	void VulkanExecutionCommandBuffer::TransitionSwapchainImageToCopyDst(VkImage swapchain_image, VulkanSurfaceContext* surface_context, bool initialized)
 	{

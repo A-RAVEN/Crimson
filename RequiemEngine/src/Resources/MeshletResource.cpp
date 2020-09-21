@@ -2,6 +2,10 @@
 #include <headers/VertexData.h>
 #include <set>
 
+MeshletGroupResource::MeshletGroupResource(PGPUDevice device, PDescriptorSetLayout setLayout) : pDevice(device), sharedSetLayout(setLayout)
+{
+}
+
 void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 {
 	std::vector<VertexDataLightWeightUnpacked> vertices;
@@ -126,7 +130,7 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 	m_VertexDataType = VertexDataLightWeightUnpacked::GetDataType();
 
 	//change to device injection later
-	PGPUDevice main_device = GPUDeviceManager::Get()->GetDevice("MainDevice");
+	PGPUDevice main_device = pDevice;
 	if (main_device)
 	{
 		size_t vertex_size = vertices.size() * sizeof(VertexDataLightWeightUnpacked);
@@ -155,5 +159,41 @@ void MeshletGroupResource::LoadMeshRaw(const aiScene* scene)
 		m_MeshletVertexIndexBuffer->UnMapp();
 		m_MeshletPrimitiveIndexBuffer->UnMapp();
 		m_MeshletDescriptorBuffer->UnMapp();
+
+		//д descriptorSet
+		meshletSet = sharedSetLayout->AllocDescriptorSet();
+		meshletSet->WriteDescriptorSetTexelBufferView(0, m_MeshletVertexIndexBuffer, "default", 0);
+		meshletSet->WriteDescriptorSetTexelBufferView(1, m_MeshletPrimitiveIndexBuffer, "default", 0);
+		meshletSet->WriteDescriptorSetTexelBufferView(2, m_VertexBuffer, "default", 0);
+		meshletSet->WriteDescriptorSetBuffers(3, { m_MeshletDescriptorBuffer }, { m_MeshletDescriptorBuffer->GetRange() }, 0);
+		meshletSet->EndWriteDescriptorSet();
 	}
+}
+
+PDescriptorSetLayout MeshletGroupResource::CreateSharedSetLayout(PGPUDevice srcDevice)
+{
+	PDescriptorSetLayout return_val = srcDevice->CreateDescriptorSetLayout();
+	return_val->m_Bindings.resize(4);
+
+	return_val->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
+	return_val->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	return_val->m_Bindings[0].m_BindingPoint = 0;
+	return_val->m_Bindings[0].m_Num = 1;
+
+	return_val->m_Bindings[1].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
+	return_val->m_Bindings[1].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	return_val->m_Bindings[1].m_BindingPoint = 1;
+	return_val->m_Bindings[1].m_Num = 1;
+
+	return_val->m_Bindings[2].m_ResourceType = EShaderResourceType::E_SHADER_STORAGE_TEXEL_BUFFER;
+	return_val->m_Bindings[2].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	return_val->m_Bindings[2].m_BindingPoint = 2;
+	return_val->m_Bindings[2].m_Num = 1;
+
+	return_val->m_Bindings[3].m_ResourceType = EShaderResourceType::E_SHADER_TYPE_STORAGE_BUFFER;
+	return_val->m_Bindings[3].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
+	return_val->m_Bindings[3].m_BindingPoint = 3;
+	return_val->m_Bindings[3].m_Num = 1;
+	return_val->BuildLayout();
+	return return_val;
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <PipelineEnums.h>
+#include <Pipeline.h>
 #include <vector>
 #include <glm/glm.hpp>
 using namespace glm;
@@ -39,6 +40,11 @@ public:
 	{
 		return { EDataType::EVEC3, EDataType::EVEC2, EDataType::ERGBA8_SNORM, EDataType::ERGBA8_SNORM };
 	}
+
+	static VertexInputDescriptor GetInputDescriptor()
+	{
+		return { EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX, GetDataType() };
+	}
 };
 
 class VertexDataLightWeightUnpacked
@@ -68,4 +74,10 @@ public:
 	bvec4_sn m_Normal;
 	bvec4_sn m_Tangent;
 	bvec4 m_Color;
+};
+
+class VertexDataPresets
+{
+public:
+	static VertexInputDescriptor INSTANCE_INDEX() { return { EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE, {EDataType::EUINT} }; }
 };

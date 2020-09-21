@@ -150,4 +150,8 @@ namespace Crimson
 	{
 		return m_Handle;
 	}
+	PGPUBuffer VulkanAccelerationStructure::GetScratchBuffer()
+	{
+		return p_ScratchBuffer;
+	}
 }

@@ -16,6 +16,7 @@ namespace Crimson
 		virtual void SetupScratchBuffer() override;
 		virtual void FreeScratchBuffer() override;
 		virtual uint64_t GetHandle() override;
+		virtual PGPUBuffer GetScratchBuffer() override;
 	private:
 		VulkanGPUDevice* p_OwningDevice;
 

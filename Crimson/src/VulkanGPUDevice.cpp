@@ -127,9 +127,10 @@ namespace Crimson
 	{
 		delete p_set_layout;
 	}
-	PShaderModule VulkanGPUDevice::CreateShaderModule(void* data, size_t size)
+	PShaderModule VulkanGPUDevice::CreateShaderModule(void* data, size_t size, EShaderType shader_type)
 	{
 		VulkanShaderModule* return_val = new VulkanShaderModule();
+		return_val->m_ShaderType = shader_type;
 		VkShaderModule new_shader_module = VK_NULL_HANDLE;
 		VkShaderModuleCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

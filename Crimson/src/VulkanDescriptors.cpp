@@ -48,7 +48,7 @@ namespace Crimson
 	{
 		VulkanBufferObject* vulkan_buffer = static_cast<VulkanBufferObject*>(buffer);
 		VkBufferView buffer_view = vulkan_buffer->GetVulkanBufferView(view_name);
-		CRIM_ASSERT_AND_RETURN_VOID(buffer_view != nullptr, "Unfounded Buffer View With Name " + view_name);
+		CRIM_ASSERT_AND_RETURN_VOID(buffer_view != VK_NULL_HANDLE, "Unfounded Buffer View With Name " + view_name);
 		m_WritingBufferViews.push_back(buffer_view);
 		VkWriteDescriptorSet new_write{};
 		new_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

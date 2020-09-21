@@ -3,6 +3,7 @@
 #include <headers/VulkanDebugLog.h>
 #include <headers/VulkanPipeline.h>
 #include <headers/VulkanDescriptors.h>
+#include <headers/VulkanShaderModule.h>
 #include <set>
 #include <map>
 
@@ -402,18 +403,32 @@ namespace Crimson
 		BuildRenderPass();
 
 		VulkanGraphicsPipeline const* vulkan_pipeline = static_cast<VulkanGraphicsPipeline const*>(pipeline);
-		size_t shader_count = vulkan_pipeline->m_Shaders.size();
+		size_t shader_count = vulkan_pipeline->m_Shaders.size() + vulkan_pipeline->m_ShaderModules.size();
 		std::vector<VkPipelineShaderStageCreateInfo> shader_infos(shader_count);
-		for (size_t id = 0; id < shader_count; ++id)
+		int shader_id = 0;
+		for (auto& shader_pair : vulkan_pipeline->m_Shaders)
 		{
-			shader_infos[id].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-			shader_infos[id].module = vulkan_pipeline->m_Shaders[id].first;
-			shader_infos[id].stage = TranslateShaderTypeToVulkan(vulkan_pipeline->m_Shaders[id].second);
-			shader_infos[id].pName = "main";
+			shader_infos[shader_id].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_infos[shader_id].module = shader_pair.first;
+			shader_infos[shader_id].stage = TranslateShaderTypeToVulkan(shader_pair.second);
+			shader_infos[shader_id].pName = "main";
 			//TODO: Need explorations
-			shader_infos[id].flags = 0;
-			shader_infos[id].pNext = nullptr;
-			shader_infos[id].pSpecializationInfo = nullptr;
+			shader_infos[shader_id].flags = 0;
+			shader_infos[shader_id].pNext = nullptr;
+			shader_infos[shader_id].pSpecializationInfo = nullptr;
+			++shader_id;
+		}
+		for (auto pshader_module : vulkan_pipeline->m_ShaderModules)
+		{
+			shader_infos[shader_id].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+			shader_infos[shader_id].module = pshader_module->m_ShaderModule;
+			shader_infos[shader_id].stage = TranslateShaderTypeToVulkan(pshader_module->m_ShaderType);
+			shader_infos[shader_id].pName = "main";
+			//TODO: Need explorations
+			shader_infos[shader_id].flags = 0;
+			shader_infos[shader_id].pNext = nullptr;
+			shader_infos[shader_id].pSpecializationInfo = nullptr;
+			++shader_id;
 		}
 		//get vertex inputs
 		size_t vertex_inpute_size = vulkan_pipeline->m_VertexInputs.size();

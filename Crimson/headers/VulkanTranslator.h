@@ -332,6 +332,8 @@ namespace Crimson
 		return return_val;
 	}
 
+
+
 	static inline VmaMemoryUsage TranslateMemoryUsageToVMA(EMemoryType memory_type)
 	{
 		return VMA_STATIC_MEMORY_USAGE_TABLE[static_cast<uint32_t>(memory_type)];
@@ -497,6 +499,26 @@ namespace Crimson
 			break;
 		}
 		return VK_IMAGE_LAYOUT_GENERAL;
+	}
+
+	static inline VkImageLayout TranslateImageUsageToImageLayout(EImageUsage usage, EFormat image_format)
+	{
+		bool is_depth_stencil = IsDepthStencilFormat(image_format);
+		switch (usage)
+		{
+		case EImageUsage::E_IMAGE_USAGE_COPY_SRC:
+			return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		case EImageUsage::E_IMAGE_USAGE_COPY_DST:
+			return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		case EImageUsage::E_IMAGE_USAGE_SAMPLE:
+			return is_depth_stencil ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		case EImageUsage::E_IMAGE_USAGE_STORAGE:
+			return VK_IMAGE_LAYOUT_GENERAL;
+		case EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT:
+			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		case EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT:
+			return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
 	}
 
 	static inline VkBuildAccelerationStructureFlagsNV TranslateBuildAccelStructureFlags(std::vector<EBuildAccelerationStructureFlags> const& flags)

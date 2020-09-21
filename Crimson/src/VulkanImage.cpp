@@ -93,25 +93,6 @@ namespace Crimson
 		{
 			return_val.aspectMask = TranslateViewAsTypeToVulkanAspectFlags(type);
 		}
-	/*	if (IsColorFormat(m_Format))
-		{
-			return_val.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		}
-		else
-		{
-			if (IsDepthOnlyFormat(m_Format))
-			{
-				return_val.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-			}
-			else if (IsStencilOnlyFormat(m_Format))
-			{
-				return_val.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-			}
-			else
-			{
-				return_val.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-			}
-		}*/
 		return return_val;
 	}
 	VkImageSubresourceLayers VulkanImageObject::GetFullSubresourceLayers(EViewAsType type, uint32_t mip_level) const

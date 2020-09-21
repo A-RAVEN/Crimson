@@ -4,6 +4,10 @@
 
 void ThreadWorker::Work()
 {
+	moodycamel::ProducerToken producer(p_OwningManager->m_JobQueue);
+	moodycamel::ConsumerToken consumer(p_OwningManager->m_JobQueue);
+	producerToken = &producer;
+	consumerToken = &consumer;
 	while (p_OwningManager->b_Working)
 	{
 		ThreadJob* new_job = p_OwningManager->DequeueJob();
@@ -73,10 +77,21 @@ void ThreadManager::EnqueueJob(ThreadJob* job)
 	//m_QueueNotifier.notify_one();
 }
 
+void ThreadManager::EnqueueJob(ThreadWorker const* srcWorker, ThreadJob* job)
+{
+	if (!job->b_Finished)
+	{
+		std::cout << "job not finish yet" << std::endl;
+		return;
+	}
+	job->b_Finished = false;
+	m_JobQueue.enqueue(*srcWorker->producerToken, job);
+}
+
 ThreadJob* ThreadManager::DequeueJob()
 {
 	ThreadJob* return_val = nullptr;
-	if (m_JobQueue.wait_dequeue_timed(return_val, std::chrono::milliseconds(10)))
+	if (m_JobQueue.try_dequeue(return_val))
 	{
 		return return_val;
 	}

@@ -94,6 +94,7 @@ namespace Crimson
 		uint32_t m_InstanceNumber;
 		// init acceleration structure, them a build should be done in cmd buffer
 		virtual void InitAS(bool top_level = false) = 0;
+		virtual PGPUBuffer GetScratchBuffer() = 0;
 		virtual void SetupScratchBuffer() = 0;
 		virtual void FreeScratchBuffer() = 0;
 		virtual uint64_t GetHandle() = 0;

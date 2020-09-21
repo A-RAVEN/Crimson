@@ -11,6 +11,7 @@ namespace Crimson
 		static void Dispose();
 		static D3D12Instance* Get();
 		std::vector<ComPtr<IDXGIAdapter4>>& GetPhysicalDevices() { return m_PhysicalDevices; }
+		ComPtr<IDXGIFactory4> GetFactory4() { return dxgiFactory; }
 	private:
 		D3D12Instance(bool enable_debug_extension);
 		~D3D12Instance();

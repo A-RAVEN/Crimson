@@ -14,6 +14,7 @@
 #include <headers/stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <headers/GlobalStaticPointers.h>
 
 void RenderingSystem::Work(ThreadWorker const* this_worker)
 {
@@ -30,24 +31,30 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 			memcpy(m_TimeBuffer->GetMappedPointer(), &elapsed, sizeof(float));
 			if (TryPopFrame(new_frame))
 			{
-				//MainDevice->WaitIdle();
-				bool should_update = false;
-				for (auto& list : m_Instances)
-				{
-					list.second.Clear();
-				}
+				RenderingSubpassThread rendering_job;
+				rendering_job.Init(this, MainDevice, m_RenderPassInstance, 0, m_Pipeline, { m_Set });
+
+				RenderingSubpassMeshletThread meshlet_job;
+				meshlet_job.Init(this, MainDevice, m_RenderPassInstance, 0, m_MeshletPipeline, {}, &cameraCombinedSet);
+				glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+				meshlet_job.AddSingleMesh(p_MeshletMesh, { transform });
+				//for (auto& list : m_Instances)
+				//{
+				//	list.second.Clear();
+				//}
 				for (auto& inst : new_frame.m_InstanceList)
 				{
-					auto find = m_Instances.find(inst.first);
-					if (find == m_Instances.end())
-					{
-						m_Instances.insert(std::make_pair(inst.first, MeshInstanceQueue{}));
-						find = m_Instances.find(inst.first);
-						find->second.m_Resource = inst.first;
-					}
+					//auto find = m_Instances.find(inst.first);
+					//if (find == m_Instances.end())
+					//{
+					//	m_Instances.insert(std::make_pair(inst.first, MeshInstanceQueue{}));
+					//	find = m_Instances.find(inst.first);
+					//	find->second.m_Resource = inst.first;
+					//}
 					for (auto& itr : inst.second)
 					{
-						find->second.PushInstance(itr);
+						rendering_job.PushInstanceQueue(inst.first, itr);
+							//find->second.PushInstance(itr);
 						m_TransformManager.ExtendBufferPages(itr.m_BatchId);
 					}
 				}
@@ -61,33 +68,28 @@ void RenderingSystem::Work(ThreadWorker const* this_worker)
 				if (m_Inited > 0)
 				{
 					m_Inited--;
-					PGraphicsCommandBuffer cmd = m_RenderingThread->StartSubpassCommand(m_RenderPassInstance, 0);
-
-					cmd->BindSubpassPipeline(m_MeshletPipeline);
-					cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-					cmd->Sissor(0, 0, 1024, 720);
-					glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
-					cmd->PushConstants({ EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV }, 0, sizeof(mat4), &(transform[0][0]));
-					cmd->BindSubpassDescriptorSets({ m_MeshletSet });
-					cmd->DrawMeshShading(p_MeshletMesh->m_MeshletSize, 0);
-
-					cmd->BindSubpassPipeline(m_Pipeline);
-					cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-					cmd->Sissor(0, 0, 1024, 720);
-					vec3 testColor(1.0f, 0.0f, 1.0f);
-					//cmd->PushConstants({ EShaderType::E_SHADER_TYPE_FRAGMENT }, 0, sizeof(vec3), &testColor);
-					cmd->BindSubpassDescriptorSets({ m_Set });
-					for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
-					{
-						cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
-						for (auto& pair : m_Instances)
-						{
-							pair.second.CmdDrawInstances(cmd, i);
-						}
-					}
+					GLOBAL::GlobalStaticManager->EnqueueJob(this_worker, &rendering_job);
+					GLOBAL::GlobalStaticManager->EnqueueJob(this_worker, &meshlet_job);
 
 
-					cmd->EndCommandBuffer();
+					rendering_job.WaitJob();
+					meshlet_job.WaitJob();
+
+					//cmd->BindSubpassPipeline(m_Pipeline);
+					//cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+					//cmd->Sissor(0, 0, 1024, 720);
+					//vec3 testColor(1.0f, 0.0f, 1.0f);
+					//cmd->BindSubpassDescriptorSets({ m_Set });
+					//for (uint32_t i = 0; i < m_TransformManager.GetBatchCount(); ++i)
+					//{
+					//	cmd->BindSubpassDescriptorSets({ m_TransformManager.GetSet(i) }, 1);
+					//	for (auto& pair : m_Instances)
+					//	{
+					//		pair.second.CmdDrawInstances(cmd, i);
+					//	}
+					//}
+
+
 
 					m_ExecutionCmd->StartCommand();
 					m_ExecutionCmd->DeviceMemoryBarrier(EMemoryBarrierType::E_HOST_READ_WRITE);
@@ -125,6 +127,8 @@ RenderingSystem::RenderingSystem(IWindow* window, PAccelerationStructure blas, P
 p_CubeResource(p_cube)
 {
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->GetDevice("MainDevice");
+
+	cameraCombinedSet.Init(MainDevice);
 
 	Rect.Init(MainDevice);
 	MeshletTransform = MainDevice->CreateBuffer(sizeof(mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
@@ -179,7 +183,9 @@ p_CubeResource(p_cube)
 	m_Set->WriteDescriptorSetTexelBufferView(2, test_texel_buffer, "default", 0);
 	m_Set->EndWriteDescriptorSet();
 
-	ShaderProcessor processor;
+	cameraCombinedSet.WriteCameraBuffer(m_CameraBuffer);
+
+	//ShaderProcessor processor;
 
 	FilterRenderPass = MainDevice->CreateRenderPass();
 	FilterRenderPass->m_Attachments = {
@@ -237,7 +243,7 @@ p_CubeResource(p_cube)
 	FilterPipeline->m_DescriptorSetLayouts = { {0, FilterSetLayout} };
 	FilterPipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_DISABLED;
 	{
-		auto results = processor.MultiCompile("bilateral_filter.shaders");
+		auto results = shaderProcessor.MultiCompile("bilateral_filter.shaders");
 		for (auto& itr : results)
 		{
 			std::cout << static_cast<int>(itr.first) << std::endl;
@@ -250,7 +256,7 @@ p_CubeResource(p_cube)
 	m_Pipeline = MainDevice->CreateGraphicsPipeline();
 
 	{
-		auto results = processor.MultiCompile("test.shaders");
+		auto results = shaderProcessor.MultiCompile("test.shaders");
 		for (auto& itr : results)
 		{
 			std::cout << static_cast<int>(itr.first) << std::endl;
@@ -354,7 +360,7 @@ p_CubeResource(p_cube)
 
 	m_RayTracer = MainDevice->CreateRayTracer();
 	{
-		auto results = processor.MultiCompile("raytracing.shaders");
+		auto results = shaderProcessor.MultiCompile("raytracing.shaders");
 		for (auto& itr : results)
 		{
 			std::cout << static_cast<int>(itr.first) << std::endl;
@@ -369,6 +375,7 @@ p_CubeResource(p_cube)
 	m_RayTracer->CopyShaderTable(m_ShaderTable->GetMappedPointer(), "default");
 
 	SetupMeshletPipeline(MainDevice, p_MeshletMesh, test_renderpass);
+	SetupDebugPipeline(MainDevice, m_RTColorAcc);
 
 	PFramebuffer test_framebuffer = MainDevice->CreateFramebuffer();
 	test_framebuffer->m_Images = { m_Color, m_Normal, test_depth_stencil };
@@ -377,6 +384,7 @@ p_CubeResource(p_cube)
 
 	MainDevice->CreateBatch("GraphicsLoading", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
+	MainDevice->CreateBatch("Debug Render", EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 0);
 	MainDevice->CreateBatch("Present", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 
 	m_RenderingThread = MainDevice->CreateThread();
@@ -408,7 +416,8 @@ p_CubeResource(p_cube)
 	m_LoadingBuffer->StartCommand();
 	m_LoadingBuffer->CopyBufferToImage(image_load_buffer, test_loaded_image);
 	m_LoadingBuffer->BuildAccelerationStructure(blas);
-	m_LoadingBuffer->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
+	m_LoadingBuffer->BufferBarrier({ blas->GetScratchBuffer() }, EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
+	//m_LoadingBuffer->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 	m_LoadingBuffer->BuildAccelerationStructure(tlas, instance_buffer);
 	m_LoadingBuffer->DeviceMemoryBarrier(EMemoryBarrierType::E_ACCEL_STRUCTURE_BUILD_READ_WRITE);
 	m_LoadingBuffer->EndCommand();
@@ -473,22 +482,23 @@ void RenderingSystem::SetupMeshletPipeline(PGPUDevice device, MeshletGroupResour
 	m_MeshletSet->EndWriteDescriptorSet();
 
 	m_MeshletPipeline = device->CreateGraphicsPipeline();
-	ShaderProcessor processor;
-	CompileResult results = processor.MultiCompile("test_mesh.shaders");
+	//ShaderProcessor processor;
+	CompileResult results = shaderProcessor.MultiCompile("test_mesh.shaders");
 	for (auto& itr : results)
 	{
 		std::cout << static_cast<int>(itr.first) << std::endl;
 		m_MeshletPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
 	}
 
-	results = processor.MultiCompile("testmesh.mesh");
+	results = shaderProcessor.MultiCompile("testmesh.mesh");
 	for (auto& itr : results)
 	{
 		std::cout << static_cast<int>(itr.first) << std::endl;
 		m_MeshletPipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
 	}
 
-	m_MeshletPipeline->m_DescriptorSetLayouts = {std::make_pair(0, m_MeshletSetLayout) };
+
+	m_MeshletPipeline->m_DescriptorSetLayouts = {std::make_pair(1, meshlet->GetDescriptorSetLayout()), std::make_pair(0, cameraCombinedSet.cameraSetLayout) };
 	m_MeshletPipeline->m_PushConstants.resize(1);
 	m_MeshletPipeline->m_PushConstants[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV };
 	m_MeshletPipeline->m_PushConstants[0].m_Offset = 0;
@@ -499,14 +509,74 @@ void RenderingSystem::SetupMeshletPipeline(PGPUDevice device, MeshletGroupResour
 	renderpass->InstanciatePipeline(m_MeshletPipeline, 0);
 }
 
+void RenderingSystem::SetupDebugPipeline(PGPUDevice device, PGPUImage renderTarget)
+{
+	DebuglineRenderPass = device->CreateRenderPass();
+	DebuglineRenderPass->m_Attachments = { {EFormat::E_FORMAT_B8G8R8A8_UNORM, EAttachmentClearType::E_ATTACHMENT_NOT_CLEAR, 1} };
+	DebuglineRenderPass->m_Subpasses.resize(1);
+	DebuglineRenderPass->m_Subpasses[0].m_OutputAttachments = { 0 };
+	DebuglineRenderPass->BuildRenderPass();
+
+	DebuglineFramebuffer = device->CreateFramebuffer();
+	DebuglineFramebuffer->m_Images = { renderTarget };
+
+	DebuglineRenderpassInstance = device->CreateRenderPassInstance(DebuglineRenderPass, DebuglineFramebuffer);
+
+	debugLineDescriptorSetLayout = device->CreateDescriptorSetLayout();
+	debugLineDescriptorSetLayout->m_Bindings.resize(1);
+	debugLineDescriptorSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX };
+	debugLineDescriptorSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	debugLineDescriptorSetLayout->m_Bindings[0].m_Num = 1;
+	debugLineDescriptorSetLayout->m_Bindings[0].m_BindingPoint = 0;
+	debugLineDescriptorSetLayout->BuildLayout();
+
+	debuglineDescriptorSet = debugLineDescriptorSetLayout->AllocDescriptorSet();
+	debuglineDescriptorSet->WriteDescriptorSetBuffers(0, { m_CameraBuffer }, { m_CameraBuffer->GetRange() }, 0);
+	debuglineDescriptorSet->EndWriteDescriptorSet();
+
+	debuglinePipeline = device->CreateGraphicsPipeline();
+
+	debuglinePipeline->m_DescriptorSetLayouts = { std::make_pair(0, debugLineDescriptorSetLayout), std::make_pair(1, m_TransformManager.GetSetLayout()) };
+	debuglinePipeline->m_PushConstants.resize(1);
+	debuglinePipeline->m_PushConstants[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX};
+	debuglinePipeline->m_PushConstants[0].m_Offset = 0;
+	debuglinePipeline->m_PushConstants[0].m_Size = sizeof(mat4);
+	debuglinePipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_DISABLED;
+	debuglinePipeline->m_StencilRule = EStencilRule::E_STENCIL_DISABLED;
+	debuglinePipeline->m_VertexInputs.resize(1);
+	debuglinePipeline->m_VertexInputs[0] = VertexDataLightWeight::GetInputDescriptor();
+	debuglinePipeline->m_PolygonMode = EPolygonMode::E_POLYGON_MODE_LINE;
+	debuglinePipeline->m_CullMode = ECullMode::E_CULL_NONE;
+	//debuglinePipeline->m_VertexInputs[1] = VertexDataPresets::INSTANCE_INDEX();
+
+	CompileResult results = shaderProcessor.MultiCompile("debugWire.shaders");
+	for (auto& itr : results)
+	{
+		std::cout << static_cast<int>(itr.first) << std::endl;
+		debuglinePipeline->LoadShaderSource(reinterpret_cast<char*>(itr.second.data()), itr.second.size() * sizeof(uint32_t), itr.first);
+	}
+
+	
+	DebuglineRenderPass->InstanciatePipeline(debuglinePipeline, 0);
+}
+
+void RenderingSystem::RecordDebugFrame(PGPUDeviceThread thread, GraphicsFrame const& frame)
+{
+	auto draw = thread->StartSubpassCommand(DebuglineRenderpassInstance, 0);
+	draw->BindSubpassPipeline(debuglinePipeline);
+	//draw->BindVertexInputeBuffer()
+	//draw->PushConstants()
+	//draw->DrawIndexed();
+	draw->EndCommandBuffer();
+}
+
+
 void RenderingSystem::PushBackNewFrame(GraphicsFrame &frame)
 {
-	if (m_FrameQueue.size_approx() < 2)
+	while (m_FrameQueue.size_approx() > 3)
 	{
-		m_FrameQueue.enqueue(std::move(frame));
 	}
-	//LockGuard guard(m_FrameQueueLock);
-	//m_FrameQueue.push_back(frame);
+	m_FrameQueue.enqueue(std::move(frame));
 }
 
 void RenderingSystem::ParseBVH(BVH& bvh)
@@ -532,24 +602,119 @@ bool RenderingSystem::TryPopFrame(GraphicsFrame& frame)
 	//return false;
 }
 
-void RenderingSubThread::Work(ThreadWorker const* this_worker)
+void RenderingSubpassThread::Work(ThreadWorker const* this_worker)
 {
+	PGraphicsCommandBuffer cmd = m_DeviceThreadHandle->StartSubpassCommand(pInstance, subpassId);
+	cmd->BindSubpassPipeline(usingPipeline);
+	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+	cmd->Sissor(0, 0, 1024, 720);
+	vec3 testColor(1.0f, 0.0f, 1.0f);
+	cmd->BindSubpassDescriptorSets({ descSets });
+	for (uint32_t i = 0; i < p_transformManager->GetBatchCount(); ++i)
+	{
+		cmd->BindSubpassDescriptorSets({ p_transformManager->GetSet(i) }, 1);
+		for (auto& pair : m_Instances)
+		{
+			pair.second.CmdDrawInstances(cmd, i);
+		}
+	}
+	cmd->EndCommandBuffer();
 }
 
-void RenderingSubThread::Init(RenderingSystem const* rendering_system, PGPUDevice device)
+void RenderingSubpassThread::Init(RenderingSystem const* rendering_system, PGPUDevice device, PRenderPassInstance renderPassInstance, uint32_t subpassId, PGraphicsPipeline pipeline, std::vector<PDescriptorSet> const& sets)
 {
+	descSets = sets;
+	usingPipeline = pipeline;
+	pInstance = renderPassInstance;
+	this->subpassId = subpassId;
 	p_RenderingSystem = rendering_system;
 	m_Device = device;
 	m_DeviceThreadHandle = m_Device->CreateThread();
+	p_transformManager = &p_RenderingSystem->m_TransformManager;
 }
 
-void RenderingSubThread::PushInstanceQueue(MeshResource* resource, InstanceInfo const& info)
+void RenderingSubpassThread::PushInstanceQueue(MeshResource* resource, InstanceInfo const& info)
 {
 	auto find = m_Instances.find(resource);
 	if (find == m_Instances.end())
 	{
 		m_Instances.insert(std::make_pair(resource, MeshInstanceQueue{}));
 		find = m_Instances.find(resource);
+		find->second.m_Resource = resource;
 	}
 	find->second.PushInstance(info);
+}
+
+void RenderingSubpassMeshletThread::Work(ThreadWorker const* this_worker)
+{
+	PGraphicsCommandBuffer cmd = m_DeviceThreadHandle->StartSubpassCommand(pInstance, 0);
+
+	cmd->BindSubpassPipeline(usingPipeline);
+	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+	cmd->Sissor(0, 0, 1024, 720);
+	glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
+	cmd->BindSubpassDescriptorSets({ pCameraCombinedSet->cameraSet }, 0u);
+	for (auto& pair : m_Instances)
+	{
+		cmd->BindSubpassDescriptorSets({ pair.first->GetDescriptorSet() }, 1u);
+		for (auto& inst : pair.second)
+		{
+			cmd->PushConstants({ EShaderType::E_SHADER_TYPE_TASK_NV, EShaderType::E_SHADER_TYPE_MESH_NV }, 0, sizeof(mat4), &(transform[0][0]));
+			cmd->DrawMeshShading(pair.first->m_MeshletSize, 0);
+		}
+	}
+	cmd->EndCommandBuffer();
+}
+
+void RenderingSubpassMeshletThread::Init(RenderingSystem const* rendering_system, PGPUDevice device, PRenderPassInstance renderPassInstance, uint32_t subpassId, PGraphicsPipeline pipeline, std::vector<PDescriptorSet> const& sets, CameraCombinedSet const* cameraSet)
+{
+	pCameraCombinedSet = cameraSet;
+	descSets = sets;
+	usingPipeline = pipeline;
+	pInstance = renderPassInstance;
+	this->subpassId = subpassId;
+	p_RenderingSystem = rendering_system;
+	m_Device = device;
+	m_DeviceThreadHandle = m_Device->CreateThread();
+	p_transformManager = &p_RenderingSystem->m_TransformManager;
+}
+
+void RenderingSubpassMeshletThread::SetCameraCombinedSet(CameraCombinedSet const* combinedCamera)
+{
+	pCameraCombinedSet = combinedCamera;
+}
+
+void RenderingSubpassMeshletThread::AddSingleMesh(MeshletGroupResource* meshlet, std::vector<glm::mat4> const& transforms)
+{
+	auto find = m_Instances.find(meshlet);
+	if (find == m_Instances.end())
+	{
+		m_Instances.insert(std::make_pair(meshlet, transforms));
+		return;
+	}
+	uint32_t oldsize = find->second.size();
+	find->second.resize(find->second.size() + transforms.size());
+	for (int i = oldsize; i < find->second.size(); ++i)
+	{
+		find->second[i] = transforms[i - oldsize];
+	}
+}
+
+void CameraCombinedSet::Init(PGPUDevice device)
+{
+	cameraSetLayout = device->CreateDescriptorSetLayout();
+	cameraSetLayout->m_Bindings.resize(1);
+	cameraSetLayout->m_Bindings[0].m_BindingPoint = 0;
+	cameraSetLayout->m_Bindings[0].m_Num = 1;
+	cameraSetLayout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	cameraSetLayout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX, EShaderType::E_SHADER_TYPE_FRAGMENT, EShaderType::E_SHADER_TYPE_MESH_NV };
+	cameraSetLayout->BuildLayout();
+
+	cameraSet = cameraSetLayout->AllocDescriptorSet();
+}
+
+void CameraCombinedSet::WriteCameraBuffer(PGPUBuffer buffer)
+{
+	cameraSet->WriteDescriptorSetBuffers(0, { buffer }, { {0, buffer->GetSize()} }, 0);
+	cameraSet->EndWriteDescriptorSet();
 }

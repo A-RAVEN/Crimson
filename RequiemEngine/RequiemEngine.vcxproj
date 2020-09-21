@@ -259,9 +259,14 @@ copy /Y "$(SolutionDir)\ExternalLib\lua53\*.dll" "$(OutputPath)"</Command>
     <ClInclude Include="headers\Entity\Entity.h" />
     <ClInclude Include="headers\Entity\World.h" />
     <ClInclude Include="headers\GeometryInstanceManager.h" />
+    <ClInclude Include="headers\GlobalStaticPointers.h" />
     <ClInclude Include="headers\GraphicsFrame.h" />
     <ClInclude Include="headers\Graphics\FillScreenRect.h" />
+    <ClInclude Include="headers\Graphics\GraphicsRenderPass.h" />
     <ClInclude Include="headers\Graphics\GraphicsRenderPipeline.h" />
+    <ClInclude Include="headers\Graphics\RenderingContext.h" />
+    <ClInclude Include="headers\Graphics\ShaderPack.h" />
+    <ClInclude Include="headers\Graphics\SphericalHarmonics3.h" />
     <ClInclude Include="headers\Resources\IResource.h" />
     <ClInclude Include="headers\Resources\MeshletResource.h" />
     <ClInclude Include="headers\Resources\ResourceDependency.h" />

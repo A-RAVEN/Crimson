@@ -11,8 +11,10 @@ namespace Crimson
 	class VertexInputDescriptor
 	{
 	public:
-		EVertexInputMode		m_VertexInputMode;
-		std::vector<EDataType>	m_DataTypes;
+		EVertexInputMode					m_VertexInputMode;
+		std::vector<EDataType>				m_DataTypes;
+		//only needed in dx12 backend
+		std::vector<std::string>	m_Sematics;
 	};
 
 	class BlendSetting
@@ -35,6 +37,8 @@ namespace Crimson
 	class ShaderModule : public IObject
 	{
 	public:
+	protected:
+		EShaderType m_ShaderType;
 	};
 
 	class PushConstantRange
@@ -53,11 +57,13 @@ namespace Crimson
 	{
 	public:
 		virtual void LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type) = 0;
+		virtual void LoadShaderModule(PShaderModule shader_module) = 0;
 		std::vector<std::pair<uint32_t, PDescriptorSetLayout>>		m_DescriptorSetLayouts;
 		std::vector<VertexInputDescriptor>		m_VertexInputs;
 		std::vector<BlendSetting>				m_ColorBlendSettings;
 		std::vector<BlendSetting>				m_AlphaBlendSettings;
 		std::vector<PushConstantRange>			m_PushConstants;
+		std::vector<PShaderModule>				m_ShaderModules;
 
 		ECullMode								m_CullMode;
 		EPolygonMode							m_PolygonMode;

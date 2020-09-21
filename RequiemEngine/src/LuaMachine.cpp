@@ -54,6 +54,11 @@ void LuaVM::RegisterModules(luaL_Reg const* funcs, size_t reg_count)
 	lua_settop(m_VM, 0);
 }
 
+void LuaVM::RegisterLuaClass(std::string const& className)
+{
+
+}
+
 void LuaVM::ReleaseVM()
 {
 	lua_settop(m_VM, 0);
