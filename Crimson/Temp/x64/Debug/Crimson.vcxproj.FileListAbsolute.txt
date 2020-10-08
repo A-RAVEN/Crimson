@@ -1,0 +1,2 @@
+D:\Programming\C++\Crimson\Lib\Crimson\x64\Debug\Crimson.pdb
+D:\Programming\C++\Crimson\Crimson\Temp\x64\Debug\Crimson.pdb

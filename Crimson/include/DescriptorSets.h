@@ -24,11 +24,13 @@ namespace Crimson
 	{
 	public:
 		uint32_t					m_BindingPoint;
+		uint32_t					m_RegisterPoint; // intended for dx12 api, similar to binding point of vulkan but type local
 		EShaderResourceType			m_ResourceType;
 		std::vector<EShaderType>	m_ShaderTypes;
 		uint32_t					m_Num;
-		ShaderBinding(uint32_t bindpoint = 0, EShaderResourceType resource_type = EShaderResourceType::E_SHADER_RESOURCE_TYPE_MAX, std::vector<EShaderType> const& shader_types = {}, uint32_t array_number = 1) :
+		ShaderBinding(uint32_t bindpoint = 0, uint32_t registerpoint = 0, EShaderResourceType resource_type = EShaderResourceType::E_SHADER_RESOURCE_TYPE_MAX, std::vector<EShaderType> const& shader_types = {}, uint32_t array_number = 1) :
 			m_BindingPoint(bindpoint),
+			m_RegisterPoint(registerpoint),
 			m_ResourceType(resource_type),
 			m_ShaderTypes(shader_types),
 			m_Num(array_number)

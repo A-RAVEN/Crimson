@@ -1,11 +1,13 @@
 #ifdef _WIN32
 #include <Windows.h>
+#include <dxc/dxcapi.h>
 #endif
 #define NV_EXTENSIONS
 #include <include/Compiler.h>
 #include <FileIncluder.h>
 #include <shaderc/shaderc.hpp>
 #include <iostream>
+#include <DX12Compiler.h>
 
 
 namespace ShaderCompiler
@@ -118,6 +120,10 @@ namespace ShaderCompiler
 
 			return { result.cbegin(), result.cend() };
 		}
+		virtual std::vector<byte> CompileHLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true)
+		{
+			return std::vector<byte>();
+		}
 	private:
 		shaderc::CompileOptions m_Options;
 		FileIncluder			m_Includer;
@@ -140,6 +146,11 @@ namespace ShaderCompiler
 			delete m_Singleton;
 			m_Singleton = nullptr;
 		}
+	}
+
+	IShaderCompiler* IShaderCompiler::CreateDxCompiler()
+	{
+		return new DX12Compiler();
 	}
 
 

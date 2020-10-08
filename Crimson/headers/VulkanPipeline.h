@@ -14,6 +14,7 @@ namespace Crimson
 		VulkanGraphicsPipeline(VulkanGPUDevice* device);
 		virtual void LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type) override;
 		virtual void LoadShaderModule(PShaderModule shader_module) override;
+		virtual void BuildPipeline() override;
 		virtual void Dispose() override;
 	private:
 		VulkanGPUDevice* p_OwningDevice;

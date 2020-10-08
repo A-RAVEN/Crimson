@@ -26,6 +26,9 @@ namespace Crimson
 		VulkanShaderModule* vulkan_shader_module = static_cast<VulkanShaderModule*>(shader_module);
 		m_ShaderModules.push_back(vulkan_shader_module);
 	}
+	void VulkanGraphicsPipeline::BuildPipeline()
+	{
+	}
 	void VulkanGraphicsPipeline::Dispose()
 	{
 		for (auto& pair : m_Shaders)

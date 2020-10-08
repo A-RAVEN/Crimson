@@ -58,6 +58,7 @@ namespace Crimson
 	public:
 		virtual void LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type) = 0;
 		virtual void LoadShaderModule(PShaderModule shader_module) = 0;
+		virtual void BuildPipeline() = 0;
 		std::vector<std::pair<uint32_t, PDescriptorSetLayout>>		m_DescriptorSetLayouts;
 		std::vector<VertexInputDescriptor>		m_VertexInputs;
 		std::vector<BlendSetting>				m_ColorBlendSettings;

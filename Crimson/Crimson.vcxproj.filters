@@ -165,6 +165,12 @@
     <ClInclude Include="headers\D3D12ShaderModule.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\D3D12DescriptorHeapWrapper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\D3D12Descriptors.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -252,6 +258,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\D3D12ShaderModule.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12DescriptorHeapWrapper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

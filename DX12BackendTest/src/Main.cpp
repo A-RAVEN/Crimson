@@ -22,6 +22,7 @@
 //#include <headers/ThreadManager.h>
 #include <iostream>
 #include <headers/Camera.h>
+#include <Compiler.h>
 //#include <headers/RenderingSystem.h>
 //#include <headers/LuaInterface/LuaMachine.h>
 //#include <headers/LuaInterface/LuaInterfaces.h>
@@ -40,6 +41,45 @@ int main()
 	GPUDeviceManager::Get()->InitAPIContext(EAPIType::E_API_TYPE_D3D12, true);
 	std::cout << "Create Device" << std::endl;
 	PGPUDevice MainDevice = GPUDeviceManager::Get()->CreateDevice("MainDevice", 0, EAPIType::E_API_TYPE_D3D12, 3, 1, 1);
+	auto dxCompiler = ShaderCompiler::IShaderCompiler::CreateDxCompiler();
+
+	PShaderModule vsModule = nullptr;
+	PShaderModule psModule = nullptr;
+	{
+		std::string file_name = "VertexShader.hlsl";
+		std::ifstream shader_src(file_name);
+		std::string src;
+		std::vector<uint32_t> shaderByte;
+		if (shader_src.is_open())
+		{
+			std::string line;
+			while (std::getline(shader_src, line))
+			{
+				src += line + "\n";
+			}
+			shaderByte = dxCompiler->CompileGLSLShaderSource(file_name, src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_VERTEX);
+		}
+
+		vsModule = MainDevice->CreateShaderModule(shaderByte.data(), shaderByte.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_VERTEX);
+	}
+
+	{
+		std::string file_name = "PixelShader.hlsl";
+		std::ifstream shader_src(file_name);
+		std::string src;
+		std::vector<uint32_t> shaderByte;
+		if (shader_src.is_open())
+		{
+			std::string line;
+			while (std::getline(shader_src, line))
+			{
+				src += line + "\n";
+			}
+			shaderByte = dxCompiler->CompileGLSLShaderSource(file_name, src, ShaderCompiler::ECompileShaderType::E_SHADER_TYPE_FRAGMENT);
+		}
+
+		psModule = MainDevice->CreateShaderModule(shaderByte.data(), shaderByte.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
+	}
 
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);

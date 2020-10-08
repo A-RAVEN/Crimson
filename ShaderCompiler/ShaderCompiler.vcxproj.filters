@@ -21,12 +21,24 @@
     <ClCompile Include="FileIncluder.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="DX12Compiler.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Helper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FileIncluder.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="include\Compiler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DX12Compiler.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Helper.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

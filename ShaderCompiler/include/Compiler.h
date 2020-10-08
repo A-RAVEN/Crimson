@@ -34,6 +34,7 @@ namespace ShaderCompiler
 		virtual std::vector<uint32_t> CompileGLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true) = 0;
 		static IShaderCompiler* GetCompiler();
 		static void DisposeCompiler();
+		static IShaderCompiler* CreateDxCompiler();
 	private:
 		static IShaderCompiler* m_Singleton;
 	};

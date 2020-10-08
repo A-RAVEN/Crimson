@@ -2,6 +2,7 @@
 #include <headers/D3D12Header.h>
 #include <include/GPUDevice.h>
 #include <headers/D3D12SurfaceContext.h>
+#include <headers/D3D12DescriptorHeapWrapper.h>
 
 namespace Crimson
 {
@@ -78,10 +79,10 @@ namespace Crimson
 		//
 		struct DescriptorHeaps
 		{
-			ComPtr<ID3D12DescriptorHeap> m_BufferHeap;
-			ComPtr<ID3D12DescriptorHeap> m_SamplerHeap;
-			ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
-			ComPtr<ID3D12DescriptorHeap> m_DsvHeap;
+			D3D12DescriptorHeapWrapper m_CBV_SRV_UAV_Heap;
+			D3D12DescriptorHeapWrapper m_SamplerHeap;
+			D3D12DescriptorHeapWrapper m_RtvHeap;
+			D3D12DescriptorHeapWrapper m_DsvHeap;
 		} m_DescriptorHeaps;
 	};
 }

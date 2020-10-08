@@ -1,0 +1,2 @@
+D:\Programming\C++\Crimson\Lib\ShaderCompiler\x64\Debug\ShaderCompiler.pdb
+D:\Programming\C++\Crimson\ShaderCompiler\Temp\x64\Debug\ShaderCompiler.pdb

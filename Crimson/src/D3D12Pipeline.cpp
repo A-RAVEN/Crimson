@@ -1,6 +1,8 @@
 #include <headers/D3D12Pipeline.h>
 #include <headers/D3D12Translator.h>
 #include <headers/D3D12ShaderModule.h>
+#include <headers/D3D12DebugLog.h>
+#include <map>
 
 namespace Crimson
 {
@@ -8,50 +10,166 @@ namespace Crimson
 	{
 
 	}
+	void D3D12GraphicsPipeline::LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type)
+	{
+	}
 	void D3D12GraphicsPipeline::LoadShaderModule(PShaderModule shader_module)
 	{
 	}
+
+	void D3D12GraphicsPipeline::Dispose()
+	{
+	}
+
 	void D3D12GraphicsPipeline::BuildPipeline()
 	{
 		m_PipelineStateStreamingData.Clear();
 		CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY topology = D3D12TopologyType(m_Topology);
 		m_PipelineStateStreamingData.PushData(topology);
-		//push attribute inputs
-		std::map<std::string, uint32_t> sematics_counter;
-		m_VertexInputDescriptors.clear();
-		uint32_t slot = 0;
-		for (auto& input : m_VertexInputs)
+		//attribute inputs
 		{
-			D3D12_INPUT_CLASSIFICATION inputClassification = input.m_VertexInputMode == EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
-			uint32_t instanceStepRate = input.m_VertexInputMode == EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX ? 0 : 1;
-			
-			uint32_t sematics_size = input.m_Sematics.size();
-			for (uint32_t i = 0; i < input.m_DataTypes.size(); ++i)
+			std::map<std::string, uint32_t> sematics_counter;
+			m_VertexInputDescriptors.clear();
+			uint32_t slot = 0;
+			for (auto& input : m_VertexInputs)
 			{
-				D3D12VertexInputDataTypeInfo const& info = D3D12VertexInputDataType(input.m_DataTypes[i]);
-				std::string sematic = "";
-				if (i < sematics_size)
+				D3D12_INPUT_CLASSIFICATION inputClassification = input.m_VertexInputMode == EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX ? D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA : D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA;
+				uint32_t instanceStepRate = input.m_VertexInputMode == EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX ? 0 : 1;
+
+				uint32_t sematics_size = input.m_Sematics.size();
+				for (uint32_t i = 0; i < input.m_DataTypes.size(); ++i)
 				{
-					sematic = input.m_Sematics[i];
+					D3D12VertexInputDataTypeInfo const& info = D3D12VertexInputDataType(input.m_DataTypes[i]);
+					std::string sematic = "";
+					if (i < sematics_size)
+					{
+						sematic = input.m_Sematics[i];
+					}
+					else
+					{
+						sematic = info.m_DefaultSematicString;
+					}
+					auto find = sematics_counter.find(sematic);
+					if (find == sematics_counter.end())
+					{
+						sematics_counter.insert(std::make_pair(sematic, 0));
+						find = sematics_counter.find(sematic);
+					}
+					D3D12_INPUT_ELEMENT_DESC new_input = { find->first.c_str(), find->second, info.m_Format, slot, D3D12_APPEND_ALIGNED_ELEMENT, inputClassification, instanceStepRate };
+					m_VertexInputDescriptors.push_back(new_input);
+					find->second = find->second + 1;
 				}
-				else
-				{
-					sematic = info.m_DefaultSematicString;
-				}
-				auto find = sematics_counter.find(sematic);
-				if (find == sematics_counter.end())
-				{
-					sematics_counter.insert(std::make_pair(sematic, 0));
-					find = sematics_counter.find(sematic);
-				}
-				D3D12_INPUT_ELEMENT_DESC new_input = { find->first.c_str(), find->second, info.m_Format, slot, D3D12_APPEND_ALIGNED_ELEMENT, inputClassification, instanceStepRate };
-				m_VertexInputDescriptors.push_back(new_input);
-				find->second = find->second + 1;
+				++slot;
 			}
-			++slot;
+			CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout = D3D12_INPUT_LAYOUT_DESC{ m_VertexInputDescriptors.data(), static_cast<UINT>(m_VertexInputDescriptors.size()) };
+			m_PipelineStateStreamingData.PushData(inputLayout);
 		}
-		CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout = D3D12_INPUT_LAYOUT_DESC{ m_VertexInputDescriptors.data(), static_cast<UINT>(m_VertexInputDescriptors.size())};
-		m_PipelineStateStreamingData.PushData(inputLayout);
+		//root signature
+		{
+			//Create one root signature based on descriptor set layouts to simulate vulkan feature
+			std::vector<CD3DX12_ROOT_PARAMETER1> parameters;
+			for (auto& pair : m_DescriptorSetLayouts)
+			{
+				//This part can partialy moved into descriptor set layout initialization
+				//treat set id as space
+				uint32_t space = pair.first;
+				PDescriptorSetLayout layout = pair.second;
+				std::map<D3D12_DESCRIPTOR_RANGE_TYPE, std::vector<ShaderBinding*>> bindingMap;
+				for (auto& shader_binding : layout->m_Bindings)
+				{
+					auto& info = D3D12ResourceTypeInfo(shader_binding.m_ResourceType);
+					auto find = bindingMap.find(info.descriptorRange);
+					if (find == bindingMap.end())
+					{
+						bindingMap.insert(std::make_pair(info.descriptorRange, std::vector<ShaderBinding*>{}));
+						find = bindingMap.find(info.descriptorRange);
+					}
+					find->second.push_back(&shader_binding);
+				}
+				//
+				std::vector<CD3DX12_DESCRIPTOR_RANGE1> ranges;
+				{
+					auto find = bindingMap.find(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_CBV);
+					if (find != bindingMap.end())
+					{
+						CD3DX12_DESCRIPTOR_RANGE1 new_range{};
+						new_range.Init(find->first, find->second.size(), 0, space);
+						ranges.push_back(new_range);
+					}
+				}
+				{
+					auto find = bindingMap.find(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV);
+					if (find != bindingMap.end())
+					{
+						CD3DX12_DESCRIPTOR_RANGE1 new_range{};
+						new_range.Init(find->first, find->second.size(), 0, space);
+						ranges.push_back(new_range);
+					}
+				}
+				{
+					auto find = bindingMap.find(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV);
+					if (find != bindingMap.end())
+					{
+						CD3DX12_DESCRIPTOR_RANGE1 new_range{};
+						new_range.Init(find->first, find->second.size(), 0, space);
+						ranges.push_back(new_range);
+					}
+				}
+				{
+					auto find = bindingMap.find(D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER);
+					if (find != bindingMap.end())
+					{
+						CD3DX12_DESCRIPTOR_RANGE1 new_range{};
+						new_range.Init(find->first, find->second.size(), 0, space);
+						ranges.push_back(new_range);
+					}
+				}
+				CD3DX12_ROOT_PARAMETER1 new_param{};
+				//shader visibility set to all for now
+				new_param.InitAsDescriptorTable(ranges.size(), ranges.data());
+				parameters.push_back(new_param);
+			}
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
+			rootSignatureDescription.Init_1_1(parameters.size(), parameters.data(), 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+			ComPtr<ID3DBlob> rootSignatureBlob;
+			ComPtr<ID3DBlob> errorBlob;
+			CHECK_DXRESULT(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
+				D3D_ROOT_SIGNATURE_VERSION_1_1, //Check for version in device initialization
+				&rootSignatureBlob, &errorBlob), "D3D12 Error: Serialize Root Signature Issue!");
+			// Create the root signature.
+			CHECK_DXRESULT(p_OwningDevice->m_Device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
+				rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)), "D3D12 Error: Create Root Signature Issue!");
+			CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE root_signature_stream = m_RootSignature.Get();
+			m_PipelineStateStreamingData.PushData(root_signature_stream);
+		}
+		//root constants
+		//blend state
+		{
+			CD3DX12_BLEND_DESC  blend_desc{};
+			blend_desc.AlphaToCoverageEnable = FALSE;
+			blend_desc.IndependentBlendEnable = (m_ColorBlendSettings.size() > 1 || m_AlphaBlendSettings.size() > 1) ? TRUE : FALSE;
+			uint32_t blend_state_max = std::min(static_cast<uint32_t>(m_ColorBlendSettings.size()), 8u);
+			for (uint32_t i = 0; i < blend_state_max; ++i)
+			{
+				blend_desc.RenderTarget[i].BlendEnable = (m_ColorBlendSettings[i].IsNoBlendSetting()) ? FALSE : TRUE;
+				blend_desc.RenderTarget[i].BlendOp = D3D12BlendOp(m_ColorBlendSettings[i].m_BlendOp);
+				blend_desc.RenderTarget[i].SrcBlend = D3D12BlendFactor(m_ColorBlendSettings[i].m_SrcFactor);
+				blend_desc.RenderTarget[i].DestBlend = D3D12BlendFactor(m_ColorBlendSettings[i].m_DstFactor);
+				blend_desc.RenderTarget[i].LogicOpEnable = FALSE;
+				blend_desc.RenderTarget[i].LogicOp = D3D12_LOGIC_OP::D3D12_LOGIC_OP_COPY;
+			}
+
+			blend_state_max = std::min(static_cast<uint32_t>(m_AlphaBlendSettings.size()), 8u);
+			for (uint32_t i = 0; i < blend_state_max; ++i)
+			{
+				blend_desc.RenderTarget[i].BlendEnable |= (m_AlphaBlendSettings[i].IsNoBlendSetting()) ? FALSE : TRUE;
+				blend_desc.RenderTarget[i].BlendOpAlpha = D3D12BlendOp(m_AlphaBlendSettings[i].m_BlendOp);
+				blend_desc.RenderTarget[i].SrcBlendAlpha = D3D12BlendFactor(m_AlphaBlendSettings[i].m_SrcFactor);
+				blend_desc.RenderTarget[i].DestBlendAlpha = D3D12BlendFactor(m_AlphaBlendSettings[i].m_DstFactor);
+			}
+			CD3DX12_PIPELINE_STATE_STREAM_BLEND_DESC blend_sream = blend_desc;
+			m_PipelineStateStreamingData.PushData(blend_sream);
+		}
 		//push rasterizer settings
 		{
 			CD3DX12_RASTERIZER_DESC rasterizer_desc{};

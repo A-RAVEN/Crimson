@@ -179,6 +179,42 @@ namespace Crimson
 		D3D12_COMPARISON_FUNC::D3D12_COMPARISON_FUNC_GREATER,
 	};
 
+	static D3D12_BLEND_OP D3D12_BLEND_OP_TABLE[static_cast<uint32_t>(EBlendOp::E_BLEND_OP_MAX)]
+	{
+		D3D12_BLEND_OP::D3D12_BLEND_OP_ADD,
+		D3D12_BLEND_OP::D3D12_BLEND_OP_ADD,
+		D3D12_BLEND_OP::D3D12_BLEND_OP_SUBTRACT,
+		D3D12_BLEND_OP::D3D12_BLEND_OP_ADD,
+	};
+
+	static D3D12_BLEND D3D12_BLEND_TABLE[static_cast<uint32_t>(EBlendFactor::E_BLEND_FACTOR_MAX)]
+	{
+		D3D12_BLEND::D3D12_BLEND_ONE,
+		D3D12_BLEND::D3D12_BLEND_ZERO,
+		D3D12_BLEND::D3D12_BLEND_SRC_ALPHA,
+		D3D12_BLEND::D3D12_BLEND_DEST_ALPHA,
+		D3D12_BLEND::D3D12_BLEND_INV_SRC_ALPHA,
+		D3D12_BLEND::D3D12_BLEND_INV_DEST_ALPHA,
+	};
+
+	struct D3D12ShaderResourceTypeInfo
+	{
+		D3D12_DESCRIPTOR_RANGE_TYPE descriptorRange;
+		D3D12_DESCRIPTOR_HEAP_TYPE descriptorHeapType;
+	};
+
+	static D3D12ShaderResourceTypeInfo D3D12_SHADER_RESOURCE_TYPE_INFO_TABLE[static_cast<uint32_t>(EShaderResourceType::E_SHADER_RESOURCE_TYPE_MAX)] =
+	{
+		{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_CBV, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV},//uniform buffer
+		{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER},//combined sampler may be incorrect for dx12
+		{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV},//storage image
+		{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV},//storage buffer may be not very correct(Structure buffer is srv but RWBuffer is uav)
+		{},//input attachment is not available in dx12
+		{},//raytrace accel structure is not a general resource type
+		{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV},//uniform texel buffer
+		{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_UAV, D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV},//storage texel buffer
+	};
+
 	static D3D12_COMMAND_LIST_TYPE D3D12ExecutionCommandTypeToCommandListType(EExecutionCommandType srcType)
 	{
 		return D3D12_STATIC_COMMAND_LIST_TYPE_TABLE[static_cast<uint32_t>(srcType)];
@@ -224,5 +260,22 @@ namespace Crimson
 	inline static D3D12_COMPARISON_FUNC D3D12ComparisonFunc(ECompareMode compare_mode)
 	{
 		return D3D12_STATIC_COMPARISON_MODE_TABLE[static_cast<uint32_t>(compare_mode)];
+	}
+
+	inline static D3D12_BLEND_OP D3D12BlendOp(EBlendOp blend_op)
+	{
+		CRIM_ASSERT(blend_op != EBlendOp::E_MINUS, "DXGI does not support Blend Op Minus, Fallback to Blend Op Add");
+		CRIM_ASSERT(blend_op != EBlendOp::E_MULTIPLY, "DXGI does not support Blend Op Multiply, Fallback to Blend Op Add");
+		return D3D12_BLEND_OP_TABLE[static_cast<uint32_t>(blend_op)];
+	}
+
+	inline static D3D12_BLEND D3D12BlendFactor(EBlendFactor blend_factor)
+	{
+		return D3D12_BLEND_TABLE[static_cast<uint32_t>(blend_factor)];
+	}
+
+	inline static D3D12ShaderResourceTypeInfo const& D3D12ResourceTypeInfo(EShaderResourceType resource_type)
+	{
+		return D3D12_SHADER_RESOURCE_TYPE_INFO_TABLE[static_cast<uint32_t>(resource_type)];
 	}
 }

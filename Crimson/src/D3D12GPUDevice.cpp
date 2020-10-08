@@ -3,6 +3,7 @@
 #include <headers/D3D12Buffer.h>
 #include <headers/D3D12Image.h>
 #include <headers/D3D12ShaderModule.h>
+#include <dxcapi.h>
 namespace Crimson
 {
 	void D3D12GPUDevice::RegisterWindow(IWindow& window)
@@ -32,6 +33,8 @@ namespace Crimson
 	PShaderModule D3D12GPUDevice::CreateShaderModule(void* data, size_t size, EShaderType shader_type)
 	{
 		ComPtr<ID3DBlob> blob;
+		D3DCreateBlob(size, &blob);
+		memcpy(blob->GetBufferPointer(), data, size);
 		D3D12ShaderModule* return_val = new D3D12ShaderModule();
 		return_val->Init(this, blob);
 		return return_val;
@@ -69,25 +72,29 @@ namespace Crimson
 	}
 	void D3D12GPUDevice::InitDescriptorHeaps()
 	{
-		D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
-		HeapDesc.NumDescriptors = 100;
-		HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_BufferHeap)), "DX12 Create Buffer Heap Issue!");
+		//D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
+		//HeapDesc.NumDescriptors = 100;
+		//HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		//HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_CBV_SRV_UAV_Heap)), "DX12 Create CBV_SRV_UAV Heap Issue!");
+		m_DescriptorHeaps.m_CBV_SRV_UAV_Heap.Init(m_Device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 100, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
-		HeapDesc.NumDescriptors = 100;
-		HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-		HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_SamplerHeap)), "DX12 Create Sampler Heap Issue!");
+		//HeapDesc.NumDescriptors = 100;
+		//HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+		//HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_SamplerHeap)), "DX12 Create Sampler Heap Issue!");
+		m_DescriptorHeaps.m_SamplerHeap.Init(m_Device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 100, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
-		HeapDesc.NumDescriptors = 100;
-		HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_RtvHeap)), "DX12 Create Render Target Heap Issue!");
+		//HeapDesc.NumDescriptors = 100;
+		//HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		//HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_RtvHeap)), "DX12 Create Render Target Heap Issue!");
+		m_DescriptorHeaps.m_RtvHeap.Init(m_Device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 100, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
-		HeapDesc.NumDescriptors = 100;
-		HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-		HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_DsvHeap)), "DX12 Create DSV Heap Issue!");
+		//HeapDesc.NumDescriptors = 100;
+		//HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		//HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		//CHECK_DXRESULT(m_Device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&m_DescriptorHeaps.m_DsvHeap)), "DX12 Create DSV Heap Issue!");
+		m_DescriptorHeaps.m_DsvHeap.Init(m_Device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 100, D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 	}
 }

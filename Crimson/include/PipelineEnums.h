@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <stdint.h>
 
 namespace Crimson
@@ -91,7 +92,7 @@ namespace Crimson
 		ESEMATIC_MAX,
 	};
 
-	static std::string STATIC_SEMATIC_TABLE[static_cast<uint32_t>(EVertexInputSematic::ESEMATIC_MAX)] =
+	static const char* STATIC_SEMATIC_TABLE[static_cast<uint32_t>(EVertexInputSematic::ESEMATIC_MAX)] =
 	{
 		"POSITION",
 		"COLOR",

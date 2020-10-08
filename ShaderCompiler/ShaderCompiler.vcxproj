@@ -20,9 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Compiler.cpp" />
+    <ClCompile Include="DX12Compiler.cpp" />
     <ClCompile Include="FileIncluder.cpp" />
+    <ClCompile Include="Helper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DX12Compiler.h" />
+    <ClInclude Include="Helper.h" />
     <ClInclude Include="include\Compiler.h" />
     <ClInclude Include="FileIncluder.h" />
   </ItemGroup>
@@ -78,25 +82,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>D:\Programming\C++\Crimson\ExternalLib\ShaderConductor\Include;$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
     <TargetExt>.lib</TargetExt>
     <OutDir>$(SolutionDir)\Lib\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>D:\Programming\C++\Crimson\ExternalLib\ShaderConductor\Include;$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
     <TargetExt>.lib</TargetExt>
     <OutDir>$(SolutionDir)\Lib\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)ExternalLib\dxc\include;$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
     <TargetExt>.lib</TargetExt>
     <OutDir>$(SolutionDir)\Lib\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)ExternalLib\dxc\include;$(VK_SDK_PATH)\Include\;$(ProjectDir);$(IncludePath)</IncludePath>
     <TargetExt>.lib</TargetExt>
     <OutDir>$(SolutionDir)\Lib\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>Temp\$(Platform)\$(Configuration)\</IntDir>
@@ -113,10 +117,10 @@
       <SubSystem>Console</SubSystem>
     </Link>
     <Lib>
-      <AdditionalDependencies>shaderc_combined.lib</AdditionalDependencies>
+      <AdditionalDependencies>shaderc_combined.lib;$(SolutionDir)ExternalLib\dxc\lib\$(Platform)\$(Configuration)\dxcompiler.lib;LLVMDxcSupport.lib</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)ExternalLib\shaderc\lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)ExternalLib\dxc\lib\$(Platform)\$(Configuration);$(SolutionDir)ExternalLib\shaderc\lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -171,10 +175,10 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>shaderc_combined.lib</AdditionalDependencies>
+      <AdditionalDependencies>shaderc_combined.lib;$(SolutionDir)ExternalLib\dxc\lib\$(Platform)\$(Configuration)\dxcompiler.lib;LLVMDxcSupport.lib</AdditionalDependencies>
     </Lib>
     <Lib>
-      <AdditionalLibraryDirectories>$(SolutionDir)ExternalLib\shaderc\lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)ExternalLib\dxc\lib\$(Platform)\$(Configuration);$(SolutionDir)ExternalLib\shaderc\lib\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
