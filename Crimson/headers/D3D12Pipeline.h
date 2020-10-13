@@ -9,7 +9,7 @@ namespace Crimson
 	class D3D12GraphicsPipeline : public GraphicsPipeline
 	{
 	public:
-		//friend class VulkanRenderPass;
+		friend class D3D12RenderPass;
 		//friend class VulkanGraphicsCommandBuffer;
 
 		D3D12GraphicsPipeline(D3D12GPUDevice* device);

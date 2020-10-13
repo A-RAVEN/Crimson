@@ -182,6 +182,7 @@
     <ClInclude Include="headers\D3D12Image.h" />
     <ClInclude Include="headers\D3D12Instance.h" />
     <ClInclude Include="headers\D3D12Pipeline.h" />
+    <ClInclude Include="headers\D3D12RenderPass.h" />
     <ClInclude Include="headers\D3D12ShaderModule.h" />
     <ClInclude Include="headers\D3D12SurfaceContext.h" />
     <ClInclude Include="headers\D3D12Translator.h" />
@@ -226,12 +227,14 @@
   <ItemGroup>
     <ClCompile Include="src\D3D12Buffer.cpp" />
     <ClCompile Include="src\D3D12DescriptorHeapWrapper.cpp" />
+    <ClCompile Include="src\D3D12Descriptors.cpp" />
     <ClCompile Include="src\D3D12ExecutionCommandBuffer.cpp" />
     <ClCompile Include="src\D3D12GPUDevice.cpp" />
     <ClCompile Include="src\D3D12GPUDeviceThread.cpp" />
     <ClCompile Include="src\D3D12Image.cpp" />
     <ClCompile Include="src\D3D12Instance.cpp" />
     <ClCompile Include="src\D3D12Pipeline.cpp" />
+    <ClCompile Include="src\D3D12RenderPass.cpp" />
     <ClCompile Include="src\D3D12ShaderModule.cpp" />
     <ClCompile Include="src\D3D12SurfaceContext.cpp" />
     <ClCompile Include="src\GPUDevice.cpp" />

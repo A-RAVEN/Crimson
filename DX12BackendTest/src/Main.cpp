@@ -80,6 +80,15 @@ int main()
 
 		psModule = MainDevice->CreateShaderModule(shaderByte.data(), shaderByte.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
 	}
+	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
+	pipeline->m_ShaderModules = { vsModule , psModule };
+	pipeline->m_VertexInputs.resize(2);
+	//pipeline->m_VertexInputs[0].m_DataTypes = rt_mesh->GetDataType();
+	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
+	pipeline->m_VertexInputs[1].m_DataTypes = { EDataType::EUINT };
+	pipeline->m_VertexInputs[1].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE;
+	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
+	pipeline->BuildPipeline();
 
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);

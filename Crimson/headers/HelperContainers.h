@@ -49,6 +49,25 @@ namespace Crimson
 		{
 			dataVector.clear();
 		}
+
+		size_t Size()
+		{
+			return dataVector.size();
+		}
+
+		byte* Data()
+		{
+			return dataVector.data();
+		}
+
+		static ByteVector Combine(ByteVector const& left, ByteVector const& right)
+		{
+			ByteVector return_val;
+			return_val.dataVector.resize(left.dataVector.size() + right.dataVector.size());
+			memcpy(return_val.dataVector.data(), left.dataVector.data(), left.dataVector.size());
+			memcpy(return_val.dataVector.data() + left.dataVector.size(), right.dataVector.data(), right.dataVector.size());
+			return return_val;
+		}
 	private:
 		std::vector<byte> dataVector;
 	};

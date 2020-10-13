@@ -3,6 +3,8 @@
 #include <headers/D3D12Buffer.h>
 #include <headers/D3D12Image.h>
 #include <headers/D3D12ShaderModule.h>
+#include <headers/D3D12RenderPass.h>
+#include <headers/D3D12Pipeline.h>
 #include <dxcapi.h>
 namespace Crimson
 {
@@ -30,6 +32,12 @@ namespace Crimson
 		return_val->SetD3D12Image(this, format, width, height, depth, mip_level_num, layer_num, usages, memory_type);
 		return return_val;
 	}
+	PRenderPass D3D12GPUDevice::CreateRenderPass()
+	{
+		D3D12RenderPass* return_val = new D3D12RenderPass();
+		return_val->InitRenderPass(this);
+		return return_val;
+	}
 	PShaderModule D3D12GPUDevice::CreateShaderModule(void* data, size_t size, EShaderType shader_type)
 	{
 		ComPtr<ID3DBlob> blob;
@@ -38,6 +46,11 @@ namespace Crimson
 		D3D12ShaderModule* return_val = new D3D12ShaderModule();
 		return_val->Init(this, blob);
 		return return_val;
+	}
+	PGraphicsPipeline D3D12GPUDevice::CreateGraphicsPipeline()
+	{
+		D3D12GraphicsPipeline* pipeline = new D3D12GraphicsPipeline(this);
+		return pipeline;
 	}
 	void D3D12GPUDevice::InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num)
 	{

@@ -13,7 +13,7 @@ namespace Crimson
 		friend class VulkanGPUDevice;
 		friend class VulkanGraphicsCommandBuffer;
 		friend class VulkanExecutionCommandBuffer;
-		friend class VulkanDescriptorSet;
+		friend class D3D12DescriptorSet;
 
 		D3D12BufferObject();
 		void SetD3D12Buffer(D3D12GPUDevice* p_device, uint64_t size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type);

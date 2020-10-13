@@ -16,6 +16,7 @@ namespace Crimson
 		newRange.m_CPUStart = m_Heap->GetCPUDescriptorHandleForHeapStart();
 		newRange.m_GPUStart = m_Heap->GetGPUDescriptorHandleForHeapStart();
 		newRange.m_Size = descriptor_num;
+		m_Stride = p_device->GetDescriptorHandleIncrementSize(type);
 		m_DescriptorChunks.insert(std::make_pair(newRange.m_CPUStart.ptr, newRange));
 	}
 	D3D12DescriptorHeapWrapper::DescriptorRange D3D12DescriptorHeapWrapper::AllocDescriptor(size_t size)
@@ -41,13 +42,14 @@ namespace Crimson
 			{
 				//split chosen chunk
 				DescriptorRange splittedChunk{};
-				splittedChunk.m_CPUStart.ptr = chosenChunk.m_CPUStart.ptr + size;
-				splittedChunk.m_GPUStart.ptr = chosenChunk.m_GPUStart.ptr + size;
+				splittedChunk.m_CPUStart.ptr = chosenChunk.m_CPUStart.ptr + size * m_Stride;
+				splittedChunk.m_GPUStart.ptr = chosenChunk.m_GPUStart.ptr + size * m_Stride;
 				splittedChunk.m_Size = chosenChunk.m_Size - size;
 				m_DescriptorChunks.insert(std::make_pair(splittedChunk.m_CPUStart.ptr, splittedChunk));
 				chosenChunk.m_Size = size;
 			}
 			chosenChunk.m_Owner = this;
+			chosenChunk.m_Stride = m_Stride;
 			return chosenChunk;
 		}
 		LOG_ERR("D3D12 Descriptor Chunk Allocation Failed!");
@@ -68,7 +70,7 @@ namespace Crimson
 		//try combine find and previous
 		if (previous != find)
 		{
-			if (previous->second.m_CPUStart.ptr + previous->second.m_Size == find->second.m_CPUStart.ptr)
+			if (previous->second.m_CPUStart.ptr + previous->second.m_Size * m_Stride == find->second.m_CPUStart.ptr)
 			{
 				previous->second.m_Size += find->second.m_Size;
 				m_DescriptorChunks.erase(find);
@@ -79,7 +81,7 @@ namespace Crimson
 		}
 		if (next != m_DescriptorChunks.end())
 		{
-			if (find->second.m_CPUStart.ptr + find->second.m_Size == next->second.m_CPUStart.ptr)
+			if (find->second.m_CPUStart.ptr + find->second.m_Size * m_Stride == next->second.m_CPUStart.ptr)
 			{
 				find->second.m_Size += next->second.m_Size;
 				m_DescriptorChunks.erase(next);
@@ -90,14 +92,14 @@ namespace Crimson
 	{
 		CRIM_ASSERT_AND_RETURN(index < m_Size, "D3D12 Descriptor Indexing Out of Bound!", D3D12_CPU_DESCRIPTOR_HANDLE{});
 		D3D12_CPU_DESCRIPTOR_HANDLE returnVal = m_CPUStart;
-		returnVal.ptr += index;
+		returnVal.ptr += index * m_Stride;
 		return returnVal;
 	}
 	D3D12_GPU_DESCRIPTOR_HANDLE D3D12DescriptorHeapWrapper::DescriptorRange::GetGPUHandle(uint32_t index)
 	{
 		CRIM_ASSERT_AND_RETURN(index < m_Size, "D3D12 Descriptor Indexing Out of Bound!", D3D12_GPU_DESCRIPTOR_HANDLE{});
 		D3D12_GPU_DESCRIPTOR_HANDLE returnVal = m_GPUStart;
-		returnVal.ptr += index;
+		returnVal.ptr += index * m_Stride;
 		return returnVal;
 	}
 	void D3D12DescriptorHeapWrapper::DescriptorRange::Free()

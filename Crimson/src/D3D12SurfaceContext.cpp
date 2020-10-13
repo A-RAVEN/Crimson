@@ -52,20 +52,21 @@ namespace Crimson
 
 	void D3D12SurfaceContext::UpdateRTViews()
 	{
-		//increment size of render target view
-		auto rtvDescriptorSize = p_OwningDevice->m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-		//start address of rtv heap
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(p_OwningDevice->m_DescriptorHeaps.m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
+		////increment size of render target view
+		//auto rtvDescriptorSize = p_OwningDevice->m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		////start address of rtv heap
+		//CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle();
+		descriptorRange = p_OwningDevice->m_DescriptorHeaps.m_RtvHeap.AllocDescriptor(3);
 		g_BackBuffers.resize(3);
 		for (int i = 0; i < 3; ++i)
 		{
 			ComPtr<ID3D12Resource> backBuffer;
 			CHECK_DXRESULT(swapChain4->GetBuffer(i, IID_PPV_ARGS(&backBuffer)), "D3D12 Swapchain Get Buffer Issue!");
-			p_OwningDevice->m_Device->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
+			p_OwningDevice->m_Device->CreateRenderTargetView(backBuffer.Get(), nullptr, descriptorRange[i]);
 			g_BackBuffers[i] = backBuffer;
 
 			//offset address with size
-			rtvHandle.Offset(rtvDescriptorSize);
+			//rtvHandle.Offset(rtvDescriptorSize);
 		}
 	}
 

@@ -15,6 +15,8 @@ namespace Crimson
 		friend class D3D12ImageObject;
 		friend class D3D12SurfaceContext;
 		friend class D3D12GraphicsPipeline;
+		friend class D3D12DescriptorSet;
+		friend class D3D12RenderPass;
 
 		virtual void InitDeviceChannel(uint32_t num_channel) override {};
 		virtual void RegisterWindow(IWindow& window) override;
@@ -28,7 +30,7 @@ namespace Crimson
 		virtual PGPUImage CreateImage(EFormat format, uint32_t width, uint32_t height, uint32_t depth, std::vector<EImageUsage> const& usages, EMemoryType memory_type, uint32_t layer_num = 1, uint32_t mip_level_num = 1, uint32_t sample_num = 1);
 
 		//RenderPass Managing
-		virtual PRenderPass CreateRenderPass() { return nullptr; };
+		virtual PRenderPass CreateRenderPass();
 
 		//Descriptor Set Layout Managing
 		virtual PDescriptorSetLayout CreateDescriptorSetLayout() { return nullptr; };
@@ -37,7 +39,7 @@ namespace Crimson
 		virtual PShaderModule CreateShaderModule(void* data, size_t size, EShaderType shader_type) override;
 
 		//Pipeline Managing
-		virtual PGraphicsPipeline CreateGraphicsPipeline() { return nullptr; };
+		virtual PGraphicsPipeline CreateGraphicsPipeline();
 
 		//Ray Tracer Managing
 		virtual PRayTracer CreateRayTracer() { return nullptr; };

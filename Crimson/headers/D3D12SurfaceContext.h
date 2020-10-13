@@ -18,6 +18,8 @@ namespace Crimson
 		ComPtr<IDXGISwapChain4> g_SwapChain;
 		std::vector<ComPtr<ID3D12Resource>> g_BackBuffers;
 
+		D3D12DescriptorHeapWrapper::DescriptorRange descriptorRange;
+
 		ComPtr<IDXGISwapChain4> swapChain4;
 	};
 }

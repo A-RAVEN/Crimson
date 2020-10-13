@@ -19,6 +19,7 @@ namespace Crimson
 			D3D12_CPU_DESCRIPTOR_HANDLE m_CPUStart;
 			D3D12_GPU_DESCRIPTOR_HANDLE m_GPUStart;
 			UINT64 m_Size;
+			SIZE_T m_Stride;
 			D3D12DescriptorHeapWrapper* m_Owner;
 		};
 		void Init(ComPtr<ID3D12Device2> p_device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptor_num, D3D12_DESCRIPTOR_HEAP_FLAGS flags);
@@ -28,5 +29,6 @@ namespace Crimson
 		ComPtr<ID3D12Device2> m_OwningDevice;
 		ComPtr<ID3D12DescriptorHeap> m_Heap;
 		std::map<UINT64, DescriptorRange> m_DescriptorChunks;
+		SIZE_T m_Stride;
 	};
 }

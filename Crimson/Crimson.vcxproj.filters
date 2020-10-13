@@ -171,6 +171,9 @@
     <ClInclude Include="headers\D3D12Descriptors.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="headers\D3D12RenderPass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\GPUDevice.cpp">
@@ -261,6 +264,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\D3D12DescriptorHeapWrapper.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12Descriptors.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\D3D12RenderPass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
