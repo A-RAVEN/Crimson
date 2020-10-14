@@ -80,10 +80,28 @@ int main()
 
 		psModule = MainDevice->CreateShaderModule(shaderByte.data(), shaderByte.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
 	}
+
+	PGPUBuffer buffer = MainDevice->CreateBuffer(sizeof(glm::mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST);
+
+	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
+	layout->m_Bindings.resize(1);
+	layout->m_Bindings[0].m_ResourceType = EShaderResourceType::E_SHADER_UNIFORM_BUFFER;
+	layout->m_Bindings[0].m_Num = 1;
+	layout->m_Bindings[0].m_RegisterPoint = 0;
+	layout->m_Bindings[0].m_BindingPoint = 0;
+	layout->m_Bindings[0].m_ShaderTypes = { EShaderType::E_SHADER_TYPE_VERTEX };
+	layout->BuildLayout();
+
+	PDescriptorSet set = layout->AllocDescriptorSet();
+	set->WriteDescriptorSetBuffers(0, { buffer }, { buffer->GetRange() }, 0);
+	set->EndWriteDescriptorSet();
+
 	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
+	pipeline->m_DescriptorSetLayouts = { {0, layout} };
 	pipeline->m_ShaderModules = { vsModule , psModule };
 	pipeline->m_VertexInputs.resize(2);
 	//pipeline->m_VertexInputs[0].m_DataTypes = rt_mesh->GetDataType();
+	pipeline->m_VertexInputs[0].m_DataTypes = { EDataType::EVEC3 };
 	pipeline->m_VertexInputs[0].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_VERTEX;
 	pipeline->m_VertexInputs[1].m_DataTypes = { EDataType::EUINT };
 	pipeline->m_VertexInputs[1].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE;

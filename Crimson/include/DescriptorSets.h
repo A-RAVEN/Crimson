@@ -23,7 +23,7 @@ namespace Crimson
 	class ShaderBinding
 	{
 	public:
-		uint32_t					m_BindingPoint;
+		uint32_t					m_BindingPoint;	//	meaning binding point for vulkan and space for dx12
 		uint32_t					m_RegisterPoint; // intended for dx12 api, similar to binding point of vulkan but type local
 		EShaderResourceType			m_ResourceType;
 		std::vector<EShaderType>	m_ShaderTypes;

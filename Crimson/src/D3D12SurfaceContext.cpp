@@ -56,7 +56,7 @@ namespace Crimson
 		//auto rtvDescriptorSize = p_OwningDevice->m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		////start address of rtv heap
 		//CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle();
-		descriptorRange = p_OwningDevice->m_DescriptorHeaps.m_RtvHeap.AllocDescriptor(3);
+		descriptorRange = p_OwningDevice->m_DescriptorHeaps.m_Heaps[D3D12_DESCRIPTOR_HEAP_TYPE_RTV].AllocDescriptor(3);
 		g_BackBuffers.resize(3);
 		for (int i = 0; i < 3; ++i)
 		{

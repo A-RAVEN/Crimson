@@ -15,6 +15,7 @@ namespace Crimson
 		friend class D3D12ImageObject;
 		friend class D3D12SurfaceContext;
 		friend class D3D12GraphicsPipeline;
+		friend class D3D12DescriptorSetLayout;
 		friend class D3D12DescriptorSet;
 		friend class D3D12RenderPass;
 
@@ -33,7 +34,7 @@ namespace Crimson
 		virtual PRenderPass CreateRenderPass();
 
 		//Descriptor Set Layout Managing
-		virtual PDescriptorSetLayout CreateDescriptorSetLayout() { return nullptr; };
+		virtual PDescriptorSetLayout CreateDescriptorSetLayout();
 
 		//Shader Managing
 		virtual PShaderModule CreateShaderModule(void* data, size_t size, EShaderType shader_type) override;
@@ -81,10 +82,11 @@ namespace Crimson
 		//
 		struct DescriptorHeaps
 		{
-			D3D12DescriptorHeapWrapper m_CBV_SRV_UAV_Heap;
-			D3D12DescriptorHeapWrapper m_SamplerHeap;
-			D3D12DescriptorHeapWrapper m_RtvHeap;
-			D3D12DescriptorHeapWrapper m_DsvHeap;
+			D3D12DescriptorHeapWrapper m_Heaps[D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+			//D3D12DescriptorHeapWrapper m_CBV_SRV_UAV_Heap;
+			//D3D12DescriptorHeapWrapper m_SamplerHeap;
+			//D3D12DescriptorHeapWrapper m_RtvHeap;
+			//D3D12DescriptorHeapWrapper m_DsvHeap;
 		} m_DescriptorHeaps;
 	};
 }
