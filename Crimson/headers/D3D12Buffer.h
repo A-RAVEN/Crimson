@@ -10,9 +10,9 @@ namespace Crimson
 	class D3D12BufferObject : public IGPUBuffer
 	{
 	public:
-		friend class VulkanGPUDevice;
-		friend class VulkanGraphicsCommandBuffer;
-		friend class VulkanExecutionCommandBuffer;
+		friend class D3D12GPUDevice;
+		friend class D3D12GraphicsCommandBuffer;
+		friend class D3D12ExecutionCommandBuffer;
 		friend class D3D12DescriptorSet;
 
 		D3D12BufferObject();
@@ -30,6 +30,6 @@ namespace Crimson
 		uint32_t			m_CurrentQueueFamily;
 		uint8_t* p_Mapped;
 
-		std::map<std::string, VkBufferView> m_BufferViews;
+		//std::map<std::string, VkBufferView> m_BufferViews;
 	};
 }

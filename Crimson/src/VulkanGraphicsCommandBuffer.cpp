@@ -92,19 +92,21 @@ namespace Crimson
 			m_CurrentPipelineLayout = pipeline_instance_find->second.second;
 		}
 	}
-	void VulkanGraphicsCommandBuffer::BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<uint64_t> const& buffer_offset_list)
+	void VulkanGraphicsCommandBuffer::BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides)
 	{
 		std::vector<VkBuffer> buffers(buffer_list.size());
+		std::vector<VkDeviceSize> bufferOffsets(buffer_list.size());
 		for (uint32_t buffer_id = 0; buffer_id < buffer_list.size(); ++buffer_id)
 		{
 			buffers[buffer_id] = static_cast<VulkanBufferObject*> (buffer_list[buffer_id])->m_Buffer;
+			bufferOffsets[buffer_id] = buffer_range_list[buffer_id].m_Offset;
 		}
-		vkCmdBindVertexBuffers(m_CommandBuffer, 0, buffers.size(), buffers.data(), buffer_offset_list.data());
+		vkCmdBindVertexBuffers(m_CommandBuffer, 0, buffers.size(), buffers.data(), bufferOffsets.data());
 	}
-	void VulkanGraphicsCommandBuffer::BindIndexBuffer(PGPUBuffer buffer, uint64_t buffer_offset, EIndexType index_type)
+	void VulkanGraphicsCommandBuffer::BindIndexBuffer(PGPUBuffer buffer, BufferRange const& buffer_range, EIndexType index_type)
 	{
 		VkIndexType vulkan_index_type = (index_type == EIndexType::E_INDEX_TYPE_32) ? VK_INDEX_TYPE_UINT32 : VK_INDEX_TYPE_UINT16;
-		vkCmdBindIndexBuffer(m_CommandBuffer, static_cast<VulkanBufferObject*>(buffer)->m_Buffer, buffer_offset, vulkan_index_type);
+		vkCmdBindIndexBuffer(m_CommandBuffer, static_cast<VulkanBufferObject*>(buffer)->m_Buffer, buffer_range.m_Offset, vulkan_index_type);
 	}
 	void VulkanGraphicsCommandBuffer::DrawIndexed(uint32_t index_count, uint32_t instance_count, 
 		uint32_t first_index, uint32_t first_vertex, uint32_t first_instance_id)

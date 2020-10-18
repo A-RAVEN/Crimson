@@ -8,7 +8,7 @@ namespace Crimson
 	{
 	public:
 		friend class D3D12GPUDevice;
-		//friend class VulkanFramebuffer;
+		friend class D3D12Framebuffer;
 		//friend class VulkanExecutionCommandBuffer;
 		//friend class VulkanDescriptorSet;
 		D3D12ImageObject();

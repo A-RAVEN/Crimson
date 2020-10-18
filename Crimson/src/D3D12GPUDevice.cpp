@@ -6,6 +6,7 @@
 #include <headers/D3D12RenderPass.h>
 #include <headers/D3D12Pipeline.h>
 #include <headers/D3D12Descriptors.h>
+#include <headers/D3D12Framebuffer.h>
 #include <dxcapi.h>
 namespace Crimson
 {
@@ -55,8 +56,18 @@ namespace Crimson
 	}
 	PGraphicsPipeline D3D12GPUDevice::CreateGraphicsPipeline()
 	{
-		D3D12GraphicsPipeline* pipeline = new D3D12GraphicsPipeline(this);
-		return pipeline;
+		D3D12GraphicsPipeline* new_pipeline = new D3D12GraphicsPipeline(this);
+		return new_pipeline;
+	}
+	PFramebuffer D3D12GPUDevice::CreateFramebuffer()
+	{
+		D3D12Framebuffer* new_framebuffer = new D3D12Framebuffer();
+		new_framebuffer->Init(this);
+		return new_framebuffer;
+	}
+	PRenderPassInstance D3D12GPUDevice::CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer)
+	{
+		return PRenderPassInstance();
 	}
 	void D3D12GPUDevice::InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num)
 	{

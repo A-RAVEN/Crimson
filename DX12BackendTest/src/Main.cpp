@@ -35,6 +35,16 @@
 
 int main()
 {
+	int x,y,n;
+    unsigned char *data = stbi_load("ExportValue.png", &x, &y, &n, 4);
+	int idy = y / 2;
+	for (int i = 0; i < x / 2; ++i)
+	{
+		float a = 1.0f - (i * 2.0f / x);
+		unsigned char alpha = data[4 * (idy * y + i) + 3];
+		float val = alpha / 255.0f;
+		std::cout << a << ", " << val << std::endl;
+	}
 	using namespace Crimson;
 	GPUDeviceManager::Init();
 	std::cout << "Init Context" << std::endl;

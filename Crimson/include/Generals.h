@@ -264,6 +264,12 @@ namespace Crimson
 		{}
 	};
 
+	struct VertexBufferDescriptor
+	{
+		uint64_t m_Stride;
+		uint64_t m_Size;
+	};
+
 	class IGPUBuffer : public IObject
 	{
 	public:
@@ -291,6 +297,7 @@ namespace Crimson
 		inline uint32_t GetImageLayerNum() const { return m_LayerNum; }
 		void SetStaticLayout(bool static_layout) { m_StaticLayout = static_layout; }
 		bool IsStaticLayout() const { return m_StaticLayout; }
+		EFormat GetFormat() { return m_Format; }
 	protected:
 		IGPUImage() :
 			m_StaticLayout(false),
@@ -380,7 +387,7 @@ namespace Crimson
 	class RenderPassInstance : public IObject
 	{
 	public:
-		virtual void Call() = 0;
+		virtual void Call() = 0;//useless for now
 	protected:
 		PRenderPass		p_RenderPass;
 		PFramebuffer	p_Framebuffer;

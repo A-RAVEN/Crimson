@@ -22,8 +22,8 @@ namespace Crimson
 		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) override;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) override;
 		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, 
-			std::vector<uint64_t> const& buffer_offset_list) override;
-		virtual void BindIndexBuffer(PGPUBuffer buffer, uint64_t buffer_offset, EIndexType index_type) override;
+			std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides) override;
+		virtual void BindIndexBuffer(PGPUBuffer buffer, BufferRange const& buffer_range, EIndexType index_type) override;
 		virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count,
 			uint32_t first_index, uint32_t first_vertex, uint32_t first_instance_id) override;
 		virtual void Draw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance_id) override;

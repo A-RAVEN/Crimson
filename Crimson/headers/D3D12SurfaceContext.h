@@ -1,6 +1,7 @@
 #pragma once
 #include <headers/D3D12Header.h>
 #include <include/IWindow.h>
+#include <headers/D3D12DescriptorHeapWrapper.h>
 
 namespace Crimson
 {

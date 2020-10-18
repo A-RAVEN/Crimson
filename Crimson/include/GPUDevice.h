@@ -65,8 +65,8 @@ namespace Crimson
 		virtual void ViewPort(float x, float y, float width, float height) = 0;
 		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) = 0;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) = 0;
-		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<uint64_t> const& buffer_offset_list) = 0;
-		virtual void BindIndexBuffer(PGPUBuffer buffer, uint64_t buffer_offset, EIndexType index_type = EIndexType::E_INDEX_TYPE_32) = 0;
+		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides) = 0;
+		virtual void BindIndexBuffer(PGPUBuffer buffer,  BufferRange const& buffer_range, EIndexType index_type = EIndexType::E_INDEX_TYPE_32) = 0;
 		virtual void DrawIndexed(uint32_t index_count, uint32_t instance_count,
 			uint32_t first_index = 0, uint32_t first_vertex = 0, uint32_t first_instance_id = 0) = 0;
 		virtual void Draw(uint32_t vertex_count, uint32_t instance_count, uint32_t first_vertex, uint32_t first_instance_id) = 0;

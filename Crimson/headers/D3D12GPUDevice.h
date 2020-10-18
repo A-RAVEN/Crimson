@@ -18,6 +18,7 @@ namespace Crimson
 		friend class D3D12DescriptorSetLayout;
 		friend class D3D12DescriptorSet;
 		friend class D3D12RenderPass;
+		friend class D3D12Framebuffer;
 
 		virtual void InitDeviceChannel(uint32_t num_channel) override {};
 		virtual void RegisterWindow(IWindow& window) override;
@@ -46,10 +47,10 @@ namespace Crimson
 		virtual PRayTracer CreateRayTracer() { return nullptr; };
 
 		//Framebuffer Managing
-		virtual PFramebuffer CreateFramebuffer() { return nullptr; };
+		virtual PFramebuffer CreateFramebuffer();
 
 		//RenderPass Instance Managing
-		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer) { return nullptr; };
+		virtual PRenderPassInstance CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer);
 
 		//Ray Trace Geometry Managing 
 		virtual PRayTraceGeometry CreateRayTraceGeometry() { return nullptr; };

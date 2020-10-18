@@ -3,6 +3,7 @@
 #include <headers/D3D12Header.h>
 #include <deque>
 #include <set>
+#include <unordered_map>
 
 namespace Crimson
 {
@@ -16,7 +17,7 @@ namespace Crimson
 		D3D12GPUDeviceThread();
 		~D3D12GPUDeviceThread();
 		virtual void Dispose() override;
-		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override { return nullptr; }
+		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
 
 		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override { return nullptr; }
 		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time) override {}
@@ -35,6 +36,7 @@ namespace Crimson
 		ComPtr<ID3D12CommandAllocator> m_ComputeCommandPool;
 		ComPtr<ID3D12CommandAllocator> m_CopyCommandPool;
 
+		std::unordered_map < PRenderPassInstance, std::vector<ComPtr<ID3D12GraphicsCommandList4>> > m_SubpassCommandLists;
 		//std::deque<uint32_t> m_RenderPassInstanceGraphicsCommandBufferInfoReferences;
 		//std::deque<RenderPassInstanceGraphicsCommandBufferInfo> m_RenderPassInstanceGraphicsCommandBufferInfos;
 

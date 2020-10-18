@@ -9,6 +9,8 @@ namespace Crimson
 	class D3D12RenderPass : public RenderPass
 	{
 	public:
+		friend class D3D12RenderPassInstance;
+		friend class D3D12GraphicsCommandBuffer;
 		virtual void BuildRenderPass();
 		virtual void InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass);
 		virtual void Dispose() override;
