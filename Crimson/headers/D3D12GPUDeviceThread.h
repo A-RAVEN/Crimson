@@ -19,14 +19,16 @@ namespace Crimson
 		virtual void Dispose() override;
 		virtual PGraphicsCommandBuffer StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id) override;
 
-		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override { return nullptr; }
+		virtual PExecutionCommandBuffer CreateExecutionCommandBuffer(EExecutionCommandType cmd_type) override;
 		virtual void BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time) override {}
 
 		void InitGPUDeviceThread(D3D12GPUDevice* device);
 
+		ComPtr<ID3D12GraphicsCommandList4> GetSubpassCommandList(PRenderPassInstance instance, uint32_t subpassId);
+
 		//accessed by execution command buffer
-		ComPtr<ID3D12GraphicsCommandList> AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, ComPtr<ID3D12CommandAllocator>& ownerAllocator);
-		void RecycleExecutionD3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmd_buffer, EExecutionCommandType cmd_type);
+		ComPtr<ID3D12GraphicsCommandList6> AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, ComPtr<ID3D12CommandAllocator>& ownerAllocator);
+		void RecycleExecutionD3D12CommandList(ComPtr<ID3D12GraphicsCommandList6> cmd_buffer, EExecutionCommandType cmd_type);
 	private:
 		void InitCommandAllocators();
 

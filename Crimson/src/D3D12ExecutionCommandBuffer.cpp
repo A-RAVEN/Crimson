@@ -1,6 +1,7 @@
 #include <headers/D3D12ExecutionCommandBuffer.h>
 #include <headers/D3D12GPUDevice.h>
 #include <headers/D3D12GPUDeviceThread.h>
+#include <headers/D3D12RenderPassInstance.h>
 #include <headers/D3D12DebugLog.h>
 
 namespace Crimson
@@ -33,6 +34,23 @@ namespace Crimson
 		m_CommandType(EExecutionCommandType::E_COMMAND_TYPE_MAX),
 		m_CurrentCommandBuffer(nullptr)
 	{
+	}
+	void D3D12ExecutionCommandBuffer::ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance)
+	{
+		std::vector<ComPtr<ID3D12GraphicsCommandList4>> subpassCmdList;
+		D3D12RenderPassInstance* dxinstance = static_cast<D3D12RenderPassInstance*>(renderpass_instance);
+		for (uint32_t i = 0; i < dxinstance->m_SubpassInstances.size(); ++i)
+		{
+			subpassCmdList.clear();
+			p_OwningDevice->CollectSubpassCommandLists(dxinstance, subpassCmdList, i);
+			auto& subpass = dxinstance->m_SubpassInstances[i];
+			m_CurrentCommandBuffer->BeginRenderPass(subpass.m_RenderTargetDescriptors.size(), subpass.m_RenderTargetDescriptors.data(), subpass.b_HasDepthStencil ? &subpass.m_DepthStencilDescriptor : NULL, D3D12_RENDER_PASS_FLAG_NONE);
+			for (auto cmd : subpassCmdList)
+			{
+				m_CurrentCommandBuffer->ExecuteBundle(cmd.Get());
+			}
+			m_CurrentCommandBuffer->EndRenderPass();
+		}
 	}
 	void D3D12ExecutionCommandBuffer::CopyImageToImage(PGPUImage srd_image, PGPUImage dst_image)
 	{

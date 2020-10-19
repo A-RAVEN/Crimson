@@ -2,13 +2,14 @@
 #include <headers/D3D12GPUDevice.h>
 #include <headers/D3D12GPUDeviceThread.h>
 #include <headers/GeneralDebug.h>
+#include <headers/D3D12DebugLog.h>
 #include <headers/D3D12Buffer.h>
 
 namespace Crimson
 {
 	void D3D12GraphicsCommandBuffer::EndCommandBuffer()
 	{
-		m_CommandList->EndRenderPass();
+		CHECK_DXRESULT(m_CommandList->Close(), "D3D12 Close Execution Command Buffer Issue!");
 	}
 	void D3D12GraphicsCommandBuffer::BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets, uint32_t start_set)
 	{

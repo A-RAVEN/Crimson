@@ -40,17 +40,30 @@ namespace Crimson
 			CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_GraphicsCommandPool.Get(), nullptr, IID_PPV_ARGS(&commandList)), "D3D12 Create Subpass CommandList Issue!");
 			find->second[subpass_id] = commandList;
 		}
-		commandList->BeginRenderPass(subpass.m_RenderTargetDescriptors.size(), subpass.m_RenderTargetDescriptors.data(), subpass.b_HasDepthStencil ? &subpass.m_DepthStencilDescriptor : NULL, D3D12_RENDER_PASS_FLAG_SUSPENDING_PASS | D3D12_RENDER_PASS_FLAG_RESUMING_PASS);
 		D3D12GraphicsCommandBuffer* new_cmd_buffer = new D3D12GraphicsCommandBuffer();
 		new_cmd_buffer->InitCommandBuffer(this, commandList, dxrenderpass_instance, subpass_id);
 		return new_cmd_buffer;
+	}
+	PExecutionCommandBuffer D3D12GPUDeviceThread::CreateExecutionCommandBuffer(EExecutionCommandType cmd_type)
+	{
+
+		return PExecutionCommandBuffer();
 	}
 	void D3D12GPUDeviceThread::InitGPUDeviceThread(D3D12GPUDevice* device)
 	{
 		p_OwningDevice = device;
 		InitCommandAllocators();
 	}
-	ComPtr<ID3D12GraphicsCommandList> D3D12GPUDeviceThread::AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, ComPtr<ID3D12CommandAllocator>& ownerAllocator)
+	ComPtr<ID3D12GraphicsCommandList4> D3D12GPUDeviceThread::GetSubpassCommandList(PRenderPassInstance instance, uint32_t subpassId)
+	{
+		auto find = m_SubpassCommandLists.find(instance);
+		if (find != m_SubpassCommandLists.end())
+		{
+			return find->second[subpassId];
+		}
+		return ComPtr<ID3D12GraphicsCommandList4>(nullptr);
+	}
+	ComPtr<ID3D12GraphicsCommandList6> D3D12GPUDeviceThread::AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, ComPtr<ID3D12CommandAllocator>& ownerAllocator)
 	{
 		ComPtr<ID3D12CommandAllocator> allocator= nullptr;
 		switch (cmd_type)
@@ -68,7 +81,7 @@ namespace Crimson
 		}
 		ownerAllocator = allocator;
 
-		ComPtr<ID3D12GraphicsCommandList> commandList;
+		ComPtr<ID3D12GraphicsCommandList6> commandList;
 		D3D12_COMMAND_LIST_TYPE commandType = D3D12ExecutionCommandTypeToCommandListType(cmd_type);
 		CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandList(0, commandType, allocator.Get(), nullptr, IID_PPV_ARGS(&commandList)), "D3D12 Create Execution Command Issue!");
 
@@ -76,7 +89,7 @@ namespace Crimson
 
 		return commandList;
 	}
-	void D3D12GPUDeviceThread::RecycleExecutionD3D12CommandList(ComPtr<ID3D12GraphicsCommandList> cmd_buffer, EExecutionCommandType cmd_type)
+	void D3D12GPUDeviceThread::RecycleExecutionD3D12CommandList(ComPtr<ID3D12GraphicsCommandList6> cmd_buffer, EExecutionCommandType cmd_type)
 	{
 		cmd_buffer.Reset();
 	}

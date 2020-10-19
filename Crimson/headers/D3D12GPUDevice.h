@@ -3,9 +3,11 @@
 #include <include/GPUDevice.h>
 #include <headers/D3D12SurfaceContext.h>
 #include <headers/D3D12DescriptorHeapWrapper.h>
+#include <deque>
 
 namespace Crimson
 {
+	class D3D12RenderPassInstance;
 	class D3D12GPUDevice : public IGPUDevice
 	{
 	public:
@@ -19,12 +21,13 @@ namespace Crimson
 		friend class D3D12DescriptorSet;
 		friend class D3D12RenderPass;
 		friend class D3D12Framebuffer;
+		friend class D3D12RenderPassInstance;
 
 		virtual void InitDeviceChannel(uint32_t num_channel) override {};
 		virtual void RegisterWindow(IWindow& window) override;
 
 		//Should Externally Symchronized
-		virtual PGPUDeviceThread CreateThread() { return nullptr; };
+		virtual PGPUDeviceThread CreateThread();
 
 		//Buffer Managing
 		virtual PGPUBuffer CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type);
@@ -68,6 +71,8 @@ namespace Crimson
 		virtual void WaitIdle() {};
 
 		virtual void PresentWindow(IWindow& window) {};
+
+		void CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id);
 	private:
 		void InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
 		void InitDescriptorHeaps();
@@ -80,6 +85,7 @@ namespace Crimson
 		std::vector<ComPtr<ID3D12CommandQueue>> m_ComputeQueues;
 		std::vector<ComPtr<ID3D12CommandQueue>> m_TransferQueues;
 
+		std::deque<D3D12GPUDeviceThread*> m_Threads;
 		//
 		struct DescriptorHeaps
 		{

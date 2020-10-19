@@ -7,6 +7,8 @@
 #include <headers/D3D12Pipeline.h>
 #include <headers/D3D12Descriptors.h>
 #include <headers/D3D12Framebuffer.h>
+#include <headers/D3D12GPUDeviceThread.h>
+#include <headers/D3D12RenderPassInstance.h>
 #include <dxcapi.h>
 namespace Crimson
 {
@@ -21,6 +23,13 @@ namespace Crimson
 #endif
 			m_SurfaceContexts.insert(std::make_pair(window.GetName(), newContext));
 		}
+	}
+	PGPUDeviceThread D3D12GPUDevice::CreateThread()
+	{
+		D3D12GPUDeviceThread* new_thread = new D3D12GPUDeviceThread();
+		new_thread->InitGPUDeviceThread(this);
+		m_Threads.push_back(new_thread);
+		return new_thread;
 	}
 	PGPUBuffer D3D12GPUDevice::CreateBuffer(uint64_t buffer_size, std::vector<EBufferUsage> const& usages, EMemoryType memory_type)
 	{
@@ -67,7 +76,20 @@ namespace Crimson
 	}
 	PRenderPassInstance D3D12GPUDevice::CreateRenderPassInstance(PRenderPass render_pass, PFramebuffer framebuffer)
 	{
-		return PRenderPassInstance();
+		D3D12RenderPassInstance* new_instance = new D3D12RenderPassInstance();
+		new_instance->Init(this, static_cast<D3D12RenderPass*>(render_pass), static_cast<D3D12Framebuffer*>(framebuffer));
+		return new_instance;
+	}
+	void D3D12GPUDevice::CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id)
+	{
+		for (auto thread : m_Threads)
+		{
+			ComPtr<ID3D12GraphicsCommandList4> result = thread->GetSubpassCommandList(renderpass_instance, subpass_id);
+			if (result != nullptr)
+			{
+				subpassList.push_back(result);
+			}
+		}
 	}
 	void D3D12GPUDevice::InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num)
 	{

@@ -11,7 +11,8 @@ namespace Crimson
 	public:
 		friend class D3D12GPUDeviceThread;
 		friend class D3D12GraphicsCommandBuffer;
-		virtual void Call() = 0;
+		friend class D3D12ExecutionCommandBuffer;
+		virtual void Call() {};
 		void Init(D3D12GPUDevice* owning_device, D3D12RenderPass* renderpass, D3D12Framebuffer* framebuffer);
 		struct SubpassInstanceInfo
 		{
@@ -20,6 +21,7 @@ namespace Crimson
 			D3D12_RENDER_PASS_DEPTH_STENCIL_DESC m_DepthStencilDescriptor;
 			bool b_HasDepthStencil = false;
 		};
+
 	private:
 		D3D12GPUDevice* p_OwningDevice;
 		std::vector<SubpassInstanceInfo> m_SubpassInstances;

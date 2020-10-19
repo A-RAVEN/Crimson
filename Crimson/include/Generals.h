@@ -374,6 +374,7 @@ namespace Crimson
 		uint32_t				m_Width;
 		uint32_t				m_Height;
 		uint32_t				m_Layers;
+		virtual void BuildFramebuffer() {};
 	protected:
 		Framebuffer() : 
 			m_Width(0),

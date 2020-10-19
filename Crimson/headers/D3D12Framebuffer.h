@@ -11,7 +11,7 @@ namespace Crimson
 	{
 	public:
 		friend class D3D12RenderPassInstance;
-		void BuildFramebuffer();
+		virtual void BuildFramebuffer() override;
 		void Init(D3D12GPUDevice* owning_device)
 		{
 			p_OwningDevice = owning_device;

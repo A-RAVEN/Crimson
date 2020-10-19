@@ -91,6 +91,19 @@ int main()
 		psModule = MainDevice->CreateShaderModule(shaderByte.data(), shaderByte.size() * sizeof(uint32_t), EShaderType::E_SHADER_TYPE_FRAGMENT);
 	}
 
+	auto image = MainDevice->CreateImage(EFormat::E_FORMAT_B8G8R8A8_SRGB, 512, 512, 1, { EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT, EImageUsage::E_IMAGE_USAGE_COPY_SRC }, EMemoryType::E_MEMORY_TYPE_DEVICE);
+	auto frameBuffer = MainDevice->CreateFramebuffer();
+	frameBuffer->m_Images.push_back(image);
+	frameBuffer->BuildFramebuffer();
+	auto renderPass = MainDevice->CreateRenderPass();
+	renderPass->m_Attachments.resize(1);
+	renderPass->m_Attachments[0].m_Format = image->GetFormat();
+	renderPass->m_Attachments[0].m_ClearType = EAttachmentClearType::E_ATTACHMENT_CLEAR_ZEROS;
+	renderPass->m_Attachments[0].m_SampleCount = 1;
+
+	renderPass->m_Subpasses.resize(1);
+	renderPass->m_Subpasses[0].m_OutputAttachments = { 0 };
+	renderPass->BuildRenderPass();
 	PGPUBuffer buffer = MainDevice->CreateBuffer(sizeof(glm::mat4), { EBufferUsage::E_BUFFER_USAGE_UNIFORM }, EMemoryType::E_MEMORY_TYPE_HOST);
 
 	PDescriptorSetLayout layout = MainDevice->CreateDescriptorSetLayout();
@@ -107,7 +120,7 @@ int main()
 	set->EndWriteDescriptorSet();
 
 	PGraphicsPipeline pipeline = MainDevice->CreateGraphicsPipeline();
-	pipeline->m_DescriptorSetLayouts = { {0, layout} };
+	//pipeline->m_DescriptorSetLayouts = { {0, layout} };
 	pipeline->m_ShaderModules = { vsModule , psModule };
 	pipeline->m_VertexInputs.resize(2);
 	//pipeline->m_VertexInputs[0].m_DataTypes = rt_mesh->GetDataType();
@@ -117,6 +130,24 @@ int main()
 	pipeline->m_VertexInputs[1].m_VertexInputMode = EVertexInputMode::E_VERTEX_INPUT_PER_INSTANCE;
 	pipeline->m_DepthRule = EDepthTestRule::E_DEPTH_TEST_ENABLED;
 	pipeline->BuildPipeline();
+
+	renderPass->InstanciatePipeline(pipeline, 0);
+
+	auto renderInstance = MainDevice->CreateRenderPassInstance(renderPass, frameBuffer);
+
+	PGPUDeviceThread device_thread = MainDevice->CreateThread();
+	auto subpass_command = device_thread->StartSubpassCommand(renderInstance, 0);
+
+	std::vector<glm::vec3> triangle{ glm::vec3(-0.8f, -0.8f, -0.1f), glm::vec3(0.8f, -0.8f, -0.1f) , glm::vec3(0.0f, 0.6f, -0.1f) };
+	PGPUBuffer vertex_buffer = MainDevice->CreateBuffer(triangle.size() * sizeof(glm::vec3), { EBufferUsage::E_BUFFER_USAGE_VERTEX }, EMemoryType::E_MEMORY_TYPE_HOST_TO_DEVICE);
+
+	subpass_command->BindSubpassPipeline(pipeline);
+	subpass_command->ViewPort(0.0f, 0.0f, 512.0f, 512.0f);
+	subpass_command->Sissor(0, 0, 512, 512);
+	subpass_command->BindVertexInputeBuffer({ vertex_buffer }, { vertex_buffer->GetRange() }, { sizeof(glm::vec3) });
+	subpass_command->Draw(3, 1, 0, 0);
+
+
 
 	Win32Window new_window;
 	new_window.InitWindow(L"Test Window", L"default", 1024, 720);
