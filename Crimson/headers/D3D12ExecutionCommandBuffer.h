@@ -38,7 +38,7 @@ namespace Crimson
 		ComPtr<ID3D12CommandAllocator> p_OwningAllocator;
 		//VulkanBatch* p_AttachedBatch;
 		EExecutionCommandType m_CommandType;
-		ComPtr<ID3D12GraphicsCommandList> m_CurrentCommandBuffer;
+		ComPtr<ID3D12GraphicsCommandList6> m_CurrentCommandBuffer;
 		//std::vector<VkSemaphore> m_AdditionialWaitingSemaphores;
 		//std::vector<VkPipelineStageFlags> m_AdditionalWaitingStages;
 
