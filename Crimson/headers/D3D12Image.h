@@ -9,6 +9,7 @@ namespace Crimson
 	public:
 		friend class D3D12GPUDevice;
 		friend class D3D12Framebuffer;
+		friend class D3D12ExecutionCommandBuffer;
 		//friend class VulkanExecutionCommandBuffer;
 		//friend class VulkanDescriptorSet;
 		D3D12ImageObject();
@@ -21,6 +22,8 @@ namespace Crimson
 			uint32_t layer_num,
 			std::vector<EImageUsage> const& usages, EMemoryType memory_type);
 		virtual void Dispose() override;
+
+		void TransitionOverallState(ComPtr<ID3D12GraphicsCommandList6> cmdList, D3D12_RESOURCE_STATES dstState);
 		//VkImageSubresourceRange GetFullSubresourceRange(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX) const;
 		//VkImageSubresourceLayers GetFullSubresourceLayers(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t mip_level = 0) const;
 		//VkImageSubresourceLayers GetSubresourceLayers(EViewAsType type = EViewAsType::E_VIEW_AS_TYPE_MAX, uint32_t mip_level = 0, uint32_t base_layer = 0, uint32_t layer_num = 1) const;
@@ -37,6 +40,7 @@ namespace Crimson
 		//Queue family ownership
 		uint32_t			m_CurrentQueueFamily;
 		uint32_t			m_NextQueueFamily;
+		D3D12_RESOURCE_STATES m_OverallState;
 		//Overall image layout, assume that all the mip levels and layers have same layout (which may not be true)
 		//std::array<int8_t, static_cast<size_t>(EViewAsType::E_VIEW_AS_TYPE_MAX)> m_ImageViewMap;
 		//std::vector<VkImageView> m_ImageViews;

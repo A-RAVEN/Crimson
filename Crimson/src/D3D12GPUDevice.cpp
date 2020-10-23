@@ -80,6 +80,67 @@ namespace Crimson
 		new_instance->Init(this, static_cast<D3D12RenderPass*>(render_pass), static_cast<D3D12Framebuffer*>(framebuffer));
 		return new_instance;
 	}
+	void D3D12GPUDevice::CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority)
+	{
+		if (m_BatchIdMap.find(batch_name) == m_BatchIdMap.end())
+		{
+			uint32_t id = m_BatchIdMap.size();
+			if (!m_AvailableBatchIds.empty())
+			{
+				id = m_AvailableBatchIds.front();
+				m_AvailableBatchIds.pop_front();
+			}
+			m_BatchIdMap.insert(std::make_pair(batch_name, id));
+		}
+	}
+	void D3D12GPUDevice::ExecuteBatches(std::vector<std::string> const& batches, EExecutionCommandType command_type, uint32_t queue_id)
+	{
+		ComPtr<ID3D12CommandQueue> queue = nullptr;
+		switch (command_type)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GENERAL:
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			queue = m_GraphicsQueues[std::min(queue_id, static_cast<uint32_t>(m_GraphicsQueues.size() - 1))];
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			queue = m_ComputeQueues[std::min(queue_id, static_cast<uint32_t>(m_ComputeQueues.size() - 1))];
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COPY:
+			queue = m_TransferQueues[std::min(queue_id, static_cast<uint32_t>(m_TransferQueues.size() - 1))];
+			break;
+		default:
+			break;
+		}
+		std::vector<ID3D12CommandList *const> cmdList;
+		for (auto& name : batches)
+		{
+			auto find = m_BatchIdMap.find(name);
+			if (find != m_BatchIdMap.end())
+			{
+				for (auto pthread : m_Threads)
+				{
+					if (pthread->m_BatchDataList.size() > find->second)
+					{
+						pthread->m_BatchDataList[find->second].CollectCmdLists(command_type, cmdList);
+					}
+				}
+			}
+		}
+		if (!cmdList.empty())
+		{
+			queue->ExecuteCommandLists(cmdList.size(), cmdList.data());
+		}
+	}
+	void D3D12GPUDevice::PresentWindow(IWindow& window)
+	{
+		auto find = m_SurfaceContexts.find(window.GetName());
+		if (find != m_SurfaceContexts.end())
+		{
+			UINT syncInterval = find->second.g_VSync ? 1 : 0;
+			UINT presentFlags = find->second.g_TearingSupported && ! find->second.g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+			find->second.swapChain4->Present(syncInterval, presentFlags);
+		}
+	}
 	void D3D12GPUDevice::CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id)
 	{
 		for (auto thread : m_Threads)

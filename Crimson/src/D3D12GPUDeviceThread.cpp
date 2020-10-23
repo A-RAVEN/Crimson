@@ -4,6 +4,7 @@
 #include <headers/D3D12RenderPassInstance.h>
 #include <headers/D3D12Translator.h>
 #include <headers/D3D12GraphicsCommandBuffer.h>
+#include <headers/D3D12ExecutionCommandBuffer.h>
 namespace Crimson
 {
 	D3D12GPUDeviceThread::D3D12GPUDeviceThread()
@@ -46,8 +47,37 @@ namespace Crimson
 	}
 	PExecutionCommandBuffer D3D12GPUDeviceThread::CreateExecutionCommandBuffer(EExecutionCommandType cmd_type)
 	{
-
-		return PExecutionCommandBuffer();
+		D3D12ExecutionCommandBuffer* newCmdBuffer = new D3D12ExecutionCommandBuffer();
+		ComPtr<ID3D12CommandAllocator> allocator;
+		auto cmdList = AllocExecutionD3D12CommandList(cmd_type, allocator);
+		newCmdBuffer->Init(p_OwningDevice, this, allocator, cmd_type, cmdList);
+		return newCmdBuffer;
+	}
+	void D3D12GPUDeviceThread::BindExecutionCommandBufferToBatch(std::string const& batch_name, PExecutionCommandBuffer command_buffer, bool one_time)
+	{
+		auto find = p_OwningDevice->m_BatchIdMap.find(batch_name);
+		CRIM_ASSERT_AND_RETURN_VOID(find != p_OwningDevice->m_BatchIdMap.end(), "Invalid Batch Name: " + batch_name);
+		if (m_BatchDataList.size() <= find->second)
+		{
+			m_BatchDataList.resize(find->second + 1);
+		}
+		auto& batchData = m_BatchDataList[find->second];
+		D3D12ExecutionCommandBuffer* dxcmdBuffer = static_cast<D3D12ExecutionCommandBuffer*>(command_buffer);
+		switch (dxcmdBuffer->m_CommandType)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GENERAL:
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			batchData.m_GraphicsExecutionBuffers.push_back(dxcmdBuffer);
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			batchData.m_ComputeExecutionBuffers.push_back(dxcmdBuffer);
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COPY:
+			batchData.m_CopyExecutionBuffers.push_back(dxcmdBuffer);
+			break;
+		default:
+			break;
+		}
 	}
 	void D3D12GPUDeviceThread::InitGPUDeviceThread(D3D12GPUDevice* device)
 	{
@@ -101,5 +131,29 @@ namespace Crimson
 		m_GraphicsCommandPool->Reset();
 		m_ComputeCommandPool->Reset();
 		m_CopyCommandPool->Reset();
+	}
+	void D3D12GPUDeviceThread::ThreadBatchData::CollectCmdLists(EExecutionCommandType cmdType, std::vector<ID3D12CommandList *const>& list)
+	{
+		std::vector<D3D12ExecutionCommandBuffer*> const* targetList = nullptr;
+		switch (cmdType)
+		{
+		case EExecutionCommandType::E_COMMAND_TYPE_GENERAL:
+		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
+			targetList = &m_GraphicsExecutionBuffers;
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
+			targetList = &m_ComputeExecutionBuffers;
+			break;
+		case EExecutionCommandType::E_COMMAND_TYPE_COPY:
+			targetList = &m_CopyExecutionBuffers;
+			break;
+		default:
+			break;
+		}
+		if (targetList == nullptr) { return; }
+		for (auto p_buffer : *targetList)
+		{
+			list.push_back(p_buffer->m_CurrentCommandBuffer.Get());
+		}
 	}
 }

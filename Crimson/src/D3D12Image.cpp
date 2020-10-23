@@ -44,12 +44,12 @@ namespace Crimson
                 static_cast<UINT16>(mip_level_num)
             );
         }
-
+        m_OverallState = D3D12_RESOURCE_STATE_COMMON;
         CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12MemoryTypeToHeapType(m_MemoryType)),
             D3D12_HEAP_FLAG_NONE,
             &textureDesc,
-            D3D12_RESOURCE_STATE_COMMON,
+            m_OverallState,
             nullptr,
             IID_PPV_ARGS(&m_Image)), "DX12 Image Creation Issue!");
 	}
@@ -57,4 +57,11 @@ namespace Crimson
     {
         m_Image.Reset();
     }
+
+    void D3D12ImageObject::TransitionOverallState(ComPtr<ID3D12GraphicsCommandList6> cmdList, D3D12_RESOURCE_STATES dstState)
+    {
+        auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_Image.Get(), m_OverallState, dstState);
+        cmdList->ResourceBarrier(1, &barrier);
+    }
+
 }

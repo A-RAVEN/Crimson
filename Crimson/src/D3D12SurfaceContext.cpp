@@ -48,6 +48,13 @@ namespace Crimson
 		CHECK_DXRESULT(swapChain1.As(&swapChain4), "D3D12 Convert Swapchain 1 to 4 Issue!");
 
 		UpdateRTViews();
+
+		CHECK_DXRESULT(device->m_Device->CreateFence(0, D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&g_Fence)), "D3D12 Create Swapchain Fence Issue!");
+		g_FenceEvent = ::CreateEvent(NULL, FALSE, FALSE, NULL);
+
+		g_TearingSupported = CheckTearingSupport();
+
+		m_CurrentFrameId = swapChain4->GetCurrentBackBufferIndex();
 	}
 
 	void D3D12SurfaceContext::UpdateRTViews()

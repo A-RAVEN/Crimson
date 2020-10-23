@@ -8,6 +8,7 @@
 namespace Crimson
 {
 	class D3D12RenderPassInstance;
+	class D3D12GPUDeviceThread;
 	class D3D12GPUDevice : public IGPUDevice
 	{
 	public:
@@ -22,6 +23,7 @@ namespace Crimson
 		friend class D3D12RenderPass;
 		friend class D3D12Framebuffer;
 		friend class D3D12RenderPassInstance;
+		friend class D3D12ExecutionCommandBuffer;
 
 		virtual void InitDeviceChannel(uint32_t num_channel) override {};
 		virtual void RegisterWindow(IWindow& window) override;
@@ -62,21 +64,24 @@ namespace Crimson
 		virtual PAccelerationStructure CreateAccelerationStructure() { return nullptr; };
 
 		//Batch Managing
-		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority) {};
+		virtual void CreateBatch(std::string const& batch_name, EExecutionCommandType command_type, uint32_t priority);
 		virtual void DestroyBatch(std::string const& batch_name) {};
 		virtual void ExecuteBatches(std::vector<std::string> const& batches) {};
-		virtual void ExecuteBatches(std::vector<std::string> const& batches, EExecutionCommandType command_type, uint32_t queue_id) {};
+		virtual void ExecuteBatches(std::vector<std::string> const& batches, EExecutionCommandType command_type, uint32_t queue_id);
 		virtual void WaitBatches(std::vector<std::string> const& batches) {};
 
 		virtual void WaitIdle() {};
 
-		virtual void PresentWindow(IWindow& window) {};
+		virtual void PresentWindow(IWindow& window);
 
 		void CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id);
 	private:
 		void InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
 		void InitDescriptorHeaps();
 	private:
+		std::map<std::string, uint32_t> m_BatchIdMap;
+		std::deque<uint32_t> m_AvailableBatchIds;
+
 		ComPtr<IDXGIAdapter4> p_Adapter;
 		ComPtr<ID3D12Device2> m_Device;
 

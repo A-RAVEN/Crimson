@@ -3,6 +3,7 @@
 #include <headers/D3D12GPUDeviceThread.h>
 #include <headers/D3D12RenderPassInstance.h>
 #include <headers/D3D12DebugLog.h>
+#include <headers/D3D12Image.h>
 
 namespace Crimson
 {
@@ -28,10 +29,17 @@ namespace Crimson
 		m_CommandType = command_type;
 		m_CurrentCommandBuffer = p_OwningThread->AllocExecutionD3D12CommandList(m_CommandType, p_OwningAllocator);
 	}
+	void D3D12ExecutionCommandBuffer::Init(D3D12GPUDevice* device, D3D12GPUDeviceThread* thread, ComPtr<ID3D12CommandAllocator> allocator, EExecutionCommandType cmd_type, ComPtr<ID3D12GraphicsCommandList6> cmd_list)
+	{
+		p_OwningDevice = device;
+		p_OwningThread = thread;
+		p_OwningAllocator = allocator;
+		m_CommandType = cmd_type;
+		m_CurrentCommandBuffer = cmd_list;
+	}
 	D3D12ExecutionCommandBuffer::D3D12ExecutionCommandBuffer():
 		p_OwningDevice(nullptr),
 		p_OwningThread(nullptr),
-		m_CommandType(EExecutionCommandType::E_COMMAND_TYPE_MAX),
 		m_CurrentCommandBuffer(nullptr)
 	{
 	}
@@ -39,6 +47,11 @@ namespace Crimson
 	{
 		std::vector<ComPtr<ID3D12GraphicsCommandList4>> subpassCmdList;
 		D3D12RenderPassInstance* dxinstance = static_cast<D3D12RenderPassInstance*>(renderpass_instance);
+		for (auto pimg : dxinstance->p_DXFramebuffer->m_Images)
+		{
+			auto dximage = static_cast<D3D12ImageObject*>(pimg);
+			dximage->TransitionOverallState(m_CurrentCommandBuffer, IsColorFormat(dximage->m_Format) ? D3D12_RESOURCE_STATE_RENDER_TARGET : D3D12_RESOURCE_STATE_DEPTH_WRITE);
+		}
 		for (uint32_t i = 0; i < dxinstance->m_SubpassInstances.size(); ++i)
 		{
 			subpassCmdList.clear();
@@ -55,5 +68,20 @@ namespace Crimson
 	void D3D12ExecutionCommandBuffer::CopyImageToImage(PGPUImage srd_image, PGPUImage dst_image)
 	{
 
+	}
+	void D3D12ExecutionCommandBuffer::CopyToSwapchain_Dynamic(PGPUImage image, IWindow* p_window)
+	{
+		auto find = p_OwningDevice->m_SurfaceContexts.find(p_window->GetName());
+		if (find != p_OwningDevice->m_SurfaceContexts.end())
+		{
+			D3D12ImageObject* dxImage = static_cast<D3D12ImageObject*>(image);
+			dxImage->TransitionOverallState(m_CurrentCommandBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
+			auto backBuffer = find->second.g_BackBuffers[find->second.m_CurrentFrameId];
+			D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST);
+			m_CurrentCommandBuffer->ResourceBarrier(1, &barrier);
+			m_CurrentCommandBuffer->CopyResource(backBuffer.Get(), dxImage->m_Image.Get());
+			barrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+			m_AdditionialWaitingFences.push_back(find->second.g_Fence);
+		}
 	}
 }
