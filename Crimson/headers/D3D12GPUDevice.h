@@ -9,6 +9,8 @@ namespace Crimson
 {
 	class D3D12RenderPassInstance;
 	class D3D12GPUDeviceThread;
+
+
 	class D3D12GPUDevice : public IGPUDevice
 	{
 	public:
@@ -44,6 +46,7 @@ namespace Crimson
 
 		//Shader Managing
 		virtual PShaderModule CreateShaderModule(void* data, size_t size, EShaderType shader_type) override;
+		virtual PShaderModule CreateShaderModule(std::vector<char> const& data, EShaderType shader_type) override;
 
 		//Pipeline Managing
 		virtual PGraphicsPipeline CreateGraphicsPipeline();
@@ -70,10 +73,13 @@ namespace Crimson
 		virtual void ExecuteBatches(std::vector<std::string> const& batches, EExecutionCommandType command_type, uint32_t queue_id);
 		virtual void WaitBatches(std::vector<std::string> const& batches) {};
 
-		virtual void WaitIdle() {};
+		virtual void WaitIdle() { };
 
 		virtual void PresentWindow(IWindow& window);
 
+		virtual void Diagnose() override;
+
+		bool QueryQueueFenceSignalState(D3D12_COMMAND_LIST_TYPE list_type, uint32_t queue, uint64_t fenceValue);
 		void CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id);
 	private:
 		void InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
@@ -83,22 +89,27 @@ namespace Crimson
 		std::deque<uint32_t> m_AvailableBatchIds;
 
 		ComPtr<IDXGIAdapter4> p_Adapter;
-		ComPtr<ID3D12Device2> m_Device;
+		ComPtr<ID3D12Device6> m_Device;
+		ComPtr<ID3D12Fence1> m_Fence;
 
 		std::map<std::wstring, D3D12SurfaceContext> m_SurfaceContexts;
 		std::vector<ComPtr<ID3D12CommandQueue>> m_GraphicsQueues;
+		std::vector<ComPtr<ID3D12Fence>> m_GraphicsQueueFences;
+		std::vector<uint64_t> m_GraphicsQueueFenceCounters;
+
 		std::vector<ComPtr<ID3D12CommandQueue>> m_ComputeQueues;
+		std::vector<ComPtr<ID3D12Fence>> m_ComputeQueueFences;
+		std::vector<uint64_t> m_ComputeQueueFenceCounters;
+
 		std::vector<ComPtr<ID3D12CommandQueue>> m_TransferQueues;
+		std::vector<ComPtr<ID3D12Fence>> m_TransferQueueFences;
+		std::vector<uint64_t> m_TransferQueueFenceCounters;
 
 		std::deque<D3D12GPUDeviceThread*> m_Threads;
 		//
 		struct DescriptorHeaps
 		{
 			D3D12DescriptorHeapWrapper m_Heaps[D3D12_DESCRIPTOR_HEAP_TYPE::D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
-			//D3D12DescriptorHeapWrapper m_CBV_SRV_UAV_Heap;
-			//D3D12DescriptorHeapWrapper m_SamplerHeap;
-			//D3D12DescriptorHeapWrapper m_RtvHeap;
-			//D3D12DescriptorHeapWrapper m_DsvHeap;
 		} m_DescriptorHeaps;
 	};
 }

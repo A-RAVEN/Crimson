@@ -25,6 +25,8 @@ public:
 	void InitWindow(std::wstring const& window_name, std::wstring const& wnd_style, uint32_t width, uint32_t height);
 	virtual HINSTANCE	GetWin32Instance() override;
 	virtual HWND		GetWin32Handle() override;
+	virtual uint32_t GetClientWidth() override { return m_Width; }
+	virtual uint32_t GetClientHeight() override { return m_Height; }
 	void CloseWindow();
 	void OnWindowResize(uint32_t new_width, uint32_t new_height);
 	bool IsWindowRunning() const { return !b_Closing; }

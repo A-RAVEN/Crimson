@@ -15,8 +15,8 @@ namespace Crimson
 
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		swapChainDesc.Width = windowRect.right - windowRect.left;
-		swapChainDesc.Height = windowRect.bottom - windowRect.top;
+		swapChainDesc.Width = window.GetClientWidth();// windowRect.right - windowRect.left;
+		swapChainDesc.Height = window.GetClientHeight(); //windowRect.bottom - windowRect.top;
 		swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		swapChainDesc.Stereo = FALSE;
 		swapChainDesc.SampleDesc = { 1, 0 };

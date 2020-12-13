@@ -115,6 +115,20 @@ namespace Crimson
 		D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH
 	};
 
+	static D3D_PRIMITIVE_TOPOLOGY D3D12_STATIC_ACTUAL_TOPOLOGY_TABLE[static_cast<uint32_t>(ETopology::E_TOPOLOGY_MAX)] =
+	{
+		//E_TOPOLOGY_POINT_LIST,
+		D3D_PRIMITIVE_TOPOLOGY_POINTLIST,
+		//E_TOPOLOGY_LINE_LIST,
+		D3D_PRIMITIVE_TOPOLOGY_LINELIST,
+		//E_TOPOLOGY_TRIANGLE_LIST,
+		D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+		//E_TOPOLOGY_TRIANGLE_STRIP,
+		D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
+		//E_TOPOLOGY_PATCH_LIST,
+		D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST,
+	};
+
 	struct D3D12VertexInputDataTypeInfo
 	{
 		DXGI_FORMAT m_Format;
@@ -232,6 +246,11 @@ namespace Crimson
 		CRIM_ASSERT(format != EFormat::E_FORMAT_B8G8R8A8_SINT && format != EFormat::E_FORMAT_B8G8R8_SINT, "DXGI does not support BGR(A)_SINT, Fallback to RGB(A)_SINT");
 		CRIM_ASSERT(format != EFormat::E_FORMAT_R64_SFLOAT && format != EFormat::E_FORMAT_R64_UINT && format != EFormat::E_FORMAT_R64_SINT, "DXGI does not support R64 format, Fallback to R32 format");
 		return D3D12_STATIC_FORMAT_TYPE_TABLE[static_cast<uint32_t>(format)];
+	}
+
+	inline static D3D_PRIMITIVE_TOPOLOGY D3D12ActualTopologyType(ETopology topology)
+	{
+		return D3D12_STATIC_ACTUAL_TOPOLOGY_TABLE[static_cast<uint32_t>(topology)];
 	}
 
 	inline static D3D12_PRIMITIVE_TOPOLOGY_TYPE D3D12TopologyType(ETopology topology)

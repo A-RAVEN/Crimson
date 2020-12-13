@@ -37,7 +37,13 @@ namespace Crimson
 		for (uint32_t i = 0; i < rtFrames.size(); ++i)
 		{
 			D3D12ImageObject* dximage = rtFrames[i];
-			p_OwningDevice->m_Device->CreateRenderTargetView(dximage->m_Image.Get(), nullptr, m_RTRanges[i]);
+			D3D12_RENDER_TARGET_VIEW_DESC desc{};
+			desc.Texture2D.MipSlice = 0;
+			desc.Texture2D.PlaneSlice = 0;
+			desc.Format = D3D12FormatType(dximage->GetFormat());
+			desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+			p_OwningDevice->m_Device->CreateRenderTargetView(dximage->m_Image.Get(), &desc, m_RTRanges[i]);
+			p_OwningDevice->Diagnose();
 			m_CPUHandles[rtIds[i]] = m_RTRanges[i];
 		}
 		for (uint32_t i = 0; i < dsFrames.size(); ++i)

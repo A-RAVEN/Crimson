@@ -27,8 +27,12 @@ namespace Crimson
 			SetupDebugLayer();
 			createFractoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 		}
-		CreateDXGIFactory2(createFractoryFlags, IID_PPV_ARGS(&dxgiFactory));
-
+		CHECK_DXRESULT(CreateDXGIFactory2(createFractoryFlags, IID_PPV_ARGS(&dxgiFactory)), "DXGI Factory Creation Issue!");
+		UUID UUIDExperimentalFeatures[] = { D3D12ExperimentalShaderModels };
+		HRESULT hr1 = D3D12EnableExperimentalFeatures(1
+			, UUIDExperimentalFeatures
+			, nullptr
+			, nullptr);
 		EnumeratePhysicalDevices();
 	}
 	D3D12Instance::~D3D12Instance()
@@ -38,6 +42,12 @@ namespace Crimson
 	{
 		CHECK_DXRESULT(D3D12GetDebugInterface(IID_PPV_ARGS(&m_DebugInterface)), "D3D12 Get Debug Interface Issue!");
 		m_DebugInterface->EnableDebugLayer();
+
+		ComPtr<ID3D12Debug> spDebugController0;
+		ComPtr<ID3D12Debug1> spDebugController1;
+		CHECK_DXRESULT(D3D12GetDebugInterface(IID_PPV_ARGS(&spDebugController0)), "Debug Interface Get Failed!");
+		CHECK_DXRESULT(spDebugController0->QueryInterface(IID_PPV_ARGS(&spDebugController1)), "Debug Controller1 Get Failed!");
+		spDebugController1->SetEnableGPUBasedValidation(true);
 	}
 	void D3D12Instance::DestroyDebugLayer()
 	{
@@ -60,7 +70,7 @@ namespace Crimson
 				// is favored.
 				if ((dxgiAdapterDesc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) == 0 &&
 					SUCCEEDED(D3D12CreateDevice(dxgiAdapter1.Get(),
-						D3D_FEATURE_LEVEL_11_0, __uuidof(ID3D12Device), nullptr)) &&
+						D3D_FEATURE_LEVEL_12_1, __uuidof(ID3D12Device), nullptr)) &&
 					dxgiAdapterDesc1.DedicatedVideoMemory > maxDedicatedVideoMemory)
 				{
 					maxDedicatedVideoMemory = dxgiAdapterDesc1.DedicatedVideoMemory;

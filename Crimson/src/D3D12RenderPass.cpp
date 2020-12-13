@@ -92,8 +92,13 @@ namespace Crimson
 					}
 					rtArray.RTFormats[i] = D3D12FormatType(attachement.m_Format);
 				}
+				for (int i = subpass.m_OutputAttachments.size(); i < 8; ++i)
+				{
+					rtArray.RTFormats[i] = DXGI_FORMAT_UNKNOWN;
+				}
 				CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rt_formats_stream = rtArray;
 				dxsubpass.m_PipelineStateStreamingDataRenderTargetFormats.PushData(rt_formats_stream);
+				dxsubpass.rtFormats = rt_formats_stream;
 			}
 			
 			if (subpass.m_DepthStencilAttachment != -1)
@@ -114,24 +119,34 @@ namespace Crimson
 				DXGI_FORMAT ds_format = D3D12FormatType(attachement.m_Format);
 				CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT ds_format_stream = ds_format;
 				dxsubpass.m_PipelineStateStreamingDataRenderTargetFormats.PushData(ds_format_stream);
+				dxsubpass.dsFormats = ds_format_stream;
 			}
 		}
 	}
-	void D3D12RenderPass::InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass)
+	GraphicsPipelineInstance D3D12RenderPass::InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass)
 	{
 		auto& dxSubpass = m_D3D12Subpasses[subpass];
-		auto find = dxSubpass.pipelineInstances.find(pipeline);
-		if (find == dxSubpass.pipelineInstances.end())
+		D3D12GraphicsPipeline* dxpipeline = static_cast<D3D12GraphicsPipeline*>(pipeline);
+		auto find = dxSubpass.pipelineInstanceRefs.find(dxpipeline);
+		if (find == dxSubpass.pipelineInstanceRefs.end())
 		{
-			D3D12GraphicsPipeline* dxpipeline = static_cast<D3D12GraphicsPipeline*>(pipeline);
+			PipelineStreamStruct combinedStruct = dxpipeline->m_Stream;
+			combinedStruct.rtFormats = dxSubpass.rtFormats;
+			combinedStruct.dsFormat = dxSubpass.dsFormats;
 			ByteVector stream = ByteVector::Combine(dxpipeline->m_PipelineStateStreamingData, dxSubpass.m_PipelineStateStreamingDataRenderTargetFormats);
 			D3D12_PIPELINE_STATE_STREAM_DESC pipelineStateStreamDesc = {
-				stream.Size(), stream.Data()
+				//stream.Size(), stream.Data()
+				sizeof(PipelineStreamStruct), &combinedStruct
 			};
 			ComPtr<ID3D12PipelineState> pipelineState;
 			CHECK_DXRESULT(p_OwningDevice->m_Device->CreatePipelineState(&pipelineStateStreamDesc, IID_PPV_ARGS(&pipelineState)), "D3D12 Error: Pipeline Instantiation Issue On " + subpass);
-			dxSubpass.pipelineInstances.insert(std::make_pair(pipeline, pipelineState));
+			dxSubpass.pipelineInstances.push_back(pipelineState);
+			uint32_t instanceId = dxSubpass.pipelineInstances.size() - 1;
+			dxSubpass.pipelineInstanceRefs.insert(std::make_pair(dxpipeline, instanceId));
+			GraphicsPipelineInstance return_val = { subpass, instanceId, this, pipeline };
+			return return_val;
 		}
+		GraphicsPipelineInstance return_val = { subpass, find->second, this, pipeline };
 	}
 	void D3D12RenderPass::Dispose()
 	{

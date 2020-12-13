@@ -8,6 +8,18 @@ namespace Crimson
     }
     void D3D12ImageObject::SetD3D12Image(D3D12GPUDevice* p_device, EFormat format, uint32_t width, uint32_t height, uint32_t depth, uint32_t mip_level_num, uint32_t layer_num, std::vector<EImageUsage> const& usages, EMemoryType memory_type)
 	{
+        D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
+        for (auto usage : usages)
+        {
+            if (usage == EImageUsage::E_IMAGE_USAGE_COLOR_ATTACHMENT)
+            {
+                flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            }
+            else if (usage == EImageUsage::E_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT)
+            {
+                flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+            }
+        }
         p_OwningDevice = p_device;
         m_MemoryType = memory_type;
         m_Format = format;
@@ -21,7 +33,8 @@ namespace Crimson
                     static_cast<UINT64>(width),
                     static_cast<UINT>(height),
                     static_cast<UINT16>(depth),
-                    static_cast<UINT16>(mip_level_num)
+                    static_cast<UINT16>(mip_level_num),
+                    flags
                 );
             }
             else
@@ -31,7 +44,10 @@ namespace Crimson
                     static_cast<UINT64>(width),
                     static_cast<UINT>(height),
                     static_cast<UINT16>(layer_num),
-                    static_cast<UINT16>(mip_level_num)
+                    static_cast<UINT16>(mip_level_num),
+                    1,
+                    0,
+                    flags
                 );
             }
         }
@@ -41,7 +57,8 @@ namespace Crimson
             textureDesc = CD3DX12_RESOURCE_DESC::Tex1D(D3D12FormatType(format),
                 static_cast<UINT64>(width),
                 static_cast<UINT16>(layer_num),
-                static_cast<UINT16>(mip_level_num)
+                static_cast<UINT16>(mip_level_num),
+                flags
             );
         }
         m_OverallState = D3D12_RESOURCE_STATE_COMMON;
@@ -62,6 +79,7 @@ namespace Crimson
     {
         auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_Image.Get(), m_OverallState, dstState);
         cmdList->ResourceBarrier(1, &barrier);
+        m_OverallState = dstState;
     }
 
 }

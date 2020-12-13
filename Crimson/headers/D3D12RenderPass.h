@@ -6,13 +6,14 @@
 
 namespace Crimson
 {
+	class D3D12GraphicsPipeline;
 	class D3D12RenderPass : public RenderPass
 	{
 	public:
 		friend class D3D12RenderPassInstance;
 		friend class D3D12GraphicsCommandBuffer;
 		virtual void BuildRenderPass();
-		virtual void InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass);
+		virtual GraphicsPipelineInstance InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass);
 		virtual void Dispose() override;
 		void InitRenderPass(D3D12GPUDevice* p_device);
 		struct SubpassInfo
@@ -20,7 +21,10 @@ namespace Crimson
 			std::vector<D3D12_RENDER_PASS_RENDER_TARGET_DESC> m_RenderTargetDescriptors;
 			D3D12_RENDER_PASS_DEPTH_STENCIL_DESC m_DepthStencilDescriptor;
 			ByteVector m_PipelineStateStreamingDataRenderTargetFormats;
-			std::unordered_map<PGraphicsPipeline, ComPtr<ID3D12PipelineState>> pipelineInstances;
+			CD3DX12_PIPELINE_STATE_STREAM_RENDER_TARGET_FORMATS rtFormats;
+			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL_FORMAT dsFormats;
+			std::unordered_map<D3D12GraphicsPipeline*, uint32_t> pipelineInstanceRefs;
+			std::vector<ComPtr<ID3D12PipelineState>> pipelineInstances;
 		};
 	private:
 		///					isDS	id

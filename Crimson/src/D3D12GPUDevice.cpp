@@ -60,7 +60,15 @@ namespace Crimson
 		D3DCreateBlob(size, &blob);
 		memcpy(blob->GetBufferPointer(), data, size);
 		D3D12ShaderModule* return_val = new D3D12ShaderModule();
+		return_val->m_ShaderType = shader_type;
 		return_val->Init(this, blob);
+		return return_val;
+	}
+	PShaderModule D3D12GPUDevice::CreateShaderModule(std::vector<char> const& data, EShaderType shader_type)
+	{
+		D3D12ShaderModule* return_val = new D3D12ShaderModule();
+		return_val->m_ShaderType = shader_type;
+		return_val->Init(this, data);
 		return return_val;
 	}
 	PGraphicsPipeline D3D12GPUDevice::CreateGraphicsPipeline()
@@ -96,22 +104,35 @@ namespace Crimson
 	void D3D12GPUDevice::ExecuteBatches(std::vector<std::string> const& batches, EExecutionCommandType command_type, uint32_t queue_id)
 	{
 		ComPtr<ID3D12CommandQueue> queue = nullptr;
+		ComPtr<ID3D12Fence> fence = nullptr;
+		uint64_t* pCounter = nullptr;
+		uint32_t queueId = 0;
 		switch (command_type)
 		{
 		case EExecutionCommandType::E_COMMAND_TYPE_GENERAL:
 		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
-			queue = m_GraphicsQueues[std::min(queue_id, static_cast<uint32_t>(m_GraphicsQueues.size() - 1))];
+			queueId = std::min(queue_id, static_cast<uint32_t>(m_GraphicsQueues.size() - 1));
+			queue = m_GraphicsQueues[queueId];
+			pCounter = &m_GraphicsQueueFenceCounters[queueId];
+			fence = m_GraphicsQueueFences[queueId];
 			break;
 		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
-			queue = m_ComputeQueues[std::min(queue_id, static_cast<uint32_t>(m_ComputeQueues.size() - 1))];
+			queueId = std::min(queue_id, static_cast<uint32_t>(m_ComputeQueues.size() - 1));
+			queue = m_ComputeQueues[queueId];
+			pCounter = &m_ComputeQueueFenceCounters[queueId];
+			fence = m_ComputeQueueFences[queueId];
 			break;
 		case EExecutionCommandType::E_COMMAND_TYPE_COPY:
-			queue = m_TransferQueues[std::min(queue_id, static_cast<uint32_t>(m_TransferQueues.size() - 1))];
+			queueId = std::min(queue_id, static_cast<uint32_t>(m_TransferQueues.size() - 1));
+			queue = m_TransferQueues[queueId];
+			pCounter = &m_TransferQueueFenceCounters[queueId];
+			fence = m_TransferQueueFences[queueId];
 			break;
 		default:
 			break;
 		}
-		std::vector<ID3D12CommandList *const> cmdList;
+		std::vector<ID3D12CommandList *> cmdList;
+		std::vector<ID3D12Fence *> cmdFences;
 		for (auto& name : batches)
 		{
 			auto find = m_BatchIdMap.find(name);
@@ -121,7 +142,7 @@ namespace Crimson
 				{
 					if (pthread->m_BatchDataList.size() > find->second)
 					{
-						pthread->m_BatchDataList[find->second].CollectCmdLists(command_type, cmdList);
+						pthread->m_BatchDataList[find->second].CollectCmdLists(command_type, cmdList, cmdFences, queueId, *pCounter);
 					}
 				}
 			}
@@ -129,7 +150,13 @@ namespace Crimson
 		if (!cmdList.empty())
 		{
 			queue->ExecuteCommandLists(cmdList.size(), cmdList.data());
+			for (auto fence : cmdFences)
+			{
+				queue->Signal(fence, 1);
+			}
 		}
+		queue->Signal(fence.Get(), *pCounter);
+		++(*pCounter);
 	}
 	void D3D12GPUDevice::PresentWindow(IWindow& window)
 	{
@@ -139,7 +166,24 @@ namespace Crimson
 			UINT syncInterval = find->second.g_VSync ? 1 : 0;
 			UINT presentFlags = find->second.g_TearingSupported && ! find->second.g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
 			find->second.swapChain4->Present(syncInterval, presentFlags);
+			find->second.m_CurrentFrameId = find->second.swapChain4->GetCurrentBackBufferIndex();
 		}
+	}
+	void D3D12GPUDevice::Diagnose()
+	{
+		CHECK_DXRESULT(m_Device->GetDeviceRemovedReason(), "D3D12 Diagnose Issue");
+	}
+	bool D3D12GPUDevice::QueryQueueFenceSignalState(D3D12_COMMAND_LIST_TYPE list_type, uint32_t queue, uint64_t fenceValue)
+	{
+		if (queue == -1) { return true; }
+		switch (list_type)
+		{
+		case D3D12_COMMAND_LIST_TYPE_DIRECT:
+			return m_GraphicsQueueFences[queue]->GetCompletedValue() >= fenceValue;
+		case D3D12_COMMAND_LIST_TYPE_COMPUTE:
+			return m_ComputeQueueFences[queue]->GetCompletedValue() >= fenceValue;
+		}
+		return false;
 	}
 	void D3D12GPUDevice::CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id)
 	{
@@ -155,11 +199,22 @@ namespace Crimson
 	void D3D12GPUDevice::InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num)
 	{
 		p_Adapter = p_adapter;
-		CHECK_DXRESULT(D3D12CreateDevice(p_Adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_Device)), "DX12 Device Creation Issue!");
+		CHECK_DXRESULT(D3D12CreateDevice(p_Adapter.Get(), D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&m_Device)), "DX12 Device Creation Issue!");
 
 		m_GraphicsQueues.resize(prefered_graphics_queue_num);
+		m_GraphicsQueueFences.resize(prefered_graphics_queue_num);
+		m_GraphicsQueueFenceCounters.resize(prefered_graphics_queue_num);
+		std::fill(m_GraphicsQueueFenceCounters.begin(), m_GraphicsQueueFenceCounters.end(), 1);
+
 		m_ComputeQueues.resize(prefered_compute_queue_num);
+		m_ComputeQueueFences.resize(prefered_compute_queue_num);
+		m_ComputeQueueFenceCounters.resize(prefered_graphics_queue_num);
+		std::fill(m_ComputeQueueFenceCounters.begin(), m_ComputeQueueFenceCounters.end(), 1);
+
 		m_TransferQueues.resize(prefered_transfer_queue_num);
+		m_TransferQueueFences.resize(prefered_transfer_queue_num);
+		m_TransferQueueFenceCounters.resize(prefered_graphics_queue_num);
+		std::fill(m_TransferQueueFenceCounters.begin(), m_TransferQueueFenceCounters.end(), 1);
 
 		D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 		queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
@@ -167,21 +222,26 @@ namespace Crimson
 		for (uint32_t i = 0; i < prefered_graphics_queue_num; ++i)
 		{
 			CHECK_DXRESULT(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_GraphicsQueues[i])), "DX12 Command Queue Creation Issue!");
+			CHECK_DXRESULT(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_GraphicsQueueFences[i])), "DX12 Command Queue Fence Creation Issue!");
 		}
 
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COMPUTE;
 		for (uint32_t i = 0; i < prefered_compute_queue_num; ++i)
 		{
 			CHECK_DXRESULT(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_ComputeQueues[i])), "DX12 Command Queue Creation Issue!");
+			CHECK_DXRESULT(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_ComputeQueueFences[i])), "DX12 Command Queue Fence Creation Issue!");
 		}
 
 		queueDesc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
 		for (uint32_t i = 0; i < prefered_transfer_queue_num; ++i)
 		{
 			CHECK_DXRESULT(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_TransferQueues[i])), "DX12 Command Queue Creation Issue!");
+			CHECK_DXRESULT(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_TransferQueueFences[i])), "DX12 Command Queue Fence Creation Issue!");
 		}
 
 		InitDescriptorHeaps();
+
+		m_Device->CreateFence(0, D3D12_FENCE_FLAGS::D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS(&m_Fence));
 	}
 	void D3D12GPUDevice::InitDescriptorHeaps()
 	{

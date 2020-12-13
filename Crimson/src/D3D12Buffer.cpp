@@ -17,14 +17,15 @@ namespace Crimson
         m_MemoryType = memory_type;
 
         D3D12_RESOURCE_STATES initialStates = D3D12_RESOURCE_STATE_COMMON;
-        if (memory_type == EMemoryType::E_MEMORY_TYPE_HOST)
+        D3D12_HEAP_TYPE heapType = D3D12MemoryTypeToHeapType(m_MemoryType);
+        if (heapType == D3D12_HEAP_TYPE::D3D12_HEAP_TYPE_UPLOAD)
         {
             initialStates = D3D12_RESOURCE_STATE_GENERIC_READ;
         }
-        else if (memory_type == EMemoryType::E_MEMORY_TYPE_DEVICE_TO_HOST)
-        {
-            initialStates = D3D12_RESOURCE_STATE_COPY_DEST;
-        }
+        //else if (memory_type == EMemoryType::E_MEMORY_TYPE_DEVICE_TO_HOST)
+        //{
+        //    initialStates = D3D12_RESOURCE_STATE_COPY_DEST;
+        //}
 
         p_OwningDevice = p_device;
         CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommittedResource(

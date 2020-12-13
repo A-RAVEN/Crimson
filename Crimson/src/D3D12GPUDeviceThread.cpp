@@ -22,33 +22,36 @@ namespace Crimson
 	PGraphicsCommandBuffer D3D12GPUDeviceThread::StartSubpassCommand(PRenderPassInstance renderpass_instance, uint32_t subpass_id)
 	{
 		D3D12RenderPassInstance* dxrenderpass_instance = static_cast<D3D12RenderPassInstance*>(renderpass_instance);
+		auto commandAllocator = AllocCommandAllocator(D3D12_COMMAND_LIST_TYPE_BUNDLE);
 		auto& subpass = dxrenderpass_instance->m_SubpassInstances[subpass_id];
 		ComPtr<ID3D12GraphicsCommandList4> commandList;
 		auto find = m_SubpassCommandLists.find(dxrenderpass_instance);
 		if (find == m_SubpassCommandLists.end())
 		{
-			m_SubpassCommandLists.insert(std::make_pair(dxrenderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>(dxrenderpass_instance->m_SubpassInstances.size(),
-				ComPtr<ID3D12GraphicsCommandList4>{nullptr})));
+			m_SubpassCommandLists.insert(std::make_pair(dxrenderpass_instance, std::vector<std::pair<ComPtr<ID3D12GraphicsCommandList4>, CommandAllocatorEntry>>(dxrenderpass_instance->m_SubpassInstances.size(),
+				{ ComPtr<ID3D12GraphicsCommandList4>{nullptr}, CommandAllocatorEntry{} })));
 			find = m_SubpassCommandLists.find(dxrenderpass_instance);
 		}
-		if (find->second[subpass_id] != nullptr)
+		if (find->second[subpass_id].first != nullptr)
 		{
-			find->second[subpass_id]->Reset(m_GraphicsCommandPool.Get(), NULL);
-			commandList = find->second[subpass_id];
+			ReturnCommandAllocator(find->second[subpass_id].second);
+			find->second[subpass_id].second = commandAllocator;
+			find->second[subpass_id].first->Reset(commandAllocator.m_CommandAllocator.Get(), NULL);
+			commandList = find->second[subpass_id].first;
 		}
 		else
 		{
-			CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_GraphicsCommandPool.Get(), nullptr, IID_PPV_ARGS(&commandList)), "D3D12 Create Subpass CommandList Issue!");
-			find->second[subpass_id] = commandList;
+			CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_BUNDLE, commandAllocator.m_CommandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList)), "D3D12 Create Subpass CommandList Issue!");
+			find->second[subpass_id] = std::make_pair(commandList, commandAllocator);
 		}
 		D3D12GraphicsCommandBuffer* new_cmd_buffer = new D3D12GraphicsCommandBuffer();
-		new_cmd_buffer->InitCommandBuffer(this, commandList, dxrenderpass_instance, subpass_id);
+		new_cmd_buffer->InitCommandBuffer(this, commandList, commandAllocator, dxrenderpass_instance, subpass_id);
 		return new_cmd_buffer;
 	}
 	PExecutionCommandBuffer D3D12GPUDeviceThread::CreateExecutionCommandBuffer(EExecutionCommandType cmd_type)
 	{
 		D3D12ExecutionCommandBuffer* newCmdBuffer = new D3D12ExecutionCommandBuffer();
-		ComPtr<ID3D12CommandAllocator> allocator;
+		CommandAllocatorEntry allocator;
 		auto cmdList = AllocExecutionD3D12CommandList(cmd_type, allocator);
 		newCmdBuffer->Init(p_OwningDevice, this, allocator, cmd_type, cmdList);
 		return newCmdBuffer;
@@ -89,31 +92,16 @@ namespace Crimson
 		auto find = m_SubpassCommandLists.find(instance);
 		if (find != m_SubpassCommandLists.end())
 		{
-			return find->second[subpassId];
+			return find->second[subpassId].first;
 		}
 		return ComPtr<ID3D12GraphicsCommandList4>(nullptr);
 	}
-	ComPtr<ID3D12GraphicsCommandList6> D3D12GPUDeviceThread::AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, ComPtr<ID3D12CommandAllocator>& ownerAllocator)
+	ComPtr<ID3D12GraphicsCommandList6> D3D12GPUDeviceThread::AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, CommandAllocatorEntry& ownerAllocator)
 	{
-		ComPtr<ID3D12CommandAllocator> allocator= nullptr;
-		switch (cmd_type)
-		{
-		case EExecutionCommandType::E_COMMAND_TYPE_GENERAL:
-		case EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS:
-			allocator = m_GraphicsCommandPool;
-			break;
-		case EExecutionCommandType::E_COMMAND_TYPE_COMPUTE:
-			allocator = m_ComputeCommandPool;
-			break;
-		case EExecutionCommandType::E_COMMAND_TYPE_COPY:
-			allocator = m_CopyCommandPool;
-			break;
-		}
-		ownerAllocator = allocator;
-
-		ComPtr<ID3D12GraphicsCommandList6> commandList;
 		D3D12_COMMAND_LIST_TYPE commandType = D3D12ExecutionCommandTypeToCommandListType(cmd_type);
-		CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandList(0, commandType, allocator.Get(), nullptr, IID_PPV_ARGS(&commandList)), "D3D12 Create Execution Command Issue!");
+		ownerAllocator = AllocCommandAllocator(commandType);
+		ComPtr<ID3D12GraphicsCommandList6> commandList;
+		CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandList(0, commandType, ownerAllocator.m_CommandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList)), "D3D12 Create Execution Command Issue!");
 
 		CHECK_DXRESULT(commandList->Close(), "D3D12 Close Execution Command Buffer Issue!");
 
@@ -122,6 +110,29 @@ namespace Crimson
 	void D3D12GPUDeviceThread::RecycleExecutionD3D12CommandList(ComPtr<ID3D12GraphicsCommandList6> cmd_buffer, EExecutionCommandType cmd_type)
 	{
 		cmd_buffer.Reset();
+	}
+	CommandAllocatorEntry D3D12GPUDeviceThread::AllocCommandAllocator(D3D12_COMMAND_LIST_TYPE type)
+	{
+		if (!m_CommandAllocatorQueues[type].empty())
+		{
+			auto front = m_CommandAllocatorQueues[type].front();
+			if (p_OwningDevice->QueryQueueFenceSignalState(front.m_CmdQueueType, front.m_SubmitQueue, front.m_SubmitSignalValue))
+			{
+				auto val = front;
+				val.m_SubmitQueue = -1;
+				val.m_SubmitSignalValue = -1;
+				m_CommandAllocatorQueues->pop();
+				val.m_CommandAllocator->Reset();
+				return val;
+			}
+		}
+		CommandAllocatorEntry return_val = { nullptr, type, -1, -1 };
+		CHECK_DXRESULT(p_OwningDevice->m_Device->CreateCommandAllocator(type, IID_PPV_ARGS(&return_val.m_CommandAllocator)), "DX12 Create New Command Allocator Issue!");
+		return return_val;
+	}
+	void D3D12GPUDeviceThread::ReturnCommandAllocator(CommandAllocatorEntry& return_entry)
+	{
+		m_CommandAllocatorQueues[return_entry.m_CmdQueueType].push(return_entry);
 	}
 	void D3D12GPUDeviceThread::InitCommandAllocators()
 	{
@@ -132,7 +143,7 @@ namespace Crimson
 		m_ComputeCommandPool->Reset();
 		m_CopyCommandPool->Reset();
 	}
-	void D3D12GPUDeviceThread::ThreadBatchData::CollectCmdLists(EExecutionCommandType cmdType, std::vector<ID3D12CommandList *const>& list)
+	void D3D12GPUDeviceThread::ThreadBatchData::CollectCmdLists(EExecutionCommandType cmdType, std::vector<ID3D12CommandList *>& list, std::vector<ID3D12Fence*>& allocator_fences, uint32_t queue_id, uint64_t signal_val)
 	{
 		std::vector<D3D12ExecutionCommandBuffer*> const* targetList = nullptr;
 		switch (cmdType)
@@ -154,6 +165,10 @@ namespace Crimson
 		for (auto p_buffer : *targetList)
 		{
 			list.push_back(p_buffer->m_CurrentCommandBuffer.Get());
+			p_buffer->p_OwningAllocator.m_CmdQueueType = D3D12ExecutionCommandTypeToCommandListType(cmdType);
+			p_buffer->p_OwningAllocator.m_SubmitQueue = queue_id;
+			p_buffer->p_OwningAllocator.m_SubmitSignalValue = signal_val;
+			//allocator_fences.push_back(p_buffer->p_AllocatprFence.Get());
 		}
 	}
 }

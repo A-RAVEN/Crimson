@@ -1,6 +1,7 @@
 #include <headers/D3D12GraphicsCommandBuffer.h>
 #include <headers/D3D12GPUDevice.h>
 #include <headers/D3D12GPUDeviceThread.h>
+#include <headers/D3D12Pipeline.h>
 #include <headers/GeneralDebug.h>
 #include <headers/D3D12DebugLog.h>
 #include <headers/D3D12Buffer.h>
@@ -38,9 +39,12 @@ namespace Crimson
 	void D3D12GraphicsCommandBuffer::BindSubpassPipeline(PGraphicsPipeline pipeline)
 	{
 		auto& subpass = p_OwningInstance->p_DXRenderPass->m_D3D12Subpasses[m_SubpassId];
-		auto find = subpass.pipelineInstances.find(pipeline);
-		CRIM_ASSERT_AND_RETURN_VOID(find != subpass.pipelineInstances.end(), "D3D12 BindSubpassPipeline Issue! pipeline instance not found!");
-		m_CommandList->SetPipelineState(find->second.Get());
+		D3D12GraphicsPipeline* dxpipeline = static_cast<D3D12GraphicsPipeline*>(pipeline);
+		auto find = subpass.pipelineInstanceRefs.find(dxpipeline);
+		CRIM_ASSERT_AND_RETURN_VOID(find != subpass.pipelineInstanceRefs.end(), "D3D12 BindSubpassPipeline Issue! pipeline instance not found!");
+		m_CommandList->SetPipelineState(subpass.pipelineInstances[find->second].Get());
+		m_CommandList->SetGraphicsRootSignature(find->first->m_RootSignature.Get());
+		m_CommandList->IASetPrimitiveTopology(find->first->m_D3DPrimitiveTopology);
 	}
 	void D3D12GraphicsCommandBuffer::BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides)
 	{
@@ -72,10 +76,11 @@ namespace Crimson
 	{
 		m_CommandList->DrawInstanced(vertex_count, instance_count, first_vertex, first_instance_id);
 	}
-	void D3D12GraphicsCommandBuffer::InitCommandBuffer(D3D12GPUDeviceThread* owningThread, ComPtr<ID3D12GraphicsCommandList4> cmdList, D3D12RenderPassInstance* renderpass_instance, uint32_t subpass)
+	void D3D12GraphicsCommandBuffer::InitCommandBuffer(D3D12GPUDeviceThread* owningThread, ComPtr<ID3D12GraphicsCommandList4> cmdList, CommandAllocatorEntry const& entry, D3D12RenderPassInstance* renderpass_instance, uint32_t subpass)
 	{
 		p_OwningThread = owningThread;
 		m_CommandList = cmdList;
+		m_AllocatorEntry = entry;
 		p_OwningInstance = renderpass_instance;
 		m_SubpassId = subpass;
 	}

@@ -4,19 +4,21 @@
 #include <headers/D3D12RenderPassInstance.h>
 #include <headers/D3D12DebugLog.h>
 #include <headers/D3D12Image.h>
+#include <headers/D3D12Translator.h>
 
 namespace Crimson
 {
 	void D3D12ExecutionCommandBuffer::DeviceMemoryBarrier(EMemoryBarrierType barrier_type)
 	{
-		//CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::(
-		//	backBuffer.Get(),
-		//	D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT)
-		//m_CurrentCommandBuffer->ResourceBarrier()
 	}
 	void D3D12ExecutionCommandBuffer::StartCommand()
 	{
-		m_CurrentCommandBuffer->Reset(p_OwningAllocator.Get(), nullptr);
+		if (!p_OwningDevice->QueryQueueFenceSignalState(p_OwningAllocator.m_CmdQueueType, p_OwningAllocator.m_SubmitQueue, p_OwningAllocator.m_SubmitSignalValue))
+		{
+			p_OwningThread->ReturnCommandAllocator(p_OwningAllocator);
+			p_OwningAllocator = p_OwningThread->AllocCommandAllocator(D3D12ExecutionCommandTypeToCommandListType(m_CommandType));
+		}
+		CHECK_DXRESULT(m_CurrentCommandBuffer->Reset(p_OwningAllocator.m_CommandAllocator.Get(), nullptr), "D3D12 CommandList Reset Issue!");
 	}
 	void D3D12ExecutionCommandBuffer::EndCommand()
 	{
@@ -29,13 +31,23 @@ namespace Crimson
 		m_CommandType = command_type;
 		m_CurrentCommandBuffer = p_OwningThread->AllocExecutionD3D12CommandList(m_CommandType, p_OwningAllocator);
 	}
-	void D3D12ExecutionCommandBuffer::Init(D3D12GPUDevice* device, D3D12GPUDeviceThread* thread, ComPtr<ID3D12CommandAllocator> allocator, EExecutionCommandType cmd_type, ComPtr<ID3D12GraphicsCommandList6> cmd_list)
+
+	DWORD WINAPI ThreadProc(LPVOID);
+
+	void D3D12ExecutionCommandBuffer::Init(D3D12GPUDevice* device, D3D12GPUDeviceThread* thread, CommandAllocatorEntry const& allocator,
+		EExecutionCommandType cmd_type, ComPtr<ID3D12GraphicsCommandList6> cmd_list)
 	{
 		p_OwningDevice = device;
 		p_OwningThread = thread;
 		p_OwningAllocator = allocator;
+		device->m_Device->CreateFence(1, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&p_AllocatprFence));
 		m_CommandType = cmd_type;
 		m_CurrentCommandBuffer = cmd_list;
+		p_WaitAllocatorEvent = CreateEvent(
+			NULL,               // default security attributes
+			TRUE,               // manual-reset event
+			FALSE,              // initial state is nonsignaled
+			TEXT("Wait Allocator"));
 	}
 	D3D12ExecutionCommandBuffer::D3D12ExecutionCommandBuffer():
 		p_OwningDevice(nullptr),
@@ -54,6 +66,24 @@ namespace Crimson
 		}
 		for (uint32_t i = 0; i < dxinstance->m_SubpassInstances.size(); ++i)
 		{
+			auto& sissor_setting = dxinstance->p_DXRenderPass->m_Subpasses[i].m_SissorsSetting;
+			auto& viewport_setting = dxinstance->p_DXRenderPass->m_Subpasses[i].m_ViewportSetting;
+			//ÉèÖÃviewport
+			D3D12_VIEWPORT view_port{};
+			view_port.TopLeftX = viewport_setting.x;
+			view_port.TopLeftY = viewport_setting.y;
+			view_port.Width = viewport_setting.width;
+			view_port.Height = viewport_setting.height;
+			view_port.MinDepth = 0.0f;
+			view_port.MaxDepth = 1.0f;
+			m_CurrentCommandBuffer->RSSetViewports(1, &view_port);
+			//ÉèÖÃsissor
+			D3D12_RECT rect{};
+			rect.left = sissor_setting.x;
+			rect.top = sissor_setting.y;
+			rect.right = rect.left + sissor_setting.width;
+			rect.bottom = rect.top + sissor_setting.height;
+			m_CurrentCommandBuffer->RSSetScissorRects(1, &rect);
 			subpassCmdList.clear();
 			p_OwningDevice->CollectSubpassCommandLists(dxinstance, subpassCmdList, i);
 			auto& subpass = dxinstance->m_SubpassInstances[i];
@@ -81,6 +111,7 @@ namespace Crimson
 			m_CurrentCommandBuffer->ResourceBarrier(1, &barrier);
 			m_CurrentCommandBuffer->CopyResource(backBuffer.Get(), dxImage->m_Image.Get());
 			barrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
+			m_CurrentCommandBuffer->ResourceBarrier(1, &barrier);
 			m_AdditionialWaitingFences.push_back(find->second.g_Fence);
 		}
 	}

@@ -398,7 +398,7 @@ namespace Crimson
 			CHECK_VKRESULT(vkCreateRenderPass(p_OwningDevice->m_LogicalDevice, &create_info, VULKAN_ALLOCATOR_POINTER, &m_RenderPass), "Vulkan Create RenderPass Issue!");
 		}
 	}
-	void VulkanRenderPass::InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass)
+	GraphicsPipelineInstance VulkanRenderPass::InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass)
 	{
 		BuildRenderPass();
 
@@ -770,7 +770,10 @@ namespace Crimson
 
 		VkPipeline new_graphic_pipeline;
 		CHECK_VKRESULT(vkCreateGraphicsPipelines(p_OwningDevice->m_LogicalDevice, VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &new_graphic_pipeline), "Vulkan Pipeline Instantiation Issue!");
-		m_VulkanSubpassInfos[subpass].m_PipelineInstances.insert(std::make_pair(pipeline, std::make_pair(new_graphic_pipeline, new_pipeline_layout)));
+		m_VulkanSubpassInfos[subpass].m_PipelineInstances.push_back(std::make_pair(new_graphic_pipeline, new_pipeline_layout));
+		uint32_t instanceId = m_VulkanSubpassInfos[subpass].m_PipelineInstances.size() - 1;
+		m_VulkanSubpassInfos[subpass].m_PipelineInstanceRefs.insert(std::make_pair(pipeline, instanceId));
+		return GraphicsPipelineInstance{ subpass, instanceId, this, pipeline };
 	}
 	void VulkanRenderPass::Dispose()
 	{
@@ -788,8 +791,8 @@ namespace Crimson
 				}
 				for (auto& pipeline : subpass.m_PipelineInstances)
 				{
-					vkDestroyPipeline(p_OwningDevice->m_LogicalDevice, pipeline.second.first, VULKAN_ALLOCATOR_POINTER);
-					vkDestroyPipelineLayout(p_OwningDevice->m_LogicalDevice, pipeline.second.second, VULKAN_ALLOCATOR_POINTER);
+					vkDestroyPipeline(p_OwningDevice->m_LogicalDevice, pipeline.first, VULKAN_ALLOCATOR_POINTER);
+					vkDestroyPipelineLayout(p_OwningDevice->m_LogicalDevice, pipeline.second, VULKAN_ALLOCATOR_POINTER);
 				}
 				subpass.m_PipelineInstances.clear();
 			}

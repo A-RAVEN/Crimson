@@ -270,6 +270,14 @@ namespace Crimson
 		uint64_t m_Size;
 	};
 
+	struct Rect
+	{
+		float x;
+		float y;
+		float width;
+		float height;
+	};
+
 	class IGPUBuffer : public IObject
 	{
 	public:
@@ -346,12 +354,22 @@ namespace Crimson
 		std::vector<int32_t>	m_ResolveAttachments;
 		int32_t					m_DepthStencilAttachment;
 		bool					b_DepthStencilReadOnly;
+		Rect					m_SissorsSetting;
+		Rect					m_ViewportSetting;
 		SubpassInfo() :
 			m_DepthStencilAttachment(-1),
 			b_DepthStencilReadOnly(false)
 		{}
 	};
 
+	class RenderPass;
+	struct GraphicsPipelineInstance
+	{
+		uint32_t			m_SubpassId;
+		uint32_t			m_InstanceId;
+		RenderPass*			p_Renderpass;
+		GraphicsPipeline*	p_Pipeline;
+	};
 	class RenderPass : IObject
 	{
 	public:
@@ -359,7 +377,7 @@ namespace Crimson
 		std::vector<RenderPassAttachment>	m_Attachments;
 		std::vector<SubpassInfo>			m_Subpasses;
 		virtual void BuildRenderPass() = 0;
-		virtual void InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass) = 0;
+		virtual GraphicsPipelineInstance InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass) = 0;
 		virtual void Dispose() override = 0;
 	protected:
 		RenderPass() {}

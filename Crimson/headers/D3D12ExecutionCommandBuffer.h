@@ -2,10 +2,11 @@
 #include <include/GPUDevice.h>
 #include <include/DescriptorSets.h>
 #include <headers/D3D12Header.h>
+#include <headers/D3D12GPUDeviceThread.h>
 namespace Crimson
 {
 	class D3D12GPUDevice;
-	class D3D12GPUDeviceThread;
+	//class D3D12GPUDeviceThread;
 	class D3D12ExecutionCommandBuffer : public ExecutionCommandBuffer
 	{
 	public:
@@ -33,12 +34,14 @@ namespace Crimson
 		virtual void LoadCache() override {}
 
 		void SetExecutionCommandBuffer(D3D12GPUDevice* p_device, D3D12GPUDeviceThread* p_thread, EExecutionCommandType command_type);
-		void Init(D3D12GPUDevice* device, D3D12GPUDeviceThread* thread, ComPtr<ID3D12CommandAllocator> allocator,
+		void Init(D3D12GPUDevice* device, D3D12GPUDeviceThread* thread, CommandAllocatorEntry const& allocator,
 			EExecutionCommandType cmd_type, ComPtr<ID3D12GraphicsCommandList6> cmd_list);
 	private:
 		D3D12GPUDevice* p_OwningDevice;
 		D3D12GPUDeviceThread* p_OwningThread;
-		ComPtr<ID3D12CommandAllocator> p_OwningAllocator;
+		CommandAllocatorEntry p_OwningAllocator;
+		ComPtr<ID3D12Fence> p_AllocatprFence;
+		HANDLE p_WaitAllocatorEvent;
 		//VulkanBatch* p_AttachedBatch;
 		ComPtr<ID3D12GraphicsCommandList6> m_CurrentCommandBuffer;
 		std::vector<ComPtr<ID3D12Fence>> m_AdditionialWaitingFences;

@@ -120,9 +120,9 @@ namespace ShaderCompiler
 
 			return { result.cbegin(), result.cend() };
 		}
-		virtual std::vector<byte> CompileHLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true)
+		virtual std::vector<char> CompileHLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true)
 		{
-			return std::vector<byte>();
+			return std::vector<char>();
 		}
 	private:
 		shaderc::CompileOptions m_Options;

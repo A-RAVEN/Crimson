@@ -31,7 +31,8 @@ namespace ShaderCompiler
 		virtual void AddInlcudePath(std::string const& path) = 0;
 		virtual void AddMacro(std::string const& macro_name, std::string const& macro_value) = 0;
 		virtual std::string PreprocessGLSLShader(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type) = 0;
-		virtual std::vector<uint32_t> CompileGLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true) = 0;
+		virtual std::vector<uint32_t> CompileGLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true) {return std::vector<uint32_t>();}
+		virtual std::vector<char> CompileHLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true) { return std::vector<char>(); }
 		static IShaderCompiler* GetCompiler();
 		static void DisposeCompiler();
 		static IShaderCompiler* CreateDxCompiler();

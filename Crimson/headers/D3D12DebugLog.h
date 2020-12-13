@@ -1,7 +1,7 @@
 #pragma once
 #include <headers/D3D12Header.h>
 #include <iostream>
-
+#include <comdef.h>
 namespace Crimson
 {
 	namespace D3D12Debug
@@ -18,6 +18,9 @@ namespace Crimson
 #endif
 				std::string out = "D3D12 Runtime Error:\n" + error_string + "\nLine: " + std::to_string(line) + "\nFile: " + file + "\n";
 				std::cerr << out << std::endl;
+				_com_error err(result);
+				LPCTSTR errMsg = err.ErrorMessage();
+				std::cerr << errMsg << std::endl;
 #ifdef _WIN32
 				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
 #endif

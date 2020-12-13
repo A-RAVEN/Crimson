@@ -131,6 +131,8 @@ namespace Crimson
 
 		//Shader Managing
 		virtual PShaderModule CreateShaderModule(void* data, size_t size, EShaderType shader_type) = 0;
+		virtual PShaderModule CreateShaderModule(std::vector<char> const& data, EShaderType shader_type) { return nullptr; }
+
 
 		//Pipeline Managing
 		virtual PGraphicsPipeline CreateGraphicsPipeline() = 0;
@@ -160,6 +162,7 @@ namespace Crimson
 		virtual void WaitIdle() = 0;
 
 		virtual void PresentWindow(IWindow& window) = 0;
+		virtual void Diagnose() {};
 	protected:
 		std::string m_Name;
 

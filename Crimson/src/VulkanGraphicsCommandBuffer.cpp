@@ -85,11 +85,12 @@ namespace Crimson
 	void VulkanGraphicsCommandBuffer::BindSubpassPipeline(PGraphicsPipeline pipeline)
 	{
 		VulkanGraphicsPipeline* p_pipeline = static_cast<VulkanGraphicsPipeline*>(pipeline);
-		auto pipeline_instance_find = p_OwningRenderPass->m_VulkanSubpassInfos[m_SubpassId].m_PipelineInstances.find(pipeline);
-		if (pipeline_instance_find != p_OwningRenderPass->m_VulkanSubpassInfos[m_SubpassId].m_PipelineInstances.end())
+		auto pipeline_instance_find = p_OwningRenderPass->m_VulkanSubpassInfos[m_SubpassId].m_PipelineInstanceRefs.find(pipeline);
+		if (pipeline_instance_find != p_OwningRenderPass->m_VulkanSubpassInfos[m_SubpassId].m_PipelineInstanceRefs.end())
 		{
-			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_instance_find->second.first);
-			m_CurrentPipelineLayout = pipeline_instance_find->second.second;
+			auto& inst_pair = p_OwningRenderPass->m_VulkanSubpassInfos[m_SubpassId].m_PipelineInstances[pipeline_instance_find->second];
+			vkCmdBindPipeline(m_CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, inst_pair.first);
+			m_CurrentPipelineLayout = inst_pair.second;
 		}
 	}
 	void VulkanGraphicsCommandBuffer::BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides)

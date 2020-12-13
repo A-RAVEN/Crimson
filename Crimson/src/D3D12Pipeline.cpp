@@ -8,7 +8,7 @@ namespace Crimson
 {
 	D3D12GraphicsPipeline::D3D12GraphicsPipeline(D3D12GPUDevice* device)
 	{
-
+		p_OwningDevice = device;
 	}
 	void D3D12GraphicsPipeline::LoadShaderSource(char const* src_code, size_t src_size, EShaderType shader_type)
 	{
@@ -24,11 +24,14 @@ namespace Crimson
 	void D3D12GraphicsPipeline::BuildPipeline()
 	{
 		m_PipelineStateStreamingData.Clear();
+		m_D3DPrimitiveTopology = D3D12ActualTopologyType(m_Topology);
 		CD3DX12_PIPELINE_STATE_STREAM_PRIMITIVE_TOPOLOGY topology = D3D12TopologyType(m_Topology);
 		m_PipelineStateStreamingData.PushData(topology);
+		m_Stream.topology = topology;
 		//attribute inputs
 		{
-			std::map<std::string, uint32_t> sematics_counter;
+									//first: counter, second: id
+			std::map<std::string, std::pair<uint32_t, uint32_t>> sematics_counter;
 			m_VertexInputDescriptors.clear();
 			uint32_t slot = 0;
 			for (auto& input : m_VertexInputs)
@@ -52,17 +55,19 @@ namespace Crimson
 					auto find = sematics_counter.find(sematic);
 					if (find == sematics_counter.end())
 					{
-						sematics_counter.insert(std::make_pair(sematic, 0));
+						m_FullSematics.push_back(sematic);
+						sematics_counter.insert(std::make_pair(sematic, std::make_pair(0, m_FullSematics.size() - 1)));
 						find = sematics_counter.find(sematic);
 					}
-					D3D12_INPUT_ELEMENT_DESC new_input = { find->first.c_str(), find->second, info.m_Format, slot, D3D12_APPEND_ALIGNED_ELEMENT, inputClassification, instanceStepRate };
+					D3D12_INPUT_ELEMENT_DESC new_input = { m_FullSematics[find->second.second].c_str(), find->second.first, info.m_Format, slot, D3D12_APPEND_ALIGNED_ELEMENT, inputClassification, instanceStepRate };
 					m_VertexInputDescriptors.push_back(new_input);
-					find->second = find->second + 1;
+					++find->second.first;// = find->second + 1;
 				}
 				++slot;
 			}
 			CD3DX12_PIPELINE_STATE_STREAM_INPUT_LAYOUT inputLayout = D3D12_INPUT_LAYOUT_DESC{ m_VertexInputDescriptors.data(), static_cast<UINT>(m_VertexInputDescriptors.size()) };
 			m_PipelineStateStreamingData.PushData(inputLayout);
+			m_Stream.inputLayout = inputLayout;
 		}
 		//root signature
 		{
@@ -129,8 +134,8 @@ namespace Crimson
 				new_param.InitAsDescriptorTable(ranges.size(), ranges.data());
 				parameters.push_back(new_param);
 			}
-			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
-			rootSignatureDescription.Init_1_1(parameters.size(), parameters.data(), 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription = CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC(D3D12_DEFAULT);
+			rootSignatureDescription.Init_1_1(parameters.size(), parameters.data(), 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 			ComPtr<ID3DBlob> rootSignatureBlob;
 			ComPtr<ID3DBlob> errorBlob;
 			CHECK_DXRESULT(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
@@ -141,11 +146,12 @@ namespace Crimson
 				rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_RootSignature)), "D3D12 Error: Create Root Signature Issue!");
 			CD3DX12_PIPELINE_STATE_STREAM_ROOT_SIGNATURE root_signature_stream = m_RootSignature.Get();
 			m_PipelineStateStreamingData.PushData(root_signature_stream);
+			m_Stream.rootSignature = root_signature_stream;
 		}
 		//root constants
 		//blend state
 		{
-			CD3DX12_BLEND_DESC  blend_desc{};
+			CD3DX12_BLEND_DESC  blend_desc = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 			blend_desc.AlphaToCoverageEnable = FALSE;
 			blend_desc.IndependentBlendEnable = (m_ColorBlendSettings.size() > 1 || m_AlphaBlendSettings.size() > 1) ? TRUE : FALSE;
 			uint32_t blend_state_max = std::min(static_cast<uint32_t>(m_ColorBlendSettings.size()), 8u);
@@ -169,22 +175,24 @@ namespace Crimson
 			}
 			CD3DX12_PIPELINE_STATE_STREAM_BLEND_DESC blend_sream = blend_desc;
 			m_PipelineStateStreamingData.PushData(blend_sream);
+			m_Stream.blend = blend_sream;
 		}
 		//push rasterizer settings
 		{
-			CD3DX12_RASTERIZER_DESC rasterizer_desc{};
+			CD3DX12_RASTERIZER_DESC rasterizer_desc = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 			rasterizer_desc.CullMode = D3D12CullMode(m_CullMode);
 			rasterizer_desc.FillMode = D3D12FillMode(m_PolygonMode);
 			rasterizer_desc.ForcedSampleCount = m_MultiSampleShadingNum;
 			CD3DX12_PIPELINE_STATE_STREAM_RASTERIZER rasterizer_stream = rasterizer_desc;
 			m_PipelineStateStreamingData.PushData(rasterizer_stream);
+			m_Stream.rasterizer = rasterizer_stream;
 		}
 		//depth stencil settings
 		{
-			CD3DX12_DEPTH_STENCIL_DESC depth_stencil_desc{};
+			CD3DX12_DEPTH_STENCIL_DESC depth_stencil_desc = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 			depth_stencil_desc.DepthEnable = m_DepthRule != EDepthTestRule::E_DEPTH_TEST_DISABLED;
 			depth_stencil_desc.StencilEnable = m_StencilRule != EStencilRule::E_STENCIL_DISABLED;
-			depth_stencil_desc.DepthFunc == D3D12ComparisonFunc(m_DepthCompareMode);
+			depth_stencil_desc.DepthFunc = D3D12ComparisonFunc(m_DepthCompareMode);
 			depth_stencil_desc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 			switch (m_StencilRule)
 			{
@@ -222,6 +230,7 @@ namespace Crimson
 			}
 			CD3DX12_PIPELINE_STATE_STREAM_DEPTH_STENCIL depth_stencil_stream = depth_stencil_desc;
 			m_PipelineStateStreamingData.PushData(depth_stencil_stream);
+			m_Stream.depthStencil = depth_stencil_desc;
 		}
 		//push shaders
 		for (auto p_module : m_ShaderModules)
@@ -231,52 +240,54 @@ namespace Crimson
 			{
 			case EShaderType::E_SHADER_TYPE_VERTEX:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_VS vs = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
-				m_PipelineStateStreamingData.PushData(vs);
+				CD3DX12_PIPELINE_STATE_STREAM_VS vs = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
+				//m_PipelineStateStreamingData.PushData(vs);
+				m_Stream.vertexShader = vs;
 			}
 			break;
 			case EShaderType::E_SHADER_TYPE_FRAGMENT:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_PS ps = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_PS ps = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(ps);
+				m_Stream.pixelShader = ps;
 			}
 			break;
 			case EShaderType::E_SHADER_TYPE_COMPUTE:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_CS cs = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_CS cs = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(cs);
 			}
 			break;
 			case EShaderType::E_SHADER_TYPE_GEOMETRY:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_GS gs = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_GS gs = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(gs);
 			}
 			break;
 			//Tessellation control shader is called hull shader in DX
 			case EShaderType::E_SHADER_TYPE_TESSCTR:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_HS hs = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_HS hs = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(hs);
 			}
 			break;
 			//Tessellation evaluation shader is called domain shader in DX
 			case EShaderType::E_SHADER_TYPE_TESSEVL:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_DS ds = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_DS ds = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(ds);
 			}
 			break;
 			//Task shader is called amplification shader in DX
 			case EShaderType::E_SHADER_TYPE_TASK_NV:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_AS as = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_AS as = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(as);
 			}
 			break;
 			case EShaderType::E_SHADER_TYPE_MESH_NV:
 			{
-				CD3DX12_PIPELINE_STATE_STREAM_MS ms = CD3DX12_SHADER_BYTECODE(dxmodule->m_ShaderBlob.Get());
+				CD3DX12_PIPELINE_STATE_STREAM_MS ms = CD3DX12_SHADER_BYTECODE(dxmodule->m_Binary.data(), dxmodule->m_Binary.size());
 				m_PipelineStateStreamingData.PushData(ms);
 			}
 			break;

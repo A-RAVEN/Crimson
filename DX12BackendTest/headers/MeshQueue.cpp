@@ -1,5 +1,7 @@
 #include "MeshQueue.h"
+#include <Generals.h>
 
+using namespace Crimson;
 void MeshInstanceQueue::PushInstance(InstanceInfo const& instance_info)
 {
 	if (MeshQueue.size() <= instance_info.m_BatchId)
@@ -31,7 +33,7 @@ void MeshInstanceQueue::CmdDrawInstances(PGraphicsCommandBuffer command_buffer, 
 		{
 			size_t active_num = MeshQueue[transform_batch_id].GetSegmentActiveUsage(i);
 			command_buffer->BindVertexInputeBuffer({ m_Resource->m_VertexBuffer, MeshQueue[transform_batch_id].GetBufferSegment(i) },
-				{ 0, 0 });
+				std::vector<BufferRange>{ (m_Resource->m_VertexBuffer)->GetRange() , MeshQueue[transform_batch_id].GetBufferSegment(i)->GetRange() }, { m_Resource->m_VertexStride , sizeof(uint32_t)});
 			command_buffer->DrawIndexed(m_Resource->m_IndexSize, active_num);
 		}
 	}
