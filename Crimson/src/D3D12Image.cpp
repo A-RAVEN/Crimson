@@ -77,6 +77,7 @@ namespace Crimson
 
     void D3D12ImageObject::TransitionOverallState(ComPtr<ID3D12GraphicsCommandList6> cmdList, D3D12_RESOURCE_STATES dstState)
     {
+        if (m_OverallState == dstState) return;
         auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_Image.Get(), m_OverallState, dstState);
         cmdList->ResourceBarrier(1, &barrier);
         m_OverallState = dstState;

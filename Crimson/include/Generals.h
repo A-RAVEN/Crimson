@@ -376,6 +376,8 @@ namespace Crimson
 
 		std::vector<RenderPassAttachment>	m_Attachments;
 		std::vector<SubpassInfo>			m_Subpasses;
+		Rect					m_SissorsSetting;
+		Rect					m_ViewportSetting;
 		virtual void BuildRenderPass() = 0;
 		virtual GraphicsPipelineInstance InstanciatePipeline(GraphicsPipeline* pipeline, uint32_t subpass) = 0;
 		virtual void Dispose() override = 0;
@@ -403,10 +405,13 @@ namespace Crimson
 	};
 	using PFramebuffer = Framebuffer*;
 
+#define CRIMSON_ALL_SUBPASS -1
 	class RenderPassInstance : public IObject
 	{
 	public:
 		virtual void Call() = 0;//useless for now
+		virtual void ConfigureViewPort(float x, float y, float width, float height, int subpassId = CRIMSON_ALL_SUBPASS) = 0;
+		virtual void ConfigureSissor(float x, float y, float width, float height, int subpassId = CRIMSON_ALL_SUBPASS) = 0;
 	protected:
 		PRenderPass		p_RenderPass;
 		PFramebuffer	p_Framebuffer;

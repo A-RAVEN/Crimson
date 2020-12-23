@@ -31,7 +31,7 @@ void MeshInstanceQueue::CmdDrawInstances(PGraphicsCommandBuffer command_buffer, 
 		{
 			size_t active_num = MeshQueue[transform_batch_id].GetSegmentActiveUsage(i);
 			command_buffer->BindVertexInputeBuffer({ m_Resource->m_VertexBuffer, MeshQueue[transform_batch_id].GetBufferSegment(i) },
-				{ 0, 0 });
+				{ m_Resource->m_VertexBuffer->GetRange(), MeshQueue[transform_batch_id].GetBufferSegment(i)->GetRange() }, { m_Resource->GetVertexStride(), MeshQueue[transform_batch_id].GetStride() });
 			command_buffer->DrawIndexed(m_Resource->m_IndexSize, active_num);
 		}
 	}

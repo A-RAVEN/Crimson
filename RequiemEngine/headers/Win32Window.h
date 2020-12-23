@@ -31,6 +31,8 @@ public:
 	virtual void UpdateWindow() override;
 	void SetFocus(bool focus) { m_Focused = focus; }
 	bool Focused() { return m_Focused; }
+	virtual uint32_t GetClientWidth() override { return m_Width; }
+	virtual uint32_t GetClientHeight() override { return m_Height; }
 private:
 	uint32_t	m_Width;
 	uint32_t	m_Height;

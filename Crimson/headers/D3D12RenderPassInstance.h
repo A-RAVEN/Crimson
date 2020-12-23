@@ -13,6 +13,8 @@ namespace Crimson
 		friend class D3D12GraphicsCommandBuffer;
 		friend class D3D12ExecutionCommandBuffer;
 		virtual void Call() {};
+		virtual void ConfigureViewPort(float x, float y, float width, float height, int subpassId = CRIMSON_ALL_SUBPASS) override {};
+		virtual void ConfigureSissor(float x, float y, float width, float height, int subpassId = CRIMSON_ALL_SUBPASS) override {};
 		void Init(D3D12GPUDevice* owning_device, D3D12RenderPass* renderpass, D3D12Framebuffer* framebuffer);
 		struct SubpassInstanceInfo
 		{

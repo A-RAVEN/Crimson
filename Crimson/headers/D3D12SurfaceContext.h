@@ -29,7 +29,7 @@ namespace Crimson
 		bool g_TearingSupported = false;
 
 		ComPtr<ID3D12Fence> g_Fence;
-		uint64_t g_FenceValue = 0;
+		uint64_t g_FenceValue = 1;
 		uint64_t g_FrameFenceValues[3] = {};
 		HANDLE g_FenceEvent;
 	};

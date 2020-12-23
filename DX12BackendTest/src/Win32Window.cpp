@@ -7,18 +7,22 @@ static LRESULT CALLBACK WindowsEventHandler(HWND hWnd, UINT uMsg, WPARAM wParam,
 	switch (uMsg)
 	{
 	case WM_SETFOCUS:
+		printf("WM_SETFOCUS");
 		p_window->SetFocus(true);
 		break;
 
 	case WM_KILLFOCUS:
+		printf("WM_KILLFOCUS");
 		p_window->SetFocus(false);
 
 		break;
 	case WM_CLOSE:
+		printf("WM_CLOSE");
 		p_window->CloseWindow();
 		return 0;
 	case WM_SIZE:
 		//VulkanSurface£¬Image£¬ViewPort£¬ortho/perspective
+		printf("WM_SIZE");
 		p_window->OnWindowResize(LOWORD(lParam), HIWORD(lParam));
 		return 0;
 	case WM_MOUSEMOVE:

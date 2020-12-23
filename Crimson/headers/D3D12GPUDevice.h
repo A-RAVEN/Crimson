@@ -9,7 +9,7 @@ namespace Crimson
 {
 	class D3D12RenderPassInstance;
 	class D3D12GPUDeviceThread;
-
+	struct CommandAllocatorEntry;
 
 	class D3D12GPUDevice : public IGPUDevice
 	{
@@ -80,7 +80,7 @@ namespace Crimson
 		virtual void Diagnose() override;
 
 		bool QueryQueueFenceSignalState(D3D12_COMMAND_LIST_TYPE list_type, uint32_t queue, uint64_t fenceValue);
-		void CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id);
+		void CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, std::vector<CommandAllocatorEntry*>& allocatorEntries, uint32_t subpass_id);
 	private:
 		void InitD3D12Device(ComPtr<IDXGIAdapter4> p_adapter, uint32_t prefered_graphics_queue_num, uint32_t prefered_compute_queue_num, uint32_t prefered_transfer_queue_num);
 		void InitDescriptorHeaps();

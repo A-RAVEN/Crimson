@@ -62,8 +62,8 @@ namespace Crimson
 		virtual void EndCommandBuffer() = 0;
 		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets, uint32_t start_set = 0) = 0;
 		virtual void PushConstants(std::vector<EShaderType> const& shader_stages, uint32_t offset, uint32_t size, void const* p_data) = 0;
-		virtual void ViewPort(float x, float y, float width, float height) = 0;
-		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) = 0;
+		//virtual void ViewPort(float x, float y, float width, float height) = 0;
+		//virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) = 0;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) = 0;
 		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides) = 0;
 		virtual void BindIndexBuffer(PGPUBuffer buffer,  BufferRange const& buffer_range, EIndexType index_type = EIndexType::E_INDEX_TYPE_32) = 0;

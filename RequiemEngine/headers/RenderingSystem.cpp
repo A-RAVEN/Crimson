@@ -198,7 +198,8 @@ p_CubeResource(p_cube)
 	FilterFrameBuffer = MainDevice->CreateFramebuffer();
 	FilterFrameBuffer->m_Images = { m_RTColorAcc };
 	FilterRenderPassInstance = MainDevice->CreateRenderPassInstance(FilterRenderPass, FilterFrameBuffer);
-
+	FilterRenderPassInstance->ConfigureSissor(0.0f, 0.0f, 1024.0f, 720.0f);
+	FilterRenderPassInstance->ConfigureViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
 	FilterSetLayout = MainDevice->CreateDescriptorSetLayout();
 	FilterSetLayout->m_Bindings.resize(6);
 	FilterSetLayout->m_Bindings[0].m_BindingPoint = 0;
@@ -381,6 +382,8 @@ p_CubeResource(p_cube)
 	test_framebuffer->m_Images = { m_Color, m_Normal, test_depth_stencil };
 
 	m_RenderPassInstance = MainDevice->CreateRenderPassInstance(test_renderpass, test_framebuffer);
+	m_RenderPassInstance->ConfigureSissor(0.0f, 0.0f, 1024.0f, 720.0f);
+	m_RenderPassInstance->ConfigureViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
 
 	MainDevice->CreateBatch("GraphicsLoading", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
 	MainDevice->CreateBatch("Main Render", EExecutionCommandType::E_COMMAND_TYPE_GRAPHICS, 0);
@@ -426,8 +429,8 @@ p_CubeResource(p_cube)
 	{
 		PGraphicsCommandBuffer cmd = m_RenderingThread->StartSubpassCommand(FilterRenderPassInstance, 0);
 		cmd->BindSubpassPipeline(FilterPipeline);
-		cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-		cmd->Sissor(0, 0, 1024, 720);
+		//cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+		//cmd->Sissor(0, 0, 1024, 720);
 		cmd->BindSubpassDescriptorSets({ FilterSet });
 		Rect.Draw(cmd);
 		cmd->EndCommandBuffer();
@@ -606,8 +609,8 @@ void RenderingSubpassThread::Work(ThreadWorker const* this_worker)
 {
 	PGraphicsCommandBuffer cmd = m_DeviceThreadHandle->StartSubpassCommand(pInstance, subpassId);
 	cmd->BindSubpassPipeline(usingPipeline);
-	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-	cmd->Sissor(0, 0, 1024, 720);
+	//cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+	//cmd->Sissor(0, 0, 1024, 720);
 	vec3 testColor(1.0f, 0.0f, 1.0f);
 	cmd->BindSubpassDescriptorSets({ descSets });
 	for (uint32_t i = 0; i < p_transformManager->GetBatchCount(); ++i)
@@ -650,8 +653,8 @@ void RenderingSubpassMeshletThread::Work(ThreadWorker const* this_worker)
 	PGraphicsCommandBuffer cmd = m_DeviceThreadHandle->StartSubpassCommand(pInstance, 0);
 
 	cmd->BindSubpassPipeline(usingPipeline);
-	cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
-	cmd->Sissor(0, 0, 1024, 720);
+	//cmd->ViewPort(0.0f, 0.0f, 1024.0f, 720.0f);
+	//cmd->Sissor(0, 0, 1024, 720);
 	glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.1f));
 	cmd->BindSubpassDescriptorSets({ pCameraCombinedSet->cameraSet }, 0u);
 	for (auto& pair : m_Instances)

@@ -28,6 +28,38 @@ namespace Crimson
 		}
 	}
 
+	void VulkanRenderPassInstance::ConfigureViewPort(float x, float y, float width, float height, int subpassId)
+	{
+		m_SubpassViewports.resize(p_RenderPass->m_Subpasses.size());
+		if (subpassId == CRIMSON_ALL_SUBPASS)
+		{
+			std::fill(m_SubpassViewports.begin(), m_SubpassViewports.end(), Rect{ x, y, width, height });
+		}
+		else
+		{
+			if (subpassId < p_RenderPass->m_Subpasses.size())
+			{
+				m_SubpassViewports[subpassId] = Rect{ x, y, width, height };
+			}
+		}
+	}
+
+	void VulkanRenderPassInstance::ConfigureSissor(float x, float y, float width, float height, int subpassId)
+	{
+		m_SubpassSissors.resize(p_RenderPass->m_Subpasses.size());
+		if (subpassId == CRIMSON_ALL_SUBPASS)
+		{
+			std::fill(m_SubpassSissors.begin(), m_SubpassSissors.end(), Rect{ x, y, width, height });
+		}
+		else
+		{
+			if (subpassId < p_RenderPass->m_Subpasses.size())
+			{
+				m_SubpassSissors[subpassId] = Rect{ x, y, width, height };
+			}
+		}
+	}
+
 	void VulkanRenderPassInstance::InitRenderPassInstance(VulkanGPUDevice* device, VulkanRenderPass* render_pass, VulkanFramebuffer* framebuffer, uint64_t unique_id)
 	{
 		m_InstanceUniqueId = unique_id;

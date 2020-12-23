@@ -50,13 +50,14 @@ namespace Crimson
 			m_RenderPassInstanceGraphicsCommandBufferInfoReferences[vulkan_renderpass_instance->m_InstanceUniqueId] = m_RenderPassInstanceGraphicsCommandBufferInfos.size() - 1;
 		}
 		auto& cmd_buffer_info = m_RenderPassInstanceGraphicsCommandBufferInfos[m_RenderPassInstanceGraphicsCommandBufferInfoReferences[vulkan_renderpass_instance->m_InstanceUniqueId]];
-		if (cmd_buffer_info.m_SubpassCommands[subpass_id].m_CommandBuffer != VK_NULL_HANDLE)
+		auto& subpass = cmd_buffer_info.m_SubpassCommands[subpass_id];
+		if (subpass.m_CommandBuffer != VK_NULL_HANDLE)
 		{
 			if (vulkan_renderpass_instance->p_OwningExecutionCommandBuffer && vulkan_renderpass_instance->p_OwningExecutionCommandBuffer->p_AttachedBatch)
 			{
 				vulkan_renderpass_instance->p_OwningExecutionCommandBuffer->p_AttachedBatch->Wait();
 			}
-			vkResetCommandBuffer(cmd_buffer_info.m_SubpassCommands[subpass_id].m_CommandBuffer, 0);
+			vkResetCommandBuffer(subpass.m_CommandBuffer, 0);
 			//m_RecycledGraphicsCommandBuffer.push_back(cmd_buffer_info.m_SubpassCommands[subpass_id]);
 		}
 		else 
@@ -77,6 +78,10 @@ namespace Crimson
 		return_val->SetGraphicsCommandBuffer(this, 
 			static_cast<VulkanRenderPass*>(vulkan_renderpass_instance->p_RenderPass), vulkan_renderpass_instance, subpass_id, cmd_buffer_info.m_SubpassCommands[subpass_id].m_CommandBuffer);
 		return_val->StartCommandBuffer();
+		auto& sissor_setting = vulkan_renderpass_instance->m_SubpassSissors[subpass_id];
+		auto& viewport_setting = vulkan_renderpass_instance->m_SubpassViewports[subpass_id];
+		return_val->Sissor(sissor_setting.x, sissor_setting.y, sissor_setting.width, sissor_setting.height);
+		return_val->ViewPort(viewport_setting.x, viewport_setting.y, viewport_setting.width, viewport_setting.height);
 		return return_val;
 	}
 	void VulkanGPUDeviceThread::HandleDisposedGraphicsCommandBuffer(VulkanGraphicsCommandBuffer* cmd_buffer)

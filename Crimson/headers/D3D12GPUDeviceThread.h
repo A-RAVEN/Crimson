@@ -33,7 +33,7 @@ namespace Crimson
 
 		void InitGPUDeviceThread(D3D12GPUDevice* device);
 
-		ComPtr<ID3D12GraphicsCommandList4> GetSubpassCommandList(PRenderPassInstance instance, uint32_t subpassId);
+		ComPtr<ID3D12GraphicsCommandList4> GetSubpassCommandList(PRenderPassInstance instance, std::vector<CommandAllocatorEntry*>& allocators, uint32_t subpassId);
 
 		//accessed by execution command buffer
 		ComPtr<ID3D12GraphicsCommandList6> AllocExecutionD3D12CommandList(EExecutionCommandType cmd_type, CommandAllocatorEntry& initialAllocator);
@@ -43,7 +43,7 @@ namespace Crimson
 			std::vector<D3D12ExecutionCommandBuffer*> m_GraphicsExecutionBuffers;
 			std::vector<D3D12ExecutionCommandBuffer*> m_ComputeExecutionBuffers;
 			std::vector<D3D12ExecutionCommandBuffer*> m_CopyExecutionBuffers;
-			void CollectCmdLists(EExecutionCommandType cmdType, std::vector<ID3D12CommandList *>& list, std::vector<ID3D12Fence*>& allocator_fences, uint32_t queue_id, uint64_t signal_val);
+			void CollectCmdLists(EExecutionCommandType cmdType, std::vector<ID3D12CommandList *>& list, std::vector<std::pair<ComPtr<ID3D12Fence>, uint64_t>>& allocator_fences, uint32_t queue_id, uint64_t signal_val);
 		};
 		CommandAllocatorEntry AllocCommandAllocator(D3D12_COMMAND_LIST_TYPE type);
 		void ReturnCommandAllocator(CommandAllocatorEntry& return_entry);

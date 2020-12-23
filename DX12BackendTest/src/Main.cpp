@@ -129,8 +129,11 @@ int main()
 	renderPass->InstanciatePipeline(pipeline, 0);
 
 	auto renderInstance = MainDevice->CreateRenderPassInstance(renderPass, frameBuffer);
+	renderInstance->ConfigureViewPort(0.0f, 0.0f, 512.0f, 512.0f);
+	renderInstance->ConfigureSissor(0.0f, 0.0f, 512.0f, 512.0f);
 
 	MainDevice->CreateBatch("RenderBatch", EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 0);
+	MainDevice->CreateBatch("RenderBatch1", EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 0);
 	PGPUDeviceThread device_thread = MainDevice->CreateThread();
 	auto subpass_command = device_thread->StartSubpassCommand(renderInstance, 0);
 
@@ -147,19 +150,41 @@ int main()
 
 	auto executeCmd = device_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GENERAL);
 	device_thread->BindExecutionCommandBufferToBatch("RenderBatch", executeCmd);
+	auto executeCmd1 = device_thread->CreateExecutionCommandBuffer(EExecutionCommandType::E_COMMAND_TYPE_GENERAL);
+	device_thread->BindExecutionCommandBufferToBatch("RenderBatch1", executeCmd1);
 
 	Win32Window new_window;
+	Win32Window new_window1;
 	new_window.InitWindow(L"Test Window", L"default", 512, 512);
+	new_window1.InitWindow(L"Test Window1", L"default", 512, 512);
 	MainDevice->RegisterWindow(new_window);
-	while (new_window.IsWindowRunning())
+	MainDevice->RegisterWindow(new_window1);
+	bool presentOne = false;
+	while (new_window.IsWindowRunning()&& new_window1.IsWindowRunning())
 	{
 		executeCmd->StartCommand();
 		executeCmd->ExecuteRenderPassInstance(renderInstance);
 		executeCmd->CopyToSwapchain_Dynamic(image, &new_window);
 		executeCmd->EndCommand();
-		MainDevice->ExecuteBatches({ "RenderBatch" }, EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 0);
+
+		executeCmd1->StartCommand();
+		executeCmd1->ExecuteRenderPassInstance(renderInstance);
+		executeCmd1->CopyToSwapchain_Dynamic(image, &new_window1);
+		executeCmd1->EndCommand();
+
+		MainDevice->ExecuteBatches({ "RenderBatch", "RenderBatch1" }, EExecutionCommandType::E_COMMAND_TYPE_GENERAL, 0);
 		MainDevice->PresentWindow(new_window);
+		MainDevice->PresentWindow(new_window1);
+		if (presentOne)
+		{
+		}
+		else
+		{
+		}
+		presentOne = !presentOne;
 		new_window.UpdateWindow();
+		new_window1.UpdateWindow();
+		MainDevice->Diagnose();
 	}
 	GPUDeviceManager::Get()->Dispose();
 }

@@ -14,8 +14,8 @@ namespace Crimson
 		virtual void EndCommandBuffer() override;
 		virtual void BindSubpassDescriptorSets(std::vector<PDescriptorSet> const& descriptor_sets, uint32_t start_set) override;
 		virtual void PushConstants(std::vector<EShaderType> const& shader_stages, uint32_t offset, uint32_t size, void const* p_data) override {}
-		virtual void ViewPort(float x, float y, float width, float height) override;
-		virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) override;
+		//virtual void ViewPort(float x, float y, float width, float height) override;
+		//virtual void Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y) override;
 		virtual void BindSubpassPipeline(PGraphicsPipeline pipeline) override;
 		virtual void BindVertexInputeBuffer(std::vector<PGPUBuffer> const& buffer_list, std::vector<BufferRange> const& buffer_range_list, std::vector<uint64_t> const& vertex_strides) override;
 		virtual void BindIndexBuffer(PGPUBuffer buffer, BufferRange const& buffer_range, EIndexType index_type = EIndexType::E_INDEX_TYPE_32) override;

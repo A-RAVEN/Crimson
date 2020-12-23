@@ -32,6 +32,7 @@ public:
 		return (std::min)(m_CurrentLastId - segment_id * segment_size, segment_size);
 	}
 	size_t GetActiveSegmentNum() const { return m_CurrentLastId / segment_size + (m_CurrentLastId % segment_size > 0 ? 1 : 0); }
+	size_t GetStride() const { return sizeof(T); }
 private:
 	std::vector<EBufferUsage> m_Usages;
 	EMemoryType m_MemoryType;

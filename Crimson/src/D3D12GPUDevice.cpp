@@ -132,7 +132,7 @@ namespace Crimson
 			break;
 		}
 		std::vector<ID3D12CommandList *> cmdList;
-		std::vector<ID3D12Fence *> cmdFences;
+		std::vector<std::pair<ComPtr<ID3D12Fence>, uint64_t>> cmdFences;
 		for (auto& name : batches)
 		{
 			auto find = m_BatchIdMap.find(name);
@@ -150,9 +150,9 @@ namespace Crimson
 		if (!cmdList.empty())
 		{
 			queue->ExecuteCommandLists(cmdList.size(), cmdList.data());
-			for (auto fence : cmdFences)
+			for (auto additional_fence : cmdFences)
 			{
-				queue->Signal(fence, 1);
+				queue->Signal(additional_fence.first.Get(), additional_fence.second);
 			}
 		}
 		queue->Signal(fence.Get(), *pCounter);
@@ -163,10 +163,24 @@ namespace Crimson
 		auto find = m_SurfaceContexts.find(window.GetName());
 		if (find != m_SurfaceContexts.end())
 		{
+			if (find->second.g_Fence->GetCompletedValue() < (find->second.g_FenceValue - 1))
+			{
+				find->second.g_Fence->SetEventOnCompletion(find->second.g_FenceValue - 1, find->second.g_FenceEvent);
+				WaitForSingleObject(find->second.g_FenceEvent, INFINITE);
+			}
 			UINT syncInterval = find->second.g_VSync ? 1 : 0;
 			UINT presentFlags = find->second.g_TearingSupported && ! find->second.g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
-			find->second.swapChain4->Present(syncInterval, presentFlags);
+			CHECK_DXRESULT(find->second.swapChain4->Present(syncInterval, presentFlags), "Present Failed!");
+			Diagnose();
+			/*uint32_t newId = find->second.swapChain4->GetCurrentBackBufferIndex();
+			while (newId == find->second.m_CurrentFrameId)
+			{
+				newId = find->second.swapChain4->GetCurrentBackBufferIndex();
+				std::cout << "Strange" << std::endl;
+			}*/
 			find->second.m_CurrentFrameId = find->second.swapChain4->GetCurrentBackBufferIndex();
+			std::cout << (find->second.m_CurrentFrameId) << std::endl;
+			++find->second.g_FenceValue;
 		}
 	}
 	void D3D12GPUDevice::Diagnose()
@@ -185,11 +199,11 @@ namespace Crimson
 		}
 		return false;
 	}
-	void D3D12GPUDevice::CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, uint32_t subpass_id)
+	void D3D12GPUDevice::CollectSubpassCommandLists(D3D12RenderPassInstance* renderpass_instance, std::vector<ComPtr<ID3D12GraphicsCommandList4>>& subpassList, std::vector<CommandAllocatorEntry*>& allocatorEntries, uint32_t subpass_id)
 	{
 		for (auto thread : m_Threads)
 		{
-			ComPtr<ID3D12GraphicsCommandList4> result = thread->GetSubpassCommandList(renderpass_instance, subpass_id);
+			ComPtr<ID3D12GraphicsCommandList4> result = thread->GetSubpassCommandList(renderpass_instance, allocatorEntries, subpass_id);
 			if (result != nullptr)
 			{
 				subpassList.push_back(result);

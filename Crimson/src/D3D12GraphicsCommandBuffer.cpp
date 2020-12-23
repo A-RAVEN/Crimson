@@ -16,26 +16,26 @@ namespace Crimson
 	{
 
 	}
-	void D3D12GraphicsCommandBuffer::ViewPort(float x, float y, float width, float height)
-	{
-		D3D12_VIEWPORT view_port{};
-		view_port.TopLeftX = x;
-		view_port.TopLeftY = y;
-		view_port.Width = width;
-		view_port.Height = height;
-		view_port.MinDepth = 0.0f;
-		view_port.MaxDepth = 1.0f;
-		m_CommandList->RSSetViewports(1, &view_port);
-	}
-	void D3D12GraphicsCommandBuffer::Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y)
-	{
-		D3D12_RECT rect{};
-		rect.left = _offsetx;
-		rect.top = _offsety;
-		rect.right = rect.left + _extend_x;
-		rect.bottom = rect.top + _extend_y;
-		m_CommandList->RSSetScissorRects(1, &rect);
-	}
+	//void D3D12GraphicsCommandBuffer::ViewPort(float x, float y, float width, float height)
+	//{
+	//	D3D12_VIEWPORT view_port{};
+	//	view_port.TopLeftX = x;
+	//	view_port.TopLeftY = y;
+	//	view_port.Width = width;
+	//	view_port.Height = height;
+	//	view_port.MinDepth = 0.0f;
+	//	view_port.MaxDepth = 1.0f;
+	//	m_CommandList->RSSetViewports(1, &view_port);
+	//}
+	//void D3D12GraphicsCommandBuffer::Sissor(int _offsetx, int _offsety, uint32_t _extend_x, uint32_t _extend_y)
+	//{
+	//	D3D12_RECT rect{};
+	//	rect.left = _offsetx;
+	//	rect.top = _offsety;
+	//	rect.right = rect.left + _extend_x;
+	//	rect.bottom = rect.top + _extend_y;
+	//	m_CommandList->RSSetScissorRects(1, &rect);
+	//}
 	void D3D12GraphicsCommandBuffer::BindSubpassPipeline(PGraphicsPipeline pipeline)
 	{
 		auto& subpass = p_OwningInstance->p_DXRenderPass->m_D3D12Subpasses[m_SubpassId];

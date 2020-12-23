@@ -40,11 +40,15 @@ namespace Crimson
 		D3D12GPUDevice* p_OwningDevice;
 		D3D12GPUDeviceThread* p_OwningThread;
 		CommandAllocatorEntry p_OwningAllocator;
+		std::vector<CommandAllocatorEntry*> p_BundleAllocatorReferences;
 		ComPtr<ID3D12Fence> p_AllocatprFence;
 		HANDLE p_WaitAllocatorEvent;
 		//VulkanBatch* p_AttachedBatch;
 		ComPtr<ID3D12GraphicsCommandList6> m_CurrentCommandBuffer;
-		std::vector<ComPtr<ID3D12Fence>> m_AdditionialWaitingFences;
+		std::vector<std::pair<ComPtr<ID3D12Fence>, uint64_t>> m_AdditionialWaitingFences;
+
+		//transient container
+		std::vector<ComPtr<ID3D12GraphicsCommandList4>> subpassCmdList;
 		//std::vector<VkPipelineStageFlags> m_AdditionalWaitingStages;
 
 		//ray tracing

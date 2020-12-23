@@ -19,6 +19,8 @@ namespace Crimson
 			p_OwningAllocator = p_OwningThread->AllocCommandAllocator(D3D12ExecutionCommandTypeToCommandListType(m_CommandType));
 		}
 		CHECK_DXRESULT(m_CurrentCommandBuffer->Reset(p_OwningAllocator.m_CommandAllocator.Get(), nullptr), "D3D12 CommandList Reset Issue!");
+		p_BundleAllocatorReferences.clear();
+		m_AdditionialWaitingFences.clear();
 	}
 	void D3D12ExecutionCommandBuffer::EndCommand()
 	{
@@ -57,19 +59,19 @@ namespace Crimson
 	}
 	void D3D12ExecutionCommandBuffer::ExecuteRenderPassInstance(PRenderPassInstance renderpass_instance)
 	{
-		std::vector<ComPtr<ID3D12GraphicsCommandList4>> subpassCmdList;
 		D3D12RenderPassInstance* dxinstance = static_cast<D3D12RenderPassInstance*>(renderpass_instance);
 		for (auto pimg : dxinstance->p_DXFramebuffer->m_Images)
 		{
 			auto dximage = static_cast<D3D12ImageObject*>(pimg);
 			dximage->TransitionOverallState(m_CurrentCommandBuffer, IsColorFormat(dximage->m_Format) ? D3D12_RESOURCE_STATE_RENDER_TARGET : D3D12_RESOURCE_STATE_DEPTH_WRITE);
 		}
+		D3D12_VIEWPORT view_port{};
+		D3D12_RECT rect{};
 		for (uint32_t i = 0; i < dxinstance->m_SubpassInstances.size(); ++i)
 		{
 			auto& sissor_setting = dxinstance->p_DXRenderPass->m_Subpasses[i].m_SissorsSetting;
 			auto& viewport_setting = dxinstance->p_DXRenderPass->m_Subpasses[i].m_ViewportSetting;
 			//ÉèÖÃviewport
-			D3D12_VIEWPORT view_port{};
 			view_port.TopLeftX = viewport_setting.x;
 			view_port.TopLeftY = viewport_setting.y;
 			view_port.Width = viewport_setting.width;
@@ -78,14 +80,13 @@ namespace Crimson
 			view_port.MaxDepth = 1.0f;
 			m_CurrentCommandBuffer->RSSetViewports(1, &view_port);
 			//ÉèÖÃsissor
-			D3D12_RECT rect{};
 			rect.left = sissor_setting.x;
 			rect.top = sissor_setting.y;
 			rect.right = rect.left + sissor_setting.width;
 			rect.bottom = rect.top + sissor_setting.height;
 			m_CurrentCommandBuffer->RSSetScissorRects(1, &rect);
 			subpassCmdList.clear();
-			p_OwningDevice->CollectSubpassCommandLists(dxinstance, subpassCmdList, i);
+			p_OwningDevice->CollectSubpassCommandLists(dxinstance, subpassCmdList, p_BundleAllocatorReferences, i);
 			auto& subpass = dxinstance->m_SubpassInstances[i];
 			m_CurrentCommandBuffer->BeginRenderPass(subpass.m_RenderTargetDescriptors.size(), subpass.m_RenderTargetDescriptors.data(), subpass.b_HasDepthStencil ? &subpass.m_DepthStencilDescriptor : NULL, D3D12_RENDER_PASS_FLAG_NONE);
 			for (auto cmd : subpassCmdList)
@@ -105,6 +106,7 @@ namespace Crimson
 		if (find != p_OwningDevice->m_SurfaceContexts.end())
 		{
 			D3D12ImageObject* dxImage = static_cast<D3D12ImageObject*>(image);
+			auto originalState = dxImage->m_OverallState;
 			dxImage->TransitionOverallState(m_CurrentCommandBuffer, D3D12_RESOURCE_STATE_COPY_SOURCE);
 			auto backBuffer = find->second.g_BackBuffers[find->second.m_CurrentFrameId];
 			D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -112,7 +114,8 @@ namespace Crimson
 			m_CurrentCommandBuffer->CopyResource(backBuffer.Get(), dxImage->m_Image.Get());
 			barrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PRESENT);
 			m_CurrentCommandBuffer->ResourceBarrier(1, &barrier);
-			m_AdditionialWaitingFences.push_back(find->second.g_Fence);
+			dxImage->TransitionOverallState(m_CurrentCommandBuffer, originalState);
+			m_AdditionialWaitingFences.push_back(std::make_pair(find->second.g_Fence, find->second.g_FenceValue));
 		}
 	}
 }
