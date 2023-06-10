@@ -30,7 +30,7 @@ namespace Crimson
 		VkBufferViewCreateInfo create_info{};
 		create_info.sType = VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO;
 		create_info.buffer = m_Buffer;
-		create_info.flags = VK_NULL_HANDLE;
+		create_info.flags = 0;
 		create_info.format = TranslateImageFormatToVulkan(format);
 		create_info.offset = static_cast<VkDeviceSize>(offset);
 		create_info.range = range > 0 ? static_cast<VkDeviceSize>(range) : VK_WHOLE_SIZE;

@@ -79,7 +79,7 @@ namespace Crimson
 		VkInstanceCreateInfo instance_create_info{};
 		instance_create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instance_create_info.pNext = nullptr;
-		instance_create_info.flags = VK_NULL_HANDLE;
+		instance_create_info.flags = 0;
 		instance_create_info.pApplicationInfo = &app_info;
 		instance_create_info.enabledLayerCount = static_cast<uint32_t>(instance_validation_names.size());
 		instance_create_info.ppEnabledLayerNames = instance_validation_names.data();
