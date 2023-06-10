@@ -61,6 +61,15 @@ namespace vulkan_backend
 	        }
 	        return VK_TRUE;
 	    }
+
+		vk::DebugUtilsMessengerCreateInfoEXT makeDebugUtilsMessengerCreateInfoEXT()
+		{
+			return { {},
+					 vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError,
+					 vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance |
+					   vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation,
+					 &debugUtilsMessengerCallback };
+		}
     }
 
 }
