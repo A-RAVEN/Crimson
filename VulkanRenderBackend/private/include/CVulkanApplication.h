@@ -3,11 +3,14 @@ class CVulkanApplication
 {
 public:
 	~CVulkanApplication();
+	void InitApp(std::string const& appName, std::string const& engineName);
+	void ReleaseApp();
 private:
-	void InitializeInstance(std::string const& name, std::string const& engine_name);
+	void InitializeInstance(std::string const& name, std::string const& engineName);
 	void DestroyInstance();
 	void EnumeratePhysicalDevices();
 	void CreateDevice();
+	void DestroyDevice();
 private:
 	vk::Instance m_Instance = nullptr;
 	vk::PhysicalDevice m_PhysicalDevice = nullptr;
@@ -17,3 +20,7 @@ private:
 #endif
 };
 
+extern "C"
+{
+
+}

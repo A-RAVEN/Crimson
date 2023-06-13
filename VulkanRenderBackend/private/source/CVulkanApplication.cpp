@@ -15,7 +15,7 @@ void CVulkanApplication::InitializeInstance(std::string const& name, std::string
 	m_Instance = vk::createInstance(instance_info);
 
 #if !defined(NDEBUG)
-	m_DebugMessager = m_Instance.createDebugUtilsMessengerEXT(vulkan_backend::utils::makeDebugUtilsMessengerCreateInfoEXT());
+	//m_DebugMessager = m_Instance.createDebugUtilsMessengerEXT(vulkan_backend::utils::makeDebugUtilsMessengerCreateInfoEXT());
 #endif
 }
 
@@ -24,8 +24,8 @@ void CVulkanApplication::DestroyInstance()
 	if (m_Instance != vk::Instance(nullptr))
 	{
 #if !defined( NDEBUG )
-		m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessager);
-		m_DebugMessager = nullptr;
+		//m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessager);
+		//m_DebugMessager = nullptr;
 #endif
 		m_Instance.destroy();
 	}
@@ -43,14 +43,43 @@ void CVulkanApplication::CreateDevice()
 	auto queueFamilyPropIterator = std::find_if(queueFamilyProperties.begin()
 		, queueFamilyProperties.end()
 		, [](vk::QueueFamilyProperties const& itrProperties) {
-			itrProperties.queueFlags& vk::QueueFlagBits::eGraphics;
+			return itrProperties.queueFlags & vk::QueueFlagBits::eGraphics;
 		});
 
+	size_t queueFamilyIndex = std::distance(queueFamilyProperties.begin(), queueFamilyPropIterator);
 
+	assert(queueFamilyIndex < queueFamilyProperties.size());
+
+	std::vector<float> queuePrioritiese = { 0.0f };
+	vk::DeviceQueueCreateInfo queueCreateInfo(vk::DeviceQueueCreateFlags()
+		, static_cast<uint32_t>(queueFamilyIndex)
+		, queuePrioritiese);
+	vk::DeviceCreateInfo deviceCreateInfo(vk::DeviceCreateFlags(), queueCreateInfo);
+
+	m_Device = m_PhysicalDevice.createDevice(deviceCreateInfo);
+}
+
+void CVulkanApplication::DestroyDevice()
+{
+	m_Device.destroy();
 }
 
 CVulkanApplication::~CVulkanApplication()
 {
+	ReleaseApp();
+}
+
+void CVulkanApplication::InitApp(std::string const& appName, std::string const& engineName)
+{
+	InitializeInstance(appName, engineName);
+	EnumeratePhysicalDevices();
+	CreateDevice();
+}
+
+void CVulkanApplication::ReleaseApp()
+{
+	DestroyDevice();
 	m_PhysicalDevice = nullptr;
 	DestroyInstance();
 }
+

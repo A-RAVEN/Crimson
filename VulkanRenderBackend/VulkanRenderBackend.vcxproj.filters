@@ -27,6 +27,12 @@
     <ClInclude Include="private\include\Utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="header\MRenderBackend.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\CRenderBackend_Vulkan.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -39,6 +45,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\Utils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\MRenderBackendImpl_Vulkan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

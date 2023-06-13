@@ -129,6 +129,8 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -148,17 +150,23 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="header\MRenderBackend.h" />
+    <ClInclude Include="private\include\CRenderBackend_Vulkan.h" />
     <ClInclude Include="private\include\CVulkanApplication.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />
     <ClInclude Include="private\include\Utils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
     <ClCompile Include="private\source\CVulkanApplication.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
+    <ClCompile Include="private\source\MRenderBackendImpl_Vulkan.cpp" />
     <ClCompile Include="private\source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
