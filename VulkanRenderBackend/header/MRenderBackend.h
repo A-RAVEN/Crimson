@@ -16,9 +16,11 @@ namespace graphics_backend
 		VULKANRENDERBACKEND_API virtual void Release() = 0;
 	};
 
-	extern "C"
-	{
-		VULKANRENDERBACKEND_API CRenderBackend* NewBackend();
-		VULKANRENDERBACKEND_API void DeleteBackend(CRenderBackend* removingBackend);
-	}
+
+}
+
+extern "C"
+{
+	VULKANRENDERBACKEND_API graphics_backend::CRenderBackend* NewBackend();
+	VULKANRENDERBACKEND_API void DeleteBackend(graphics_backend::CRenderBackend* removingBackend);
 }

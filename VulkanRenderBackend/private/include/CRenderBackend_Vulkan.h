@@ -1,8 +1,11 @@
 #pragma once
 #include <header/MRenderBackend.h>
 #include <private/include/CVulkanApplication.h>
+#include <functional>
 namespace graphics_backend
 {
+
+
 	class CRenderBackend_Vulkan : public CRenderBackend
 	{
 	public:

@@ -15,6 +15,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShaderCompiler", "ShaderCom
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanRenderBackend", "VulkanRenderBackend\VulkanRenderBackend.vcxproj", "{A569CD3B-6839-4CED-B67B-2BAEE2C06EC6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanRendererBackendTester", "VulkanRendererBackendTester\VulkanRendererBackendTester.vcxproj", "{885D344A-2419-4863-92FF-DB34DA0C2FC9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderInterface", "RenderInterface\RenderInterface.vcxproj", "{BBC39D3A-2CD9-4C1E-8611-5BD002249339}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -55,6 +59,22 @@ Global
 		{A569CD3B-6839-4CED-B67B-2BAEE2C06EC6}.Release|x64.Build.0 = Release|x64
 		{A569CD3B-6839-4CED-B67B-2BAEE2C06EC6}.Release|x86.ActiveCfg = Release|Win32
 		{A569CD3B-6839-4CED-B67B-2BAEE2C06EC6}.Release|x86.Build.0 = Release|Win32
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Debug|x64.ActiveCfg = Debug|x64
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Debug|x64.Build.0 = Debug|x64
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Debug|x86.ActiveCfg = Debug|Win32
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Debug|x86.Build.0 = Debug|Win32
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Release|x64.ActiveCfg = Release|x64
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Release|x64.Build.0 = Release|x64
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Release|x86.ActiveCfg = Release|Win32
+		{885D344A-2419-4863-92FF-DB34DA0C2FC9}.Release|x86.Build.0 = Release|Win32
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Debug|x64.ActiveCfg = Debug|x64
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Debug|x64.Build.0 = Debug|x64
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Debug|x86.ActiveCfg = Debug|Win32
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Debug|x86.Build.0 = Debug|Win32
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x64.ActiveCfg = Release|x64
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x64.Build.0 = Release|x64
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x86.ActiveCfg = Release|Win32
+		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

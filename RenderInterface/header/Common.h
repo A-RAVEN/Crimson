@@ -1,0 +1,20 @@
+#pragma once
+#include <cstdint>
+
+enum class ETextureFormat : uint8_t
+{
+	E_R8_UNORM,
+	E_R16_UNORM,
+	E_R16_SFLOAT,
+
+	E_R8G8_UNORM,
+	E_R16G16_SFLOAT,
+
+	E_R8G8B8A8_UNORM,
+	E_R16G16B16A16_UNORM,
+	E_R16G16B16A16_SFLOAT,
+
+	E_R32_SFLOAT,
+	E_R32G32B32A32_SFLOAT,
+	E_ALL,
+};

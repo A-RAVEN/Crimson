@@ -1,9 +1,37 @@
 #include "private/include/pch.h"
 
+//Dynamic Function Pointers of Vulkan Should be defined under global namespace
+PFN_vkCreateDebugUtilsMessengerEXT  pfnVkCreateDebugUtilsMessengerEXT = nullptr;
+PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT = nullptr;
+
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance                                 instance,
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+	const VkAllocationCallbacks* pAllocator,
+	VkDebugUtilsMessengerEXT* pMessenger)
+{
+	return pfnVkCreateDebugUtilsMessengerEXT(instance, pCreateInfo, pAllocator, pMessenger);
+}
+
+VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, VkAllocationCallbacks const* pAllocator)
+{
+	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
+}
+
 namespace vulkan_backend
 {
     namespace utils
     {
+		void SetupVulkanInstanceFunctionPointers(vk::Instance const& inInstance)
+		{
+			pfnVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(inInstance.getProcAddr("vkCreateDebugUtilsMessengerEXT"));
+			pfnVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(inInstance.getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+		}
+
+		void CleanupVulkanInstanceFuncitonPointers()
+		{
+			pfnVkCreateDebugUtilsMessengerEXT = nullptr;
+			pfnVkDestroyDebugUtilsMessengerEXT = nullptr;
+		}
 		    
 	    VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
 	        VkDebugUtilsMessageTypeFlagsEXT              messageTypes,

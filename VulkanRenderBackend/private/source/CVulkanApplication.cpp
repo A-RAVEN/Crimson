@@ -10,12 +10,19 @@ void CVulkanApplication::InitializeInstance(std::string const& name, std::string
 		, engine_name.c_str()
 		, VK_API_VERSION_1_3);
 
-	vk::InstanceCreateInfo instance_info({}, &application_info);
+	std::array<const char*, 1> extensionNames = {
+		VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+	};
+
+	vk::InstanceCreateInfo instance_info({}, &application_info, {}, extensionNames);
 
 	m_Instance = vk::createInstance(instance_info);
 
+	vulkan_backend::utils::SetupVulkanInstanceFunctionPointers(m_Instance);
+
+
 #if !defined(NDEBUG)
-	//m_DebugMessager = m_Instance.createDebugUtilsMessengerEXT(vulkan_backend::utils::makeDebugUtilsMessengerCreateInfoEXT());
+	m_DebugMessager = m_Instance.createDebugUtilsMessengerEXT(vulkan_backend::utils::makeDebugUtilsMessengerCreateInfoEXT());
 #endif
 }
 
@@ -24,10 +31,13 @@ void CVulkanApplication::DestroyInstance()
 	if (m_Instance != vk::Instance(nullptr))
 	{
 #if !defined( NDEBUG )
-		//m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessager);
-		//m_DebugMessager = nullptr;
+		m_Instance.destroyDebugUtilsMessengerEXT(m_DebugMessager);
+		m_DebugMessager = nullptr;
 #endif
+
+		vulkan_backend::utils::CleanupVulkanInstanceFuncitonPointers();
 		m_Instance.destroy();
+		m_Instance = nullptr;
 	}
 }
 
@@ -61,7 +71,11 @@ void CVulkanApplication::CreateDevice()
 
 void CVulkanApplication::DestroyDevice()
 {
-	m_Device.destroy();
+	if(m_Device != vk::Device(nullptr))
+	{
+		m_Device.destroy();
+		m_Device = nullptr;
+	}
 }
 
 CVulkanApplication::~CVulkanApplication()

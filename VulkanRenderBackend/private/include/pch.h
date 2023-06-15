@@ -14,5 +14,6 @@
 #define VULKAN_HPP_TYPESAFE_CONVERSION 1
 #endif	
 #include "vulkan/vulkan.hpp"
+#include "private/include/Utils.h"
 
 #endif //PCH_H
