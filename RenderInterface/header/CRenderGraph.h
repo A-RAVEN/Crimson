@@ -6,6 +6,11 @@
 #include "CTextureHandle.h"
 
 
+namespace graphics_backend
+{
+	class CGPUTextureResource;
+}
+
 class CInlineCommandList
 {
 public:
@@ -17,38 +22,19 @@ public:
 class CRenderGraphPassConfig
 { 
 public:
-	void ConfigInputTexture();
+	void ConfigInputTexture(CTextureHandle const& );
 	void ConfigOutputColorTarget();
 	void ConfigOutputDepthTarget();
 	void ConfigPipelineState();
 };
 
-class CRenderGraphPassObject
-{
-public:
-	CRenderGraphPassConfig m_Config;
-	std::function<void(CInlineCommandList& commandList)> m_Functor;
-};
-
 class CRenderGraph
 {
 public:
-	virtual CTextureHandle NewTextureHandle() = 0;
-
-	void NewBufferHandle();
-
-	void ImportTexture();
-
-	void ImportBuffer();
-
-	void PassGlobalShaderValueOverride(std::string const& overrideBufferName);
-
-	void AddPass(CRenderGraphPassConfig const& passConfig, std::function<void(CInlineCommandList& commandList)> const& func)
-	{
-		CRenderGraphPassObject newPassObject;
-		newPassObject.m_Config = passConfig;
-		newPassObject.m_Functor = func;
-	}
-	std::vector<CRenderGraphPassObject> m_GraphPassObjectList;
-	std::vector<CTextureMetadata> m_TextureMetadataList;
+	RENDERINTERFACE_API virtual CTextureHandle NewTextureHandle(CTextureInfo const& textureInfo) = 0;
+	RENDERINTERFACE_API virtual void ImportTexture(graphics_backend::CGPUTextureResource const& textureResource) = 0;
+	RENDERINTERFACE_API virtual void NewBufferHandle() = 0;
+	RENDERINTERFACE_API virtual void ImportBuffer() = 0;
+	RENDERINTERFACE_API virtual void PassGlobalShaderValueOverride(std::string const& overrideBufferName) = 0;
+	RENDERINTERFACE_API virtual void AddPass(CRenderGraphPassConfig const& passConfig, std::function<void(CInlineCommandList& commandList)> const& func) = 0;
 };

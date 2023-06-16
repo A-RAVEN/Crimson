@@ -5,13 +5,6 @@ namespace graphics_backend
 {
 	void CRenderBackend_Vulkan::Initialize(std::string const& appName, std::string const& engineName)
 	{
-		CRenderGraph graph;
-		int tmp;
-		graph.AddPass(CRenderGraphPassConfig(), [tmp](CInlineCommandList& commandList)
-			{
-
-			});
-
 		m_Application.InitApp(appName, engineName);
 	}
 

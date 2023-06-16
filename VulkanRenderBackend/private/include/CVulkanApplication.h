@@ -19,8 +19,3 @@ private:
 	vk::DebugUtilsMessengerEXT m_DebugMessager = nullptr;
 #endif
 };
-
-extern "C"
-{
-
-}

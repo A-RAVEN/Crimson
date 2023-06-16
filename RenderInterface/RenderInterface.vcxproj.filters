@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
+    <ClInclude Include="private\include\framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="private\include\pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\CRenderGraph.h">
@@ -30,12 +30,24 @@
     <ClInclude Include="header\Common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\CRenderGraphImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\CRenderBackend.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="private\source\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="private\source\pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CRenderGraphImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CRenderBackend_Client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
