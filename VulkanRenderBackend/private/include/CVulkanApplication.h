@@ -1,21 +1,45 @@
 #pragma once
-class CVulkanApplication
+#include <private/include/CVulkanThreadContext.h>
+
+namespace graphics_backend
 {
-public:
-	~CVulkanApplication();
-	void InitApp(std::string const& appName, std::string const& engineName);
-	void ReleaseApp();
-private:
-	void InitializeInstance(std::string const& name, std::string const& engineName);
-	void DestroyInstance();
-	void EnumeratePhysicalDevices();
-	void CreateDevice();
-	void DestroyDevice();
-private:
-	vk::Instance m_Instance = nullptr;
-	vk::PhysicalDevice m_PhysicalDevice = nullptr;
-	vk::Device m_Device = nullptr;
-#if !defined(NDEBUG)
-	vk::DebugUtilsMessengerEXT m_DebugMessager = nullptr;
-#endif
-};
+	class CVulkanApplication
+	{
+	public:
+		//friend class ApplicationSubobjectBase;
+		~CVulkanApplication();
+		void InitApp(std::string const& appName, std::string const& engineName);
+		void ReleaseApp();
+		inline vk::Instance GetInstance() const
+		{
+			return m_Instance;
+		}
+		inline vk::Device GetDevice() const
+		{
+			return m_Device;
+		}
+	private:
+		void InitializeInstance(std::string const& name, std::string const& engineName);
+		void DestroyInstance();
+		void EnumeratePhysicalDevices();
+		void CreateDevice();
+		void DestroyDevice();
+
+		void InitializeThreadContext(uint32_t threadCount);
+		void DestroyThreadContexts();
+
+		void CreateWindowsContext();
+		CVulkanThreadContext& GetThreadContext(uint32_t threadKey) const;
+	private:
+		vk::Instance m_Instance = nullptr;
+		vk::PhysicalDevice m_PhysicalDevice = nullptr;
+		vk::Device m_Device = nullptr;
+	#if !defined(NDEBUG)
+		vk::DebugUtilsMessengerEXT m_DebugMessager = nullptr;
+	#endif
+
+		std::vector<CVulkanThreadContext> m_ThreadContexts;
+	private:
+		uint32_t m_LastSubmitFrame = 0;
+	};
+}

@@ -4,8 +4,6 @@
 #include <functional>
 namespace graphics_backend
 {
-
-
 	class CRenderBackend_Vulkan : public CRenderBackend
 	{
 	public:
