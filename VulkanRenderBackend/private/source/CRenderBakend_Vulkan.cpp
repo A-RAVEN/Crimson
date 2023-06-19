@@ -16,6 +16,16 @@ namespace graphics_backend
 
 	void CRenderBackend_Vulkan::NewWindow(uint32_t width, uint32_t height, std::string const& windowName)
 	{
+		m_Application.CreateWindowContext(windowName, width, height);
+	}
 
+	bool CRenderBackend_Vulkan::AnyWindowRunning()
+	{
+		return m_Application.AnyWindowRunning();
+	}
+
+	void CRenderBackend_Vulkan::TickWindows()
+	{
+		m_Application.TickWindowContexts();
 	}
 }

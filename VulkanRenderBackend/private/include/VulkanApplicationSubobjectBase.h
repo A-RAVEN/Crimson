@@ -8,9 +8,9 @@ namespace graphics_backend
 	class ApplicationSubobjectBase
 	{
 	public:
-		virtual ~ApplicationSubobjectBase();
 		virtual void Initialize(CVulkanApplication const* owningApplication);
 		virtual void Release();
+		virtual ~ApplicationSubobjectBase();
 	protected:
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) = 0;
 		virtual void Release_Internal() = 0;

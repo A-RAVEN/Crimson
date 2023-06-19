@@ -1,4 +1,5 @@
 #pragma once
+#include <private/include/WindowContext.h>
 #include <private/include/CVulkanThreadContext.h>
 
 namespace graphics_backend
@@ -18,6 +19,9 @@ namespace graphics_backend
 		{
 			return m_Device;
 		}
+		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
+		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
+		void TickWindowContexts();
 	private:
 		void InitializeInstance(std::string const& name, std::string const& engineName);
 		void DestroyInstance();
@@ -28,7 +32,7 @@ namespace graphics_backend
 		void InitializeThreadContext(uint32_t threadCount);
 		void DestroyThreadContexts();
 
-		void CreateWindowsContext();
+		void ReleaseAllWindowContexts();
 		CVulkanThreadContext& GetThreadContext(uint32_t threadKey) const;
 	private:
 		vk::Instance m_Instance = nullptr;
@@ -38,6 +42,7 @@ namespace graphics_backend
 		vk::DebugUtilsMessengerEXT m_DebugMessager = nullptr;
 	#endif
 
+		std::vector<CWindowContext> m_WindowContexts;
 		std::vector<CVulkanThreadContext> m_ThreadContexts;
 	private:
 		uint32_t m_LastSubmitFrame = 0;

@@ -25,6 +25,21 @@ namespace graphics_backend
 
 	static glfwContext s_GLFWContext = glfwContext();
 
+	CWindowContext::CWindowContext(std::string const& windowName, uint32_t initialWidth, uint32_t initialHeight) :
+		m_WindowName(windowName), m_Width(initialWidth), m_Height(initialHeight)
+	{
+	}
+
+	bool CWindowContext::NeedClose() const
+	{
+		assert(ValidContext());
+		if(m_Window != nullptr)
+		{
+			return glfwWindowShouldClose(m_Window);
+		}
+		return false;
+	}
+
 	void CWindowContext::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
 		assert(ValidContext());
@@ -37,6 +52,11 @@ namespace graphics_backend
 
 	void CWindowContext::Release_Internal()
 	{
+		if(m_Surface != vk::SurfaceKHR(nullptr))
+		{
+			m_OwningApplication->GetInstance().destroySurfaceKHR(m_Surface);
+			m_Surface = nullptr;
+		}
 		if(m_Window != nullptr)
 		{
 			glfwDestroyWindow(m_Window);

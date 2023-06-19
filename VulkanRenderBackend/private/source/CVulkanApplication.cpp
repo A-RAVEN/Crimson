@@ -7,12 +7,12 @@
 namespace graphics_backend
 {
 
-	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engine_name)
+	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
 		vk::ApplicationInfo application_info(
 			name.c_str()
 			, 1
-			, engine_name.c_str()
+			, engineName.c_str()
 			, VK_API_VERSION_1_3);
 
 		std::array<const char*, 1> extensionNames = {
@@ -102,6 +102,33 @@ namespace graphics_backend
 		m_ThreadContexts.clear();
 	}
 
+	void CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
+	{
+		m_WindowContexts.emplace_back(windowName, initialWidth, initialHeight);
+		auto& newContext = m_WindowContexts.back();
+		newContext.Initialize(this);
+	}
+
+	void CVulkanApplication::TickWindowContexts()
+	{
+		bool anyNeedClose = std::any_of(m_WindowContexts.begin(), m_WindowContexts.end(), [](CWindowContext const& wcontest)
+			{
+				return wcontest.NeedClose();
+			});
+		if(anyNeedClose)
+		{
+			std::remove_if(m_WindowContexts.begin(), m_WindowContexts.end(), [](CWindowContext const& wcontest)
+				{
+					return wcontest.NeedClose();
+				});
+		}
+	}
+
+	void CVulkanApplication::ReleaseAllWindowContexts()
+	{
+		m_WindowContexts.clear();
+	}
+
 	CVulkanApplication::~CVulkanApplication()
 	{
 		ReleaseApp();
@@ -116,6 +143,7 @@ namespace graphics_backend
 
 	void CVulkanApplication::ReleaseApp()
 	{
+		ReleaseAllWindowContexts();
 		DestroyDevice();
 		m_PhysicalDevice = nullptr;
 		DestroyInstance();
