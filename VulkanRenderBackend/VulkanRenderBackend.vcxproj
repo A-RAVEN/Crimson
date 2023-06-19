@@ -71,16 +71,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)RenderInterface\header;$(SolutionDir)ExternalLib\;$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)RenderInterface\header;$(SolutionDir)ExternalLib\;$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)RenderInterface\header;$(SolutionDir)ExternalLib\;$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir);$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)RenderInterface\header;$(SolutionDir)ExternalLib\;$(VK_SDK_PATH)\Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -155,17 +155,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="header\MRenderBackend.h" />
     <ClInclude Include="private\include\CRenderBackend_Vulkan.h" />
     <ClInclude Include="private\include\CVulkanApplication.h" />
+    <ClInclude Include="private\include\CVulkanThreadContext.h" />
+    <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />
+    <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
+    <ClInclude Include="private\include\VulkanApplicationSubobjectBase.h" />
+    <ClInclude Include="private\include\WindowContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
     <ClCompile Include="private\source\CVulkanApplication.cpp" />
+    <ClCompile Include="private\source\CVulkanThreadContext.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
+    <ClCompile Include="private\source\FrameCountContext.cpp" />
     <ClCompile Include="private\source\MRenderBackendImpl_Vulkan.cpp" />
     <ClCompile Include="private\source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -174,6 +180,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="private\source\Utils.cpp" />
+    <ClCompile Include="private\source\VulkanApplicationSubobjectBase.cpp" />
+    <ClCompile Include="private\source\WindowContext.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

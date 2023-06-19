@@ -27,10 +27,22 @@
     <ClInclude Include="private\include\Utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="header\MRenderBackend.h">
+    <ClInclude Include="private\include\CRenderBackend_Vulkan.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\CRenderBackend_Vulkan.h">
+    <ClInclude Include="private\include\CVulkanThreadContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\FrameCountContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\RenderBackendSettings.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\VulkanApplicationSubobjectBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\WindowContext.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -51,6 +63,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\MRenderBackendImpl_Vulkan.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CVulkanThreadContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\FrameCountContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\VulkanApplicationSubobjectBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\WindowContext.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

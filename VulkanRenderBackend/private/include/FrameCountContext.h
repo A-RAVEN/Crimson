@@ -14,5 +14,6 @@ namespace graphics_backend
 		uint32_t m_CurrentFrameCount = 0;
 		std::vector<vk::Fence> m_SwapchainWaitingFences;
 		vk::SwapchainKHR m_Swapchain = nullptr;
+
 	};
 }

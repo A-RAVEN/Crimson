@@ -1,7 +1,7 @@
 #pragma once
-#include <header/MRenderBackend.h>
 #include <private/include/CVulkanApplication.h>
-#include <functional>
+#include <CRenderBackend.h>
+
 namespace graphics_backend
 {
 	class CRenderBackend_Vulkan : public CRenderBackend
@@ -9,6 +9,7 @@ namespace graphics_backend
 	public:
 		void Initialize(std::string const& appName, std::string const& engineName) override;
 		void Release() override;
+		void NewWindow(uint32_t width, uint32_t height, std::string const& windowName) override;
 	private:
 		CVulkanApplication m_Application;
 	};
