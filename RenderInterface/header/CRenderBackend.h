@@ -1,4 +1,8 @@
 #pragma once
+
+///define DEFINE_RENDERBACKEND_LOAD_FUNCTIONS to define library loading functions
+
+
 #include <string>
 #include "Common.h"
 
@@ -27,16 +31,57 @@ namespace graphics_backend
 		virtual void TickWindows() = 0;
 	};
 
-
-
 	extern "C"
 	{
 		RENDERBACKEND_API CRenderBackend* NewRenderBackend();
 		RENDERBACKEND_API void DeleteRenderBackend(CRenderBackend* removingBackend);
 	}
 
+	typedef CRenderBackend* (*FPT_NewBackend)();
+	typedef void(*FPT_DeleteBackend)(CRenderBackend*);
+
+#ifndef ANY_RENDER_BACKEND_EXPORTS
 	void LoadRenderBackend();
 	void UnloadRenderBackend();
+#endif
+
+#if defined(DEFINE_RENDERBACKEND_LOAD_FUNCTIONS) && !defined(ANY_RENDER_BACKEND_EXPORTS)
+
+	HINSTANCE hRenderBackendLib = nullptr;
+	FPT_NewBackend pNewBackendFunc = nullptr;
+	FPT_DeleteBackend pDeleteBackendFunc = nullptr;
+
+	void LoadRenderBackend()
+	{
+		hRenderBackendLib = LoadLibrary(L"VulkanRenderBackend");
+		if (hRenderBackendLib != nullptr)
+		{
+			pNewBackendFunc = reinterpret_cast<FPT_NewBackend>(GetProcAddress(hRenderBackendLib, "NewRenderBackend"));
+			pDeleteBackendFunc = reinterpret_cast<FPT_DeleteBackend>(GetProcAddress(hRenderBackendLib, "DeleteRenderBackend"));
+		}
+	}
+
+	void UnloadRenderBackend()
+	{
+		pNewBackendFunc = nullptr;
+		pDeleteBackendFunc = nullptr;
+		if (hRenderBackendLib != nullptr)
+		{
+			FreeLibrary(hRenderBackendLib);
+			hRenderBackendLib = nullptr;
+		}
+	}
+
+	CRenderBackend* NewRenderBackend()
+	{
+		return pNewBackendFunc();
+	}
+
+	void DeleteRenderBackend(CRenderBackend* removingBackend)
+	{
+		pDeleteBackendFunc(removingBackend);
+	}
+#endif
 }
 
 

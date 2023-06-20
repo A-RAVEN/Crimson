@@ -4,11 +4,11 @@
 
 namespace graphics_backend
 {
-	CRenderBackend* NewBackend()
+	CRenderBackend* NewRenderBackend()
 	{
 		return new graphics_backend::CRenderBackend_Vulkan();
 	}
-	void DeleteBackend(graphics_backend::CRenderBackend* removingBackend)
+	void DeleteRenderBackend(graphics_backend::CRenderBackend* removingBackend)
 	{
 		delete static_cast<graphics_backend::CRenderBackend_Vulkan*>(removingBackend);
 	}

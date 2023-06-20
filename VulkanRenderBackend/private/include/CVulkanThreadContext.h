@@ -15,7 +15,7 @@ namespace graphics_backend
 		vk::CommandBuffer AllocateCommandBuffer();
 		void ResetCommandBufferPool();
 	private:
-		// 通过 ApplicationSubobjectBase 继承
+		// 閫氳繃 ApplicationSubobjectBase 缁ф壙
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
 	private:
@@ -31,7 +31,7 @@ namespace graphics_backend
 		CVulkanFrameBoundCommandBufferPool& GetCurrentFramePool();
 
 	private:
-		// 通过 ApplicationSubobjectBase 继承
+		// 閫氳繃 ApplicationSubobjectBase 缁ф壙
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
 	private:

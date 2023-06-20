@@ -117,11 +117,23 @@ namespace graphics_backend
 			});
 		if(anyNeedClose)
 		{
-			std::remove_if(m_WindowContexts.begin(), m_WindowContexts.end(), [](CWindowContext const& wcontest)
+			size_t lastIndex = m_WindowContexts.size();
+			size_t currentIndex = 0;
+			while (currentIndex < m_WindowContexts.size())
+			{
+				if (m_WindowContexts[currentIndex].NeedClose())
 				{
-					return wcontest.NeedClose();
-				});
+					m_WindowContexts[currentIndex].Release();
+					std::swap(m_WindowContexts[currentIndex], m_WindowContexts.back());
+					m_WindowContexts.pop_back();
+				}
+				else
+				{
+					++currentIndex;
+				}
+			}
 		}
+		glfwPollEvents();
 	}
 
 	void CVulkanApplication::ReleaseAllWindowContexts()

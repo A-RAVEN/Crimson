@@ -2,6 +2,10 @@
 #include <cstdint>
 
 #ifdef VULKANRENDERBACKEND_EXPORTS
+#define ANY_RENDER_BACKEND_EXPORTS 1
+#endif
+
+#ifdef ANY_RENDER_BACKEND_EXPORTS
 #define RENDERBACKEND_API __declspec(dllexport)
 #else
 #define RENDERBACKEND_API

@@ -6,7 +6,7 @@ namespace graphics_backend
 {
 	ApplicationSubobjectBase::~ApplicationSubobjectBase()
 	{
-		Release();
+		m_OwningApplication = nullptr;
 	}
 
 	void ApplicationSubobjectBase::Initialize(CVulkanApplication const* owningApplication)
