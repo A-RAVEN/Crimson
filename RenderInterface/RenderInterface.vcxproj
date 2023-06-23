@@ -159,7 +159,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="header\CGPUPrimitiveResource.h" />
     <ClInclude Include="header\CRenderBackend.h" />
+    <ClInclude Include="header\CTextureResource.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="header\Common.h" />
     <ClInclude Include="header\CRenderGraph.h" />
@@ -168,7 +170,6 @@
     <ClInclude Include="private\include\CRenderGraphImpl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="private\source\CRenderBackend_Client.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
     <ClCompile Include="private\source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

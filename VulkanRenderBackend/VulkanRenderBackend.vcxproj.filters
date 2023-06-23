@@ -45,6 +45,15 @@
     <ClInclude Include="private\include\WindowContext.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\VulkanIncludes.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\CPrimitiveResource_Vulkan.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\CVulkanBufferObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -75,6 +84,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\WindowContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

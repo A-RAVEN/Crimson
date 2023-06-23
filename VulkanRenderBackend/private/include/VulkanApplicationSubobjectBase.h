@@ -10,6 +10,9 @@ namespace graphics_backend
 	public:
 		virtual void Initialize(CVulkanApplication const* owningApplication);
 		virtual void Release();
+		CVulkanApplication const* GetVulkanApplication() const { return m_OwningApplication; }
+		vk::Instance const& GetInstance() const { return m_OwningApplication->GetInstance(); }
+		vk::Device const& GetDevice() const { return m_OwningApplication->GetDevice(); }
 		virtual ~ApplicationSubobjectBase();
 	protected:
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) = 0;

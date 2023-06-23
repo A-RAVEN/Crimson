@@ -10,11 +10,8 @@
 // 添加要在此处预编译的标头
 #include "framework.h"
 #include <iostream>
-#ifndef VULKAN_HPP_TYPESAFE_CONVERSION 
-#define VULKAN_HPP_TYPESAFE_CONVERSION 1
-#endif	
-#include "vulkan/vulkan.hpp"
-#include "private/include/Utils.h"
+#include "VulkanIncludes.h"
+#include "Utils.h"
 #define GLFW_INCLUDE_NONE
 #include <glfw/include/GLFW/glfw3.h>
 

@@ -3,6 +3,7 @@
 #include <private/include/RenderBackendSettings.h>
 #include "private/include/CVulkanApplication.h"
 #include "private/include/CVulkanThreadContext.h"
+#include <set>
 
 namespace graphics_backend
 {
@@ -56,25 +57,93 @@ namespace graphics_backend
 	{
 		std::vector<vk::QueueFamilyProperties> queueFamilyProperties = m_PhysicalDevice.getQueueFamilyProperties();
 
-		auto queueFamilyPropIterator = std::find_if(queueFamilyProperties.begin()
-			, queueFamilyProperties.end()
-			, [](vk::QueueFamilyProperties const& itrProperties) {
-				return itrProperties.queueFlags & vk::QueueFlagBits::eGraphics;
-			});
+		std::vector<std::pair<uint32_t, uint32_t>> generalUsageQueues;
+		std::vector<std::pair<uint32_t, uint32_t>> computeDedicateQueues;
+		std::vector<std::pair<uint32_t, uint32_t>> transferDedicateQueues;
 
-		size_t queueFamilyIndex = std::distance(queueFamilyProperties.begin(), queueFamilyPropIterator);
+		vk::QueueFlags generalFlags = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute | vk::QueueFlagBits::eTransfer;
+		for (uint32_t queueId = 0; queueId < queueFamilyProperties.size(); ++queueId)
+		{
+			vk::QueueFamilyProperties const& itrProp = queueFamilyProperties[queueId];
+			if ((itrProp.queueFlags & generalFlags) == generalFlags)
+			{
+				generalUsageQueues.push_back(std::make_pair(queueId, itrProp.queueCount));
+			}
+			else
+			{
+				if (itrProp.queueFlags & vk::QueueFlagBits::eCompute)
+				{
+					computeDedicateQueues.push_back(std::make_pair(queueId, itrProp.queueCount));
+				}
+				else if (itrProp.queueFlags & vk::QueueFlagBits::eTransfer)
+				{
+					transferDedicateQueues.push_back(std::make_pair(queueId, itrProp.queueCount));
+				}
+			}
+		}
 
-		assert(queueFamilyIndex < queueFamilyProperties.size());
+		assert(!generalUsageQueues.empty());
 
-		std::vector<float> queuePrioritiese = { 0.0f };
-		vk::DeviceQueueCreateInfo queueCreateInfo(vk::DeviceQueueCreateFlags()
-			, static_cast<uint32_t>(queueFamilyIndex)
-			, queuePrioritiese);
+		if (computeDedicateQueues.empty())
+		{
+			computeDedicateQueues.push_back(generalUsageQueues[0]);
+		}
+		if (transferDedicateQueues.empty())
+		{
+			transferDedicateQueues.push_back(generalUsageQueues[0]);
+		}
+		std::set<std::pair<uint32_t, uint32_t>> queueFamityIndices;
+		queueFamityIndices.insert(generalUsageQueues[0]);
+		queueFamityIndices.insert(computeDedicateQueues[0]);
+		queueFamityIndices.insert(transferDedicateQueues[0]);
+
+		std::vector<vk::DeviceQueueCreateInfo> deviceQueueCreateInfoList;
+		std::pair<uint32_t, uint32_t> generalQueueRef;
+		std::pair<uint32_t, uint32_t> computeQueueRef;
+		std::pair<uint32_t, uint32_t> transferQueueRef;
+		for (std::pair<uint32_t, uint32_t> const& itrQueueInfo : queueFamityIndices)
+		{
+			uint32_t queueFamilyId = itrQueueInfo.first;
+			uint32_t queueCount = itrQueueInfo.second;
+
+			uint32_t itrQueueId = 0;
+			uint32_t requiredQueueCount = 0;
+			if (queueFamilyId == generalUsageQueues[0].first)
+			{
+				generalQueueRef = std::make_pair(queueFamilyId, itrQueueId);
+				itrQueueId = (itrQueueId + 1) % queueCount;
+				requiredQueueCount = std::min(requiredQueueCount + 1, queueCount);
+			}
+			if (queueFamilyId == computeDedicateQueues[0].first)
+			{
+				computeQueueRef = std::make_pair(queueFamilyId, itrQueueId);
+				itrQueueId = (itrQueueId + 1) % queueCount;
+				requiredQueueCount = std::min(requiredQueueCount + 1, queueCount);
+			}
+
+			if (queueFamilyId == transferDedicateQueues[0].first)
+			{
+				transferQueueRef = std::make_pair(queueFamilyId, itrQueueId);
+				itrQueueId = (itrQueueId + 1) % queueCount;
+				requiredQueueCount = std::min(requiredQueueCount + 1, queueCount);
+			}
+
+			std::vector<float> queuePrioritiese;
+			queuePrioritiese.resize(requiredQueueCount);
+			std::fill(queuePrioritiese.begin(), queuePrioritiese.end(), 0.0f);
+			deviceQueueCreateInfoList.emplace_back(vk::DeviceQueueCreateFlags(), queueFamilyId, queuePrioritiese);
+		}
 
 		auto extensions = GetDeviceExtensionNames();
-		vk::DeviceCreateInfo deviceCreateInfo({}, queueCreateInfo, {}, extensions);
+		vk::DeviceCreateInfo deviceCreateInfo({}, deviceQueueCreateInfoList, {}, extensions);
 
 		m_Device = m_PhysicalDevice.createDevice(deviceCreateInfo);
+		vk::Queue generalQueue = m_Device.getQueue(generalQueueRef.first, generalQueueRef.second);
+		vk::Queue computeQueue = m_Device.getQueue(computeQueueRef.first, computeQueueRef.second);
+		vk::Queue transferQueue = m_Device.getQueue(transferQueueRef.first, transferQueueRef.second);
+	
+		m_SubmitCounterContext.Initialize(this);
+		m_SubmitCounterContext.InitializeSubmitQueues(generalQueue, computeQueue, transferQueue);
 	}
 
 	void CVulkanApplication::DestroyDevice()

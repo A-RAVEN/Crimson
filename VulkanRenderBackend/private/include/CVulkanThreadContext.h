@@ -2,6 +2,7 @@
 #include  <vulkan/vulkan.hpp>
 #include <private/include/RenderBackendSettings.h>
 #include <private/include/VulkanApplicationSubobjectBase.h>
+#include <VulkanMemoryAllocator/include/vk_mem_alloc.h>
 
 namespace graphics_backend
 {
@@ -13,14 +14,28 @@ namespace graphics_backend
 	{
 	public:
 		vk::CommandBuffer AllocateCommandBuffer();
+		vk::CommandBuffer AllocateSecondaryCommandBuffer();
 		void ResetCommandBufferPool();
+		void CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
+		uint32_t GetCommandFrame() const { return m_BoundingFrameID; }
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
 	private:
+		class CommandBufferList
+		{
+		public:
+			size_t m_AvailableCommandBufferIndex = 0;
+			std::vector<vk::CommandBuffer> m_CommandBufferList;
+			vk::CommandBuffer AllocCommandBuffer(CVulkanFrameBoundCommandBufferPool& owner, bool secondary);
+			void CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
+			void ResetBufferList();
+			void ClearBufferList();
+		};
 		vk::CommandPool m_CommandPool = nullptr;
-		std::vector<vk::CommandBuffer> m_CommandBufferList;
+		CommandBufferList m_CommandBufferList;
+		CommandBufferList m_SecondaryCommandBufferList;
 		uint32_t m_BoundingFrameID = 0;
 	};
 
@@ -30,6 +45,7 @@ namespace graphics_backend
 		CVulkanThreadContext(CVulkanApplication const* owningApplication);
 		CVulkanFrameBoundCommandBufferPool& GetCurrentFramePool();
 
+		void CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;

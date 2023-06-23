@@ -36,6 +36,12 @@
     <ClInclude Include="header\CRenderBackend.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\CTextureResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\CGPUPrimitiveResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -45,9 +51,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="private\source\CRenderGraphImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="private\source\CRenderBackend_Client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
