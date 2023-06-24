@@ -9,6 +9,11 @@ namespace graphics_backend
 		m_Application.InitApp(appName, engineName);
 	}
 
+	void CRenderBackend_Vulkan::InitializeThreadContextCount(uint32_t threadCount)
+	{
+		m_Application.InitializeThreadContext(threadCount);
+	}
+
 	void CRenderBackend_Vulkan::Release()
 	{
 		m_Application.ReleaseApp();
@@ -27,5 +32,9 @@ namespace graphics_backend
 	void CRenderBackend_Vulkan::TickWindows()
 	{
 		m_Application.TickWindowContexts();
+	}
+	void CRenderBackend_Vulkan::TickTest()
+	{
+		m_Application.TickRunTest();
 	}
 }

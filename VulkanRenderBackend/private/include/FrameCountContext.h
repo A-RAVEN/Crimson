@@ -15,6 +15,9 @@ namespace graphics_backend
 		uint32_t GetCurrentFrameBufferIndex() const {
 			return m_CurrentFrameID % FRAMEBOUND_COMMANDPOOL_SWAP_COUNT_PER_CONTEXT;
 		}
+		uint32_t GetCurrentFrameID() const {
+			return m_CurrentFrameID;
+		}
 	private:
 
 		// 通过 ApplicationSubobjectBase 继承

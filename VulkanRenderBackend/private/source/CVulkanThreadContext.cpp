@@ -45,11 +45,6 @@ namespace graphics_backend
 		m_CommandPool = nullptr;
 	}
 
-	CVulkanThreadContext::CVulkanThreadContext(CVulkanApplication const* owningApplication)
-	{
-		Initialize(owningApplication);
-	}
-
 	CVulkanFrameBoundCommandBufferPool& CVulkanThreadContext::GetCurrentFramePool()
 	{
 		uint32_t currentFrameId =GetVulkanApplication()
@@ -62,18 +57,47 @@ namespace graphics_backend
 		GetCurrentFramePool().CollectCommandBufferList(inoutCommandBufferList);
 	}
 
+	CVulkanBufferObject const& CVulkanThreadContext::AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage)
+	{
+		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
+
+		vk::BufferCreateInfo bufferCreateInfo(
+			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
+		);
+
+		result.m_Buffer = GetDevice().createBuffer(bufferCreateInfo);
+
+		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.usage = gpuBuffer ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE : VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+		vmaAllocateMemoryForBuffer(m_ThreadGPUAllocator, result.m_Buffer, &allocationCreateInfo, &result.m_BufferAllocation, &result.m_BufferAllocationInfo);
+		
+		GetDevice().bindBufferMemory(result.m_Buffer, result.m_BufferAllocationInfo.deviceMemory, result.m_BufferAllocationInfo.offset);
+
+		return result;
+	}
+
 	void CVulkanThreadContext::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
-		m_FrameBoundCommandBufferPools.resize(FRAMEBOUND_COMMANDPOOL_SWAP_COUNT_PER_CONTEXT);
 		assert(m_FrameBoundCommandBufferPools.size() == 0);
+		m_FrameBoundCommandBufferPools.resize(FRAMEBOUND_COMMANDPOOL_SWAP_COUNT_PER_CONTEXT);
 		std::for_each(m_FrameBoundCommandBufferPools.begin(), m_FrameBoundCommandBufferPools.end()
 			, [owningApplication](CVulkanFrameBoundCommandBufferPool& itrPool)
 			{
 				itrPool.Initialize(owningApplication);
 			});
+
+		VmaAllocatorCreateInfo vmaCreateInfo{};
+		vmaCreateInfo.vulkanApiVersion = VULKAN_API_VERSION_IN_USE;
+		vmaCreateInfo.physicalDevice = static_cast<VkPhysicalDevice>(GetPhysicalDevice());
+		vmaCreateInfo.device = GetDevice();
+		vmaCreateInfo.instance = GetInstance();
+		vmaCreateAllocator(&vmaCreateInfo, &m_ThreadGPUAllocator);
 	}
 	void CVulkanThreadContext::Release_Internal()
 	{
+		vmaDestroyAllocator(m_ThreadGPUAllocator);
+		m_ThreadGPUAllocator = nullptr;
+
 		if (!m_FrameBoundCommandBufferPools.empty())
 		{
 			std::for_each(m_FrameBoundCommandBufferPools.begin(), m_FrameBoundCommandBufferPools.end()

@@ -3,6 +3,7 @@
 #include <private/include/RenderBackendSettings.h>
 #include <private/include/VulkanApplicationSubobjectBase.h>
 #include <VulkanMemoryAllocator/include/vk_mem_alloc.h>
+#include <private/include/CVulkanBufferObject.h>
 
 namespace graphics_backend
 {
@@ -42,15 +43,15 @@ namespace graphics_backend
 	class CVulkanThreadContext : public ApplicationSubobjectBase
 	{
 	public:
-		CVulkanThreadContext(CVulkanApplication const* owningApplication);
 		CVulkanFrameBoundCommandBufferPool& GetCurrentFramePool();
-
 		void CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
+		CVulkanBufferObject const& AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage);
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
 	private:
 		std::vector<CVulkanFrameBoundCommandBufferPool> m_FrameBoundCommandBufferPools;
+		VmaAllocator m_ThreadGPUAllocator = nullptr;
 	};
 }

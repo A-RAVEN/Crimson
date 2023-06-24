@@ -89,5 +89,11 @@
     <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="private\source\CVulkanBufferObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\VMAImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

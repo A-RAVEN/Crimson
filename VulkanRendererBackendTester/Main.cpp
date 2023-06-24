@@ -15,9 +15,11 @@ int main(int argc, char *argv[])
 
 	graphics_backend::CRenderBackend* pBackend = graphics_backend::NewRenderBackend();
 	pBackend->Initialize("Test Vulkan Backend", "CRIMSON Engine");
+	pBackend->InitializeThreadContextCount(1);
 	pBackend->NewWindow(1024, 512, "Test Window");
 	while (pBackend->AnyWindowRunning())
 	{
+		pBackend->TickTest();
 		for (int i = 0; i < 3; ++i)
 		{
 			threadMgr.EnqueueTask([]()

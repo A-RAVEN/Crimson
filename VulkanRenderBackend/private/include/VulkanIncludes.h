@@ -13,4 +13,4 @@
 #endif
 #include "vulkan/vulkan.hpp"
 
-#include <VulkanMemoryAllocator/include/vk_mem_alloc.h>
+#define VULKAN_API_VERSION_IN_USE VK_API_VERSION_1_3

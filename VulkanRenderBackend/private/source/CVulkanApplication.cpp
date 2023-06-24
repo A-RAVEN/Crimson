@@ -3,18 +3,38 @@
 #include <private/include/RenderBackendSettings.h>
 #include "private/include/CVulkanApplication.h"
 #include "private/include/CVulkanThreadContext.h"
-#include <set>
+#include <private/include/CVulkanBufferObject.h>
 
 namespace graphics_backend
 {
+	void CVulkanApplication::TickRunTest()
+	{
+		m_SubmitCounterContext.WaitingForCurrentFrame();
+		if (m_SubmitCounterContext.GetCurrentFrameID() == 0)
+		{
+			CVulkanThreadContext& threadContext = GetThreadContext(0);
+			CVulkanBufferObject bufferObject = threadContext.AllocBufferObject(true, 4 * 4
+				, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
+			CVulkanBufferObject bufferObject1 = threadContext.AllocBufferObject(false, 4 * 4
+				, vk::BufferUsageFlagBits::eTransferSrc);
+			auto& currentFramePool = threadContext.GetCurrentFramePool();
+			vk::CommandBuffer cmd = currentFramePool.AllocateCommandBuffer();
+			cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+			cmd.copyBuffer(bufferObject1.m_Buffer, bufferObject.m_Buffer, vk::BufferCopy(0, 0, bufferObject1.m_BufferAllocationInfo.size));
+			cmd.end();
+			std::vector<vk::CommandBuffer> commands;
+			threadContext.CollectSubmittingCommandBuffers(commands);
+			m_SubmitCounterContext.SubmitCurrentFrameGraphics(commands);
+		}
 
+	}
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
 		vk::ApplicationInfo application_info(
 			name.c_str()
 			, 1
 			, engineName.c_str()
-			, VK_API_VERSION_1_3);
+			, VULKAN_API_VERSION_IN_USE);
 
 		std::array<const char*, 1> extensionNames = {
 			VK_EXT_DEBUG_UTILS_EXTENSION_NAME
@@ -148,6 +168,7 @@ namespace graphics_backend
 
 	void CVulkanApplication::DestroyDevice()
 	{
+		m_SubmitCounterContext.Release();
 		if(m_Device != vk::Device(nullptr))
 		{
 			m_Device.destroy();
@@ -162,12 +183,16 @@ namespace graphics_backend
 		m_ThreadContexts.reserve(threadCount);
 		for (uint32_t threadContextId = 0; threadContextId < threadCount; ++threadContextId)
 		{
-			m_ThreadContexts.emplace_back(this);
+			m_ThreadContexts.push_back(SubObject<CVulkanThreadContext>());
 		}
 	}
 
 	void CVulkanApplication::DestroyThreadContexts()
 	{
+		for (auto& threadContext : m_ThreadContexts)
+		{
+			ReleaseSubObject(threadContext);
+		}
 		m_ThreadContexts.clear();
 	}
 
@@ -224,6 +249,8 @@ namespace graphics_backend
 
 	void CVulkanApplication::ReleaseApp()
 	{
+		GetDevice().waitIdle();
+		DestroyThreadContexts();
 		ReleaseAllWindowContexts();
 		DestroyDevice();
 		m_PhysicalDevice = nullptr;

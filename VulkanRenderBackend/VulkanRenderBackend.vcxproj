@@ -173,6 +173,7 @@
     <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp" />
     <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
     <ClCompile Include="private\source\CVulkanApplication.cpp" />
+    <ClCompile Include="private\source\CVulkanBufferObject.cpp" />
     <ClCompile Include="private\source\CVulkanThreadContext.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
     <ClCompile Include="private\source\FrameCountContext.cpp" />
@@ -184,6 +185,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="private\source\Utils.cpp" />
+    <ClCompile Include="private\source\VMAImpl.cpp" />
     <ClCompile Include="private\source\VulkanApplicationSubobjectBase.cpp" />
     <ClCompile Include="private\source\WindowContext.cpp" />
   </ItemGroup>
