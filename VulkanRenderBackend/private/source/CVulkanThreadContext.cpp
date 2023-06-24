@@ -32,7 +32,7 @@ namespace graphics_backend
 	void CVulkanFrameBoundCommandBufferPool::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
 		vk::CommandPoolCreateInfo commandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eTransient, 0);
-		m_CommandPool == m_OwningApplication->GetDevice().createCommandPool(commandPoolCreateInfo);
+		m_CommandPool = m_OwningApplication->GetDevice().createCommandPool(commandPoolCreateInfo);
 		m_CommandBufferList.ClearBufferList();
 		m_SecondaryCommandBufferList.ClearBufferList();
 	}
@@ -61,18 +61,14 @@ namespace graphics_backend
 	{
 		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
 
-		vk::BufferCreateInfo bufferCreateInfo(
+		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
-
-		result.m_Buffer = GetDevice().createBuffer(bufferCreateInfo);
-
 		VmaAllocationCreateInfo allocationCreateInfo{};
 		allocationCreateInfo.usage = gpuBuffer ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE : VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		vmaAllocateMemoryForBuffer(m_ThreadGPUAllocator, result.m_Buffer, &allocationCreateInfo, &result.m_BufferAllocation, &result.m_BufferAllocationInfo);
-		
-		GetDevice().bindBufferMemory(result.m_Buffer, result.m_BufferAllocationInfo.deviceMemory, result.m_BufferAllocationInfo.offset);
-
+		VkBuffer vkbuffer_c;
+		vmaCreateBuffer(m_ThreadGPUAllocator, &bufferCreateInfo, &allocationCreateInfo, &vkbuffer_c, &result.m_BufferAllocation, &result.m_BufferAllocationInfo);
+		result.m_Buffer = vkbuffer_c;
 		return result;
 	}
 
@@ -88,6 +84,7 @@ namespace graphics_backend
 
 		VmaAllocatorCreateInfo vmaCreateInfo{};
 		vmaCreateInfo.vulkanApiVersion = VULKAN_API_VERSION_IN_USE;
+		vmaCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXTERNALLY_SYNCHRONIZED_BIT;
 		vmaCreateInfo.physicalDevice = static_cast<VkPhysicalDevice>(GetPhysicalDevice());
 		vmaCreateInfo.device = GetDevice();
 		vmaCreateInfo.instance = GetInstance();

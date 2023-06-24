@@ -23,7 +23,7 @@ namespace graphics_backend
 		uint32_t currentIndex = GetCurrentFrameBufferIndex();
 		vk::Fence currentFrameFence = m_SubmitFrameFences[currentIndex];
 		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-		vk::SubmitInfo submitInfo({}, waitDestinationStageMask, commandbufferList);
+		vk::SubmitInfo submitInfo({}, {}, commandbufferList);
 		m_GraphicsQueue.submit(submitInfo, currentFrameFence);
 		++m_CurrentFrameID;
 	}

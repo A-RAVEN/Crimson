@@ -20,13 +20,13 @@ int main(int argc, char *argv[])
 	while (pBackend->AnyWindowRunning())
 	{
 		pBackend->TickTest();
-		for (int i = 0; i < 3; ++i)
-		{
-			threadMgr.EnqueueTask([]()
-				{
-					std::cout << std::this_thread::get_id() << std::endl;
-				});
-		}
+		//for (int i = 0; i < 3; ++i)
+		//{
+		//	threadMgr.EnqueueTask([]()
+		//		{
+		//			std::cout << std::this_thread::get_id() << std::endl;
+		//		});
+		//}
 		pBackend->TickWindows();
 	}
 	pBackend->Release();

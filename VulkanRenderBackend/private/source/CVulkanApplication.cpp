@@ -34,6 +34,7 @@ namespace graphics_backend
 			name.c_str()
 			, 1
 			, engineName.c_str()
+			, 0
 			, VULKAN_API_VERSION_IN_USE);
 
 		std::array<const char*, 1> extensionNames = {
