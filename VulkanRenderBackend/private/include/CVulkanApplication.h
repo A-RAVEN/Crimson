@@ -13,6 +13,7 @@ namespace graphics_backend
 		void InitApp(std::string const& appName, std::string const& engineName);
 		void InitializeThreadContext(uint32_t threadCount);
 		void ReleaseApp();
+		void DeviceWaitIdle();
 		inline vk::Instance const& GetInstance() const
 		{
 			return m_Instance;
@@ -25,8 +26,12 @@ namespace graphics_backend
 		{
 			return m_PhysicalDevice;
 		}
-		inline CVulkanThreadContext& GetThreadContext(uint32_t threadKey) const {
-			return m_ThreadContexts[threadKey];
+		inline CVulkanThreadContext* GetThreadContext(uint32_t threadKey) const {
+			if (threadKey >= m_ThreadContexts.size())
+			{
+				return nullptr;
+			}
+			return &m_ThreadContexts[threadKey];
 		}
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
@@ -34,11 +39,28 @@ namespace graphics_backend
 
 		CFrameCountContext const& GetSubmitCounterContext() const { return m_SubmitCounterContext; }
 
-		template<typename T>
-		T SubObject() const {
+		template<typename T, typename...TArgs>
+		T SubObject(TArgs&&...Args) const {
 			static_assert(std::is_base_of<ApplicationSubobjectBase, T>::value, "Type T not derived from ApplicationSubobjectBase");
-			T newSubObject;
+			T newSubObject( std::forward<TArgs>(Args)... );
 			newSubObject.Initialize(this);
+			return newSubObject;
+		}
+
+		template<typename T, typename...TArgs>
+		T& SubObject_EmplaceBack(std::vector<T>& container,TArgs&&...Args) const {
+			static_assert(std::is_base_of<ApplicationSubobjectBase, T>::value, "Type T not derived from ApplicationSubobjectBase");
+			container.emplace_back(std::forward<TArgs>(Args)...);
+			T& newSubObject = container.back();
+			newSubObject.Initialize(this);
+			return newSubObject;
+		}
+
+		template<typename T, typename...TArgs>
+		std::shared_ptr<T> SubObject_Shared(TArgs&&...Args) const {
+			static_assert(std::is_base_of<ApplicationSubobjectBase, T>::value, "Type T not derived from ApplicationSubobjectBase");
+			std::shared_ptr<T> newSubObject = std::shared_ptr<T>(new T(std::forward<TArgs>(Args)...), ApplicationSubobjectBase_Deleter{});
+			newSubObject->Initialize(this);
 			return newSubObject;
 		}
 
@@ -70,8 +92,5 @@ namespace graphics_backend
 		CFrameCountContext m_SubmitCounterContext;
 		std::vector<CWindowContext> m_WindowContexts;
 		mutable std::vector<CVulkanThreadContext> m_ThreadContexts;
-	private:
-		
-		uint32_t m_LastSubmitFrame = 0;
 	};
 }

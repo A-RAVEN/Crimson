@@ -11,6 +11,7 @@ namespace graphics_backend
 	{
 		return std::vector<const char*>{
 			VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+			VK_KHR_SURFACE_EXTENSION_NAME,
 #if defined( VK_USE_PLATFORM_ANDROID_KHR )
 				VK_KHR_ANDROID_SURFACE_EXTENSION_NAME,
 #elif defined( VK_USE_PLATFORM_IOS_MVK )

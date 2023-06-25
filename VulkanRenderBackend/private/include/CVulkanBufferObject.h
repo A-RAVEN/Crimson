@@ -7,10 +7,13 @@ namespace graphics_backend
 {
 	class CVulkanBufferObject : public ApplicationSubobjectBase
 	{
+	public:
+		vk::Buffer GetBuffer() const { return m_Buffer; }
+		VmaAllocationInfo const& GetAllocationInfo() const { return m_BufferAllocationInfo; }
 	protected:
 		void Initialize_Internal(CVulkanApplication const* owningApplication) override {};
 		void Release_Internal() override;
-	public:
+	private:
 		vk::Buffer m_Buffer = nullptr;
 		VmaAllocation m_BufferAllocation = nullptr;
 		VmaAllocationInfo m_BufferAllocationInfo;

@@ -27,18 +27,26 @@ namespace graphics_backend
 	}
 	vk::Instance const& ApplicationSubobjectBase::GetInstance() const
 	{
+		if (m_OwningApplication == nullptr)
+			return nullptr;
 		return m_OwningApplication->GetInstance();
 	}
 	vk::Device const& ApplicationSubobjectBase::GetDevice() const
 	{
+		if (m_OwningApplication == nullptr)
+			return nullptr;
 		return m_OwningApplication->GetDevice();
 	}
 	vk::PhysicalDevice const& ApplicationSubobjectBase::GetPhysicalDevice() const
 	{
+		if (m_OwningApplication == nullptr)
+			return nullptr;
 		return m_OwningApplication->GetPhysicalDevice();
 	}
-	CVulkanThreadContext& ApplicationSubobjectBase::GetThreadContext(uint32_t threadIndex)
+	CVulkanThreadContext* ApplicationSubobjectBase::GetThreadContext(uint32_t threadIndex)
 	{
+		if (m_OwningApplication == nullptr)
+			return nullptr;
 		return m_OwningApplication->GetThreadContext(threadIndex);
 	}
 }

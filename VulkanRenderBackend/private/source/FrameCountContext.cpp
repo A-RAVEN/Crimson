@@ -15,6 +15,7 @@ namespace graphics_backend
 		GetVulkanApplication()->GetDevice().waitForFences(fences
 			, true
 			, std::numeric_limits<uint64_t>::max());
+		GetDevice().resetFences(fences);
 		m_LastFinshedFrameID = m_FenceSubmitFrameIDs[currentIndex];
 		m_FenceSubmitFrameIDs[currentIndex] = m_CurrentFrameID;
 	}

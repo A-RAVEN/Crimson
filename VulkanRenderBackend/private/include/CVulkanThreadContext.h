@@ -4,6 +4,7 @@
 #include <private/include/VulkanApplicationSubobjectBase.h>
 #include <VulkanMemoryAllocator/include/vk_mem_alloc.h>
 #include <private/include/CVulkanBufferObject.h>
+#include <deque>
 
 namespace graphics_backend
 {
@@ -43,15 +44,22 @@ namespace graphics_backend
 	class CVulkanThreadContext : public ApplicationSubobjectBase
 	{
 	public:
+		CVulkanThreadContext(uint32_t threadId);
+
 		CVulkanFrameBoundCommandBufferPool& GetCurrentFramePool();
 		void CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
-		CVulkanBufferObject const& AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage);
+		std::shared_ptr<CVulkanBufferObject> AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage);
+		void ReleaseBufferObject(CVulkanBufferObject* bufferObject);
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
 	private:
+		uint32_t m_ThreadID;
 		std::vector<CVulkanFrameBoundCommandBufferPool> m_FrameBoundCommandBufferPools;
 		VmaAllocator m_ThreadGPUAllocator = nullptr;
+		std::set<VmaAllocation> m_HoldingAllocations;
+
+		std::deque<std::tuple<vk::Buffer, VmaAllocation, uint32_t>> m_PendingRemovalBuffers;
 	};
 }

@@ -12,18 +12,18 @@ namespace graphics_backend
 		m_SubmitCounterContext.WaitingForCurrentFrame();
 		if (m_SubmitCounterContext.GetCurrentFrameID() == 0)
 		{
-			CVulkanThreadContext& threadContext = GetThreadContext(0);
-			CVulkanBufferObject bufferObject = threadContext.AllocBufferObject(true, 4 * 4
+			CVulkanThreadContext* threadContext = GetThreadContext(0);
+			auto bufferObject = threadContext->AllocBufferObject(true, 4 * 4
 				, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
-			CVulkanBufferObject bufferObject1 = threadContext.AllocBufferObject(false, 4 * 4
+			auto bufferObject1 = threadContext->AllocBufferObject(false, 4 * 4
 				, vk::BufferUsageFlagBits::eTransferSrc);
-			auto& currentFramePool = threadContext.GetCurrentFramePool();
+			auto& currentFramePool = threadContext->GetCurrentFramePool();
 			vk::CommandBuffer cmd = currentFramePool.AllocateCommandBuffer();
 			cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
-			cmd.copyBuffer(bufferObject1.m_Buffer, bufferObject.m_Buffer, vk::BufferCopy(0, 0, bufferObject1.m_BufferAllocationInfo.size));
+			cmd.copyBuffer(bufferObject1->GetBuffer(), bufferObject->GetBuffer(), vk::BufferCopy(0, 0, bufferObject1->GetAllocationInfo().size));
 			cmd.end();
 			std::vector<vk::CommandBuffer> commands;
-			threadContext.CollectSubmittingCommandBuffers(commands);
+			threadContext->CollectSubmittingCommandBuffers(commands);
 			m_SubmitCounterContext.SubmitCurrentFrameGraphics(commands);
 		}
 
@@ -41,8 +41,12 @@ namespace graphics_backend
 			VK_EXT_DEBUG_UTILS_EXTENSION_NAME
 		};
 
+		const std::vector<const char*> g_validationLayers{
+			"VK_LAYER_KHRONOS_validation"
+		};
+
 		auto extensions = GetInstanceExtensionNames();
-		vk::InstanceCreateInfo instance_info({}, &application_info, {}, extensions);
+		vk::InstanceCreateInfo instance_info({}, &application_info, g_validationLayers, extensions);
 
 		m_Instance = vk::createInstance(instance_info);
 
@@ -122,6 +126,7 @@ namespace graphics_backend
 		std::pair<uint32_t, uint32_t> generalQueueRef;
 		std::pair<uint32_t, uint32_t> computeQueueRef;
 		std::pair<uint32_t, uint32_t> transferQueueRef;
+		std::vector<std::vector<float>> queuePriorities;
 		for (std::pair<uint32_t, uint32_t> const& itrQueueInfo : queueFamityIndices)
 		{
 			uint32_t queueFamilyId = itrQueueInfo.first;
@@ -149,10 +154,14 @@ namespace graphics_backend
 				requiredQueueCount = std::min(requiredQueueCount + 1, queueCount);
 			}
 
-			std::vector<float> queuePrioritiese;
-			queuePrioritiese.resize(requiredQueueCount);
-			std::fill(queuePrioritiese.begin(), queuePrioritiese.end(), 0.0f);
-			deviceQueueCreateInfoList.emplace_back(vk::DeviceQueueCreateFlags(), queueFamilyId, queuePrioritiese);
+			{
+				std::vector<float> tmp;
+				tmp.resize(requiredQueueCount);
+				std::fill(tmp.begin(), tmp.end(), 0.0f);
+				queuePriorities.push_back(tmp);
+			}
+			auto& currentQueuePriorities = queuePriorities.back();
+			deviceQueueCreateInfoList.emplace_back(vk::DeviceQueueCreateFlags(), queueFamilyId, currentQueuePriorities);
 		}
 
 		auto extensions = GetDeviceExtensionNames();
@@ -184,7 +193,8 @@ namespace graphics_backend
 		m_ThreadContexts.reserve(threadCount);
 		for (uint32_t threadContextId = 0; threadContextId < threadCount; ++threadContextId)
 		{
-			m_ThreadContexts.push_back(SubObject<CVulkanThreadContext>());
+			//SubObject_EmplaceBack(m_ThreadContexts, threadContextId);
+			m_ThreadContexts.push_back(SubObject<CVulkanThreadContext>(threadContextId));
 		}
 	}
 
@@ -250,12 +260,20 @@ namespace graphics_backend
 
 	void CVulkanApplication::ReleaseApp()
 	{
-		GetDevice().waitIdle();
+		DeviceWaitIdle();
 		DestroyThreadContexts();
 		ReleaseAllWindowContexts();
 		DestroyDevice();
 		m_PhysicalDevice = nullptr;
 		DestroyInstance();
+	}
+
+	void CVulkanApplication::DeviceWaitIdle()
+	{
+		if (m_Device != vk::Device(nullptr))
+		{
+			m_Device.waitIdle();
+		}
 	}
 
 }

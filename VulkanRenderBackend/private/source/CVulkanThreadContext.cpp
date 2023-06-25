@@ -45,6 +45,9 @@ namespace graphics_backend
 		m_CommandPool = nullptr;
 	}
 
+	CVulkanThreadContext::CVulkanThreadContext(uint32_t threadId) : m_ThreadID(threadId)
+	{}
+
 	CVulkanFrameBoundCommandBufferPool& CVulkanThreadContext::GetCurrentFramePool()
 	{
 		uint32_t currentFrameId =GetVulkanApplication()
@@ -57,9 +60,9 @@ namespace graphics_backend
 		GetCurrentFramePool().CollectCommandBufferList(inoutCommandBufferList);
 	}
 
-	CVulkanBufferObject const& CVulkanThreadContext::AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage)
+	std::shared_ptr<CVulkanBufferObject> CVulkanThreadContext::AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage)
 	{
-		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
+		std::shared_ptr<CVulkanBufferObject> result = GetVulkanApplication()->SubObject_Shared<CVulkanBufferObject>();
 
 		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
@@ -67,9 +70,20 @@ namespace graphics_backend
 		VmaAllocationCreateInfo allocationCreateInfo{};
 		allocationCreateInfo.usage = gpuBuffer ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE : VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 		VkBuffer vkbuffer_c;
-		vmaCreateBuffer(m_ThreadGPUAllocator, &bufferCreateInfo, &allocationCreateInfo, &vkbuffer_c, &result.m_BufferAllocation, &result.m_BufferAllocationInfo);
-		result.m_Buffer = vkbuffer_c;
+		vmaCreateBuffer(m_ThreadGPUAllocator, &bufferCreateInfo, &allocationCreateInfo, &vkbuffer_c, &result->m_BufferAllocation, &result->m_BufferAllocationInfo);
+		result->m_Buffer = vkbuffer_c;
+		m_HoldingAllocations.insert(result->m_BufferAllocation);
+		result->m_OwningThreadContextId = m_ThreadID;
 		return result;
+	}
+
+	void CVulkanThreadContext::ReleaseBufferObject(CVulkanBufferObject* bufferObject)
+	{
+		if (bufferObject == nullptr)
+			return;
+		assert(bufferObject->m_OwningThreadContextId == m_ThreadID);
+		m_HoldingAllocations.erase(bufferObject->m_BufferAllocation);
+		vmaDestroyBuffer(m_ThreadGPUAllocator, bufferObject->m_Buffer, bufferObject->m_BufferAllocation);
 	}
 
 	void CVulkanThreadContext::Initialize_Internal(CVulkanApplication const* owningApplication)
@@ -92,6 +106,13 @@ namespace graphics_backend
 	}
 	void CVulkanThreadContext::Release_Internal()
 	{
+		{
+			std::vector<VmaAllocation> allocation;
+			allocation.resize(m_HoldingAllocations.size());
+			std::copy(m_HoldingAllocations.begin(), m_HoldingAllocations.end(), allocation.begin());
+			vmaFreeMemoryPages(m_ThreadGPUAllocator, allocation.size(), allocation.data());
+			m_HoldingAllocations.clear();
+		}
 		vmaDestroyAllocator(m_ThreadGPUAllocator);
 		m_ThreadGPUAllocator = nullptr;
 
