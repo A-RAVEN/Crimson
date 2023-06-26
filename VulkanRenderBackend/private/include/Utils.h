@@ -6,6 +6,7 @@ namespace vulkan_backend
 		vk::DebugUtilsMessengerCreateInfoEXT makeDebugUtilsMessengerCreateInfoEXT();
 
 		void SetupVulkanInstanceFunctionPointers(vk::Instance const& inInstance);
+		void SetupVulkanDeviceFunctinoPointers(vk::Device const& inDevice);
 		void CleanupVulkanInstanceFuncitonPointers();
 	}
 }

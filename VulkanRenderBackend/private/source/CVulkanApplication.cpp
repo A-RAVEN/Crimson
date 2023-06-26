@@ -45,16 +45,19 @@ namespace graphics_backend
 			"VK_LAYER_KHRONOS_validation"
 		};
 
+
 		auto extensions = GetInstanceExtensionNames();
 		vk::InstanceCreateInfo instance_info({}, &application_info, g_validationLayers, extensions);
 
+#if !defined(NDEBUG)
+		vk::DebugUtilsMessengerCreateInfoEXT debugUtilsExt = vulkan_backend::utils::makeDebugUtilsMessengerCreateInfoEXT();
+		instance_info.setPNext(&debugUtilsExt);
+#endif
 		m_Instance = vk::createInstance(instance_info);
 
 		vulkan_backend::utils::SetupVulkanInstanceFunctionPointers(m_Instance);
-
-
 	#if !defined(NDEBUG)
-		m_DebugMessager = m_Instance.createDebugUtilsMessengerEXT(vulkan_backend::utils::makeDebugUtilsMessengerCreateInfoEXT());
+		m_DebugMessager = m_Instance.createDebugUtilsMessengerEXT(debugUtilsExt);
 	#endif
 	}
 
@@ -174,6 +177,8 @@ namespace graphics_backend
 	
 		m_SubmitCounterContext.Initialize(this);
 		m_SubmitCounterContext.InitializeSubmitQueues(generalQueue, computeQueue, transferQueue);
+
+		vulkan_backend::utils::SetupVulkanDeviceFunctinoPointers(m_Device);
 	}
 
 	void CVulkanApplication::DestroyDevice()

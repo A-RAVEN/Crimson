@@ -3,6 +3,7 @@
 //Dynamic Function Pointers of Vulkan Should be defined under global namespace
 PFN_vkCreateDebugUtilsMessengerEXT  pfnVkCreateDebugUtilsMessengerEXT = nullptr;
 PFN_vkDestroyDebugUtilsMessengerEXT pfnVkDestroyDebugUtilsMessengerEXT = nullptr;
+PFN_vkSetDebugUtilsObjectNameEXT pfnVkSetDebugUtilsObjectNameEXT = nullptr;
 
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance                                 instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
@@ -17,6 +18,12 @@ VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, 
 	return pfnVkDestroyDebugUtilsMessengerEXT(instance, messenger, pAllocator);
 }
 
+VKAPI_ATTR VkResult VKAPI_CALL vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo)
+{
+	return pfnVkSetDebugUtilsObjectNameEXT(device, pNameInfo);
+}
+
+
 namespace vulkan_backend
 {
     namespace utils
@@ -25,6 +32,11 @@ namespace vulkan_backend
 		{
 			pfnVkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(inInstance.getProcAddr("vkCreateDebugUtilsMessengerEXT"));
 			pfnVkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(inInstance.getProcAddr("vkDestroyDebugUtilsMessengerEXT"));
+		}
+
+		void SetupVulkanDeviceFunctinoPointers(vk::Device const& inDevice)
+		{
+			pfnVkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(inDevice.getProcAddr("vkSetDebugUtilsObjectNameEXT"));
 		}
 
 		void CleanupVulkanInstanceFuncitonPointers()

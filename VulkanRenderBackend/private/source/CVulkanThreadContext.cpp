@@ -68,6 +68,7 @@ namespace graphics_backend
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
 		VmaAllocationCreateInfo allocationCreateInfo{};
+		allocationCreateInfo.flags = gpuBuffer ? 0 : VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 		allocationCreateInfo.usage = gpuBuffer ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE : VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 		VkBuffer vkbuffer_c;
 		vmaCreateBuffer(m_ThreadGPUAllocator, &bufferCreateInfo, &allocationCreateInfo, &vkbuffer_c, &result->m_BufferAllocation, &result->m_BufferAllocationInfo);
@@ -127,20 +128,31 @@ namespace graphics_backend
 	}
 	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::CommandBufferList::AllocCommandBuffer(CVulkanFrameBoundCommandBufferPool& owner, bool secondary)
 	{
+		vk::CommandBuffer result = nullptr;
 		if (m_AvailableCommandBufferIndex < m_CommandBufferList.size())
 		{
 			size_t newCmdId = m_AvailableCommandBufferIndex;
-			++m_AvailableCommandBufferIndex;
-			return m_CommandBufferList[newCmdId];
+			result = m_CommandBufferList[newCmdId];
 		}
-		vk::CommandBuffer newCmd = owner.GetDevice()
-			.allocateCommandBuffers(
-				vk::CommandBufferAllocateInfo(owner.m_CommandPool
-					, secondary ? vk::CommandBufferLevel::eSecondary : vk::CommandBufferLevel::ePrimary
-					, 1u)).front();
-		m_CommandBufferList.push_back(newCmd);
+		else
+		{
+			result = owner.GetDevice()
+				.allocateCommandBuffers(
+					vk::CommandBufferAllocateInfo(owner.m_CommandPool
+						, secondary ? vk::CommandBufferLevel::eSecondary : vk::CommandBufferLevel::ePrimary
+						, 1u)).front();
+
+			m_CommandBufferList.push_back(result);
+		}
 		++m_AvailableCommandBufferIndex;
-		return newCmd;
+
+#if !defined(NDEBUG)
+		VkCommandBuffer c_handle = result;
+		uint64_t handle = reinterpret_cast<uint64_t>(c_handle);
+		vk::DebugUtilsObjectNameInfoEXT debugName(result.objectType, handle, "Test Command Buffer");
+		owner.GetDevice().setDebugUtilsObjectNameEXT(debugName);
+#endif
+		return result;
 	}
 	void CVulkanFrameBoundCommandBufferPool::CommandBufferList::CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList)
 	{
