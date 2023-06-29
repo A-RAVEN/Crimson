@@ -9,9 +9,9 @@ namespace graphics_backend
 		m_Application.InitApp(appName, engineName);
 	}
 
-	void CRenderBackend_Vulkan::InitializeThreadContextCount(uint32_t threadCount)
+	void CRenderBackend_Vulkan::InitializeThreadContextCount(CThreadManager* threadManager, uint32_t threadCount)
 	{
-		m_Application.InitializeThreadContext(threadCount);
+		m_Application.InitializeThreadContext(threadManager, threadCount);
 	}
 
 	void CRenderBackend_Vulkan::Release()

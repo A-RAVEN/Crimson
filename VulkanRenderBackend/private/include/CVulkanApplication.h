@@ -2,16 +2,18 @@
 #include <private/include/WindowContext.h>
 #include <private/include/CVulkanThreadContext.h>
 #include <private/include/FrameCountContext.h>
+#include <ThreadManager/header/ThreadManger.h>
 
 namespace graphics_backend
 {
+	using namespace thread_management;
 	class CVulkanApplication
 	{
 	public:
 		//friend class ApplicationSubobjectBase;
 		~CVulkanApplication();
 		void InitApp(std::string const& appName, std::string const& engineName);
-		void InitializeThreadContext(uint32_t threadCount);
+		void InitializeThreadContext(CThreadManager* threadManager, uint32_t threadCount);
 		void ReleaseApp();
 		void DeviceWaitIdle();
 		inline vk::Instance const& GetInstance() const
@@ -33,9 +35,14 @@ namespace graphics_backend
 			}
 			return &m_ThreadContexts[threadKey];
 		}
+		CVulkanThreadContext& AquireThreadContext();
+		CThreadManager* GetThreadManager() const;
+		void ReturnThreadContext(CVulkanThreadContext& returningContext);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void TickWindowContexts();
+
+		void TestEnqueueBufferLoadingTask(CThreadManager* pThreadManger);
 
 		CFrameCountContext const& GetSubmitCounterContext() const { return m_SubmitCounterContext; }
 
@@ -91,6 +98,9 @@ namespace graphics_backend
 
 		CFrameCountContext m_SubmitCounterContext;
 		std::vector<CWindowContext> m_WindowContexts;
+
+		Internal_InterlockedQueue<uint32_t> m_AvailableThreadQueue;
 		mutable std::vector<CVulkanThreadContext> m_ThreadContexts;
+		CThreadManager* p_ThreadManager = nullptr;
 	};
 }

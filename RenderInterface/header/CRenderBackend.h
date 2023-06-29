@@ -25,7 +25,7 @@ namespace graphics_backend
 	{
 	public:
 		virtual void Initialize(std::string const& appName, std::string const& engineName) = 0;
-		virtual void InitializeThreadContextCount(uint32_t threadContextCount) = 0;
+		virtual void InitializeThreadContextCount(CThreadManager* threadManager, uint32_t threadContextCount) = 0;
 		virtual void Release() = 0;
 		virtual void NewWindow(uint32_t width, uint32_t height, std::string const& windowName) = 0;
 		virtual bool AnyWindowRunning() = 0;

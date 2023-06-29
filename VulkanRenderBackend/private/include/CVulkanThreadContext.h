@@ -12,6 +12,46 @@ namespace graphics_backend
 	class CVulkanApplication;
 #pragma endregion
 
+	template<typename T>
+	class Internal_InterlockedQueue
+	{
+	public:
+		template<typename TContainer>
+		void Initialize(TContainer const& initializer)
+		{
+			std::lock_guard(m_Mutex);
+			m_Queue.clear();
+			m_Queue.resize(initializer.size());
+			std::copy(initializer.begin(), initializer.end(), m_Queue.begin());
+			m_Conditional.notify_one();
+		}
+
+		void Enqueue(T& newVar)
+		{
+			std::unique_lock(m_Mutex);
+			m_Queue.push_back(newVar);
+			m_Conditional.notify_one();
+		}
+		T TryGetFront()
+		{
+			T result;
+			{
+				std::unique_lock<std::mutex> lock(m_Mutex);
+				if (m_Queue.empty())
+				{
+					m_Conditional.wait(lock);
+				}
+				result = m_Queue.front();
+				m_Queue.pop_front();
+			}
+			return result;
+		}
+	private:
+		std::mutex m_Mutex;
+		std::condition_variable m_Conditional;
+		std::deque<T> m_Queue;
+	};
+
 	class CVulkanFrameBoundCommandBufferPool : public ApplicationSubobjectBase
 	{
 	public:
@@ -50,6 +90,7 @@ namespace graphics_backend
 		void CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
 		std::shared_ptr<CVulkanBufferObject> AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		void ReleaseBufferObject(CVulkanBufferObject* bufferObject);
+		uint32_t GetThreadID() const { return m_ThreadID; }
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;

@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanRendererBackendTester
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RenderInterface", "RenderInterface\RenderInterface.vcxproj", "{BBC39D3A-2CD9-4C1E-8611-5BD002249339}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreadManager", "ThreadManager\ThreadManager.vcxproj", "{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -75,6 +77,14 @@ Global
 		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x64.Build.0 = Release|x64
 		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x86.ActiveCfg = Release|Win32
 		{BBC39D3A-2CD9-4C1E-8611-5BD002249339}.Release|x86.Build.0 = Release|Win32
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Debug|x64.ActiveCfg = Debug|x64
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Debug|x64.Build.0 = Debug|x64
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Debug|x86.ActiveCfg = Debug|Win32
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Debug|x86.Build.0 = Debug|Win32
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Release|x64.ActiveCfg = Release|x64
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Release|x64.Build.0 = Release|x64
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Release|x86.ActiveCfg = Release|Win32
+		{8E6E5A0D-F0DB-4EB2-AEDF-940B97BBE7A8}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

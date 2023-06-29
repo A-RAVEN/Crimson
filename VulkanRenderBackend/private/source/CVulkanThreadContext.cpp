@@ -5,9 +5,10 @@
 
 namespace graphics_backend
 {
-	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateCommandBuffer()
+	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateOnetimeCommandBuffer()
 	{
-		return m_CommandBufferList.AllocCommandBuffer(*this, false);
+		vk::CommandBuffer result = m_CommandBufferList.AllocCommandBuffer(*this, false);
+		result.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
 	}
 	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateSecondaryCommandBuffer()
 	{
@@ -75,6 +76,10 @@ namespace graphics_backend
 		result->m_Buffer = vkbuffer_c;
 		m_HoldingAllocations.insert(result->m_BufferAllocation);
 		result->m_OwningThreadContextId = m_ThreadID;
+		if (!gpuBuffer)
+		{
+			vmaMapMemory(m_ThreadGPUAllocator, result->m_BufferAllocation, &result->m_MappedPointer);
+		}
 		return result;
 	}
 
@@ -84,6 +89,10 @@ namespace graphics_backend
 			return;
 		assert(bufferObject->m_OwningThreadContextId == m_ThreadID);
 		m_HoldingAllocations.erase(bufferObject->m_BufferAllocation);
+		if (bufferObject->GetMappedPointer() != nullptr)
+		{
+			vmaUnmapMemory(m_ThreadGPUAllocator, bufferObject->m_BufferAllocation);
+		}
 		vmaDestroyBuffer(m_ThreadGPUAllocator, bufferObject->m_Buffer, bufferObject->m_BufferAllocation);
 	}
 

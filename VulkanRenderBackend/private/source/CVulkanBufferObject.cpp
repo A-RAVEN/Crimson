@@ -4,6 +4,10 @@
 
 namespace graphics_backend
 {
+	void* CVulkanBufferObject::GetMappedPointer() const
+	{
+		return m_MappedPointer;
+	}
 	void CVulkanBufferObject::Release_Internal()
 	{
 		CVulkanThreadContext* threadContext = GetThreadContext(m_OwningThreadContextId);
@@ -12,6 +16,7 @@ namespace graphics_backend
 			threadContext->ReleaseBufferObject(this);
 		}
 		m_Buffer = nullptr;
+		m_MappedPointer = nullptr;
 		m_BufferAllocation = nullptr;
 		m_BufferAllocationInfo = {};
 		m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();

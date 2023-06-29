@@ -17,9 +17,10 @@ namespace graphics_backend
 				, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
 			auto bufferObject1 = threadContext->AllocBufferObject(false, 4 * 4
 				, vk::BufferUsageFlagBits::eTransferSrc);
+			std::vector<int> testData = { 1, 1, 1, 1 };
+			memcpy(bufferObject1->GetMappedPointer(), testData.data(), bufferObject1->GetAllocationInfo().size);
 			auto& currentFramePool = threadContext->GetCurrentFramePool();
-			vk::CommandBuffer cmd = currentFramePool.AllocateCommandBuffer();
-			cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+			vk::CommandBuffer cmd = currentFramePool.AllocateOnetimeCommandBuffer();
 			cmd.copyBuffer(bufferObject1->GetBuffer(), bufferObject->GetBuffer(), vk::BufferCopy(0, 0, bufferObject1->GetAllocationInfo().size));
 			cmd.end();
 			std::vector<vk::CommandBuffer> commands;
@@ -191,16 +192,25 @@ namespace graphics_backend
 		}
 	}
 
-	void CVulkanApplication::InitializeThreadContext(uint32_t threadCount)
+	void CVulkanApplication::InitializeThreadContext(CThreadManager* threadManager, uint32_t threadCount)
 	{
 		assert(threadCount > 0);
 		assert(m_ThreadContexts.size() == 0);
+		p_ThreadManager = threadManager;
 		m_ThreadContexts.reserve(threadCount);
 		for (uint32_t threadContextId = 0; threadContextId < threadCount; ++threadContextId)
 		{
 			//SubObject_EmplaceBack(m_ThreadContexts, threadContextId);
 			m_ThreadContexts.push_back(SubObject<CVulkanThreadContext>(threadContextId));
 		}
+		std::vector<uint32_t> threadInitializeValue;
+		threadInitializeValue.resize(threadCount);
+		uint32_t id = 0;
+		std::generate(threadInitializeValue.begin(), threadInitializeValue.end(), [&id]()
+			{
+				return id++;
+			});
+		m_AvailableThreadQueue.Initialize(threadInitializeValue);
 	}
 
 	void CVulkanApplication::DestroyThreadContexts()
@@ -210,6 +220,23 @@ namespace graphics_backend
 			ReleaseSubObject(threadContext);
 		}
 		m_ThreadContexts.clear();
+	}
+
+	CVulkanThreadContext& CVulkanApplication::AquireThreadContext()
+	{
+		uint32_t available = m_AvailableThreadQueue.TryGetFront();
+		return m_ThreadContexts[available];
+	}
+
+	CThreadManager* CVulkanApplication::GetThreadManager() const
+	{
+		return p_ThreadManager;
+	}
+
+	void CVulkanApplication::ReturnThreadContext(CVulkanThreadContext& returningContext)
+	{
+		uint32_t id = returningContext.GetThreadID();
+		m_AvailableThreadQueue.Enqueue(id);
 	}
 
 	void CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
@@ -244,6 +271,27 @@ namespace graphics_backend
 			}
 		}
 		glfwPollEvents();
+	}
+
+	void CVulkanApplication::TestEnqueueBufferLoadingTask(CThreadManager* pThreadManger)
+	{
+		auto& availableContext = AquireThreadContext();
+		pThreadManger->EnqueueAnyThreadWorkWithPromise([this, &availableContext]()
+			{
+				std::vector<float> testData;
+				testData.resize(128);
+				std::fill(testData.begin(), testData.end(), 114.0f);
+
+				auto dstBuffer = availableContext.AllocBufferObject(true, testData.size() * sizeof(float), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
+				auto srcBuffer = availableContext.AllocBufferObject(false, testData.size() * sizeof(float), vk::BufferUsageFlagBits::eTransferSrc);
+				
+				memcpy(srcBuffer->GetMappedPointer(), testData.data(), srcBuffer->GetAllocationInfo().size);
+				
+				auto commandBuffer = availableContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+				commandBuffer.copyBuffer(srcBuffer->GetBuffer(), dstBuffer->GetBuffer(), vk::BufferCopy(0, 0, srcBuffer->GetAllocationInfo().size));
+				commandBuffer.end();
+				ReturnThreadContext(availableContext);
+			});
 	}
 
 	void CVulkanApplication::ReleaseAllWindowContexts()

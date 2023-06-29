@@ -8,7 +8,7 @@ namespace graphics_backend
 	{
 	public:
 		void Initialize(std::string const& appName, std::string const& engineName) override;
-		void InitializeThreadContextCount(uint32_t threadCount) override;
+		void InitializeThreadContextCount(CThreadManager* threadManager, uint32_t threadCount) override;
 		void Release() override;
 		void NewWindow(uint32_t width, uint32_t height, std::string const& windowName) override;
 		bool AnyWindowRunning() override;

@@ -15,10 +15,13 @@ namespace graphics_backend
 	class CGPUPrimitiveResource
 	{
 	public:
+		CGPUPrimitiveResource(CGPUPrimitiveResource const& other) = delete;
+		CGPUPrimitiveResource(CGPUPrimitiveResource && other) = default;
 		virtual void AddPrimitiveDescriptor(
-		uint32_t stride
-		,std::vector<VertexAttribute> const& attributes
-		,bool perInstance = false) = 0;
+			uint32_t stride
+			,std::vector<VertexAttribute> const& attributes
+			,bool perInstance = false
+		) = 0;
 		virtual void SetPrimitiveData(
 			uint32_t primitiveIndex
 			, uint32_t dataSize
@@ -29,6 +32,8 @@ namespace graphics_backend
 			, void* data
 			, bool bit16Index = false
 		) = 0;
+
+		virtual void Submit() = 0;
 		virtual bool GPUDone() = 0;
 	};
 }
