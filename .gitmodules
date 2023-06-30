@@ -7,3 +7,6 @@
 [submodule "ExternalLib/glfw"]
 	path = ExternalLib/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "ExternalLib/taskflow"]
+	path = ExternalLib/taskflow
+	url = https://github.com/taskflow/taskflow.git
