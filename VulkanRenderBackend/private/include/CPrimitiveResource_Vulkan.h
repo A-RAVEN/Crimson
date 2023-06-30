@@ -1,5 +1,5 @@
 #pragma once
-#include <CGPUPrimitiveResource.h>
+#include <RenderInterface/header/CGPUPrimitiveResource.h>
 #include "CVulkanBufferObject.h"
 #include "CVulkanThreadContext.h"
 

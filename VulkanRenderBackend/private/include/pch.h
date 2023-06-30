@@ -10,6 +10,8 @@
 #include "framework.h"
 #include <iostream>
 #include <set>
+#include <atomic>
+#include <mutex>
 #include "VulkanIncludes.h"
 #include "Utils.h"
 #define GLFW_INCLUDE_NONE

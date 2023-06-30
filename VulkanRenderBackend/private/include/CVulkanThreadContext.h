@@ -5,6 +5,7 @@
 #include <VulkanMemoryAllocator/include/vk_mem_alloc.h>
 #include <private/include/CVulkanBufferObject.h>
 #include <deque>
+#include <mutex>
 
 namespace graphics_backend
 {
@@ -19,7 +20,7 @@ namespace graphics_backend
 		template<typename TContainer>
 		void Initialize(TContainer const& initializer)
 		{
-			std::lock_guard(m_Mutex);
+			std::unique_lock<std::mutex> lock(m_Mutex);
 			m_Queue.clear();
 			m_Queue.resize(initializer.size());
 			std::copy(initializer.begin(), initializer.end(), m_Queue.begin());
@@ -28,7 +29,7 @@ namespace graphics_backend
 
 		void Enqueue(T& newVar)
 		{
-			std::unique_lock(m_Mutex);
+			std::unique_lock<std::mutex> lock(m_Mutex);
 			m_Queue.push_back(newVar);
 			m_Conditional.notify_one();
 		}

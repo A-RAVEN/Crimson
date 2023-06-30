@@ -29,6 +29,13 @@ namespace graphics_backend
 		}
 
 	}
+
+	void CVulkanApplication::TickApplication()
+	{
+		PrepareBeforeTick();
+
+	}
+
 	void CVulkanApplication::PrepareBeforeTick()
 	{
 		m_SubmitCounterContext.WaitingForCurrentFrame();
@@ -38,9 +45,7 @@ namespace graphics_backend
 			itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
 		}
 	}
-	void CVulkanApplication::SubmitAfterTick()
-	{
-	}
+
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
 		vk::ApplicationInfo application_info(

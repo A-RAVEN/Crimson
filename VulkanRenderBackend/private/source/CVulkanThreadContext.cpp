@@ -7,8 +7,9 @@ namespace graphics_backend
 {
 	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateOnetimeCommandBuffer()
 	{
-		vk::CommandBuffer result = m_CommandBufferList.AllocCommandBuffer(*this, false);
+		vk::CommandBuffer const result = m_CommandBufferList.AllocCommandBuffer(*this, false);
 		result.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+		return result;
 	}
 	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateSecondaryCommandBuffer()
 	{
@@ -51,7 +52,7 @@ namespace graphics_backend
 
 	CVulkanFrameBoundCommandBufferPool& CVulkanThreadContext::GetCurrentFramePool()
 	{
-		uint32_t currentFrameId =GetVulkanApplication()
+		uint32_t currentFrameId = GetVulkanApplication()
 			->GetSubmitCounterContext().GetCurrentFrameBufferIndex();
 		return m_FrameBoundCommandBufferPools[currentFrameId];
 	}
@@ -101,6 +102,7 @@ namespace graphics_backend
 
 	void CVulkanThreadContext::DoReleaseResourceBeforeFrame(uint32_t releasingFrame)
 	{
+		GetCurrentFramePool().ResetCommandBufferPool();
 		while ((!m_PendingRemovalBuffers.empty()) && std::get<2>(m_PendingRemovalBuffers[0]) <= releasingFrame)
 		{
 			auto buffer = std::get<0>(m_PendingRemovalBuffers[0]);

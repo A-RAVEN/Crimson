@@ -4,6 +4,19 @@
 
 namespace thread_management
 {
+	class CTask
+	{
+	public:
+		virtual CTask* Succeed(CTask const* CTask);
+		virtual CTask* Name(std::string name);
+	};
+
+	class CTaskGraph
+	{
+	public:
+
+	};
+
 	class CThreadManager
 	{
 	public:
