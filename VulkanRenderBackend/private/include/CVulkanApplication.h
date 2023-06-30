@@ -77,6 +77,8 @@ namespace graphics_backend
 		}
 
 		void TickRunTest();
+		void PrepareBeforeTick();
+		void SubmitAfterTick();
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);

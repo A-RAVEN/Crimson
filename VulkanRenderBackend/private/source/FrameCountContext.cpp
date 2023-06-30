@@ -9,6 +9,7 @@ namespace graphics_backend
 	{
 		uint32_t currentIndex = GetCurrentFrameBufferIndex();
 		uint32_t waitingFrame = m_FenceSubmitFrameIDs[currentIndex];
+		std::atomic_thread_fence(std::memory_order_acquire);
 		std::vector<vk::Fence> fences = {
 			m_SubmitFrameFences[currentIndex]
 		};
@@ -16,7 +17,8 @@ namespace graphics_backend
 			, true
 			, std::numeric_limits<uint64_t>::max());
 		GetDevice().resetFences(fences);
-		m_LastFinshedFrameID = m_FenceSubmitFrameIDs[currentIndex];
+		std::atomic_thread_fence(std::memory_order_release);
+		m_LastFinshedFrameID = waitingFrame;
 		m_FenceSubmitFrameIDs[currentIndex] = m_CurrentFrameID;
 	}
 	void CFrameCountContext::SubmitCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList)
@@ -26,6 +28,7 @@ namespace graphics_backend
 		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 		vk::SubmitInfo submitInfo({}, {}, commandbufferList);
 		m_GraphicsQueue.submit(submitInfo, currentFrameFence);
+		std::atomic_thread_fence(std::memory_order_release);
 		++m_CurrentFrameID;
 	}
 	void CFrameCountContext::SubmitCurrentFrameCompute(std::vector<vk::CommandBuffer> const& commandbufferList)

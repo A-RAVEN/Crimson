@@ -88,12 +88,27 @@ namespace graphics_backend
 		if (bufferObject == nullptr)
 			return;
 		assert(bufferObject->m_OwningThreadContextId == m_ThreadID);
-		m_HoldingAllocations.erase(bufferObject->m_BufferAllocation);
 		if (bufferObject->GetMappedPointer() != nullptr)
 		{
 			vmaUnmapMemory(m_ThreadGPUAllocator, bufferObject->m_BufferAllocation);
 		}
-		vmaDestroyBuffer(m_ThreadGPUAllocator, bufferObject->m_Buffer, bufferObject->m_BufferAllocation);
+		auto currentFrame = GetVulkanApplication()
+			->GetSubmitCounterContext().GetCurrentFrameID();
+		m_PendingRemovalBuffers.push_back(std::make_tuple(bufferObject->m_Buffer
+			, bufferObject->m_BufferAllocation
+			, currentFrame));
+	}
+
+	void CVulkanThreadContext::DoReleaseResourceBeforeFrame(uint32_t releasingFrame)
+	{
+		while ((!m_PendingRemovalBuffers.empty()) && std::get<2>(m_PendingRemovalBuffers[0]) <= releasingFrame)
+		{
+			auto buffer = std::get<0>(m_PendingRemovalBuffers[0]);
+			auto allocation = std::get<1>(m_PendingRemovalBuffers[0]);
+			m_PendingRemovalBuffers.pop_front();
+			m_HoldingAllocations.erase(allocation);
+			vmaDestroyBuffer(m_ThreadGPUAllocator, buffer, allocation);
+		}
 	}
 
 	void CVulkanThreadContext::Initialize_Internal(CVulkanApplication const* owningApplication)

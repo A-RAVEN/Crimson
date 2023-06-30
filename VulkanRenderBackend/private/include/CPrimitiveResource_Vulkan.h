@@ -14,8 +14,6 @@ namespace graphics_backend
 		virtual void SetIndexData(uint32_t dataSize, void* data, bool bit16Index) override;
 		virtual void Submit() override;
 		virtual bool GPUDone() override;
-
-		void GPUPrepareResource(CVulkanThreadContext& threadContext);
 	private:
 		std::shared_ptr<CVulkanBufferObject> m_PrimitiveDataBuffer;
 		std::shared_ptr<CVulkanBufferObject> m_PrimitiveIndexDataBuffer;

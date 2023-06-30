@@ -18,6 +18,9 @@ namespace graphics_backend
 		uint32_t GetCurrentFrameID() const {
 			return m_CurrentFrameID;
 		}
+		uint32_t GetReleasedFrameID() const {
+			return m_LastFinshedFrameID;
+		}
 	private:
 
 		// 通过 ApplicationSubobjectBase 继承
@@ -25,7 +28,7 @@ namespace graphics_backend
 		virtual void Release_Internal() override;
 		void Initialize_Submit_Queues();
 	private:
-		uint32_t m_CurrentFrameID = 0;
+		std::atomic<uint32_t> m_CurrentFrameID = 0;
 		uint32_t m_LastFinshedFrameID = 0;
 		std::vector<vk::Fence> m_SubmitFrameFences;
 		std::vector<uint32_t> m_FenceSubmitFrameIDs;

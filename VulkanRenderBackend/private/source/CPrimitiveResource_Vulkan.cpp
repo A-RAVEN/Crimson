@@ -77,21 +77,5 @@ namespace graphics_backend
     {
         return false;
     }
-    void CGPUPrimitiveResource_Vulkan::GPUPrepareResource(CVulkanThreadContext& threadContext)
-    {
-        CVulkanApplication const* pApp = threadContext.GetVulkanApplication();
-        auto device = pApp->GetDevice();
-
-        vk::BufferCreateInfo bufferCreateInfo({}
-            , 1u
-            , vk::BufferUsageFlagBits::eVertexBuffer
-            , vk::SharingMode::eExclusive);
-        vk::Buffer vertexBuffer = device.createBuffer(bufferCreateInfo);
-
-        CVulkanFrameBoundCommandBufferPool& currentFrameCmdPool = threadContext.GetCurrentFramePool();
-        vk::CommandBuffer cmdBuffer = currentFrameCmdPool.AllocateOnetimeCommandBuffer();
-        //cmdBuffer.copyBuffer()
-        cmdBuffer.end();
-    }
 }
 

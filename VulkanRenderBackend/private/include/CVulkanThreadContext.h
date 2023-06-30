@@ -55,7 +55,7 @@ namespace graphics_backend
 	class CVulkanFrameBoundCommandBufferPool : public ApplicationSubobjectBase
 	{
 	public:
-		vk::CommandBuffer AllocateCommandBuffer();
+		vk::CommandBuffer AllocateOnetimeCommandBuffer();
 		vk::CommandBuffer AllocateSecondaryCommandBuffer();
 		void ResetCommandBufferPool();
 		void CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
@@ -90,6 +90,7 @@ namespace graphics_backend
 		void CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
 		std::shared_ptr<CVulkanBufferObject> AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		void ReleaseBufferObject(CVulkanBufferObject* bufferObject);
+		void DoReleaseResourceBeforeFrame(uint32_t releasingFrame);
 		uint32_t GetThreadID() const { return m_ThreadID; }
 	private:
 		// 通过 ApplicationSubobjectBase 继承

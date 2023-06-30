@@ -29,6 +29,18 @@ namespace graphics_backend
 		}
 
 	}
+	void CVulkanApplication::PrepareBeforeTick()
+	{
+		m_SubmitCounterContext.WaitingForCurrentFrame();
+		uint32_t releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
+		for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+		{
+			itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
+		}
+	}
+	void CVulkanApplication::SubmitAfterTick()
+	{
+	}
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
 		vk::ApplicationInfo application_info(
