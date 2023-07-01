@@ -52,6 +52,14 @@ namespace thread_management
     CTaskGraph_Impl::CTaskGraph_Impl(CThreadManager_Impl& owningManager) : m_OwningManager(owningManager)
     {
     }
+
+    void CTaskGraph_Impl::ReleaseGraph()
+    {
+        m_Tasks.clear();
+        m_SourceTasks.clear();
+        m_PendingTaskCount.store(0u, std::memory_order_relaxed);
+    }
+
     CTask* CTaskGraph_Impl::NewTask()
     {
         m_Tasks.emplace_back(*this);
@@ -76,7 +84,7 @@ namespace thread_management
         std::atomic_thread_fence(std::memory_order_acquire);
         if (remainCounter == 0)
         {
-
+            ReleaseGraph();
         }
     }
 
@@ -122,6 +130,12 @@ namespace thread_management
         CTaskGraph* newGraph = &m_TaskGraphList.back();
         return newGraph;
     }
+
+    void CThreadManager_Impl::RemoveTaskGraph(CTaskGraph_Impl* graph)
+    {
+        m_AvailableTaskGraphs.push_back(graph);
+    }
+
     void CThreadManager_Impl::EnqueueGraphTask(CTask_Impl* newTask)
     {
         std::unique_lock<std::mutex> lock(m_Mutex);
