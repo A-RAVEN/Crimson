@@ -7,7 +7,7 @@ namespace thread_management
 	class CTask
 	{
 	public:
-		virtual CTask* Succeed(CTask const* CTask) = 0;
+		virtual CTask* Succeed(CTask* CTask) = 0;
 		virtual CTask* Name(std::string name) = 0;
 		virtual CTask* Functor(std::function<void()> functor) = 0;
 	};
@@ -15,8 +15,8 @@ namespace thread_management
 	class CTaskGraph
 	{
 	public:
+		virtual CTaskGraph* Name(std::string name) = 0;
 		virtual CTask* NewTask() = 0;
-
 	};
 
 	class CThreadManager
@@ -24,6 +24,7 @@ namespace thread_management
 	public:
 		virtual void InitializeThreadCount(uint32_t threadNum) = 0;
 		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) = 0;
-		virtual void ExecuteTaskGraph(CTaskGraph* )
+		virtual void ExecuteTaskGraph(CTaskGraph* graph) = 0;
+		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 }
