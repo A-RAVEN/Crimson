@@ -30,9 +30,12 @@
     <ClInclude Include="header\ThreadManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\ThreadSafePointerPool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="private\include\ThreadManager_Impl.cpp">
+    <ClCompile Include="private\source\ThreadManager_Impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\dllmain.cpp">

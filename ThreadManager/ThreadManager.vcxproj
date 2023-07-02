@@ -153,14 +153,20 @@
   <ItemGroup>
     <ClInclude Include="header\ThreadManager.h" />
     <ClInclude Include="header\ThreadManger.h" />
+    <ClInclude Include="private\include\ThreadSafePointerPool.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />
     <ClInclude Include="private\include\ThreadManager_Impl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="private\include\ThreadManager_Impl.cpp" />
+    <ClCompile Include="private\source\ThreadManager_Impl.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
-    <ClCompile Include="private\source\pch.cpp" />
+    <ClCompile Include="private\source\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

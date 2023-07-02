@@ -45,10 +45,13 @@ namespace graphics_backend
             }
         }
 #endif
-        auto& threadContext = p_OwningApplication->AquireThreadContext();
-        CThreadManager* threadManager = p_OwningApplication->GetThreadManager();
-        threadManager->EnqueueAnyThreadWorkWithPromise([this, &threadContext, threadManager]()
+
+        auto taskGraph = p_OwningApplication->GetCurrentFrameTaskGraph();
+        auto task = taskGraph->NewTask()->Name("Upload Primitive Task");
+        task->Functor([this]()
             {
+                auto& threadContext = p_OwningApplication->AquireThreadContext();
+
                 std::atomic_thread_fence(std::memory_order_acquire);
                 size_t vertexDataSize = 0;
                 for (uint32_t i = 0; i < m_PrimitiveDataCache.size(); ++i)

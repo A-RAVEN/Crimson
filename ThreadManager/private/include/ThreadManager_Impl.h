@@ -1,5 +1,6 @@
 #pragma once
 #include <header/ThreadManager.h>
+#include "ThreadSafePointerPool.h"
 #include <deque>
 
 namespace thread_management
@@ -37,19 +38,26 @@ namespace thread_management
 		void ReleaseGraph();
 		// 通过 CTaskGraph 继承
 		virtual CTask* NewTask() override;
+		virtual CTaskGraph* Name(std::string name) override;
+		virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) override;
+
 		void SetupTopology();
 		CThreadManager_Impl& GetThreadMaanger() const { return m_OwningManager; }
 		void TryDecCounter();
 	private:
+		std::function<void()> m_Functor;
+		std::string m_Name;
 		std::deque<CTask_Impl> m_Tasks;
-		std::deque<CTask_Impl*> m_SourceTasks;
+		std::vector<CTask_Impl*> m_SourceTasks;
 		CThreadManager_Impl& m_OwningManager;
 		std::atomic<uint32_t>m_PendingTaskCount{0};
+		friend class CThreadManager_Impl;
 	};
 
 	class CThreadManager_Impl : public CThreadManager
 	{
 	public:
+		CThreadManager_Impl();
 		// 通过 CThreadManager 继承
 		virtual void InitializeThreadCount(uint32_t threadNum) override;
 		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) override;
@@ -58,6 +66,7 @@ namespace thread_management
 
 		void RemoveTaskGraph(CTaskGraph_Impl* graph);
 		void EnqueueGraphTask(CTask_Impl* newTask);
+		void EnqueueGraphTasks(std::vector<CTask_Impl*> const& tasks);
 	private:
 		void ProcessingWorks();
 	private:
@@ -67,8 +76,6 @@ namespace thread_management
 		std::mutex m_Mutex;
 		std::condition_variable m_ConditinalVariable;
 
-
-		std::deque<CTaskGraph_Impl> m_TaskGraphList;
-		std::deque<CTaskGraph_Impl*> m_AvailableTaskGraphs;
+		threadmanager_utils::TThreadSafePointerPool<CTaskGraph_Impl> m_TaskGraphPool;
 	};
 }

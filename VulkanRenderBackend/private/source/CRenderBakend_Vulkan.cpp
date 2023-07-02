@@ -37,4 +37,12 @@ namespace graphics_backend
 	{
 		m_Application.TickRunTest();
 	}
+	void CRenderBackend_Vulkan::StartCurrentFrame()
+	{
+		m_Application.PrepareBeforeTick();
+	}
+	void CRenderBackend_Vulkan::EndCurrentFrame()
+	{
+		m_Application.EndThisFrame();
+	}
 }

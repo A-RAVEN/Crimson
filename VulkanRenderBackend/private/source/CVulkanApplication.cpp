@@ -38,12 +38,35 @@ namespace graphics_backend
 
 	void CVulkanApplication::PrepareBeforeTick()
 	{
+		auto previousTaskGraph = p_TaskGraph;
+		p_TaskGraph = p_ThreadManager->NewTaskGraph();
+		p_TaskGraph->Name("GPU Task Graph");
+
+		if (previousTaskGraph != nullptr)
+		{
+
+		}
+
 		m_SubmitCounterContext.WaitingForCurrentFrame();
 		uint32_t releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
 		for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
 		{
 			itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
 		}
+	}
+
+	void CVulkanApplication::EndThisFrame()
+	{
+		p_TaskGraph->FinalizeFunctor([this]()
+			{
+				std::vector<vk::CommandBuffer> waitingSubmitCommands;
+				for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+				{
+					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
+				}
+				m_SubmitCounterContext.SubmitCurrentFrameGraphics(waitingSubmitCommands);
+			});
+		p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
 	}
 
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
@@ -248,6 +271,11 @@ namespace graphics_backend
 	CThreadManager* CVulkanApplication::GetThreadManager() const
 	{
 		return p_ThreadManager;
+	}
+
+	CTaskGraph* CVulkanApplication::GetCurrentFrameTaskGraph() const
+	{
+		return p_TaskGraph;
 	}
 
 	void CVulkanApplication::ReturnThreadContext(CVulkanThreadContext& returningContext)

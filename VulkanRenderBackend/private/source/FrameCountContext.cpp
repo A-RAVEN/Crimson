@@ -16,18 +16,25 @@ namespace graphics_backend
 		GetVulkanApplication()->GetDevice().waitForFences(fences
 			, true
 			, std::numeric_limits<uint64_t>::max());
-		GetDevice().resetFences(fences);
 		std::atomic_thread_fence(std::memory_order_release);
 		m_LastFinshedFrameID = waitingFrame;
 		m_FenceSubmitFrameIDs[currentIndex] = m_CurrentFrameID;
 	}
 	void CFrameCountContext::SubmitCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList)
 	{
-		uint32_t currentIndex = GetCurrentFrameBufferIndex();
-		vk::Fence currentFrameFence = m_SubmitFrameFences[currentIndex];
-		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-		vk::SubmitInfo submitInfo({}, {}, commandbufferList);
-		m_GraphicsQueue.submit(submitInfo, currentFrameFence);
+		//submit only if we do have some commandbuffers
+		if (!commandbufferList.empty())
+		{
+			uint32_t currentIndex = GetCurrentFrameBufferIndex();
+			vk::Fence currentFrameFence = m_SubmitFrameFences[currentIndex];
+			vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+			std::vector<vk::Fence> fences = {
+				m_SubmitFrameFences[currentIndex]
+			};
+			GetDevice().resetFences(fences);
+			vk::SubmitInfo submitInfo({}, {}, commandbufferList);
+			m_GraphicsQueue.submit(submitInfo, currentFrameFence);
+		}
 		std::atomic_thread_fence(std::memory_order_release);
 		++m_CurrentFrameID;
 	}

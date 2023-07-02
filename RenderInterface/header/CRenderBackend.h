@@ -5,6 +5,7 @@
 
 #include <string>
 #include "Common.h"
+#include "CGPUPrimitiveResource.h"
 
 namespace thread_management
 {
@@ -29,6 +30,9 @@ namespace graphics_backend
 		virtual bool AnyWindowRunning() = 0;
 		virtual void TickWindows() = 0;
 		virtual void TickTest() = 0;
+		virtual void StartCurrentFrame() = 0;
+		virtual void EndCurrentFrame() = 0;
+		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
 	};
 
 	extern "C"

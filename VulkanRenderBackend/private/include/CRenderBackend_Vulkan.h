@@ -14,6 +14,9 @@ namespace graphics_backend
 		bool AnyWindowRunning() override;
 		void TickWindows() override;
 		void TickTest() override;
+		virtual void StartCurrentFrame() override;
+		virtual void EndCurrentFrame() override;
+		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() override;
 	private:
 		CVulkanApplication m_Application;
 	};

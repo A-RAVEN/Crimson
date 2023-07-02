@@ -1,5 +1,5 @@
-#include "private/include/pch.h"
-#include "ThreadManager_Impl.h"
+#include <private/include/pch.h>
+#include <private/include/ThreadManager_Impl.h>
 
 namespace thread_management
 {
@@ -29,11 +29,15 @@ namespace thread_management
     void CTask_Impl::SetupWaitingForCounter()
     {
         uint32_t pendingCount = m_Dependents.size();
-        m_PendingTaskCount.store(m_PendingTaskCount, std::memory_order_relaxed);
+        m_PendingTaskCount.store(pendingCount, std::memory_order_relaxed);
     }
     void CTask_Impl::Invoke()
     {
-        m_Functor();
+        if (m_Functor != nullptr)
+        {
+            m_Functor();
+        }
+        std::atomic_thread_fence(std::memory_order_release);
         for (auto itrSuccessor = m_Successors.begin(); itrSuccessor != m_Successors.end(); ++itrSuccessor)
         {
             (*itrSuccessor)->TryDecCounter();
@@ -55,6 +59,7 @@ namespace thread_management
 
     void CTaskGraph_Impl::ReleaseGraph()
     {
+        m_Name = "";
         m_Tasks.clear();
         m_SourceTasks.clear();
         m_PendingTaskCount.store(0u, std::memory_order_relaxed);
@@ -64,6 +69,16 @@ namespace thread_management
     {
         m_Tasks.emplace_back(*this);
         return &m_Tasks.back();
+    }
+    CTaskGraph* CTaskGraph_Impl::Name(std::string name)
+    {
+        m_Name = name;
+        return this;
+    }
+    CTaskGraph* CTaskGraph_Impl::FinalizeFunctor(std::function<void()> functor)
+    {
+        m_Functor = functor;
+        return this;
     }
     void CTaskGraph_Impl::SetupTopology()
     {
@@ -76,6 +91,8 @@ namespace thread_management
                 m_SourceTasks.push_back(&*itr_Task);
             }
         }
+        uint32_t pendingTaskCount = m_Tasks.size();
+        m_PendingTaskCount.store(pendingTaskCount, std::memory_order_relaxed);
     }
 
     void CTaskGraph_Impl::TryDecCounter()
@@ -84,6 +101,10 @@ namespace thread_management
         std::atomic_thread_fence(std::memory_order_acquire);
         if (remainCounter == 0)
         {
+            if (m_Functor != nullptr)
+            {
+                m_Functor();
+            }
             ReleaseGraph();
         }
     }
@@ -109,6 +130,14 @@ namespace thread_management
         }
     }
 
+    CThreadManager_Impl::CThreadManager_Impl() : 
+        m_TaskGraphPool([](CTaskGraph_Impl* graph) {}
+        ,[](CTaskGraph_Impl* graph) {
+        graph->ReleaseGraph();
+        })
+    {
+    }
+
     void CThreadManager_Impl::InitializeThreadCount(uint32_t threadNum)
     {
         m_WorkerThreads.reserve(threadNum);
@@ -123,17 +152,24 @@ namespace thread_management
     }
     void CThreadManager_Impl::ExecuteTaskGraph(CTaskGraph* graph)
     {
+        CTaskGraph_Impl* pGraph = static_cast<CTaskGraph_Impl*>(graph);
+        pGraph->SetupTopology();
+        if (pGraph->m_SourceTasks.empty())
+        {
+            RemoveTaskGraph(pGraph);
+            return;
+        }
+        EnqueueGraphTasks(pGraph->m_SourceTasks);
     }
     CTaskGraph* CThreadManager_Impl::NewTaskGraph()
     {
-        m_TaskGraphList.emplace_back(*this);
-        CTaskGraph* newGraph = &m_TaskGraphList.back();
+        CTaskGraph_Impl* newGraph = m_TaskGraphPool.Alloc(*this);
         return newGraph;
     }
 
     void CThreadManager_Impl::RemoveTaskGraph(CTaskGraph_Impl* graph)
     {
-        m_AvailableTaskGraphs.push_back(graph);
+        m_TaskGraphPool.Release(graph);
     }
 
     void CThreadManager_Impl::EnqueueGraphTask(CTask_Impl* newTask)
@@ -141,6 +177,23 @@ namespace thread_management
         std::unique_lock<std::mutex> lock(m_Mutex);
         m_TaskQueue.push_back(newTask);
         m_ConditinalVariable.notify_one();
+    }
+
+    void CThreadManager_Impl::EnqueueGraphTasks(std::vector<CTask_Impl*> const& tasks)
+    {
+        std::unique_lock<std::mutex> lock(m_Mutex);
+        m_TaskQueue.insert(m_TaskQueue.end(), tasks.begin(), tasks.end());
+        m_ConditinalVariable.notify_all();
+    }
+
+    CThreadManager* NewModuleInstance()
+    {
+        return new CThreadManager_Impl();
+    }
+    void DeleteModuleInstance(CThreadManager* removingManager)
+    {
+        CThreadManager_Impl* removal = static_cast<CThreadManager_Impl*>(removingManager);
+        delete removal;
     }
 }
 

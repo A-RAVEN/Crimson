@@ -2,7 +2,7 @@
 #include <private/include/WindowContext.h>
 #include <private/include/CVulkanThreadContext.h>
 #include <private/include/FrameCountContext.h>
-#include <ThreadManager/header/ThreadManger.h>
+#include <ThreadManager/header/ThreadManager.h>
 
 namespace graphics_backend
 {
@@ -37,6 +37,7 @@ namespace graphics_backend
 		}
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
+		CTaskGraph* GetCurrentFrameTaskGraph() const;
 		void ReturnThreadContext(CVulkanThreadContext& returningContext);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
@@ -79,6 +80,7 @@ namespace graphics_backend
 		void TickRunTest();
 		void TickApplication();
 		void PrepareBeforeTick();
+		void EndThisFrame();
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);
@@ -104,5 +106,6 @@ namespace graphics_backend
 		Internal_InterlockedQueue<uint32_t> m_AvailableThreadQueue;
 		mutable std::vector<CVulkanThreadContext> m_ThreadContexts;
 		CThreadManager* p_ThreadManager = nullptr;
+		CTaskGraph* p_TaskGraph = nullptr;
 	};
 }
