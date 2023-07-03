@@ -46,11 +46,11 @@ namespace graphics_backend
         }
 #endif
 
-        auto taskGraph = p_OwningApplication->GetCurrentFrameTaskGraph();
-        auto task = taskGraph->NewTask()->Name("Upload Primitive Task");
+        auto task = p_OwningApplication->NewTask()->Name("Upload Primitive Task");
         task->Functor([this]()
             {
                 auto& threadContext = p_OwningApplication->AquireThreadContext();
+                auto currentFrame = p_OwningApplication->GetSubmitCounterContext().GetCurrentFrameID();
 
                 std::atomic_thread_fence(std::memory_order_acquire);
                 size_t vertexDataSize = 0;
@@ -71,14 +71,14 @@ namespace graphics_backend
                 cmdBuffer.copyBuffer(tempBuffer->GetBuffer(), m_PrimitiveDataBuffer->GetBuffer(), vk::BufferCopy(0, 0, m_PrimitiveDataBuffer->GetAllocationInfo().size));
                 cmdBuffer.end();
                 std::atomic_thread_fence(std::memory_order_release);
-                m_Loaded = true;
+                m_SubmitFrame = currentFrame;
                 p_OwningApplication->ReturnThreadContext(threadContext);
             });
     }
 
     bool CGPUPrimitiveResource_Vulkan::GPUDone()
     {
-        return false;
+        return p_OwningApplication->GetSubmitCounterContext().GetReleasedFrameID() >= m_SubmitFrame;
     }
 }
 

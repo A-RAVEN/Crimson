@@ -37,7 +37,8 @@ namespace graphics_backend
 		}
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
-		CTaskGraph* GetCurrentFrameTaskGraph() const;
+		//CTaskGraph* GetCurrentFrameTaskGraph() const;
+		CTask* NewTask();
 		void ReturnThreadContext(CVulkanThreadContext& returningContext);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
@@ -107,5 +108,9 @@ namespace graphics_backend
 		mutable std::vector<CVulkanThreadContext> m_ThreadContexts;
 		CThreadManager* p_ThreadManager = nullptr;
 		CTaskGraph* p_TaskGraph = nullptr;
+		CTask* p_RootTask = nullptr;
+		std::future<void> m_TaskFuture;
+
+
 	};
 }

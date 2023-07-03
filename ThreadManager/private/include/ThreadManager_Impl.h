@@ -42,7 +42,7 @@ namespace thread_management
 		virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) override;
 
 		void SetupTopology();
-		CThreadManager_Impl& GetThreadMaanger() const { return m_OwningManager; }
+		CThreadManager_Impl& GetThreadManager() const { return m_OwningManager; }
 		void TryDecCounter();
 	private:
 		std::function<void()> m_Functor;
@@ -51,6 +51,7 @@ namespace thread_management
 		std::vector<CTask_Impl*> m_SourceTasks;
 		CThreadManager_Impl& m_OwningManager;
 		std::atomic<uint32_t>m_PendingTaskCount{0};
+		std::promise<void> m_Promise;
 		friend class CThreadManager_Impl;
 	};
 
@@ -61,7 +62,7 @@ namespace thread_management
 		// 通过 CThreadManager 继承
 		virtual void InitializeThreadCount(uint32_t threadNum) override;
 		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) override;
-		virtual void ExecuteTaskGraph(CTaskGraph* graph) override;
+		virtual std::future<void> ExecuteTaskGraph(CTaskGraph* graph) override;
 		virtual CTaskGraph* NewTaskGraph() override;
 
 		void RemoveTaskGraph(CTaskGraph_Impl* graph);

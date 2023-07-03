@@ -49,7 +49,7 @@ namespace thread_management
 		CThreadManager& operator=(CThreadManager&& other) = default;
 		virtual void InitializeThreadCount(uint32_t threadNum) = 0;
 		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) = 0;
-		virtual void ExecuteTaskGraph(CTaskGraph* graph) = 0;
+		virtual std::future<void> ExecuteTaskGraph(CTaskGraph* graph) = 0;
 		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 

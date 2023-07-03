@@ -50,7 +50,7 @@ namespace thread_management
         std::atomic_thread_fence(std::memory_order_acquire);
         if (remainCounter == 0)
         {
-            m_OwningGraph.GetThreadMaanger().EnqueueGraphTask(this);
+            m_OwningGraph.GetThreadManager().EnqueueGraphTask(this);
         }
     }
     CTaskGraph_Impl::CTaskGraph_Impl(CThreadManager_Impl& owningManager) : m_OwningManager(owningManager)
@@ -59,6 +59,7 @@ namespace thread_management
 
     void CTaskGraph_Impl::ReleaseGraph()
     {
+        m_Promise = std::promise<void>();
         m_Name = "";
         m_Tasks.clear();
         m_SourceTasks.clear();
@@ -105,7 +106,8 @@ namespace thread_management
             {
                 m_Functor();
             }
-            ReleaseGraph();
+            m_Promise.set_value();
+            GetThreadManager().RemoveTaskGraph(this);
         }
     }
 
@@ -150,16 +152,20 @@ namespace thread_management
     {
         return std::future<int>();
     }
-    void CThreadManager_Impl::ExecuteTaskGraph(CTaskGraph* graph)
+    std::future<void> CThreadManager_Impl::ExecuteTaskGraph(CTaskGraph* graph)
     {
         CTaskGraph_Impl* pGraph = static_cast<CTaskGraph_Impl*>(graph);
         pGraph->SetupTopology();
         if (pGraph->m_SourceTasks.empty())
         {
             RemoveTaskGraph(pGraph);
-            return;
+            auto dummy = std::promise<void>();
+            dummy.set_value();
+            return dummy.get_future();
         }
+        auto graph_future = pGraph->m_Promise.get_future();
         EnqueueGraphTasks(pGraph->m_SourceTasks);
+        return graph_future;
     }
     CTaskGraph* CThreadManager_Impl::NewTaskGraph()
     {

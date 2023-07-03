@@ -23,6 +23,6 @@ namespace graphics_backend
 		std::vector<std::vector<uint8_t>> m_PrimitiveDataCache;
 		std::vector<std::tuple<uint32_t, std::vector<VertexAttribute>, bool>> m_PrimitiveDescriptions;
 	
-		bool m_Loaded = false;
+		uint32_t m_SubmitFrame = -1;
 	};
 }

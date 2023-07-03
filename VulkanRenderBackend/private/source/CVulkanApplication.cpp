@@ -38,21 +38,25 @@ namespace graphics_backend
 
 	void CVulkanApplication::PrepareBeforeTick()
 	{
-		auto previousTaskGraph = p_TaskGraph;
 		p_TaskGraph = p_ThreadManager->NewTaskGraph();
 		p_TaskGraph->Name("GPU Task Graph");
 
-		if (previousTaskGraph != nullptr)
-		{
-
-		}
-
-		m_SubmitCounterContext.WaitingForCurrentFrame();
-		uint32_t releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
-		for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
-		{
-			itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
-		}
+		auto lastTaskFuture = std::move(m_TaskFuture);
+		p_RootTask = p_TaskGraph->NewTask()
+			->Name("GPU Frame Initialize")
+			->Functor(std::bind([this](std::future<void>& future_waitFor)
+				{
+					if(future_waitFor.valid())
+					{
+						future_waitFor.wait();
+					}
+					m_SubmitCounterContext.WaitingForCurrentFrame();
+					uint32_t releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
+					for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+					{
+						itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
+					}
+				}, std::move(lastTaskFuture)));
 	}
 
 	void CVulkanApplication::EndThisFrame()
@@ -66,7 +70,7 @@ namespace graphics_backend
 				}
 				m_SubmitCounterContext.SubmitCurrentFrameGraphics(waitingSubmitCommands);
 			});
-		p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
+		m_TaskFuture = p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
 	}
 
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
@@ -273,9 +277,16 @@ namespace graphics_backend
 		return p_ThreadManager;
 	}
 
-	CTaskGraph* CVulkanApplication::GetCurrentFrameTaskGraph() const
+	//CTaskGraph* CVulkanApplication::GetCurrentFrameTaskGraph() const
+	//{
+	//	return p_TaskGraph;
+	//}
+
+	CTask* CVulkanApplication::NewTask()
 	{
-		return p_TaskGraph;
+		CTask* newTask = p_TaskGraph->NewTask();
+		newTask->Succeed(p_RootTask);
+		return newTask;
 	}
 
 	void CVulkanApplication::ReturnThreadContext(CVulkanThreadContext& returningContext)
