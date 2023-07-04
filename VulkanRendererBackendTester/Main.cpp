@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 		}
 		if(pPrimitive->GPUDone())
 		{
-			std::cout << "Done" << std::endl;
+			//std::cout << "Done" << std::endl;
 		}
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
