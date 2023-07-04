@@ -152,7 +152,7 @@ namespace thread_management
     {
         return std::future<int>();
     }
-    std::future<void> CThreadManager_Impl::ExecuteTaskGraph(CTaskGraph* graph)
+    std::shared_future<void> CThreadManager_Impl::ExecuteTaskGraph(CTaskGraph* graph)
     {
         CTaskGraph_Impl* pGraph = static_cast<CTaskGraph_Impl*>(graph);
         pGraph->SetupTopology();
@@ -163,7 +163,7 @@ namespace thread_management
             dummy.set_value();
             return dummy.get_future();
         }
-        auto graph_future = pGraph->m_Promise.get_future();
+        std::shared_future<void> graph_future(pGraph->m_Promise.get_future());
         EnqueueGraphTasks(pGraph->m_SourceTasks);
         return graph_future;
     }

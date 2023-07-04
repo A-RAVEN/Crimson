@@ -21,15 +21,18 @@ namespace graphics_backend
 		uint32_t GetReleasedFrameID() const {
 			return m_LastFinshedFrameID;
 		}
+		bool AnyFrameFinished() const
+		{
+			return m_LastFinshedFrameID != INVALID_FRAMEID;
+		}
 	private:
-
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
 		void Initialize_Submit_Queues();
 	private:
 		std::atomic<uint32_t> m_CurrentFrameID = 0;
-		uint32_t m_LastFinshedFrameID = 0;
+		uint32_t m_LastFinshedFrameID = INVALID_FRAMEID;
 		std::vector<vk::Fence> m_SubmitFrameFences;
 		std::vector<uint32_t> m_FenceSubmitFrameIDs;
 		vk::Queue m_GraphicsQueue = nullptr;

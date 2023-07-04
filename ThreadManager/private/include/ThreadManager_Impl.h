@@ -62,7 +62,7 @@ namespace thread_management
 		// 通过 CThreadManager 继承
 		virtual void InitializeThreadCount(uint32_t threadNum) override;
 		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) override;
-		virtual std::future<void> ExecuteTaskGraph(CTaskGraph* graph) override;
+		virtual std::shared_future<void> ExecuteTaskGraph(CTaskGraph* graph) override;
 		virtual CTaskGraph* NewTaskGraph() override;
 
 		void RemoveTaskGraph(CTaskGraph_Impl* graph);

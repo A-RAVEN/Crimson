@@ -5,6 +5,11 @@
 
 namespace graphics_backend
 {
+	CGPUPrimitiveResource_Vulkan::CGPUPrimitiveResource_Vulkan(CVulkanApplication* owningApplication) :
+		p_OwningApplication(owningApplication)
+	{
+	}
+
     void CGPUPrimitiveResource_Vulkan::AddPrimitiveDescriptor(uint32_t stride, std::vector<VertexAttribute> const& attributes, bool perInstance)
     {
         m_PrimitiveDescriptions.push_back(std::make_tuple(stride, attributes, perInstance));
@@ -68,7 +73,7 @@ namespace graphics_backend
                 auto tempBuffer = threadContext.AllocBufferObject(false, byteArray.size(), vk::BufferUsageFlagBits::eTransferSrc);
                 memcpy(tempBuffer->GetMappedPointer(), byteArray.data(), byteArray.size());
                 auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-                cmdBuffer.copyBuffer(tempBuffer->GetBuffer(), m_PrimitiveDataBuffer->GetBuffer(), vk::BufferCopy(0, 0, m_PrimitiveDataBuffer->GetAllocationInfo().size));
+                cmdBuffer.copyBuffer(tempBuffer->GetBuffer(), m_PrimitiveDataBuffer->GetBuffer(), vk::BufferCopy(0, 0, byteArray.size()));
                 cmdBuffer.end();
                 std::atomic_thread_fence(std::memory_order_release);
                 m_SubmitFrame = currentFrame;
@@ -78,7 +83,23 @@ namespace graphics_backend
 
     bool CGPUPrimitiveResource_Vulkan::GPUDone()
     {
-        return p_OwningApplication->GetSubmitCounterContext().GetReleasedFrameID() >= m_SubmitFrame;
+        if (m_SubmitFrame == INVALID_FRAMEID)
+            return false;
+        auto& frameContext = p_OwningApplication->GetSubmitCounterContext();
+        if (!frameContext.AnyFrameFinished())
+            return false;
+        return frameContext.GetReleasedFrameID() >= m_SubmitFrame;
+    }
+
+    void CGPUPrimitiveResource_Vulkan::Release()
+    {
+        m_PrimitiveDataBuffer = nullptr;
+        m_PrimitiveIndexDataBuffer = nullptr;
+		m_16BitIndices = false;
+        m_IndicesDataCache.clear();
+        m_PrimitiveDataCache.clear();
+        m_PrimitiveDescriptions.clear();
+		m_SubmitFrame = INVALID_FRAMEID;
     }
 }
 

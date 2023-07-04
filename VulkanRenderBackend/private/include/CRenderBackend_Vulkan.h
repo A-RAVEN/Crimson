@@ -13,10 +13,10 @@ namespace graphics_backend
 		void NewWindow(uint32_t width, uint32_t height, std::string const& windowName) override;
 		bool AnyWindowRunning() override;
 		void TickWindows() override;
-		void TickTest() override;
 		virtual void StartCurrentFrame() override;
 		virtual void EndCurrentFrame() override;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() override;
+		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) override;
 	private:
 		CVulkanApplication m_Application;
 	};

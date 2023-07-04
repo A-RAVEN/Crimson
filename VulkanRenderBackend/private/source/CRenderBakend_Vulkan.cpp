@@ -1,5 +1,6 @@
 #include <private/include/pch.h>
 #include <private/include/CRenderBackend_Vulkan.h>
+#include <RenderInterface/header/CGPUPrimitiveResource.h>
 
 
 namespace graphics_backend
@@ -33,10 +34,6 @@ namespace graphics_backend
 	{
 		m_Application.TickWindowContexts();
 	}
-	void CRenderBackend_Vulkan::TickTest()
-	{
-		m_Application.TickRunTest();
-	}
 	void CRenderBackend_Vulkan::StartCurrentFrame()
 	{
 		m_Application.PrepareBeforeTick();
@@ -44,5 +41,15 @@ namespace graphics_backend
 	void CRenderBackend_Vulkan::EndCurrentFrame()
 	{
 		m_Application.EndThisFrame();
+	}
+
+	CGPUPrimitiveResource* CRenderBackend_Vulkan::NewGPUPrimitiveResource()
+	{
+		return m_Application.NewPrimitiveResource();
+	}
+
+	void CRenderBackend_Vulkan::ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource)
+	{
+		m_Application.DestroyPrimitiveResource(static_cast<CGPUPrimitiveResource_Vulkan*>(resource));
 	}
 }

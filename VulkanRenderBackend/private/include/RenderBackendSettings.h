@@ -6,6 +6,7 @@ namespace graphics_backend
 {
 	constexpr uint32_t FRAMEBOUND_COMMANDPOOL_SWAP_COUNT_PER_CONTEXT = 3;
 	constexpr uint32_t SWAPCHAIN_BUFFER_COUNT = 3;
+	constexpr uint32_t INVALID_FRAMEID = std::numeric_limits<uint32_t>::max();
 
 	static std::vector<const char*> GetInstanceExtensionNames()
 	{

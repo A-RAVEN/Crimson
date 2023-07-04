@@ -7,35 +7,6 @@
 
 namespace graphics_backend
 {
-	void CVulkanApplication::TickRunTest()
-	{
-		m_SubmitCounterContext.WaitingForCurrentFrame();
-		if (m_SubmitCounterContext.GetCurrentFrameID() == 0)
-		{
-			CVulkanThreadContext* threadContext = GetThreadContext(0);
-			auto bufferObject = threadContext->AllocBufferObject(true, 4 * 4
-				, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
-			auto bufferObject1 = threadContext->AllocBufferObject(false, 4 * 4
-				, vk::BufferUsageFlagBits::eTransferSrc);
-			std::vector<int> testData = { 1, 1, 1, 1 };
-			memcpy(bufferObject1->GetMappedPointer(), testData.data(), bufferObject1->GetAllocationInfo().size);
-			auto& currentFramePool = threadContext->GetCurrentFramePool();
-			vk::CommandBuffer cmd = currentFramePool.AllocateOnetimeCommandBuffer();
-			cmd.copyBuffer(bufferObject1->GetBuffer(), bufferObject->GetBuffer(), vk::BufferCopy(0, 0, bufferObject1->GetAllocationInfo().size));
-			cmd.end();
-			std::vector<vk::CommandBuffer> commands;
-			threadContext->CollectSubmittingCommandBuffers(commands);
-			m_SubmitCounterContext.SubmitCurrentFrameGraphics(commands);
-		}
-
-	}
-
-	void CVulkanApplication::TickApplication()
-	{
-		PrepareBeforeTick();
-
-	}
-
 	void CVulkanApplication::PrepareBeforeTick()
 	{
 		p_TaskGraph = p_ThreadManager->NewTaskGraph();
@@ -44,19 +15,19 @@ namespace graphics_backend
 		auto lastTaskFuture = std::move(m_TaskFuture);
 		p_RootTask = p_TaskGraph->NewTask()
 			->Name("GPU Frame Initialize")
-			->Functor(std::bind([this](std::future<void>& future_waitFor)
+			->Functor([this, lastTaskFuture]()
 				{
-					if(future_waitFor.valid())
+					if(lastTaskFuture.valid())
 					{
-						future_waitFor.wait();
+						lastTaskFuture.wait();
 					}
 					m_SubmitCounterContext.WaitingForCurrentFrame();
-					uint32_t releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
+					uint32_t const releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
 					for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
 					{
 						itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
 					}
-				}, std::move(lastTaskFuture)));
+				});
 	}
 
 	void CVulkanApplication::EndThisFrame()
@@ -71,6 +42,16 @@ namespace graphics_backend
 				m_SubmitCounterContext.SubmitCurrentFrameGraphics(waitingSubmitCommands);
 			});
 		m_TaskFuture = p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
+	}
+
+	CGPUPrimitiveResource_Vulkan* CVulkanApplication::NewPrimitiveResource()
+	{
+		return m_PrimitiveResourcePool.Alloc(this);
+	}
+
+	void CVulkanApplication::DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan* resource)
+	{
+		m_PrimitiveResourcePool.Release(resource);
 	}
 
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
@@ -329,30 +310,14 @@ namespace graphics_backend
 		glfwPollEvents();
 	}
 
-	void CVulkanApplication::TestEnqueueBufferLoadingTask(CThreadManager* pThreadManger)
-	{
-		auto& availableContext = AquireThreadContext();
-		pThreadManger->EnqueueAnyThreadWorkWithPromise([this, &availableContext]()
-			{
-				std::vector<float> testData;
-				testData.resize(128);
-				std::fill(testData.begin(), testData.end(), 114.0f);
-
-				auto dstBuffer = availableContext.AllocBufferObject(true, testData.size() * sizeof(float), vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer);
-				auto srcBuffer = availableContext.AllocBufferObject(false, testData.size() * sizeof(float), vk::BufferUsageFlagBits::eTransferSrc);
-				
-				memcpy(srcBuffer->GetMappedPointer(), testData.data(), srcBuffer->GetAllocationInfo().size);
-				
-				auto commandBuffer = availableContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-				commandBuffer.copyBuffer(srcBuffer->GetBuffer(), dstBuffer->GetBuffer(), vk::BufferCopy(0, 0, srcBuffer->GetAllocationInfo().size));
-				commandBuffer.end();
-				ReturnThreadContext(availableContext);
-			});
-	}
-
 	void CVulkanApplication::ReleaseAllWindowContexts()
 	{
 		m_WindowContexts.clear();
+	}
+
+	CVulkanApplication::CVulkanApplication() :
+	m_PrimitiveResourcePool()
+	{
 	}
 
 	CVulkanApplication::~CVulkanApplication()

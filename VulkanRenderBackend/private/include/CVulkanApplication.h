@@ -3,6 +3,8 @@
 #include <private/include/CVulkanThreadContext.h>
 #include <private/include/FrameCountContext.h>
 #include <ThreadManager/header/ThreadManager.h>
+#include <private/include/CPrimitiveResource_Vulkan.h>
+#include <private/include/Containers.h>
 
 namespace graphics_backend
 {
@@ -11,6 +13,7 @@ namespace graphics_backend
 	{
 	public:
 		//friend class ApplicationSubobjectBase;
+		CVulkanApplication();
 		~CVulkanApplication();
 		void InitApp(std::string const& appName, std::string const& engineName);
 		void InitializeThreadContext(CThreadManager* threadManager, uint32_t threadCount);
@@ -37,14 +40,11 @@ namespace graphics_backend
 		}
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
-		//CTaskGraph* GetCurrentFrameTaskGraph() const;
 		CTask* NewTask();
 		void ReturnThreadContext(CVulkanThreadContext& returningContext);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void TickWindowContexts();
-
-		void TestEnqueueBufferLoadingTask(CThreadManager* pThreadManger);
 
 		CFrameCountContext const& GetSubmitCounterContext() const { return m_SubmitCounterContext; }
 
@@ -78,10 +78,11 @@ namespace graphics_backend
 			subobject.Release();
 		}
 
-		void TickRunTest();
-		void TickApplication();
 		void PrepareBeforeTick();
 		void EndThisFrame();
+	public:
+		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
+		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);
@@ -109,8 +110,8 @@ namespace graphics_backend
 		CThreadManager* p_ThreadManager = nullptr;
 		CTaskGraph* p_TaskGraph = nullptr;
 		CTask* p_RootTask = nullptr;
-		std::future<void> m_TaskFuture;
+		std::shared_future<void> m_TaskFuture;
 
-
+		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
 	};
 }

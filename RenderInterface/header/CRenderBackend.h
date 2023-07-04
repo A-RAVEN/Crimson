@@ -29,10 +29,10 @@ namespace graphics_backend
 		virtual void NewWindow(uint32_t width, uint32_t height, std::string const& windowName) = 0;
 		virtual bool AnyWindowRunning() = 0;
 		virtual void TickWindows() = 0;
-		virtual void TickTest() = 0;
 		virtual void StartCurrentFrame() = 0;
 		virtual void EndCurrentFrame() = 0;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
+		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) = 0;
 	};
 
 	extern "C"
