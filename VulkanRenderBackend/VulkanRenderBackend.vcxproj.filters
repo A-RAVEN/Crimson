@@ -57,6 +57,9 @@
     <ClInclude Include="private\include\Containers.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\CVulkanMemoryManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -96,6 +99,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\VMAImpl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CVulkanMemoryManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

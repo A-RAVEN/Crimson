@@ -26,6 +26,6 @@ namespace graphics_backend
 		std::vector<uint8_t> m_IndicesDataCache;
 		std::vector<std::vector<uint8_t>> m_PrimitiveDataCache;
 		std::vector<std::tuple<uint32_t, std::vector<VertexAttribute>, bool>> m_PrimitiveDescriptions;
-		uint32_t m_SubmitFrame = INVALID_FRAMEID;
+		FrameType m_SubmitFrame = INVALID_FRAMEID;
 	};
 }

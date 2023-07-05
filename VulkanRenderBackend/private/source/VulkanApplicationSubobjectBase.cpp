@@ -25,6 +25,12 @@ namespace graphics_backend
 	{
 		return m_OwningApplication;
 	}
+
+	CFrameCountContext const& ApplicationSubobjectBase::GetFrameCountContext() const
+	{
+		return m_OwningApplication->GetSubmitCounterContext();
+	}
+
 	vk::Instance const& ApplicationSubobjectBase::GetInstance() const
 	{
 		if (m_OwningApplication == nullptr)

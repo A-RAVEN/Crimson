@@ -160,6 +160,7 @@
     <ClInclude Include="private\include\CRenderBackend_Vulkan.h" />
     <ClInclude Include="private\include\CVulkanApplication.h" />
     <ClInclude Include="private\include\CVulkanBufferObject.h" />
+    <ClInclude Include="private\include\CVulkanMemoryManager.h" />
     <ClInclude Include="private\include\CVulkanThreadContext.h" />
     <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
     <ClCompile Include="private\source\CVulkanApplication.cpp" />
     <ClCompile Include="private\source\CVulkanBufferObject.cpp" />
+    <ClCompile Include="private\source\CVulkanMemoryManager.cpp" />
     <ClCompile Include="private\source\CVulkanThreadContext.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
     <ClCompile Include="private\source\FrameCountContext.cpp" />

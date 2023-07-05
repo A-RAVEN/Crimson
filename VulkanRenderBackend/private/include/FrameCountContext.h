@@ -13,12 +13,16 @@ namespace graphics_backend
 			, vk::Queue const& computeQueue
 			, vk::Queue const& transferQueue);
 		uint32_t GetCurrentFrameBufferIndex() const {
-			return m_CurrentFrameID % FRAMEBOUND_COMMANDPOOL_SWAP_COUNT_PER_CONTEXT;
+			return m_CurrentFrameID % FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT;
 		}
-		uint32_t GetCurrentFrameID() const {
+		uint32_t GetReleasedResourcePoolIndex() const
+		{
+			return m_LastFinshedFrameID % FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT;
+		}
+		FrameType GetCurrentFrameID() const {
 			return m_CurrentFrameID;
 		}
-		uint32_t GetReleasedFrameID() const {
+		FrameType GetReleasedFrameID() const {
 			return m_LastFinshedFrameID;
 		}
 		bool AnyFrameFinished() const
@@ -31,10 +35,10 @@ namespace graphics_backend
 		virtual void Release_Internal() override;
 		void Initialize_Submit_Queues();
 	private:
-		std::atomic<uint32_t> m_CurrentFrameID = 0;
-		uint32_t m_LastFinshedFrameID = INVALID_FRAMEID;
+		std::atomic<FrameType> m_CurrentFrameID {0};
+		FrameType m_LastFinshedFrameID = INVALID_FRAMEID;
 		std::vector<vk::Fence> m_SubmitFrameFences;
-		std::vector<uint32_t> m_FenceSubmitFrameIDs;
+		std::vector<FrameType> m_FenceSubmitFrameIDs;
 		vk::Queue m_GraphicsQueue = nullptr;
 		vk::Queue m_ComputeQueue = nullptr;
 		vk::Queue m_TransferQueue = nullptr;

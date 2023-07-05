@@ -4,6 +4,7 @@ namespace graphics_backend
 #pragma region Forward Declaration
 	class CVulkanApplication;
 	class CVulkanThreadContext;
+	class CFrameCountContext;
 #pragma endregion
 
 	class ApplicationSubobjectBase
@@ -17,6 +18,7 @@ namespace graphics_backend
 		virtual void Initialize(CVulkanApplication const* owningApplication);
 		virtual void Release();
 		CVulkanApplication const* GetVulkanApplication() const;
+		CFrameCountContext const& GetFrameCountContext() const;
 		vk::Instance const& GetInstance() const;
 		vk::Device const& GetDevice() const;
 		vk::PhysicalDevice const& GetPhysicalDevice() const;

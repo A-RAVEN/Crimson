@@ -27,6 +27,7 @@ namespace graphics_backend
 					{
 						itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
 					}
+					m_MemoryManager.ReleaseCurrentFrameResource();
 				});
 	}
 
@@ -247,6 +248,11 @@ namespace graphics_backend
 		m_ThreadContexts.clear();
 	}
 
+	CVulkanMemoryManager& CVulkanApplication::GetMemoryManager()
+	{
+		return m_MemoryManager;
+	}
+
 	CVulkanThreadContext& CVulkanApplication::AquireThreadContext()
 	{
 		uint32_t available = m_AvailableThreadQueue.TryGetFront();
@@ -330,11 +336,13 @@ namespace graphics_backend
 		InitializeInstance(appName, engineName);
 		EnumeratePhysicalDevices();
 		CreateDevice();
+		m_MemoryManager.Initialize(this);
 	}
 
 	void CVulkanApplication::ReleaseApp()
 	{
 		DeviceWaitIdle();
+		m_MemoryManager.Release();
 		DestroyThreadContexts();
 		ReleaseAllWindowContexts();
 		DestroyDevice();

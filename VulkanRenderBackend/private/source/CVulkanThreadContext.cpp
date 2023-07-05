@@ -116,7 +116,7 @@ namespace graphics_backend
 	void CVulkanThreadContext::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
 		assert(m_FrameBoundCommandBufferPools.size() == 0);
-		m_FrameBoundCommandBufferPools.resize(FRAMEBOUND_COMMANDPOOL_SWAP_COUNT_PER_CONTEXT);
+		m_FrameBoundCommandBufferPools.resize(FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT);
 		std::for_each(m_FrameBoundCommandBufferPools.begin(), m_FrameBoundCommandBufferPools.end()
 			, [owningApplication](CVulkanFrameBoundCommandBufferPool& itrPool)
 			{

@@ -2,6 +2,7 @@
 #include <private/include/WindowContext.h>
 #include <private/include/CVulkanThreadContext.h>
 #include <private/include/FrameCountContext.h>
+#include <private/include/CVulkanMemoryManager.h>
 #include <ThreadManager/header/ThreadManager.h>
 #include <private/include/CPrimitiveResource_Vulkan.h>
 #include <private/include/Containers.h>
@@ -38,6 +39,7 @@ namespace graphics_backend
 			}
 			return &m_ThreadContexts[threadKey];
 		}
+		CVulkanMemoryManager& GetMemoryManager();
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
 		CTask* NewTask();
@@ -113,5 +115,7 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
+
+		CVulkanMemoryManager m_MemoryManager;
 	};
 }

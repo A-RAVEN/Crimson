@@ -54,6 +54,7 @@ namespace graphics_backend
         auto task = p_OwningApplication->NewTask()->Name("Upload Primitive Task");
         task->Functor([this]()
             {
+                auto& memoryManager = p_OwningApplication->GetMemoryManager();
                 auto& threadContext = p_OwningApplication->AquireThreadContext();
                 auto currentFrame = p_OwningApplication->GetSubmitCounterContext().GetCurrentFrameID();
 

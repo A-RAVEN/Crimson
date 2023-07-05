@@ -84,4 +84,24 @@ namespace graphics_backend
 		std::function<void(T*)> m_Initializer;
 		std::function<void(T*)> m_Releaser;
 	};
+
+	template<typename T>
+	class TThreadSafeQueue
+	{
+	public:
+		void Enqueue(T const& newObj)
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
+			m_Queue.push_back(newObj);
+		}
+		void Pop()
+		{
+			std::lock_guard<std::mutex> lock(m_Mutex);
+			m_Queue.pop_front();
+		}
+	private:
+		std::deque<T> m_Queue;
+		std::mutex m_Mutex;
+	};
+
 }
