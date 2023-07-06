@@ -115,7 +115,6 @@ namespace graphics_backend
 		std::vector<std::pair<uint32_t, uint32_t>> generalUsageQueues;
 		std::vector<std::pair<uint32_t, uint32_t>> computeDedicateQueues;
 		std::vector<std::pair<uint32_t, uint32_t>> transferDedicateQueues;
-		std::vector<uint32_t> otherQueueFamilies;
 
 		vk::QueueFlags generalFlags = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute | vk::QueueFlagBits::eTransfer;
 		for (uint32_t queueId = 0; queueId < queueFamilyProperties.size(); ++queueId)
@@ -137,7 +136,6 @@ namespace graphics_backend
 				}
 				else
 				{
-					otherQueueFamilies.push_back(queueId);
 				}
 			}
 		}
@@ -198,6 +196,17 @@ namespace graphics_backend
 			auto& currentQueuePriorities = queuePriorities.back();
 			deviceQueueCreateInfoList.emplace_back(vk::DeviceQueueCreateFlags(), queueFamilyId, currentQueuePriorities);
 		}
+
+		std::vector<uint32_t> otherQueueFamilies;
+		for(uint32_t familyId = 0; familyId < queueFamilyProperties.size(); ++familyId)
+		{
+			if(familyId != generalQueueRef.first && familyId != computeQueueRef.first && familyId != transferQueueRef.first)
+			{
+				otherQueueFamilies.push_back(familyId);
+			}
+		}
+
+
 		for(uint32_t itrOtherFamilyId : otherQueueFamilies)
 		{
 			queuePriorities.push_back({ 0.0f });
