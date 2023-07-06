@@ -2,23 +2,25 @@
 #include <private/include/CVulkanBufferObject.h>
 #include <private/include/CVulkanThreadContext.h>
 
+#include "private/include/CVulkanApplication.h"
+
 namespace graphics_backend
 {
 	void* CVulkanBufferObject::GetMappedPointer() const
 	{
-		return m_MappedPointer;
+		return m_BufferAllocationInfo.pMappedData;
 	}
 	void CVulkanBufferObject::Release_Internal()
 	{
-		CVulkanThreadContext* threadContext = GetThreadContext(m_OwningThreadContextId);
-		if (threadContext != nullptr)
+		if(m_Buffer != vk::Buffer(nullptr) && m_BufferAllocation != nullptr)
 		{
-			threadContext->ReleaseBufferObject(this);
+			CVulkanMemoryManager& memoryManager = GetVulkanApplication()->GetMemoryManager();
+			memoryManager.ReleaseBuffer(*this);
 		}
 		m_Buffer = nullptr;
-		m_MappedPointer = nullptr;
 		m_BufferAllocation = nullptr;
 		m_BufferAllocationInfo = {};
 		m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();
+		m_OwningFrameBoundPoolId = INVALID_INDEX;
 	}
 }

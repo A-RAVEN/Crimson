@@ -12,6 +12,9 @@ namespace graphics_backend
 		void InitializeSubmitQueues(vk::Queue const& generalQueue
 			, vk::Queue const& computeQueue
 			, vk::Queue const& transferQueue);
+		void InitializeDefaultQueues(std::vector<vk::Queue> defaultQueues);
+		uint32_t FindPresentQueueFamily(vk::SurfaceKHR surface) const;
+		vk::Queue FindPresentQueue(vk::SurfaceKHR surface) const;
 		uint32_t GetCurrentFrameBufferIndex() const {
 			return m_CurrentFrameID % FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT;
 		}
@@ -33,7 +36,6 @@ namespace graphics_backend
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		virtual void Release_Internal() override;
-		void Initialize_Submit_Queues();
 	private:
 		std::atomic<FrameType> m_CurrentFrameID {0};
 		FrameType m_LastFinshedFrameID = INVALID_FRAMEID;
@@ -42,5 +44,7 @@ namespace graphics_backend
 		vk::Queue m_GraphicsQueue = nullptr;
 		vk::Queue m_ComputeQueue = nullptr;
 		vk::Queue m_TransferQueue = nullptr;
+
+		std::vector<vk::Queue> m_QueueFamilyDefaultQueues;
 	};
 }

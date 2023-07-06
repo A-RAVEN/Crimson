@@ -70,17 +70,13 @@ namespace graphics_backend
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
 		VmaAllocationCreateInfo allocationCreateInfo{};
-		allocationCreateInfo.flags = gpuBuffer ? 0 : VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+		allocationCreateInfo.flags = gpuBuffer ? 0 : (VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
 		allocationCreateInfo.usage = gpuBuffer ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE : VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 		VkBuffer vkbuffer_c;
 		vmaCreateBuffer(m_ThreadGPUAllocator, &bufferCreateInfo, &allocationCreateInfo, &vkbuffer_c, &result->m_BufferAllocation, &result->m_BufferAllocationInfo);
 		result->m_Buffer = vkbuffer_c;
 		m_HoldingAllocations.insert(result->m_BufferAllocation);
 		result->m_OwningThreadContextId = m_ThreadID;
-		if (!gpuBuffer)
-		{
-			vmaMapMemory(m_ThreadGPUAllocator, result->m_BufferAllocation, &result->m_MappedPointer);
-		}
 		return result;
 	}
 

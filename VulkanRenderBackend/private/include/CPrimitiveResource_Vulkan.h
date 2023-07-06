@@ -20,8 +20,8 @@ namespace graphics_backend
 	private:
 		CVulkanApplication* p_OwningApplication;
 
-		std::shared_ptr<CVulkanBufferObject> m_PrimitiveDataBuffer;
-		std::shared_ptr<CVulkanBufferObject> m_PrimitiveIndexDataBuffer;
+		CVulkanBufferObject m_PrimitiveDataBuffer;
+		CVulkanBufferObject m_PrimitiveIndexDataBuffer;
 		bool m_16BitIndices = false;
 		std::vector<uint8_t> m_IndicesDataCache;
 		std::vector<std::vector<uint8_t>> m_PrimitiveDataCache;

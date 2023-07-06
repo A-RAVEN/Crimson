@@ -20,8 +20,6 @@ namespace graphics_backend
 		VmaAllocation m_BufferAllocation = nullptr;
 		VmaAllocationInfo m_BufferAllocationInfo {};
 		uint32_t m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();
-		//not null if host visible
-		void* m_MappedPointer = nullptr;
 		friend class CVulkanThreadContext;
 		friend class CVulkanMemoryManager;
 		friend class CFrameBoundMemoryPool;

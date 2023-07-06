@@ -19,7 +19,7 @@ namespace graphics_backend
 	CVulkanBufferObject CFrameBoundMemoryPool::AllocateFrameBoundBuffer(EMemoryType memoryType, size_t bufferSize,
 	                                                                    vk::BufferUsageFlags bufferUsage)
 	{
-		CVulkanBufferObject result{};
+		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
 		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
@@ -34,13 +34,17 @@ namespace graphics_backend
 		break;
 		case EMemoryType::CPU_Random_Access:
 		{
-			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+			allocationCreateInfo.flags = 
+				VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT
+				| VMA_ALLOCATION_CREATE_MAPPED_BIT;
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 		}
 		break;
 		case EMemoryType::CPU_Sequential_Access:
 		{
-			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+			allocationCreateInfo.flags = 
+				VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+				| VMA_ALLOCATION_CREATE_MAPPED_BIT;
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
 		}
 		break;
@@ -54,7 +58,7 @@ namespace graphics_backend
 			, &result.m_BufferAllocation
 			, &result.m_BufferAllocationInfo);
 		result.m_Buffer = vkbuffer_c;
-		result.m_OwningFrameBoundPoolId = INVALID_INDEX;
+		result.m_OwningFrameBoundPoolId = m_PoolId;
 
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		m_ActiveBuffers.emplace_back(std::make_tuple(result.m_Buffer, result.m_BufferAllocation));
@@ -104,7 +108,7 @@ namespace graphics_backend
 	CVulkanBufferObject CGlobalMemoryPool::AllocatePersistantBuffer(EMemoryType memoryType, size_t bufferSize,
 	                                                                vk::BufferUsageFlags bufferUsage)
 	{
-		CVulkanBufferObject result{};
+		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
 		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
@@ -199,7 +203,9 @@ namespace graphics_backend
 				, pending_release_buffer.first
 				, pending_release_buffer.second);
 		}
+		m_ActiveBuffers.clear();
 		vmaDestroyAllocator(m_BufferAllocator);
+		m_BufferAllocator = nullptr;
 	}
 
 	CVulkanBufferObject CVulkanMemoryManager::AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime,

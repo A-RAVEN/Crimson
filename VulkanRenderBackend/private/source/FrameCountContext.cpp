@@ -51,6 +51,36 @@ namespace graphics_backend
 		m_ComputeQueue = computeQueue;
 		m_TransferQueue = transferQueue;
 	}
+
+	void CFrameCountContext::InitializeDefaultQueues(std::vector<vk::Queue> defaultQueues)
+	{
+		m_QueueFamilyDefaultQueues = defaultQueues;
+	}
+
+	uint32_t CFrameCountContext::FindPresentQueueFamily(vk::SurfaceKHR surface) const
+	{
+		for(uint32_t familyId = 0; familyId < m_QueueFamilyDefaultQueues.size(); ++familyId)
+		{
+			if(GetPhysicalDevice().getSurfaceSupportKHR(familyId, surface))
+			{
+				return familyId;
+			}
+		}
+		return std::numeric_limits<uint32_t>::max();
+	}
+
+	vk::Queue CFrameCountContext::FindPresentQueue(vk::SurfaceKHR surface) const
+	{
+		for (uint32_t familyId = 0; familyId < m_QueueFamilyDefaultQueues.size(); ++familyId)
+		{
+			if (GetPhysicalDevice().getSurfaceSupportKHR(familyId, surface))
+			{
+				return m_QueueFamilyDefaultQueues[familyId];
+			}
+		}
+		return nullptr;
+	}
+
 	void CFrameCountContext::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
 
@@ -78,10 +108,6 @@ namespace graphics_backend
 		m_GraphicsQueue = nullptr;
 		m_ComputeQueue = nullptr;
 		m_TransferQueue = nullptr;
-	}
-	void CFrameCountContext::Initialize_Submit_Queues()
-	{
-
 	}
 }
 

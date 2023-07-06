@@ -39,7 +39,7 @@ namespace graphics_backend
 			}
 			return &m_ThreadContexts[threadKey];
 		}
-		CVulkanMemoryManager& GetMemoryManager();
+		CVulkanMemoryManager& GetMemoryManager() const;
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
 		CTask* NewTask();
@@ -116,6 +116,6 @@ namespace graphics_backend
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
 
-		CVulkanMemoryManager m_MemoryManager;
+		mutable CVulkanMemoryManager m_MemoryManager;
 	};
 }

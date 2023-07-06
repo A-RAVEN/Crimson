@@ -115,6 +115,7 @@ namespace graphics_backend
 		std::vector<std::pair<uint32_t, uint32_t>> generalUsageQueues;
 		std::vector<std::pair<uint32_t, uint32_t>> computeDedicateQueues;
 		std::vector<std::pair<uint32_t, uint32_t>> transferDedicateQueues;
+		std::vector<uint32_t> otherQueueFamilies;
 
 		vk::QueueFlags generalFlags = vk::QueueFlagBits::eGraphics | vk::QueueFlagBits::eCompute | vk::QueueFlagBits::eTransfer;
 		for (uint32_t queueId = 0; queueId < queueFamilyProperties.size(); ++queueId)
@@ -133,6 +134,10 @@ namespace graphics_backend
 				else if (itrProp.queueFlags & vk::QueueFlagBits::eTransfer)
 				{
 					transferDedicateQueues.push_back(std::make_pair(queueId, itrProp.queueCount));
+				}
+				else
+				{
+					otherQueueFamilies.push_back(queueId);
 				}
 			}
 		}
@@ -193,6 +198,12 @@ namespace graphics_backend
 			auto& currentQueuePriorities = queuePriorities.back();
 			deviceQueueCreateInfoList.emplace_back(vk::DeviceQueueCreateFlags(), queueFamilyId, currentQueuePriorities);
 		}
+		for(uint32_t itrOtherFamilyId : otherQueueFamilies)
+		{
+			queuePriorities.push_back({ 0.0f });
+			auto& currentQueuePriorities = queuePriorities.back();
+			deviceQueueCreateInfoList.emplace_back(vk::DeviceQueueCreateFlags(), itrOtherFamilyId, currentQueuePriorities);
+		}
 
 		auto extensions = GetDeviceExtensionNames();
 		vk::DeviceCreateInfo deviceCreateInfo({}, deviceQueueCreateInfoList, {}, extensions);
@@ -201,7 +212,15 @@ namespace graphics_backend
 		vk::Queue generalQueue = m_Device.getQueue(generalQueueRef.first, generalQueueRef.second);
 		vk::Queue computeQueue = m_Device.getQueue(computeQueueRef.first, computeQueueRef.second);
 		vk::Queue transferQueue = m_Device.getQueue(transferQueueRef.first, transferQueueRef.second);
-	
+
+		std::vector<vk::Queue> defaultQueues;
+		defaultQueues.reserve(queueFamilyProperties.size());
+		for(int itrFamily = 0; itrFamily < queueFamilyProperties.size(); ++itrFamily)
+		{
+			vk::Queue itrQueue = m_Device.getQueue(itrFamily, 0);
+			defaultQueues.push_back(itrQueue);
+		}
+
 		m_SubmitCounterContext.Initialize(this);
 		m_SubmitCounterContext.InitializeSubmitQueues(generalQueue, computeQueue, transferQueue);
 
@@ -248,7 +267,7 @@ namespace graphics_backend
 		m_ThreadContexts.clear();
 	}
 
-	CVulkanMemoryManager& CVulkanApplication::GetMemoryManager()
+	CVulkanMemoryManager& CVulkanApplication::GetMemoryManager() const
 	{
 		return m_MemoryManager;
 	}
@@ -328,7 +347,7 @@ namespace graphics_backend
 
 	CVulkanApplication::~CVulkanApplication()
 	{
-		ReleaseApp();
+		//ReleaseApp();
 	}
 
 	void CVulkanApplication::InitApp(std::string const& appName, std::string const& engineName)
