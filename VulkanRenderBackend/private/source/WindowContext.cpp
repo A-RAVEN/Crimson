@@ -48,6 +48,7 @@ namespace graphics_backend
 		VkSurfaceKHR surface;
 		glfwCreateWindowSurface(static_cast<VkInstance>(m_OwningApplication->GetInstance()), m_Window, nullptr, &surface);
 		m_Surface = vk::SurfaceKHR(surface);
+		m_PresentQueue = GetVulkanApplication()->GetSubmitCounterContext().FindPresentQueue(m_Surface);
 	}
 
 	void CWindowContext::Release_Internal()
@@ -62,5 +63,6 @@ namespace graphics_backend
 			glfwDestroyWindow(m_Window);
 			m_Window = nullptr;
 		}
+		m_PresentQueue = nullptr;
 	}
 }

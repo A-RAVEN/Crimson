@@ -19,5 +19,6 @@ namespace graphics_backend
 
 		GLFWwindow* m_Window = nullptr;
 		vk::SurfaceKHR m_Surface = nullptr;
+		vk::Queue m_PresentQueue = nullptr;
 	};
 }
