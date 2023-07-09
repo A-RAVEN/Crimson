@@ -15,6 +15,7 @@ namespace graphics_backend
 		void TickWindows() override;
 		virtual void StartCurrentFrame() override;
 		virtual void EndCurrentFrame() override;
+		virtual void RunGraphWithPresentTarget(std::string const& windowName) override;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() override;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) override;
 	private:

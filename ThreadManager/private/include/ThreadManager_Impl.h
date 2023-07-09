@@ -1,6 +1,7 @@
 #pragma once
 #include <header/ThreadManager.h>
 #include "ThreadSafePointerPool.h"
+#include "IGraphComponent.h"
 #include <deque>
 
 namespace thread_management
@@ -8,7 +9,7 @@ namespace thread_management
 	class CTaskGraph_Impl;
 	class CThreadManager_Impl;
 
-	class CTask_Impl : public CTask
+	class CTask_Impl : public CTask, public IGraphComponent
 	{
 	public:
 		CTask_Impl(CTaskGraph_Impl& owningGraph);
@@ -18,32 +19,45 @@ namespace thread_management
 		virtual CTask* Functor(std::function<void()> functor) override;
 		void SetupWaitingForCounter();
 		void Invoke();
-		void TryDecCounter();
+
+
+		virtual void AddDependent(IGraphComponent* dependent) override;
+		virtual void AddSuccessor(IGraphComponent* successor) override;
+		virtual void TryDecCounter() override;
+	private:
+		CTask* Succeed_Internal(IGraphComponent* component);
 	private:
 		std::function<void()> m_Functor;
 		std::string m_Name;
 		std::shared_ptr<CTaskGraph> p_TaskGraph;
-		std::vector<CTask_Impl*>m_Dependents;
-		std::vector<CTask_Impl*>m_Successors;
+		std::vector<IGraphComponent*>m_Dependents;
+		std::vector<IGraphComponent*>m_Successors;
 		CTaskGraph_Impl& m_OwningGraph;
 		friend class CTaskGraph_Impl;
 		std::atomic<uint32_t>m_PendingTaskCount{0};
 	};
 
 
-	class CTaskGraph_Impl : public CTaskGraph
+	class CTaskGraph_Impl : public CTaskGraph, public IGraphComponent
 	{
 	public:
 		CTaskGraph_Impl(CThreadManager_Impl& owningManager);
 		void ReleaseGraph();
 		// 通过 CTaskGraph 继承
 		virtual CTask* NewTask() override;
+		virtual CTaskGraph* Succeed(CTask* parentTask) override;
 		virtual CTaskGraph* Name(std::string name) override;
 		virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) override;
 
 		void SetupTopology();
 		CThreadManager_Impl& GetThreadManager() const { return m_OwningManager; }
-		void TryDecCounter();
+
+		virtual void AddDependent(IGraphComponent* dependent) override;
+		virtual void AddSuccessor(IGraphComponent* successor) override;
+		virtual void TryDecCounter() override;
+		void TryDecPendingCounter();
+	private:
+		CTaskGraph* Succeed_Internal(IGraphComponent* component);
 	private:
 		std::function<void()> m_Functor;
 		std::string m_Name;
@@ -51,7 +65,12 @@ namespace thread_management
 		std::vector<CTask_Impl*> m_SourceTasks;
 		CThreadManager_Impl& m_OwningManager;
 		std::atomic<uint32_t>m_PendingTaskCount{0};
+		std::atomic<uint32_t>m_PendingParentCount{0};
 		std::promise<void> m_Promise;
+
+		std::vector<IGraphComponent*>m_Dependents;
+		std::vector<IGraphComponent*>m_Successors;
+
 		friend class CThreadManager_Impl;
 	};
 
@@ -76,6 +95,8 @@ namespace thread_management
 		std::vector<std::thread> m_WorkerThreads;
 		std::mutex m_Mutex;
 		std::condition_variable m_ConditinalVariable;
+
+
 
 		threadmanager_utils::TThreadSafePointerPool<CTaskGraph_Impl> m_TaskGraphPool;
 	};

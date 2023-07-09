@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="header\ThreadManager.h" />
     <ClInclude Include="header\ThreadManger.h" />
+    <ClInclude Include="private\include\IGraphComponent.h" />
     <ClInclude Include="private\include\ThreadSafePointerPool.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />

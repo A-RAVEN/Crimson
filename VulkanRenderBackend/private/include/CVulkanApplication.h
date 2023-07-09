@@ -82,6 +82,7 @@ namespace graphics_backend
 
 		void PrepareBeforeTick();
 		void EndThisFrame();
+		void RunGraphWithPresentTarget(std::string const& targetName);
 	public:
 		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
 		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);

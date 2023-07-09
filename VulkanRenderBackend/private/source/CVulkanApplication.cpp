@@ -45,6 +45,10 @@ namespace graphics_backend
 		m_TaskFuture = p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
 	}
 
+	void CVulkanApplication::RunGraphWithPresentTarget(std::string const& targetName)
+	{
+	}
+
 	CGPUPrimitiveResource_Vulkan* CVulkanApplication::NewPrimitiveResource()
 	{
 		return m_PrimitiveResourcePool.Alloc(this);

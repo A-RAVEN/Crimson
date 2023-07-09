@@ -31,6 +31,7 @@ namespace graphics_backend
 		virtual void TickWindows() = 0;
 		virtual void StartCurrentFrame() = 0;
 		virtual void EndCurrentFrame() = 0;
+		virtual void RunGraphWithPresentTarget(std::string const& windowName) = 0;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) = 0;
 	};
