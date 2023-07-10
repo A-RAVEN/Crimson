@@ -10,7 +10,9 @@ namespace thread_management
     {
         CTask_Impl* task = static_cast<CTask_Impl*>(parentTask);
         assert((&task->m_OwningGraph) == (&m_OwningGraph));
-        return Succeed_Internal(task);
+        task->m_Successors.push_back(this);
+        m_Dependents.push_back(task);
+        return this;
     }
 
     CTask* CTask_Impl::Name(std::string name)
@@ -40,19 +42,8 @@ namespace thread_management
         {
             (*itrSuccessor)->TryDecCounter();
         }
-        m_OwningGraph.TryDecPendingCounter();
+        m_OwningGraph.TryDecCounter();
     }
-
-    void CTask_Impl::AddDependent(IGraphComponent* dependent)
-    {
-        m_Dependents.push_back(dependent);
-    }
-
-    void CTask_Impl::AddSuccessor(IGraphComponent* successor)
-    {
-        m_Successors.push_back(successor);
-    }
-
     void CTask_Impl::TryDecCounter()
     {
         uint32_t remainCounter = --m_PendingTaskCount;
@@ -62,14 +53,6 @@ namespace thread_management
             m_OwningGraph.GetThreadManager().EnqueueGraphTask(this);
         }
     }
-
-    CTask* CTask_Impl::Succeed_Internal(IGraphComponent* component)
-    {
-        component->AddSuccessor(this);
-        AddDependent(component);
-        return this;
-    }
-
     CTaskGraph_Impl::CTaskGraph_Impl(CThreadManager_Impl& owningManager) : m_OwningManager(owningManager)
     {
     }
@@ -88,13 +71,6 @@ namespace thread_management
         m_Tasks.emplace_back(*this);
         return &m_Tasks.back();
     }
-
-    CTaskGraph* CTaskGraph_Impl::Succeed(CTask* parentTask)
-    {
-        CTask_Impl* task = static_cast<CTask_Impl*>(parentTask);
-        assert((&task->m_OwningGraph) != this);
-    }
-
     CTaskGraph* CTaskGraph_Impl::Name(std::string name)
     {
         m_Name = name;
@@ -120,56 +96,46 @@ namespace thread_management
         m_PendingTaskCount.store(pendingTaskCount, std::memory_order_relaxed);
     }
 
-    void CTaskGraph_Impl::AddDependent(IGraphComponent* dependent)
-    {
-        m_Dependents.push_back(dependent);
-    }
-
-    void CTaskGraph_Impl::AddSuccessor(IGraphComponent* successor)
-    {
-        m_Successors.push_back(successor);
-    }
-
     void CTaskGraph_Impl::TryDecCounter()
-    {
-        uint32_t remainCounter = --m_PendingParentCount;
-    }
-
-    void CTaskGraph_Impl::TryDecPendingCounter()
     {
         uint32_t remainCounter = --m_PendingTaskCount;
         std::atomic_thread_fence(std::memory_order_acquire);
         if (remainCounter == 0)
         {
-            if (m_Functor != nullptr)
-            {
-                m_Functor();
-            }
+            Finalize();
             m_Promise.set_value();
             GetThreadManager().RemoveTaskGraph(this);
         }
     }
 
-    CTaskGraph* CTaskGraph_Impl::Succeed_Internal(IGraphComponent* component)
+    void CTaskGraph_Impl::Finalize() const
     {
-        component->AddSuccessor(this);
-        AddDependent(component);
-        return this;
+        if (m_Functor != nullptr)
+        {
+            m_Functor();
+        }
     }
 
 
-    void CThreadManager_Impl::ProcessingWorks()
+    void CThreadManager_Impl::ProcessingWorks(uint32_t threadId)
     {
         while (!m_Stopped)
         {
             std::unique_lock<std::mutex> lock(m_Mutex);
-            m_ConditinalVariable.wait(lock);
-            if (m_Stopped)
-                return;
+            m_ConditinalVariable.wait(lock, [this]()
+            {
+                return !m_TaskQueue.empty();
+            });
+
             if (m_TaskQueue.empty())
             {
                 lock.unlock();
                 continue;
+            }
+            if (m_Stopped)
+            {
+                lock.unlock();
+                return;
             }
             auto task = m_TaskQueue.front();
             m_TaskQueue.pop_front();
@@ -189,9 +155,9 @@ namespace thread_management
     void CThreadManager_Impl::InitializeThreadCount(uint32_t threadNum)
     {
         m_WorkerThreads.reserve(threadNum);
-        for (size_t i = 0; i < threadNum; ++i)
+        for (uint32_t i = 0; i < threadNum; ++i)
         {
-            m_WorkerThreads.emplace_back(&CThreadManager_Impl::ProcessingWorks, this);
+            m_WorkerThreads.emplace_back(&CThreadManager_Impl::ProcessingWorks, this, i);
         }
     }
     std::future<int> CThreadManager_Impl::EnqueueAnyThreadWorkWithPromise(std::function<void()> function)
@@ -205,10 +171,12 @@ namespace thread_management
         if (pGraph->m_SourceTasks.empty())
         {
             RemoveTaskGraph(pGraph);
+            pGraph->Finalize();
             auto dummy = std::promise<void>();
             dummy.set_value();
             return dummy.get_future();
         }
+        std::atomic_thread_fence(std::memory_order_release);
         std::shared_future<void> graph_future(pGraph->m_Promise.get_future());
         EnqueueGraphTasks(pGraph->m_SourceTasks);
         return graph_future;
@@ -226,16 +194,20 @@ namespace thread_management
 
     void CThreadManager_Impl::EnqueueGraphTask(CTask_Impl* newTask)
     {
-        std::unique_lock<std::mutex> lock(m_Mutex);
-        m_TaskQueue.push_back(newTask);
-        m_ConditinalVariable.notify_one();
+        {
+            std::lock_guard<std::mutex> guard(m_Mutex);
+            m_TaskQueue.push_back(newTask);
+            m_ConditinalVariable.notify_one();
+        }
     }
 
     void CThreadManager_Impl::EnqueueGraphTasks(std::vector<CTask_Impl*> const& tasks)
     {
-        std::unique_lock<std::mutex> lock(m_Mutex);
-        m_TaskQueue.insert(m_TaskQueue.end(), tasks.begin(), tasks.end());
-        m_ConditinalVariable.notify_all();
+        {
+            std::lock_guard<std::mutex> guard(m_Mutex);
+            m_TaskQueue.insert(m_TaskQueue.end(), tasks.begin(), tasks.end());
+            m_ConditinalVariable.notify_all();
+        }
     }
 
     CThreadManager* NewModuleInstance()

@@ -39,13 +39,14 @@ int main(int argc, char *argv[])
 	while (pBackend->AnyWindowRunning())
 	{
 		pBackend->StartCurrentFrame();
-		if(pPrimitive->GPUDone())
-		{
-		}
-		else
-		{
-			std::cout << "Not Done Yet " << frame << std::endl;
-		}
+		//if(pPrimitive->GPUDone())
+		//{
+		//}
+		//else
+		//{
+		//	std::cout << "Not Done Yet " << frame << std::endl;
+		//}
+		pBackend->RunGraphWithPresentTarget("Test Window");
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;

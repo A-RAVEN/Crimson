@@ -12,15 +12,10 @@ namespace graphics_backend
 		p_TaskGraph = p_ThreadManager->NewTaskGraph();
 		p_TaskGraph->Name("GPU Task Graph");
 
-		auto lastTaskFuture = std::move(m_TaskFuture);
 		p_RootTask = p_TaskGraph->NewTask()
 			->Name("GPU Frame Initialize")
-			->Functor([this, lastTaskFuture]()
+			->Functor([this]()
 				{
-					if(lastTaskFuture.valid())
-					{
-						lastTaskFuture.wait();
-					}
 					m_SubmitCounterContext.WaitingForCurrentFrame();
 					uint32_t const releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
 					for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
@@ -42,12 +37,28 @@ namespace graphics_backend
 				}
 				m_SubmitCounterContext.SubmitCurrentFrameGraphics(waitingSubmitCommands);
 			});
+
+		if (m_TaskFuture.valid())
+		{
+			m_TaskFuture.wait();
+		}
+
 		m_TaskFuture = p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
 	}
 
 	void CVulkanApplication::RunGraphWithPresentTarget(std::string const& targetName)
 	{
-		m_WindowContexts
+		CTaskGraph* newGraph = GetThreadManager()->NewTaskGraph()->Name("SubGraph");
+		newGraph->FinalizeFunctor([this, targetName]()
+			{
+				std::cout << targetName << std::endl;
+			});
+		CTask* subGraphTask = NewTask()
+			->Name("SubGraph Task")
+			->Functor([this, newGraph]()
+				{
+					GetThreadManager()->ExecuteTaskGraph(newGraph);
+				});
 	}
 
 	CGPUPrimitiveResource_Vulkan* CVulkanApplication::NewPrimitiveResource()

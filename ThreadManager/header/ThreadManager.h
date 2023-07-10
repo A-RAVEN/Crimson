@@ -33,7 +33,6 @@ namespace thread_management
 		CTaskGraph& operator=(CTaskGraph const& other) = delete;
 		CTaskGraph(CTaskGraph && other) = default;
 		CTaskGraph& operator=(CTaskGraph && other) = default;
-		virtual CTaskGraph* Succeed(CTask* parentTask) = 0;
 		virtual CTaskGraph* Name(std::string name) = 0;
 		virtual CTask* NewTask() = 0;
 		virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) = 0;
