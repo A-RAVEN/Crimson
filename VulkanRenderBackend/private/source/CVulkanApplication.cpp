@@ -47,6 +47,7 @@ namespace graphics_backend
 
 	void CVulkanApplication::RunGraphWithPresentTarget(std::string const& targetName)
 	{
+		m_WindowContexts
 	}
 
 	CGPUPrimitiveResource_Vulkan* CVulkanApplication::NewPrimitiveResource()
