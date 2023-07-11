@@ -49,8 +49,16 @@ namespace graphics_backend
 	void CVulkanApplication::RunGraphWithPresentTarget(std::string const& targetName)
 	{
 		CTaskGraph* newGraph = GetThreadManager()->NewTaskGraph()->Name("SubGraph");
+
 		newGraph->FinalizeFunctor([this, targetName]()
 			{
+				//for(int i = 0; i < m_WindowContexts.size(); ++i)
+				//{
+				//	if(m_WindowContexts[i].GetName() == targetName)
+				//	{
+				//		m_WindowContexts[i].m_PresentQueue.presentKHR()
+				//	}
+				//}
 				std::cout << targetName << std::endl;
 			});
 		CTask* subGraphTask = NewTask()
@@ -234,9 +242,6 @@ namespace graphics_backend
 		vk::DeviceCreateInfo deviceCreateInfo({}, deviceQueueCreateInfoList, {}, extensions);
 
 		m_Device = m_PhysicalDevice.createDevice(deviceCreateInfo);
-		vk::Queue generalQueue = m_Device.getQueue(generalQueueRef.first, generalQueueRef.second);
-		vk::Queue computeQueue = m_Device.getQueue(computeQueueRef.first, computeQueueRef.second);
-		vk::Queue transferQueue = m_Device.getQueue(transferQueueRef.first, transferQueueRef.second);
 
 		std::vector<vk::Queue> defaultQueues;
 		defaultQueues.reserve(queueFamilyProperties.size());
@@ -247,7 +252,7 @@ namespace graphics_backend
 		}
 
 		m_SubmitCounterContext.Initialize(this);
-		m_SubmitCounterContext.InitializeSubmitQueues(generalQueue, computeQueue, transferQueue);
+		m_SubmitCounterContext.InitializeSubmitQueues(generalQueueRef, computeQueueRef, transferQueueRef);
 
 		vulkan_backend::utils::SetupVulkanDeviceFunctinoPointers(m_Device);
 	}

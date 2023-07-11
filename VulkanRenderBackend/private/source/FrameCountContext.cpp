@@ -45,11 +45,17 @@ namespace graphics_backend
 	void CFrameCountContext::SubmitCurrentFrameTransfer(std::vector<vk::CommandBuffer> const& commandbufferList)
 	{
 	}
-	void CFrameCountContext::InitializeSubmitQueues(vk::Queue const& generalQueue, vk::Queue const& computeQueue, vk::Queue const& transferQueue)
+	void CFrameCountContext::InitializeSubmitQueues(
+		std::pair<uint32_t, uint32_t> const& generalQueue
+		, std::pair<uint32_t, uint32_t> const& computeQueue
+		, std::pair<uint32_t, uint32_t> const& transferQueue)
 	{
-		m_GraphicsQueue = generalQueue;
-		m_ComputeQueue = computeQueue;
-		m_TransferQueue = transferQueue;
+		m_GraphicsQueueReference = generalQueue;
+		m_ComputeQueueReference = computeQueue;
+		m_TransferQueueReference = transferQueue;
+		m_GraphicsQueue = GetDevice().getQueue(m_GraphicsQueueReference.first, m_GraphicsQueueReference.second);
+		m_ComputeQueue = GetDevice().getQueue(m_ComputeQueueReference.first, m_ComputeQueueReference.second);
+		m_TransferQueue = GetDevice().getQueue(m_TransferQueueReference.first, m_TransferQueueReference.second);
 	}
 
 	void CFrameCountContext::InitializeDefaultQueues(std::vector<vk::Queue> defaultQueues)
@@ -69,16 +75,17 @@ namespace graphics_backend
 		return std::numeric_limits<uint32_t>::max();
 	}
 
-	vk::Queue CFrameCountContext::FindPresentQueue(vk::SurfaceKHR surface) const
+	std::pair<uint32_t, vk::Queue> CFrameCountContext::FindPresentQueue(vk::SurfaceKHR surface) const
 	{
 		for (uint32_t familyId = 0; familyId < m_QueueFamilyDefaultQueues.size(); ++familyId)
 		{
 			if (GetPhysicalDevice().getSurfaceSupportKHR(familyId, surface))
 			{
-				return m_QueueFamilyDefaultQueues[familyId];
+				return std::make_pair(familyId, m_QueueFamilyDefaultQueues[familyId]);
 			}
 		}
-		return nullptr;
+		assert(false);
+		return std::pair<uint32_t, vk::Queue>(INVALID_INDEX, nullptr);
 	}
 
 	void CFrameCountContext::Initialize_Internal(CVulkanApplication const* owningApplication)

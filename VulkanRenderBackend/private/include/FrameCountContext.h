@@ -9,12 +9,12 @@ namespace graphics_backend
 		void SubmitCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList);
 		void SubmitCurrentFrameCompute(std::vector<vk::CommandBuffer> const& commandbufferList);
 		void SubmitCurrentFrameTransfer(std::vector<vk::CommandBuffer> const& commandbufferList);
-		void InitializeSubmitQueues(vk::Queue const& generalQueue
-			, vk::Queue const& computeQueue
-			, vk::Queue const& transferQueue);
+		void InitializeSubmitQueues(std::pair<uint32_t, uint32_t> const& generalQueue
+			, std::pair<uint32_t, uint32_t> const& computeQueue
+			, std::pair<uint32_t, uint32_t> const& transferQueue);
 		void InitializeDefaultQueues(std::vector<vk::Queue> defaultQueues);
 		uint32_t FindPresentQueueFamily(vk::SurfaceKHR surface) const;
-		vk::Queue FindPresentQueue(vk::SurfaceKHR surface) const;
+		std::pair<uint32_t, vk::Queue> FindPresentQueue(vk::SurfaceKHR surface) const;
 		uint32_t GetCurrentFrameBufferIndex() const {
 			return m_CurrentFrameID % FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT;
 		}
@@ -32,6 +32,11 @@ namespace graphics_backend
 		{
 			return m_LastFinshedFrameID != INVALID_FRAMEID;
 		}
+
+		std::pair<uint32_t, uint32_t> const& GetGraphicsQueueRef() const
+		{
+			return m_GraphicsQueueReference;
+		}
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
@@ -41,8 +46,11 @@ namespace graphics_backend
 		FrameType m_LastFinshedFrameID = INVALID_FRAMEID;
 		std::vector<vk::Fence> m_SubmitFrameFences;
 		std::vector<FrameType> m_FenceSubmitFrameIDs;
+		std::pair<uint32_t, uint32_t> m_GraphicsQueueReference;
 		vk::Queue m_GraphicsQueue = nullptr;
+		std::pair<uint32_t, uint32_t> m_ComputeQueueReference;
 		vk::Queue m_ComputeQueue = nullptr;
+		std::pair<uint32_t, uint32_t> m_TransferQueueReference;
 		vk::Queue m_TransferQueue = nullptr;
 
 		std::vector<vk::Queue> m_QueueFamilyDefaultQueues;
