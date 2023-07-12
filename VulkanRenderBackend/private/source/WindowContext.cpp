@@ -116,6 +116,9 @@ namespace graphics_backend
 
 	void CWindowContext::Release_Internal()
 	{
+		m_SwapchainImages.clear();
+		GetDevice().destroySwapchainKHR(m_Swapchain);
+		m_Swapchain = nullptr;
 		if(m_Surface != vk::SurfaceKHR(nullptr))
 		{
 			m_OwningApplication->GetInstance().destroySurfaceKHR(m_Surface);

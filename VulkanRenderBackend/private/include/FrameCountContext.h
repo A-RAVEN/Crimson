@@ -6,7 +6,15 @@ namespace graphics_backend
 	{
 	public:
 		void WaitingForCurrentFrame();
-		void SubmitCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList);
+		void EndCurrentFrame();
+		void SubmitGraphics(std::vector<vk::CommandBuffer> const& commandbufferList
+			, vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores = {}
+			, vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores = {});
+
+		void FinalizeCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList
+			, vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores = {}
+			, vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores = {});
+
 		void SubmitCurrentFrameCompute(std::vector<vk::CommandBuffer> const& commandbufferList);
 		void SubmitCurrentFrameTransfer(std::vector<vk::CommandBuffer> const& commandbufferList);
 		void InitializeSubmitQueues(std::pair<uint32_t, uint32_t> const& generalQueue

@@ -35,7 +35,31 @@ namespace graphics_backend
 				{
 					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
 				}
-				m_SubmitCounterContext.SubmitCurrentFrameGraphics(waitingSubmitCommands);
+				m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
+
+	/*			if(!m_WindowContexts.empty())
+				{
+					vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
+						m_WindowContexts[0].m_Swapchain
+						, 100000
+						, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
+
+					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0].m_WaitNextFrameSemaphore };
+
+					auto& threadContext0 = m_ThreadContexts[0];
+					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+
+					cmd.end();
+
+					m_SubmitCounterContext.SubmitCurrentFrameCompute();
+
+					vk::PresentInfoKHR presenttInfo(
+						m_WindowContexts[0].m_WaitNextFrameSemaphore
+						, m_WindowContexts[0].m_Swapchain
+						, currentBuffer.value
+					);
+					m_WindowContexts[0].m_PresentQueue.second.presentKHR(presenttInfo);
+				}*/
 			});
 
 		if (m_TaskFuture.valid())
@@ -52,13 +76,7 @@ namespace graphics_backend
 
 		newGraph->FinalizeFunctor([this, targetName]()
 			{
-				//for(int i = 0; i < m_WindowContexts.size(); ++i)
-				//{
-				//	if(m_WindowContexts[i].GetName() == targetName)
-				//	{
-				//		m_WindowContexts[i].m_PresentQueue.presentKHR()
-				//	}
-				//}
+
 				std::cout << targetName << std::endl;
 			});
 		CTask* subGraphTask = NewTask()
@@ -253,6 +271,7 @@ namespace graphics_backend
 
 		m_SubmitCounterContext.Initialize(this);
 		m_SubmitCounterContext.InitializeSubmitQueues(generalQueueRef, computeQueueRef, transferQueueRef);
+		m_SubmitCounterContext.InitializeDefaultQueues(defaultQueues);
 
 		vulkan_backend::utils::SetupVulkanDeviceFunctinoPointers(m_Device);
 	}

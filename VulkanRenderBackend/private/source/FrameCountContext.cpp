@@ -20,23 +20,36 @@ namespace graphics_backend
 		m_LastFinshedFrameID = waitingFrame;
 		m_FenceSubmitFrameIDs[currentIndex] = m_CurrentFrameID;
 	}
-	void CFrameCountContext::SubmitCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList)
+
+	void CFrameCountContext::EndCurrentFrame()
 	{
-		//submit only if we do have some commandbuffers
-		if (!commandbufferList.empty())
-		{
-			uint32_t currentIndex = GetCurrentFrameBufferIndex();
-			vk::Fence currentFrameFence = m_SubmitFrameFences[currentIndex];
-			vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-			std::vector<vk::Fence> fences = {
-				m_SubmitFrameFences[currentIndex]
-			};
-			GetDevice().resetFences(fences);
-			vk::SubmitInfo submitInfo({}, {}, commandbufferList);
-			m_GraphicsQueue.submit(submitInfo, currentFrameFence);
-		}
 		std::atomic_thread_fence(std::memory_order_release);
 		++m_CurrentFrameID;
+	}
+
+	void CFrameCountContext::SubmitGraphics(std::vector<vk::CommandBuffer> const& commandbufferList,
+		vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores,
+		vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores)
+	{
+		if (commandbufferList.empty() && waitSemaphores.empty() && signalSemaphores.empty())
+			return;
+		vk::SubmitInfo const submitInfo(waitSemaphores, {}, commandbufferList, signalSemaphores);
+		m_GraphicsQueue.submit(submitInfo);
+	}
+
+	void CFrameCountContext::FinalizeCurrentFrameGraphics(
+		std::vector<vk::CommandBuffer> const& commandbufferList
+	    , vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores
+		, vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores)
+	{
+		uint32_t currentIndex = GetCurrentFrameBufferIndex();
+		vk::Fence currentFrameFence = m_SubmitFrameFences[currentIndex];
+		std::vector<vk::Fence> fences = {
+			m_SubmitFrameFences[currentIndex]
+		};
+		GetDevice().resetFences(fences);
+		vk::SubmitInfo submitInfo(waitSemaphores, {}, commandbufferList, signalSemaphores);
+		m_GraphicsQueue.submit(submitInfo, currentFrameFence);
 	}
 	void CFrameCountContext::SubmitCurrentFrameCompute(std::vector<vk::CommandBuffer> const& commandbufferList)
 	{

@@ -46,10 +46,11 @@ int main(int argc, char *argv[])
 		//{
 		//	std::cout << "Not Done Yet " << frame << std::endl;
 		//}
-		pBackend->RunGraphWithPresentTarget("Test Window");
+		//pBackend->RunGraphWithPresentTarget("Test Window");
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;
+		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
 	pBackend->ReleaseGPUPrimitiveResource(pPrimitive);
 	pBackend->Release();
