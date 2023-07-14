@@ -44,24 +44,56 @@ namespace graphics_backend
 						, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
 
 					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0].m_WaitNextFrameSemaphore };
+					std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
 					std::array<const vk::Semaphore, 1> presentSemaphore = { m_WindowContexts[0].m_CanPresentSemaphore };
 
 					auto& threadContext0 = m_ThreadContexts[0];
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+
+					cmd.pipelineBarrier(
+						vk::PipelineStageFlagBits::eTopOfPipe
+						, vk::PipelineStageFlagBits::eTransfer
+						, {}
+						, {}
+						, {}
+						, vk::ImageMemoryBarrier(
+							vk::AccessFlagBits::eNone
+							, vk::AccessFlagBits::eTransferWrite
+							, vk::ImageLayout::eUndefined
+							, vk::ImageLayout::eTransferDstOptimal
+							, {}, {}
+							, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+							, vulkan_backend::utils::DefaultColorSubresourceRange()
+						));
+
 					cmd.clearColorImage(
 						m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
-						, vk::ImageLayout::eSharedPresentKHR
-						, vk::ClearColorValue(std::array<float, 4>{ 1.0f, 0.0f, 0.0f, 1.0f }), vk::ImageSubresourceRange(
-							vk::ImageAspectFlagBits::eColor
-							, 0
-							, 1
-							, 0
-							, 1));
+						, vk::ImageLayout::eTransferDstOptimal
+						, vk::ClearColorValue(std::array<float, 4>{ 0.0f, 0.0f, 1.0f, 1.0f }), vulkan_backend::utils::DefaultColorSubresourceRange());
+
+					cmd.pipelineBarrier(
+						vk::PipelineStageFlagBits::eTransfer
+						, vk::PipelineStageFlagBits::eBottomOfPipe
+						, {}
+						, {}
+						, {}
+						, vk::ImageMemoryBarrier(
+							vk::AccessFlagBits::eTransferWrite
+							, vk::AccessFlagBits::eNone
+							, vk::ImageLayout::eTransferDstOptimal
+							, vk::ImageLayout::ePresentSrcKHR
+							, {}, {}
+							, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+							, vulkan_backend::utils::DefaultColorSubresourceRange()
+						));
+
 					cmd.end();
 					waitingSubmitCommands.push_back(cmd);
 
 					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
-						, semaphore, presentSemaphore);
+						, semaphore
+						, waitStages
+						, presentSemaphore);
 
 					vk::PresentInfoKHR presenttInfo(
 						presentSemaphore

@@ -168,6 +168,7 @@
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
     <ClInclude Include="private\include\VulkanApplicationSubobjectBase.h" />
+    <ClInclude Include="private\include\VulkanBarrierCollector.h" />
     <ClInclude Include="private\include\VulkanIncludes.h" />
     <ClInclude Include="private\include\WindowContext.h" />
   </ItemGroup>

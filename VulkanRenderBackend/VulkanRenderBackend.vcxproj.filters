@@ -60,6 +60,9 @@
     <ClInclude Include="private\include\CVulkanMemoryManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\VulkanBarrierCollector.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">

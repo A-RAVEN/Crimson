@@ -8,5 +8,7 @@ namespace vulkan_backend
 		void SetupVulkanInstanceFunctionPointers(vk::Instance const& inInstance);
 		void SetupVulkanDeviceFunctinoPointers(vk::Device const& inDevice);
 		void CleanupVulkanInstanceFuncitonPointers();
+
+		vk::ImageSubresourceRange const& DefaultColorSubresourceRange();
 	}
 }

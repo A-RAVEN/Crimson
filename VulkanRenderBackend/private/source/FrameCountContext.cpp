@@ -40,6 +40,7 @@ namespace graphics_backend
 	void CFrameCountContext::FinalizeCurrentFrameGraphics(
 		std::vector<vk::CommandBuffer> const& commandbufferList
 	    , vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores
+		, vk::ArrayProxyNoTemporaries<const vk::PipelineStageFlags> waitStages
 		, vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores)
 	{
 		uint32_t currentIndex = GetCurrentFrameBufferIndex();
@@ -48,7 +49,7 @@ namespace graphics_backend
 			m_SubmitFrameFences[currentIndex]
 		};
 		GetDevice().resetFences(fences);
-		vk::SubmitInfo submitInfo(waitSemaphores, {}, commandbufferList, signalSemaphores);
+		vk::SubmitInfo submitInfo(waitSemaphores, waitStages, commandbufferList, signalSemaphores);
 		m_GraphicsQueue.submit(submitInfo, currentFrameFence);
 	}
 	void CFrameCountContext::SubmitCurrentFrameCompute(std::vector<vk::CommandBuffer> const& commandbufferList)

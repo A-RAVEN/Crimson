@@ -44,8 +44,22 @@ namespace vulkan_backend
 			pfnVkCreateDebugUtilsMessengerEXT = nullptr;
 			pfnVkDestroyDebugUtilsMessengerEXT = nullptr;
 		}
-		    
-	    VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
+
+
+
+		vk::ImageSubresourceRange const& DefaultColorSubresourceRange()
+		{
+			const static vk::ImageSubresourceRange s_DefaultColorSubresourceRange = {
+				vk::ImageAspectFlagBits::eColor
+				, 0
+				, 1
+				, 0
+				, 1
+			};
+			return s_DefaultColorSubresourceRange;
+		}
+
+		VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT       messageSeverity,
 	        VkDebugUtilsMessageTypeFlagsEXT              messageTypes,
 	        VkDebugUtilsMessengerCallbackDataEXT const* pCallbackData,
 	        void* /*pUserData*/)
