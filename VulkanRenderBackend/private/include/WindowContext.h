@@ -24,7 +24,9 @@ namespace graphics_backend
 		std::pair<uint32_t, vk::Queue> m_PresentQueue = std::pair<uint32_t, vk::Queue>(INVALID_INDEX, nullptr);
 		vk::SwapchainKHR m_Swapchain = nullptr;
 		std::vector<vk::Image> m_SwapchainImages;
+		std::vector<vk::ImageView> m_SwapchainImageViews;
 		vk::Semaphore m_WaitNextFrameSemaphore = nullptr;
+		vk::Semaphore m_CanPresentSemaphore = nullptr;
 
 		friend class CVulkanApplication;
 	};

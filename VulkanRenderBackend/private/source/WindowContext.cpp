@@ -88,7 +88,7 @@ namespace graphics_backend
 			vk::ColorSpaceKHR::eSrgbNonlinear,
 			swapchainExtent,
 			1,
-			vk::ImageUsageFlagBits::eColorAttachment,
+			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst,
 			vk::SharingMode::eExclusive,
 			{},
 			preTransform,
@@ -112,10 +112,22 @@ namespace graphics_backend
 
 		m_Swapchain = GetDevice().createSwapchainKHR(swapChainCreateInfo);
 		m_SwapchainImages = GetDevice().getSwapchainImagesKHR(m_Swapchain);
+		GetVulkanApplication()->CreateImageViews2D(format, m_SwapchainImages, m_SwapchainImageViews);
+		m_WaitNextFrameSemaphore = GetDevice().createSemaphore(vk::SemaphoreCreateInfo());
+		m_CanPresentSemaphore = GetDevice().createSemaphore(vk::SemaphoreCreateInfo());
 	}
 
 	void CWindowContext::Release_Internal()
 	{
+		GetDevice().destroySemaphore(m_CanPresentSemaphore);
+		m_CanPresentSemaphore = nullptr;
+		GetDevice().destroySemaphore(m_WaitNextFrameSemaphore);
+		m_WaitNextFrameSemaphore = nullptr;
+		for(auto& imgView : m_SwapchainImageViews)
+		{
+			GetDevice().destroyImageView(imgView);
+		}
+		m_SwapchainImageViews.clear();
 		m_SwapchainImages.clear();
 		GetDevice().destroySwapchainKHR(m_Swapchain);
 		m_Swapchain = nullptr;

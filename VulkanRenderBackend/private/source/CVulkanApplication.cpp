@@ -35,9 +35,8 @@ namespace graphics_backend
 				{
 					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
 				}
-				m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
 
-	/*			if(!m_WindowContexts.empty())
+				if(!m_WindowContexts.empty())
 				{
 					vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
 						m_WindowContexts[0].m_Swapchain
@@ -45,21 +44,36 @@ namespace graphics_backend
 						, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
 
 					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0].m_WaitNextFrameSemaphore };
+					std::array<const vk::Semaphore, 1> presentSemaphore = { m_WindowContexts[0].m_CanPresentSemaphore };
 
 					auto& threadContext0 = m_ThreadContexts[0];
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-
+					cmd.clearColorImage(
+						m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+						, vk::ImageLayout::eSharedPresentKHR
+						, vk::ClearColorValue(std::array<float, 4>{ 1.0f, 0.0f, 0.0f, 1.0f }), vk::ImageSubresourceRange(
+							vk::ImageAspectFlagBits::eColor
+							, 0
+							, 1
+							, 0
+							, 1));
 					cmd.end();
+					waitingSubmitCommands.push_back(cmd);
 
-					m_SubmitCounterContext.SubmitCurrentFrameCompute();
+					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
+						, semaphore, presentSemaphore);
 
 					vk::PresentInfoKHR presenttInfo(
-						m_WindowContexts[0].m_WaitNextFrameSemaphore
+						presentSemaphore
 						, m_WindowContexts[0].m_Swapchain
 						, currentBuffer.value
 					);
 					m_WindowContexts[0].m_PresentQueue.second.presentKHR(presenttInfo);
-				}*/
+				}
+				else
+				{
+					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
+				}
 			});
 
 		if (m_TaskFuture.valid())
@@ -85,6 +99,31 @@ namespace graphics_backend
 				{
 					GetThreadManager()->ExecuteTaskGraph(newGraph);
 				});
+	}
+
+	void CVulkanApplication::CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages,
+		std::vector<vk::ImageView>& outImageViews) const
+	{
+		for(auto& img : inImages)
+		{
+			vk::ImageViewCreateInfo createInfo({}
+				, img
+				, vk::ImageViewType::e2D
+				, format
+				, vk::ComponentMapping(
+					vk::ComponentSwizzle::eIdentity
+					, vk::ComponentSwizzle::eIdentity
+					, vk::ComponentSwizzle::eIdentity
+					, vk::ComponentSwizzle::eIdentity)
+				, vk::ImageSubresourceRange(
+					vk::ImageAspectFlagBits::eColor
+					, 0
+					, 1
+					, 0
+					, 1));
+			auto newView = GetDevice().createImageView(createInfo);
+			outImageViews.push_back(newView);
+		}
 	}
 
 	CGPUPrimitiveResource_Vulkan* CVulkanApplication::NewPrimitiveResource()
