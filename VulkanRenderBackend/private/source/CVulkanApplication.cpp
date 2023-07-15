@@ -4,6 +4,7 @@
 #include "private/include/CVulkanApplication.h"
 #include "private/include/CVulkanThreadContext.h"
 #include <private/include/CVulkanBufferObject.h>
+#include <private/include/VulkanBarrierCollector.h>
 
 namespace graphics_backend
 {
@@ -50,7 +51,16 @@ namespace graphics_backend
 					auto& threadContext0 = m_ThreadContexts[0];
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					cmd.pipelineBarrier(
+					VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueRef().first };
+					barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+						, ResourceUsage::eDontCare, ResourceUsage::eTransferDest);
+
+					VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueRef().first };
+					barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+						, ResourceUsage::eTransferDest, ResourceUsage::ePresent);
+
+					barrier0.ExecuteBarrier(cmd);
+	/*				cmd.pipelineBarrier(
 						vk::PipelineStageFlagBits::eTopOfPipe
 						, vk::PipelineStageFlagBits::eTransfer
 						, {}
@@ -64,28 +74,31 @@ namespace graphics_backend
 							, {}, {}
 							, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
 							, vulkan_backend::utils::DefaultColorSubresourceRange()
-						));
+						));*/
 
 					cmd.clearColorImage(
 						m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
 						, vk::ImageLayout::eTransferDstOptimal
 						, vk::ClearColorValue(std::array<float, 4>{ 0.0f, 0.0f, 1.0f, 1.0f }), vulkan_backend::utils::DefaultColorSubresourceRange());
 
-					cmd.pipelineBarrier(
-						vk::PipelineStageFlagBits::eTransfer
-						, vk::PipelineStageFlagBits::eBottomOfPipe
-						, {}
-						, {}
-						, {}
-						, vk::ImageMemoryBarrier(
-							vk::AccessFlagBits::eTransferWrite
-							, vk::AccessFlagBits::eNone
-							, vk::ImageLayout::eTransferDstOptimal
-							, vk::ImageLayout::ePresentSrcKHR
-							, {}, {}
-							, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
-							, vulkan_backend::utils::DefaultColorSubresourceRange()
-						));
+
+					barrier1.ExecuteBarrier(cmd);
+
+					//cmd.pipelineBarrier(
+					//	vk::PipelineStageFlagBits::eTransfer
+					//	, vk::PipelineStageFlagBits::eBottomOfPipe
+					//	, {}
+					//	, {}
+					//	, {}
+					//	, vk::ImageMemoryBarrier(
+					//		vk::AccessFlagBits::eTransferWrite
+					//		, vk::AccessFlagBits::eNone
+					//		, vk::ImageLayout::eTransferDstOptimal
+					//		, vk::ImageLayout::ePresentSrcKHR
+					//		, {}, {}
+					//		, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+					//		, vulkan_backend::utils::DefaultColorSubresourceRange()
+					//	));
 
 					cmd.end();
 					waitingSubmitCommands.push_back(cmd);

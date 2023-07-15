@@ -1,5 +1,7 @@
 #pragma once
 #include <private/include/VulkanIncludes.h>
+#include <map>
+#include <deque>
 namespace graphics_backend
 {
 	enum EResourceUsageIDs
@@ -13,11 +15,12 @@ namespace graphics_backend
 		eFragmentWriteID,
 		eComputeReadID,
 		eComputeWriteID,
-		eComputeReadWriteID,
 
 		eColorAttachmentOutputID,
 
 		ePresentID,
+
+		eMax,
 	};
 
 	enum ResourceUsage : uint32_t
@@ -33,7 +36,6 @@ namespace graphics_backend
 		eFragmentWrite = 1 << eFragmentWriteID,
 		eComputeRead = 1 << eComputeReadID,
 		eComputeWrite = 1 << eComputeWriteID,
-		eComputeReadWrite = 1 << eComputeReadWriteID,
 
 		eColorAttachmentOutput = 1 << eColorAttachmentOutputID,
 
@@ -47,7 +49,7 @@ namespace graphics_backend
 	public:
 		vk::PipelineStageFlags m_UsageStageMask;
 		vk::AccessFlags m_UsageAccessFlags;
-		vk::ImageLayout m_UsageLayout;
+		vk::ImageLayout m_UsageImageLayout;
 	};
 
 
@@ -61,26 +63,43 @@ namespace graphics_backend
 	class VulkanBarrierCollector
 	{
 	public:
-		VulkanBarrierCollector(uint32_t currentQueueFamilyIndex);
+		VulkanBarrierCollector(uint32_t currentQueueFamilyIndex) : m_CurrentQueueFamilyIndex(currentQueueFamilyIndex){}
 
 		void PushImageBarrier(vk::Image image
 			, ResourceUsageFlags sourceUsage
 			, ResourceUsageFlags destUsage);
 
-		void PushImageReleaseBarrier(vk::Image image
-			, ResourceUsageFlags sourceUsage
-			, ResourceUsageFlags destUsage
-			, uint32_t destQueueFamily);
+		//void PushImageReleaseBarrier(vk::Image image
+		//	, ResourceUsageFlags sourceUsage
+		//	, ResourceUsageFlags destUsage
+		//	, uint32_t destQueueFamily);
 
-		void PushImageAquireBarrier(vk::Image image
-			, ResourceUsageFlags sourceUsage
-			, ResourceUsageFlags destUsage
-			, uint32_t sourceQueueFamily);
+		//void PushImageAquireBarrier(vk::Image image
+		//	, ResourceUsageFlags sourceUsage
+		//	, ResourceUsageFlags destUsage
+		//	, uint32_t sourceQueueFamily);
 
 		void ExecuteBarrier(vk::CommandBuffer commandBuffer);
 
-	private:
-		uint32_t m_CurrentQueueFamilyIndex;
 
+		struct BarrierGroup
+		{
+			std::vector<std::tuple<ResourceUsageVulkanInfo, ResourceUsageVulkanInfo, vk::Image>> m_Images;
+		};
+
+	private:
+
+		void ExecuteCurrentQueueBarriers(vk::CommandBuffer commandBuffer);
+
+
+		uint32_t m_CurrentQueueFamilyIndex;
+		std::map<std::tuple<vk::PipelineStageFlags, vk::PipelineStageFlags>
+			, BarrierGroup> m_BarrierGroups;
+
+		std::map<std::tuple<vk::PipelineStageFlags, vk::PipelineStageFlags, uint32_t>
+			, BarrierGroup> m_ReleaseGroups;
+
+		std::map<std::tuple<vk::PipelineStageFlags, vk::PipelineStageFlags, uint32_t>
+			, BarrierGroup> m_AquireGroups;
 	};
 }

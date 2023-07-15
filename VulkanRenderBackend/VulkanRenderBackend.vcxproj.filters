@@ -107,5 +107,8 @@
     <ClCompile Include="private\source\CVulkanMemoryManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="private\source\VulkanBarrierCollector.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

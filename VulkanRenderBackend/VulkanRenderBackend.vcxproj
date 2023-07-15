@@ -191,6 +191,7 @@
     <ClCompile Include="private\source\Utils.cpp" />
     <ClCompile Include="private\source\VMAImpl.cpp" />
     <ClCompile Include="private\source\VulkanApplicationSubobjectBase.cpp" />
+    <ClCompile Include="private\source\VulkanBarrierCollector.cpp" />
     <ClCompile Include="private\source\WindowContext.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -34,7 +34,7 @@ namespace graphics_backend
 	vk::Instance const& ApplicationSubobjectBase::GetInstance() const
 	{
 		if (m_OwningApplication == nullptr)
-			return nullptr;
+			return vk::Instance{nullptr};
 		return m_OwningApplication->GetInstance();
 	}
 	vk::Device const& ApplicationSubobjectBase::GetDevice() const
