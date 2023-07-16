@@ -12,6 +12,7 @@ namespace graphics_backend
 		eBack = 0,
 		eFront,
 		eNone,
+		eAll,
 	};
 
 	enum class EFrontFace
@@ -100,16 +101,15 @@ namespace graphics_backend
 	public:
 #pragma region Internal Structs
 
-
-
 		struct RasterizerStates
 		{
 		public:
 			bool enableDepthClamp = false;
+			bool discardRasterization = false;
 			ECullMode cullMode = ECullMode::eBack;
 			EFrontFace frontFace = EFrontFace::eClockWise;
-			float lineWidth = 1.0f;
 			EPolygonMode polygonMode = EPolygonMode::eFill;
+			float lineWidth = 1.0f;
 		};
 
 		struct MultiSampleStates

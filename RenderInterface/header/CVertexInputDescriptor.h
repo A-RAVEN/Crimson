@@ -13,6 +13,16 @@ namespace graphics_backend
 		eLineStrip,
 	};
 
+	enum class VertexInputFormat
+	{
+		eR32_SFloat = 0,
+		eR32G32_SFloat,
+		eR32G32B32_SFloat,
+		eR32G32B32A32_SFloat,
+		eR32_UInt,
+		eR32_SInt,
+	};
+
 	struct InputAssemblyStates
 	{
 	public:
@@ -24,13 +34,13 @@ namespace graphics_backend
 	public:
 		uint32_t attributeIndex;
 		uint32_t offset;
-		uint32_t size;
+		VertexInputFormat format;
 	};
 
 	class CVertexInputDescriptor
 	{
 	public:
-		InputAssemblyStates m_AssemblyStates;
+		InputAssemblyStates assemblyStates;
 		std::vector<std::tuple<uint32_t, std::vector<VertexAttribute>, bool>> m_PrimitiveDescriptions;
 
 		inline void AddPrimitiveDescriptor(
@@ -43,8 +53,15 @@ namespace graphics_backend
 		}
 	};
 
-	class CVertexInputInstanceDescriptor
-	{
-		std::vector<std::tuple<uint32_t, std::vector<VertexAttribute>>> m_PrimitiveDescriptions_Instanced;
-	};
+	//class CVertexInputInstanceDescriptor
+	//{
+	//	std::vector<std::tuple<uint32_t, std::vector<VertexAttribute>>> m_PrimitiveDescriptions_Instanced;
+
+	//	inline void AddInstanceDescriptor(
+	//		uint32_t stride
+	//		, std::vector<VertexAttribute> const& attributes)
+	//	{
+	//		m_PrimitiveDescriptions_Instanced.push_back(std::make_tuple(stride, attributes));
+	//	}
+	//};
 }

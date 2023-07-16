@@ -166,7 +166,7 @@
     <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />
-    <ClInclude Include="private\include\PipelineObjectBuilder.h" />
+    <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
     <ClInclude Include="private\include\VulkanApplicationSubobjectBase.h" />
@@ -195,6 +195,7 @@
     <ClCompile Include="private\source\VMAImpl.cpp" />
     <ClCompile Include="private\source\VulkanApplicationSubobjectBase.cpp" />
     <ClCompile Include="private\source\VulkanBarrierCollector.cpp" />
+    <ClCompile Include="private\source\VulkanPipelineObject.cpp" />
     <ClCompile Include="private\source\WindowContext.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

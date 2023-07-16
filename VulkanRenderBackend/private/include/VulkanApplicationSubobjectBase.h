@@ -46,6 +46,7 @@ namespace graphics_backend
 		BaseApplicationSubobject& operator=(BaseApplicationSubobject const&) = delete;
 		BaseApplicationSubobject(BaseApplicationSubobject&& other) = default;
 		BaseApplicationSubobject& operator=(BaseApplicationSubobject&&) = default;
+		virtual ~BaseApplicationSubobject() {};
 
 		virtual void Initialize() {};
 		virtual void Release() {};
