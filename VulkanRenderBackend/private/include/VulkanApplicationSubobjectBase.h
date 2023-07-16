@@ -36,4 +36,27 @@ namespace graphics_backend
 			delete deleteObject;
 		}
 	};
+
+	class BaseApplicationSubobject
+	{
+	public:
+		BaseApplicationSubobject() = delete;
+		BaseApplicationSubobject(CVulkanApplication& owner);
+		BaseApplicationSubobject(BaseApplicationSubobject const& other) = delete;
+		BaseApplicationSubobject& operator=(BaseApplicationSubobject const&) = delete;
+		BaseApplicationSubobject(BaseApplicationSubobject&& other) = default;
+		BaseApplicationSubobject& operator=(BaseApplicationSubobject&&) = default;
+
+		virtual void Initialize() {};
+		virtual void Release() {};
+
+		CVulkanApplication& GetVulkanApplication() const;
+		CFrameCountContext const& GetFrameCountContext() const;
+		vk::Instance const& GetInstance() const;
+		vk::Device const& GetDevice() const;
+		vk::PhysicalDevice const& GetPhysicalDevice() const;
+		CVulkanThreadContext* GetThreadContext(uint32_t threadIndex);
+	private:
+		CVulkanApplication& m_OwningApplication;
+	};
 }

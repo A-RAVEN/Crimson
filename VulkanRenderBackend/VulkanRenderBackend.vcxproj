@@ -158,6 +158,7 @@
     <ClInclude Include="private\include\Containers.h" />
     <ClInclude Include="private\include\CPrimitiveResource_Vulkan.h" />
     <ClInclude Include="private\include\CRenderBackend_Vulkan.h" />
+    <ClInclude Include="private\include\CShaderModule_Vulkan.h" />
     <ClInclude Include="private\include\CVulkanApplication.h" />
     <ClInclude Include="private\include\CVulkanBufferObject.h" />
     <ClInclude Include="private\include\CVulkanMemoryManager.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />
+    <ClInclude Include="private\include\PipelineObjectBuilder.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
     <ClInclude Include="private\include\VulkanApplicationSubobjectBase.h" />
@@ -173,6 +175,7 @@
     <ClInclude Include="private\include\WindowContext.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />
     <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp" />
     <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
     <ClCompile Include="private\source\CVulkanApplication.cpp" />

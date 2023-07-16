@@ -160,8 +160,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="header\CGPUPrimitiveResource.h" />
+    <ClInclude Include="header\CPipelineStateObject.h" />
     <ClInclude Include="header\CRenderBackend.h" />
+    <ClInclude Include="header\CShaderModule.h" />
+    <ClInclude Include="header\CShaderStateObject.h" />
     <ClInclude Include="header\CTextureResource.h" />
+    <ClInclude Include="header\CVertexInputDescriptor.h" />
+    <ClInclude Include="header\TEnumCommon.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="header\Common.h" />
     <ClInclude Include="header\CRenderGraph.h" />

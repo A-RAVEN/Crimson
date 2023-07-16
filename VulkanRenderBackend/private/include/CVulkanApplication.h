@@ -6,6 +6,7 @@
 #include <ThreadManager/header/ThreadManager.h>
 #include <private/include/CPrimitiveResource_Vulkan.h>
 #include <private/include/Containers.h>
+#include "CShaderModule_Vulkan.h"
 
 namespace graphics_backend
 {
@@ -89,6 +90,8 @@ namespace graphics_backend
 	public:
 		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
 		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);
+		CShaderModule_Vulkan* NewShaderModule();
+		void DestroyShaderModule(CShaderModule_Vulkan*);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);
@@ -120,6 +123,7 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
+		TThreadSafePointerPool<CShaderModule_Vulkan> m_ShaderModulePool;
 
 		mutable CVulkanMemoryManager m_MemoryManager;
 	};

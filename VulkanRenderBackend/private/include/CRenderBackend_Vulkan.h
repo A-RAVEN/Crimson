@@ -18,6 +18,8 @@ namespace graphics_backend
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) override;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() override;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) override;
+		virtual CShaderModule* NewShaderModule() override;
+		virtual void ReleaseShaderModule(CShaderModule* resource) override;
 	private:
 		CVulkanApplication m_Application;
 	};

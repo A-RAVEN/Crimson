@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
 	pBackend->InitializeThreadContextCount(pThreadManager, 1);
 	pBackend->NewWindow(1024, 512, "Test Window");
 
+	auto shaderModule = pBackend->NewShaderModule_Ptr();
+
 	int32_t frame = 0;
 
 	graphics_backend::CGPUPrimitiveResource* pPrimitive = nullptr;
@@ -39,19 +41,13 @@ int main(int argc, char *argv[])
 	while (pBackend->AnyWindowRunning())
 	{
 		pBackend->StartCurrentFrame();
-		//if(pPrimitive->GPUDone())
-		//{
-		//}
-		//else
-		//{
-		//	std::cout << "Not Done Yet " << frame << std::endl;
-		//}
-		//pBackend->RunGraphWithPresentTarget("Test Window");
+
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;
 		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
+	shaderModule = nullptr;
 	pBackend->ReleaseGPUPrimitiveResource(pPrimitive);
 	pBackend->Release();
 	graphics_backend::DeleteRenderBackend(pBackend);

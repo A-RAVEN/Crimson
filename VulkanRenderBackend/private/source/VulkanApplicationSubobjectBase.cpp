@@ -55,4 +55,32 @@ namespace graphics_backend
 			return nullptr;
 		return m_OwningApplication->GetThreadContext(threadIndex);
 	}
+	BaseApplicationSubobject::BaseApplicationSubobject(CVulkanApplication& owner) :
+		m_OwningApplication(owner)
+	{
+	}
+	CVulkanApplication& BaseApplicationSubobject::GetVulkanApplication() const
+	{
+		return m_OwningApplication;
+	}
+	CFrameCountContext const& BaseApplicationSubobject::GetFrameCountContext() const
+	{
+		return m_OwningApplication.GetSubmitCounterContext();
+	}
+	vk::Instance const& BaseApplicationSubobject::GetInstance() const
+	{
+		return m_OwningApplication.GetInstance();
+	}
+	vk::Device const& BaseApplicationSubobject::GetDevice() const
+	{
+		return m_OwningApplication.GetDevice();
+	}
+	vk::PhysicalDevice const& BaseApplicationSubobject::GetPhysicalDevice() const
+	{
+		return m_OwningApplication.GetPhysicalDevice();
+	}
+	CVulkanThreadContext* BaseApplicationSubobject::GetThreadContext(uint32_t threadIndex)
+	{
+		return m_OwningApplication.GetThreadContext(threadIndex);
+	}
 }

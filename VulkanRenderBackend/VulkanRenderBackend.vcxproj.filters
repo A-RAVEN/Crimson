@@ -63,6 +63,12 @@
     <ClInclude Include="private\include\VulkanBarrierCollector.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\PipelineObjectBuilder.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\CShaderModule_Vulkan.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -108,6 +114,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\VulkanBarrierCollector.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\CShaderModule_Vulkan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
