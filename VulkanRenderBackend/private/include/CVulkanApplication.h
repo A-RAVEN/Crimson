@@ -100,6 +100,7 @@ namespace graphics_backend
 		void DestroyThreadContexts();
 
 		void ReleaseAllWindowContexts();
+
 	private:
 		vk::Instance m_Instance = nullptr;
 		vk::PhysicalDevice m_PhysicalDevice = nullptr;

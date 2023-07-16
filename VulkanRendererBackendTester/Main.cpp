@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
 	pBackend->StartCurrentFrame();
 	pPrimitive = pBackend->NewGPUPrimitiveResource();
-	pPrimitive->AddPrimitiveDescriptor(sizeof(int), { {0, 0, sizeof(int)} });
+	pPrimitive->m_VertexInputDescriptor.AddPrimitiveDescriptor(sizeof(int), { {0, 0, sizeof(int)} });
 	std::vector<int> tmpData = { 1, 2, 3, 4, 5 };
 	pPrimitive->SetPrimitiveData(0, tmpData.size() * sizeof(tmpData[0]), tmpData.data());
 	pPrimitive->Submit();

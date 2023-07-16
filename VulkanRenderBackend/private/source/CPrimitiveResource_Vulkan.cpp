@@ -10,10 +10,10 @@ namespace graphics_backend
 	{
 	}
 
-    void CGPUPrimitiveResource_Vulkan::AddPrimitiveDescriptor(uint32_t stride, std::vector<VertexAttribute> const& attributes, bool perInstance)
-    {
-        m_PrimitiveDescriptions.push_back(std::make_tuple(stride, attributes, perInstance));
-    }
+    //void CGPUPrimitiveResource_Vulkan::AddPrimitiveDescriptor(uint32_t stride, std::vector<VertexAttribute> const& attributes, bool perInstance)
+    //{
+    //    m_PrimitiveDescriptions.push_back(std::make_tuple(stride, attributes, perInstance));
+    //}
 
     void CGPUPrimitiveResource_Vulkan::SetPrimitiveData(uint32_t primitiveIndex, uint32_t dataSize, void* data)
     {
@@ -36,16 +36,16 @@ namespace graphics_backend
 
     void CGPUPrimitiveResource_Vulkan::Submit()
     {
-        if (m_PrimitiveDescriptions.size() == 0)
+        if (m_VertexInputDescriptor.m_PrimitiveDescriptions.size() == 0)
             return;
         if (m_PrimitiveDataCache.size() == 0)
             return;
-        assert(m_PrimitiveDataCache.size() == m_PrimitiveDescriptions.size());
+        assert(m_PrimitiveDataCache.size() == m_VertexInputDescriptor.m_PrimitiveDescriptions.size());
 #if !defined(NDEBUG)
         {
             for (uint32_t i = 0; i < m_PrimitiveDataCache.size(); ++i)
             {
-                size_t stride = std::get<0>(m_PrimitiveDescriptions[i]);
+                size_t stride = std::get<0>(m_VertexInputDescriptor.m_PrimitiveDescriptions[i]);
                 assert(((m_PrimitiveDataCache[i].size()) / stride * stride) == m_PrimitiveDataCache[i].size());
             }
         }
@@ -102,7 +102,7 @@ namespace graphics_backend
 		m_16BitIndices = false;
         m_IndicesDataCache.clear();
         m_PrimitiveDataCache.clear();
-        m_PrimitiveDescriptions.clear();
+        m_VertexInputDescriptor.m_PrimitiveDescriptions.clear();
 		m_SubmitFrame = INVALID_FRAMEID;
     }
 }
