@@ -41,7 +41,7 @@ namespace graphics_backend
 				{
 					vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
 						m_WindowContexts[0].m_Swapchain
-						, 100000
+						, std::numeric_limits<uint64_t>::max()
 						, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
 
 					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0].m_WaitNextFrameSemaphore };
@@ -51,30 +51,15 @@ namespace graphics_backend
 					auto& threadContext0 = m_ThreadContexts[0];
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueRef().first };
+					VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
 					barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
 						, ResourceUsage::eDontCare, ResourceUsage::eTransferDest);
 
-					VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueRef().first };
+					VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
 					barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
 						, ResourceUsage::eTransferDest, ResourceUsage::ePresent);
 
 					barrier0.ExecuteBarrier(cmd);
-	/*				cmd.pipelineBarrier(
-						vk::PipelineStageFlagBits::eTopOfPipe
-						, vk::PipelineStageFlagBits::eTransfer
-						, {}
-						, {}
-						, {}
-						, vk::ImageMemoryBarrier(
-							vk::AccessFlagBits::eNone
-							, vk::AccessFlagBits::eTransferWrite
-							, vk::ImageLayout::eUndefined
-							, vk::ImageLayout::eTransferDstOptimal
-							, {}, {}
-							, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
-							, vulkan_backend::utils::DefaultColorSubresourceRange()
-						));*/
 
 					cmd.clearColorImage(
 						m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
@@ -83,22 +68,6 @@ namespace graphics_backend
 
 
 					barrier1.ExecuteBarrier(cmd);
-
-					//cmd.pipelineBarrier(
-					//	vk::PipelineStageFlagBits::eTransfer
-					//	, vk::PipelineStageFlagBits::eBottomOfPipe
-					//	, {}
-					//	, {}
-					//	, {}
-					//	, vk::ImageMemoryBarrier(
-					//		vk::AccessFlagBits::eTransferWrite
-					//		, vk::AccessFlagBits::eNone
-					//		, vk::ImageLayout::eTransferDstOptimal
-					//		, vk::ImageLayout::ePresentSrcKHR
-					//		, {}, {}
-					//		, m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
-					//		, vulkan_backend::utils::DefaultColorSubresourceRange()
-					//	));
 
 					cmd.end();
 					waitingSubmitCommands.push_back(cmd);
@@ -449,6 +418,7 @@ namespace graphics_backend
 			});
 		if(anyNeedClose)
 		{
+			DeviceWaitIdle();
 			size_t lastIndex = m_WindowContexts.size();
 			size_t currentIndex = 0;
 			while (currentIndex < m_WindowContexts.size())
@@ -504,6 +474,7 @@ namespace graphics_backend
 
 	void CVulkanApplication::DeviceWaitIdle()
 	{
+		m_TaskFuture.wait();
 		if (m_Device != vk::Device(nullptr))
 		{
 			m_Device.waitIdle();

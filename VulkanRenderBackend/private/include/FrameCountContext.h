@@ -46,6 +46,21 @@ namespace graphics_backend
 		{
 			return m_GraphicsQueueReference;
 		}
+
+		uint32_t GetGraphicsQueueFamily() const
+		{
+			return m_GraphicsQueueReference.first;
+		}
+
+		uint32_t GetTransferQueueFamily() const
+		{
+			return m_TransferQueueReference.first;
+		}
+
+		uint32_t GetComputeQueueFamily() const
+		{
+			return m_ComputeQueueReference.first;
+		}
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
