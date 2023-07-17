@@ -63,6 +63,86 @@ namespace graphics_backend
 		}
 	}
 
+	vk::StencilOp EStencilOpTranslate(EStencilOp inStencilOp)
+	{
+		switch(inStencilOp)
+		{
+		case EStencilOp::eKeep: return vk::StencilOp::eKeep;
+		case EStencilOp::eReplace: return vk::StencilOp::eReplace;
+		case EStencilOp::eZero: return vk::StencilOp::eZero;
+		default: return vk::StencilOp::eKeep;
+		}
+	}
+
+	vk::CompareOp ECompareOpTranslate(ECompareOp inCompareOp)
+	{
+		switch (inCompareOp)
+		{
+		case ECompareOp::eAlways: return vk::CompareOp::eAlways;
+		case ECompareOp::eNever: return vk::CompareOp::eNever;
+		case ECompareOp::eLEqual: return vk::CompareOp::eLessOrEqual;
+		case ECompareOp::eGEqual: return vk::CompareOp::eGreaterOrEqual;
+		case ECompareOp::eLess: return vk::CompareOp::eLess;
+		case ECompareOp::eGreater: return vk::CompareOp::eGreater;
+		case ECompareOp::eEqual: return vk::CompareOp::eEqual;
+		case ECompareOp::eUnequal: return vk::CompareOp::eNotEqual;
+		default: return vk::CompareOp::eAlways;
+		}
+	}
+
+	vk::BlendFactor EBlendFactorTranslate(EBlendFactor inBlendFactor)
+	{
+		switch(inBlendFactor)
+		{
+		case EBlendFactor::eZero: return vk::BlendFactor::eZero;
+		case EBlendFactor::eOne: return vk::BlendFactor::eOne;
+		case EBlendFactor::eSrcAlpha: return vk::BlendFactor::eSrcAlpha;
+		case EBlendFactor::eOneMinusSrcAlpha: return vk::BlendFactor::eOneMinusSrcAlpha;
+		case EBlendFactor::eDstAlpha: return vk::BlendFactor::eDstAlpha;
+		case EBlendFactor::eOneMinusDstAlpha: return vk::BlendFactor::eOneMinusDstAlpha;
+		case EBlendFactor::eSrcColor: return vk::BlendFactor::eSrcColor;
+		case EBlendFactor::eOneMinusSrcColor: return vk::BlendFactor::eOneMinusSrcColor;
+		case EBlendFactor::eDstColor: return vk::BlendFactor::eDstColor;
+		case EBlendFactor::eOneMinusDstColor: return vk::BlendFactor::eOneMinusDstColor;
+		default: return vk::BlendFactor::eZero;
+		}
+	}
+
+	vk::BlendOp EBlendOpTranslate(EBlendOp inBlendOp)
+	{
+		switch(inBlendOp)
+		{
+		case EBlendOp::eAdd: return vk::BlendOp::eAdd;
+		case EBlendOp::eSubtract: return vk::BlendOp::eSubtract;
+		case EBlendOp::eReverseSubtract: return vk::BlendOp::eReverseSubtract;
+		case EBlendOp::eMin: return vk::BlendOp::eMin;
+		case EBlendOp::eMax: return vk::BlendOp::eMax;
+		default: return vk::BlendOp::eAdd;
+		}
+	}
+
+	vk::ColorComponentFlags EColorChannelMaskTranslate(EColorChannelMaskFlags inColorMask)
+	{
+		vk::ColorComponentFlags result = vk::ColorComponentFlags(0);
+		if(inColorMask & EColorChannelMask::eR)
+		{
+			result |= vk::ColorComponentFlagBits::eR;
+		}
+		if (inColorMask & EColorChannelMask::eG)
+		{
+			result |= vk::ColorComponentFlagBits::eG;
+		}
+		if (inColorMask & EColorChannelMask::eB)
+		{
+			result |= vk::ColorComponentFlagBits::eB;
+		}
+		if (inColorMask & EColorChannelMask::eA)
+		{
+			result |= vk::ColorComponentFlagBits::eA;
+		}
+		return result;
+	}
+
 	void PopulateVertexInputStates(std::vector<vk::VertexInputBindingDescription>& inoutVertexBindingDescs
 		, std::vector<vk::VertexInputAttributeDescription>& inoutVertexAttributeDescs
 		, CVertexInputDescriptor const& vertexInputs)
@@ -125,6 +205,60 @@ namespace graphics_backend
 		return result;
 	}
 
+	void PopulateStencilOpState(CPipelineStateObject::StencilStates const& stencilState, vk::StencilOpState& inoutVulkanStencilOp)
+	{
+		inoutVulkanStencilOp.failOp = EStencilOpTranslate(stencilState.failOp);
+		inoutVulkanStencilOp.passOp = EStencilOpTranslate(stencilState.passOp);
+		inoutVulkanStencilOp.depthFailOp = EStencilOpTranslate(stencilState.depthFailOp);
+		inoutVulkanStencilOp.compareOp = ECompareOpTranslate(stencilState.compareOp);
+		inoutVulkanStencilOp.compareMask = stencilState.compareMask;
+		inoutVulkanStencilOp.writeMask = stencilState.writeMask;
+		inoutVulkanStencilOp.reference = stencilState.reference;
+	}
+
+	vk::PipelineDepthStencilStateCreateInfo PopulateDepthStencilStateInfo(CPipelineStateObject const& srcPSO)
+	{
+		vk::PipelineDepthStencilStateCreateInfo result{};
+		auto& depthStencilState = srcPSO.depthStencilStates;
+		result.depthTestEnable = depthStencilState.depthTestEnable;
+		result.depthWriteEnable = depthStencilState.depthWriteEnable;
+		result.depthCompareOp = ECompareOpTranslate(depthStencilState.depthCompareOp);
+		result.depthBoundsTestEnable = false;
+		result.maxDepthBounds = 1.0f;
+		result.minDepthBounds = 0.0f;
+		result.stencilTestEnable = depthStencilState.stencilTestEnable;
+		PopulateStencilOpState(depthStencilState.stencilStateFront, result.front);
+		PopulateStencilOpState(depthStencilState.stencilStateBack, result.back);
+		return result;
+	}
+
+	vk::PipelineColorBlendStateCreateInfo PopulateColorBlendStateInfo(
+		CPipelineStateObject const& srcPSO
+		, std::vector<vk::PipelineColorBlendAttachmentState>& inoutBlendAttachmentStates)
+	{
+		auto& colorAttachments = srcPSO.colorAttachments;
+		vk::PipelineColorBlendStateCreateInfo result{};
+		uint32_t attachmentCount = std::min(
+			static_cast<uint32_t>(colorAttachments.attachmentBlendStates.size())
+			, colorAttachments.attachmentCount);
+		inoutBlendAttachmentStates.resize(attachmentCount);
+		for(uint32_t i = 0; i < attachmentCount; ++i)
+		{
+			auto const& srcInfo =colorAttachments.attachmentBlendStates[i];
+			auto& dstInfo = inoutBlendAttachmentStates[i];
+			dstInfo.blendEnable = srcInfo.blendEnable;
+			dstInfo.srcColorBlendFactor = EBlendFactorTranslate(srcInfo.sourceColorBlendFactor);
+			dstInfo.dstColorBlendFactor = EBlendFactorTranslate(srcInfo.destColorBlendFactor);
+			dstInfo.srcAlphaBlendFactor = EBlendFactorTranslate(srcInfo.sourceAlphaBlendFactor);
+			dstInfo.dstAlphaBlendFactor = EBlendFactorTranslate(srcInfo.destAlphaBlendFactor);
+			dstInfo.colorBlendOp = EBlendOpTranslate(srcInfo.colorBlendOp);
+			dstInfo.alphaBlendOp = EBlendOpTranslate(srcInfo.alphaBlendOp);
+			dstInfo.colorWriteMask = EColorChannelMaskTranslate(srcInfo.channelMask);
+		}
+		result.setAttachments(inoutBlendAttachmentStates);
+		return result;
+	}
+
 	void CPipelineObject::BuildPipelineObject(CPipelineStateObject const& srcPSO,
 		CVertexInputDescriptor const& vertexInputs, CGraphicsShaderStates const& shaderStates,
 		RenderPassInfo const& renderPassInfo)
@@ -147,6 +281,12 @@ namespace graphics_backend
 		vk::PipelineRasterizationStateCreateInfo rasterizationInfo = PopulateRasterizationStateInfo(srcPSO);
 
 
+		//Depth Stencil
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState = PopulateDepthStencilStateInfo(srcPSO);
+
+		//Color Attachment State
+		std::vector<vk::PipelineColorBlendAttachmentState> inoutBlendAttachmentStates;
+		vk::PipelineColorBlendStateCreateInfo colorBlendState = PopulateColorBlendStateInfo(srcPSO, inoutBlendAttachmentStates);
 
 		//vk::GraphicsPipelineCreateInfo graphicsPipeCreateInfo(
 		//	

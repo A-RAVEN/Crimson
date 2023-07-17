@@ -125,6 +125,7 @@ namespace graphics_backend
 			ECompareOp compareOp = ECompareOp::eAlways;
 			uint32_t compareMask = 0u;
 			uint32_t writeMask = 0u;
+			uint32_t reference = 0u;
 		};
 
 		struct DepthStencilStates
@@ -142,20 +143,24 @@ namespace graphics_backend
 		{
 			bool blendEnable = false;
 			EColorChannelMaskFlags channelMask = ToFlags(EColorChannelMask::eRGBA);
-			EBlendFactor sourceBlendFactor = EBlendFactor::eOne;
-			EBlendFactor destBlendFactor = EBlendFactor::eZero;
-			EBlendOp blendOp = EBlendOp::eAdd;
+			EBlendFactor sourceColorBlendFactor = EBlendFactor::eOne;
+			EBlendFactor destColorBlendFactor = EBlendFactor::eZero;
+			EBlendFactor sourceAlphaBlendFactor = EBlendFactor::eOne;
+			EBlendFactor destAlphaBlendFactor = EBlendFactor::eZero;
+			EBlendOp colorBlendOp = EBlendOp::eAdd;
+			EBlendOp alphaBlendOp = EBlendOp::eAdd;
 		};
 
 		struct ColorAttachmentsBlendStates
 		{
 			std::array<SingleColorAttachmentBlendStates, 8> attachmentBlendStates = {};
+			uint32_t attachmentCount = 0;
 		};
 #pragma endregion
 	public:
 		RasterizerStates rasterizationStates = {};
 		MultiSampleStates multiSampleStates = {};
 		DepthStencilStates depthStencilStates = {};
-		ColorAttachmentsBlendStates attachnmentBlendStates = {};
+		ColorAttachmentsBlendStates colorAttachments = {};
 	};
 }
