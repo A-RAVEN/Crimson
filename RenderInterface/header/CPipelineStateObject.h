@@ -3,6 +3,8 @@
 #include "TEnumCommon.h"
 #include <array>
 
+#include "HashCommon.h"
+
 namespace graphics_backend
 {
 
@@ -164,3 +166,16 @@ namespace graphics_backend
 		ColorAttachmentsBlendStates colorAttachments = {};
 	};
 }
+
+template<> struct std::hash<graphics_backend::CPipelineStateObject::ColorAttachmentsBlendStates>
+{
+	std::size_t operator()(graphics_backend::CPipelineStateObject::ColorAttachmentsBlendStates const& source) const noexcept
+	{
+		auto h = std::hash<uint32_t>{}(source.attachmentCount);
+		for(uint32_t i = 0; i < source.attachmentCount; ++i)
+		{
+			hash_combine(h, source.attachmentBlendStates[i]);
+		}
+		return h;
+	}
+};

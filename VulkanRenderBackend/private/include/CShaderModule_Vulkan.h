@@ -8,15 +8,11 @@ namespace graphics_backend
 	{
 	public:
 		CShaderModule_Vulkan(CVulkanApplication& owner) : BaseApplicationSubobject(owner) {}
-		//CShaderModule_Vulkan(CShaderModule_Vulkan const& other) = delete;
-		//CShaderModule_Vulkan& operator=(CShaderModule_Vulkan const&) = delete;
-		//CShaderModule_Vulkan(CShaderModule_Vulkan&& other) = default;
-		//CShaderModule_Vulkan& operator=(CShaderModule_Vulkan&&) = default;
+		vk::ShaderModule GetVulkanModule() const { return m_ThisShaderModule; }
 		// 通过 CShaderModule 继承
 		virtual void SetShaderProvider(std::shared_ptr<const ShaderProvider> provider) override;
 		virtual void Submit() override;
 		virtual bool Done() override;
-
 		virtual void Release() override;
 	private:
 		std::shared_ptr<const ShaderProvider> m_OwningProvider = nullptr;

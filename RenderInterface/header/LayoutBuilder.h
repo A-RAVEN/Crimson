@@ -4,11 +4,6 @@
 namespace graphics_backend
 {
 
-	class CShaderUniformSet
-	{
-		
-	};
-
 	class CShaderLayoutBuilder
 	{
 	public:
@@ -16,9 +11,4 @@ namespace graphics_backend
 		CShaderLayoutBuilder& ConstantBuffer(std::string const& name);
 		CShaderLayoutBuilder& Buffer(std::string const& name);
 	};
-
-	static CShaderLayoutBuilder s_Test = CShaderLayoutBuilder{}
-		.ConstantBuffer("Test1")
-		.Buffer("Test0")
-		.Texture("Test2");
 }

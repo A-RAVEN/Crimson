@@ -18,13 +18,19 @@ namespace graphics_backend
 			uint32_t subpassId = 0;
 		};
 
+		struct ShaderDataLayoutInfo
+		{
+			vk::PipelineLayout layout;
+		};
+
 		CPipelineObject(CVulkanApplication& owner) : BaseApplicationSubobject(owner) {};
 
 		void BuildPipelineObject(
 			CPipelineStateObject const& srcPSO
 			, CVertexInputDescriptor const& vertexInputs
 			, CGraphicsShaderStates const& shaderStates
-			, RenderPassInfo const& renderPassInfo);
+			, RenderPassInfo const& renderPassInfo
+			, ShaderDataLayoutInfo const& pipelineLayout);
 	protected:
 		vk::Pipeline m_GraphicsPipeline = nullptr;
 	};

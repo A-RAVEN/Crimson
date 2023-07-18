@@ -1,5 +1,8 @@
+#include <unordered_map>
 #include <private/include/pch.h>
 #include <private/include/VulkanPipelineObject.h>
+
+#include "private/include/CShaderModule_Vulkan.h"
 
 namespace graphics_backend
 {
@@ -259,9 +262,35 @@ namespace graphics_backend
 		return result;
 	}
 
-	void CPipelineObject::BuildPipelineObject(CPipelineStateObject const& srcPSO,
-		CVertexInputDescriptor const& vertexInputs, CGraphicsShaderStates const& shaderStates,
-		RenderPassInfo const& renderPassInfo)
+	void PopulateShaderStages(CGraphicsShaderStates const& shaderStates
+		, std::vector<vk::PipelineShaderStageCreateInfo>& inoutShaderStages)
+	{
+		auto vertexModdule = static_cast<CShaderModule_Vulkan*>(shaderStates.vertexShader.get())->GetVulkanModule();
+		auto fragmentModdule = static_cast<CShaderModule_Vulkan*>(shaderStates.fragmentShader.get())->GetVulkanModule();
+		inoutShaderStages.clear();
+		inoutShaderStages.push_back(vk::PipelineShaderStageCreateInfo{
+			vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
+				, vk::ShaderStageFlagBits::eVertex
+				, vertexModdule
+				, "Vertex Shader"
+		});
+		inoutShaderStages.push_back(vk::PipelineShaderStageCreateInfo{
+			vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
+				, vk::ShaderStageFlagBits::eFragment
+				, fragmentModdule
+				, "Fragment Shader"
+		});
+
+		std::unordered_map<CPipelineObject, int> test;
+	}
+
+
+	void CPipelineObject::BuildPipelineObject(
+		CPipelineStateObject const& srcPSO
+		, CVertexInputDescriptor const& vertexInputs
+		, CGraphicsShaderStates const& shaderStates
+		, RenderPassInfo const& renderPassInfo
+		, ShaderDataLayoutInfo const& pipelineLayout)
 	{
 
 		//Vertex States
@@ -288,8 +317,24 @@ namespace graphics_backend
 		std::vector<vk::PipelineColorBlendAttachmentState> inoutBlendAttachmentStates;
 		vk::PipelineColorBlendStateCreateInfo colorBlendState = PopulateColorBlendStateInfo(srcPSO, inoutBlendAttachmentStates);
 
-		//vk::GraphicsPipelineCreateInfo graphicsPipeCreateInfo(
-		//	
-		//)
+		//Shader Stages
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+		PopulateShaderStages(shaderStates, shaderStages);
+
+		vk::GraphicsPipelineCreateInfo graphicsPipeCreateInfo{};
+		//graphicsPipeCreateInfo.flags = vk::PipelineCreateFlagBits::
+		graphicsPipeCreateInfo.layout = pipelineLayout.layout;
+		graphicsPipeCreateInfo.setPColorBlendState(&colorBlendState);
+		graphicsPipeCreateInfo.setStages(shaderStages);
+		graphicsPipeCreateInfo.setPVertexInputState(&vertexStateCreateInfo);
+		graphicsPipeCreateInfo.setPInputAssemblyState(&inputAssemblyInfo);
+		graphicsPipeCreateInfo.setPRasterizationState(&rasterizationInfo);
+		graphicsPipeCreateInfo.setPDepthStencilState(&depthStencilState);
+		graphicsPipeCreateInfo.setRenderPass(renderPassInfo.renderPass);
+		graphicsPipeCreateInfo.setSubpass(renderPassInfo.subpassId);
+
+		m_GraphicsPipeline = GetDevice().createGraphicsPipeline(nullptr, graphicsPipeCreateInfo).value;
+
+		//GetDevice().getPipelineCacheData()
 	}
 }
