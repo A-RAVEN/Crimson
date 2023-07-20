@@ -7,6 +7,7 @@
 #include <private/include/CPrimitiveResource_Vulkan.h>
 #include <private/include/Containers.h>
 #include "CShaderModule_Vulkan.h"
+#include <unordered_map>
 
 namespace graphics_backend
 {
@@ -124,6 +125,8 @@ namespace graphics_backend
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
 		TThreadSafePointerPool<CShaderModule_Vulkan> m_ShaderModulePool;
+
+		std::unordered_map<>
 
 		mutable CVulkanMemoryManager m_MemoryManager;
 	};

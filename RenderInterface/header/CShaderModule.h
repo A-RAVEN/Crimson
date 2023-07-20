@@ -39,6 +39,11 @@ namespace graphics_backend
 		std::shared_ptr<CShaderModule> vertexShader;
 		std::shared_ptr<CShaderModule> fragmentShader;
 	};
+
+	class CShaderStateLibrary
+	{
+		
+	};
 }
 
 template<> struct std::hash<graphics_backend::ShaderProvider>

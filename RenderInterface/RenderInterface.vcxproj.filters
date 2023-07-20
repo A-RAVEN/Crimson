@@ -63,6 +63,12 @@
     <ClInclude Include="header\HashCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\CNativeRenderPassInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\CCommandList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
