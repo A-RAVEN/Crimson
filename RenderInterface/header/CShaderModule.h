@@ -14,8 +14,6 @@ namespace graphics_backend
 		virtual std::string GetSourcePath() const = 0;
 	};
 
-
-
 	class CShaderModule
 	{
 	public:
@@ -29,6 +27,11 @@ namespace graphics_backend
 		}
 		virtual void Submit() = 0;
 		virtual bool Done() = 0;
+
+		bool operator==(CShaderModule const& other) const
+		{
+			return m_Provider == other.m_Provider;
+		}
 	protected:
 		std::shared_ptr<const ShaderProvider> m_Provider = nullptr;
 	};
@@ -38,6 +41,12 @@ namespace graphics_backend
 	public:
 		std::shared_ptr<CShaderModule> vertexShader;
 		std::shared_ptr<CShaderModule> fragmentShader;
+
+		bool operator==(CGraphicsShaderStates const& other) const
+		{
+			return (vertexShader == other.vertexShader
+				&& fragmentShader == other.fragmentShader);
+		}
 	};
 
 	class CShaderStateLibrary
