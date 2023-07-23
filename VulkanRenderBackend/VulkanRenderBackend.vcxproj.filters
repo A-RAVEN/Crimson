@@ -66,7 +66,10 @@
     <ClInclude Include="private\include\VulkanPipelineObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\CShaderModule_Vulkan.h">
+    <ClInclude Include="private\include\CShaderModuleObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\PipelineObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

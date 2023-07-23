@@ -150,15 +150,6 @@ namespace graphics_backend
 		m_PrimitiveResourcePool.Release(resource);
 	}
 
-	CShaderModule_Vulkan* CVulkanApplication::NewShaderModule()
-	{
-		return m_ShaderModulePool.Alloc(*this);
-	}
-
-	void CVulkanApplication::DestroyShaderModule(CShaderModule_Vulkan* shaderModule)
-	{
-		m_ShaderModulePool.Release(shaderModule);
-	}
 
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{

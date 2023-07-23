@@ -14,6 +14,10 @@
 //template<>
 //struct is_contiguously_hashable<TestStruct> : public std::true_type {};
 
+namespace hash_utils
+{
+	
+
 #pragma region Is Contiguously
 
 template <class T> struct is_contiguously_hashable : public std::integral_constant<bool, std::is_integral<T>::value || std::is_enum<T>::value> {};
@@ -172,6 +176,21 @@ hash_append(HashAlgorithm& h, std::basic_string<CharT, Traits, Alloc> const& s) 
 }
 #pragma endregion
 
+#pragma region pointer hash_append
+template <class HashAlgorithm, class T>
+void hash_append(HashAlgorithm& h, T* const pT) noexcept
+{
+    if(pT == nullptr)
+    {
+        hash_append(h, size_t{0});
+    }
+    else
+    {
+        hash_append(h, *pT);
+    }
+}
+#pragma endregion
+
 #pragma region basic types hash_append
 template <class HashAlgorithm, class T>
 inline
@@ -199,3 +218,4 @@ hash_append(HashAlgorithm& h, std::pair<T, U> const& p) noexcept
 
 
 #pragma endregion
+}

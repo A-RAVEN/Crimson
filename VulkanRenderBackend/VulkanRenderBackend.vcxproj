@@ -158,7 +158,7 @@
     <ClInclude Include="private\include\Containers.h" />
     <ClInclude Include="private\include\CPrimitiveResource_Vulkan.h" />
     <ClInclude Include="private\include\CRenderBackend_Vulkan.h" />
-    <ClInclude Include="private\include\CShaderModule_Vulkan.h" />
+    <ClInclude Include="private\include\CShaderModuleObject.h" />
     <ClInclude Include="private\include\CVulkanApplication.h" />
     <ClInclude Include="private\include\CVulkanBufferObject.h" />
     <ClInclude Include="private\include\CVulkanMemoryManager.h" />
@@ -166,6 +166,7 @@
     <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\pch.h" />
+    <ClInclude Include="private\include\PipelineObject.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />

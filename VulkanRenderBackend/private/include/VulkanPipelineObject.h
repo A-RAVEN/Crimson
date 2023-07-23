@@ -9,6 +9,13 @@
 namespace graphics_backend
 {
 
+	struct CPipelineObjectDescriptor
+	{
+		CPipelineStateObject pso{};
+		CVertexInputDescriptor vertexInputs{};
+		CGraphicsShaderStates shaderStates{};
+	};
+
 	class CPipelineObject final : public BaseApplicationSubobject
 	{
 	public:
