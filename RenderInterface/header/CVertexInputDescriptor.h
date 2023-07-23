@@ -2,30 +2,18 @@
 #include <cstdint>
 #include <vector>
 #include <tuple>
-
-enum class ETopology
-{
-	eTriangleList = 0,
-	eTriangleStrip,
-	ePointList,
-	eLineList,
-	eLineStrip,
-};
-
-enum class VertexInputFormat
-{
-	eR32_SFloat = 0,
-	eR32G32_SFloat,
-	eR32G32B32_SFloat,
-	eR32G32B32A32_SFloat,
-	eR32_UInt,
-	eR32_SInt,
-};
+#include "Common.h"
+#include <SharedTools/header/uhash.h>
 
 struct InputAssemblyStates
 {
 public:
 	ETopology topology = ETopology::eLineList;
+
+	bool operator==(InputAssemblyStates const& rhs) const
+	{
+		return topology == rhs.topology;
+	}
 };
 
 struct VertexAttribute
@@ -34,7 +22,17 @@ public:
 	uint32_t attributeIndex;
 	uint32_t offset;
 	VertexInputFormat format;
+
+	bool operator==(VertexAttribute const& rhs) const
+	{
+		return attributeIndex == rhs.attributeIndex
+			&& offset == rhs.offset
+			&& format == rhs.format;
+	}
 };
+
+template<>
+struct hash_utils::is_contiguously_hashable<VertexAttribute> : public std::true_type {};
 
 class CVertexInputDescriptor
 {
@@ -49,5 +47,24 @@ public:
 	)
 	{
 		m_PrimitiveDescriptions.push_back(std::make_tuple(stride, attributes, perInstance));
+	}
+
+	bool operator==(CVertexInputDescriptor const& rhs) const
+	{
+		return assemblyStates == rhs.assemblyStates
+			&& m_PrimitiveDescriptions == rhs.m_PrimitiveDescriptions;
+	}
+
+	template <class HashAlgorithm>
+	friend void hash_append(HashAlgorithm& h, CVertexInputDescriptor const& vertex_input_desc) noexcept
+	{
+		hash_append(h, vertex_input_desc.assemblyStates);
+		for (auto& tup : m_PrimitiveDescriptions)
+		{
+			hash_append(h, std::get<0>(tup));
+			hash_append(h, std::get<1>(tup));
+			hash_append(h, std::get<2>(tup));
+		}
+		hash_append(h, m_PrimitiveDescriptions.size());
 	}
 };

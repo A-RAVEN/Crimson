@@ -69,7 +69,10 @@
     <ClInclude Include="private\include\CShaderModuleObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\PipelineObject.h">
+    <ClInclude Include="private\include\RenderPassObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\InterfaceTranslator.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -123,6 +126,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\VulkanPipelineObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\RenderPassObject.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

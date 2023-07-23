@@ -154,3 +154,22 @@ enum class EBlendOp
 	eMin,
 	eMax,
 };
+
+enum class ETopology
+{
+	eTriangleList = 0,
+	eTriangleStrip,
+	ePointList,
+	eLineList,
+	eLineStrip,
+};
+
+enum class VertexInputFormat
+{
+	eR32_SFloat = 0,
+	eR32G32_SFloat,
+	eR32G32B32_SFloat,
+	eR32G32B32A32_SFloat,
+	eR32_UInt,
+	eR32_SInt,
+};

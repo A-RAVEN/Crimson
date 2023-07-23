@@ -165,8 +165,9 @@
     <ClInclude Include="private\include\CVulkanThreadContext.h" />
     <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
+    <ClInclude Include="private\include\InterfaceTranslator.h" />
     <ClInclude Include="private\include\pch.h" />
-    <ClInclude Include="private\include\PipelineObject.h" />
+    <ClInclude Include="private\include\RenderPassObject.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
@@ -192,6 +193,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="private\source\RenderPassObject.cpp" />
     <ClCompile Include="private\source\Utils.cpp" />
     <ClCompile Include="private\source\VMAImpl.cpp" />
     <ClCompile Include="private\source\VulkanApplicationSubobjectBase.cpp" />

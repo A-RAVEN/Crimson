@@ -2,7 +2,7 @@
 #include <deque>
 #include <vector>
 
-//ÔÚĞèÒªhashµÄÀà»ò½á¹¹ÌåÖĞÊµÏÖhash_append£¬ÔÚÆäÖĞ×ÔĞĞ½«ĞèÒª¼ÆËãhashµÄ³ÉÔ±±äÁ¿ÀÛ¼Ó
+//åœ¨éœ€è¦hashçš„ç±»æˆ–ç»“æ„ä½“ä¸­å®ç°hash_appendï¼Œåœ¨å…¶ä¸­è‡ªè¡Œå°†éœ€è¦è®¡ç®—hashçš„æˆå‘˜å˜é‡ç´¯åŠ 
 //template <class HashAlgorithm>
 //friend void hash_append(HashAlgorithm& h, TestStruct const& x) noexcept
 //{
@@ -10,7 +10,7 @@
 //	hash_append(h, x.two);
 //}
 
-//Èç¹û½á¹¹Ìå±¾ÉíÊÇÁ¬ĞøµÄÄÚ´æ£¨ÓĞÖ¸ÕëºÍ¶ÑÄÚ´æÈİÆ÷£©¿ÉÒÔÉùÃ÷Ò»¸öis contiguous
+//å¦‚æœç»“æ„ä½“æœ¬èº«æ˜¯è¿ç»­çš„å†…å­˜ï¼ˆæœ‰æŒ‡é’ˆå’Œå †å†…å­˜å®¹å™¨ï¼‰å¯ä»¥å£°æ˜ä¸€ä¸ªis contiguous
 //template<>
 //struct is_contiguously_hashable<TestStruct> : public std::true_type {};
 
@@ -55,6 +55,7 @@ public:
 	    }
 };
 
+
 #pragma endregion
 
 #pragma region Hash Functor
@@ -72,6 +73,8 @@ struct uhash
         return static_cast<result_type>(h);
     }
 };
+
+using default_hashAlg = uhash<fnv1a>;
 #pragma endregion
 
 #pragma region contiguous hash_append

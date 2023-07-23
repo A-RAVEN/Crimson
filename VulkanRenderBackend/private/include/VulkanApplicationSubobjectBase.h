@@ -50,6 +50,7 @@ namespace graphics_backend
 
 		virtual void Initialize() {};
 		virtual void Release() {};
+		virtual bool Done() const { return true; }
 
 		CVulkanApplication& GetVulkanApplication() const;
 		CFrameCountContext const& GetFrameCountContext() const;
