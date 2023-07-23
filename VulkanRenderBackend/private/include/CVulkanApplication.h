@@ -10,10 +10,14 @@
 
 #include "CShaderModuleObject.h"
 #include "RenderInterface/header/CShaderModule.h"
+#include "CShaderModuleObject.h"
+#include "RenderPassObject.h"
+#include "VulkanPipelineObject.h"
 
 namespace graphics_backend
 {
 	using namespace thread_management;
+
 	class CVulkanApplication
 	{
 	public:
@@ -124,7 +128,9 @@ namespace graphics_backend
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
 
-		std::unordered_map<ShaderProvider, CShaderModuleObject, hash_utils::uhash<fnv1a>> m_ShaderModuleCache;
+		ShaderModuleObjectDic m_ShaderModuleCache;
+		RenderPassObjectDic m_RenderPassCache;
+		PipelineObjectDic m_PipelineObjectCache;
 
 		mutable CVulkanMemoryManager m_MemoryManager;
 	};

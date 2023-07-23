@@ -100,6 +100,18 @@ struct SingleColorAttachmentBlendStates
 	EBlendFactor destAlphaBlendFactor = EBlendFactor::eZero;
 	EBlendOp colorBlendOp = EBlendOp::eAdd;
 	EBlendOp alphaBlendOp = EBlendOp::eAdd;
+
+	bool operator==(SingleColorAttachmentBlendStates const& rhs) const
+	{
+		return blendEnable == rhs.blendEnable
+			&& channelMask == rhs.channelMask
+			&& sourceColorBlendFactor == rhs.sourceColorBlendFactor
+			&& destColorBlendFactor == rhs.destColorBlendFactor
+			&& sourceAlphaBlendFactor == rhs.sourceAlphaBlendFactor
+			&& destAlphaBlendFactor == rhs.destAlphaBlendFactor
+			&& colorBlendOp == rhs.colorBlendOp
+			&& alphaBlendOp == rhs.alphaBlendOp;
+	}
 };
 
 template<>
@@ -109,6 +121,22 @@ struct ColorAttachmentsBlendStates
 {
 	std::array<SingleColorAttachmentBlendStates, 8> attachmentBlendStates = {};
 	uint32_t attachmentCount = 0;
+
+	bool operator==(ColorAttachmentsBlendStates const& rhs) const
+	{
+		if (attachmentCount != rhs.attachmentCount)
+		{
+			return false;
+		}
+		for (uint32_t i = 0; i < attachmentCount; ++i)
+		{
+			if (!(attachmentBlendStates[i] == rhs.attachmentBlendStates[i]))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 };
 template<>
 struct is_contiguously_hashable<ColorAttachmentsBlendStates> : public std::true_type {};

@@ -1,8 +1,6 @@
-#include <unordered_map>
 #include <private/include/pch.h>
-#include <private/include/VulkanPipelineObject.h>
-#include <private/include/CShaderModuleObject.h>
 #include <private/include/InterfaceTranslator.h>
+#include <private/include/VulkanPipelineObject.h>
 
 namespace graphics_backend
 {
@@ -69,7 +67,7 @@ namespace graphics_backend
 		return result;
 	}
 
-	void PopulateStencilOpState(CPipelineStateObject::StencilStates const& stencilState, vk::StencilOpState& inoutVulkanStencilOp)
+	void PopulateStencilOpState(DepthStencilStates::StencilStates const& stencilState, vk::StencilOpState& inoutVulkanStencilOp)
 	{
 		inoutVulkanStencilOp.failOp = EStencilOpTranslate(stencilState.failOp);
 		inoutVulkanStencilOp.passOp = EStencilOpTranslate(stencilState.passOp);
@@ -123,11 +121,11 @@ namespace graphics_backend
 		return result;
 	}
 
-	void PopulateShaderStages(CGraphicsShaderStates const& shaderStates
+	void PopulateShaderStages(ShaderStateDescriptor const& shaderStates
 		, std::vector<vk::PipelineShaderStageCreateInfo>& inoutShaderStages)
 	{
-		auto vertexModdule = static_cast<CShaderModule_Vulkan*>(shaderStates.vertexShader.get())->GetVulkanModule();
-		auto fragmentModdule = static_cast<CShaderModule_Vulkan*>(shaderStates.fragmentShader.get())->GetVulkanModule();
+		auto vertexModdule = shaderStates.vertexShader->GetShaderModule();
+		auto fragmentModdule = shaderStates.fragmentShader->GetShaderModule();
 		inoutShaderStages.clear();
 		inoutShaderStages.push_back(vk::PipelineShaderStageCreateInfo{
 			vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
@@ -141,61 +139,50 @@ namespace graphics_backend
 				, fragmentModdule
 				, "Fragment Shader"
 		});
-
-		std::unordered_map<CPipelineObject, int> test;
 	}
 
-
-	void CPipelineObject::BuildPipelineObject(
-		CPipelineStateObject const& srcPSO
-		, CVertexInputDescriptor const& vertexInputs
-		, CGraphicsShaderStates const& shaderStates
-		, RenderPassInfo const& renderPassInfo
-		, ShaderDataLayoutInfo const& pipelineLayout)
+	void CPipelineObject::Create(CPipelineObjectDescriptor const& pipelineObjectDescriptor)
 	{
-
 		//Vertex States
 		std::vector<vk::VertexInputBindingDescription> vertexBindingDescriptions;
 		std::vector<vk::VertexInputAttributeDescription> vertexAttributeDescriptions;
 		PopulateVertexInputStates(
 			vertexBindingDescriptions
 			, vertexAttributeDescriptions
-			, vertexInputs);
+			, pipelineObjectDescriptor.vertexInputs);
 
 		vk::PipelineVertexInputStateCreateInfo vertexStateCreateInfo({}, vertexBindingDescriptions, vertexAttributeDescriptions);
 
 		//Input Assembly
-		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = PopulateInputAssemblyInfo(vertexInputs);
+		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo = PopulateInputAssemblyInfo(pipelineObjectDescriptor.vertexInputs);
 
 		//Rasterization States
-		vk::PipelineRasterizationStateCreateInfo rasterizationInfo = PopulateRasterizationStateInfo(srcPSO);
-
+		vk::PipelineRasterizationStateCreateInfo rasterizationInfo = PopulateRasterizationStateInfo(pipelineObjectDescriptor.pso);
 
 		//Depth Stencil
-		vk::PipelineDepthStencilStateCreateInfo depthStencilState = PopulateDepthStencilStateInfo(srcPSO);
+		vk::PipelineDepthStencilStateCreateInfo depthStencilState = PopulateDepthStencilStateInfo(pipelineObjectDescriptor.pso);
 
 		//Color Attachment State
 		std::vector<vk::PipelineColorBlendAttachmentState> inoutBlendAttachmentStates;
-		vk::PipelineColorBlendStateCreateInfo colorBlendState = PopulateColorBlendStateInfo(srcPSO, inoutBlendAttachmentStates);
+		vk::PipelineColorBlendStateCreateInfo colorBlendState = PopulateColorBlendStateInfo(pipelineObjectDescriptor.pso, inoutBlendAttachmentStates);
 
 		//Shader Stages
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
-		PopulateShaderStages(shaderStates, shaderStages);
+		PopulateShaderStages(pipelineObjectDescriptor.shaderState, shaderStages);
+
+		vk::PipelineLayoutCreateInfo layoutCreateInfo{};
+		m_PipelineLayout = GetDevice().createPipelineLayout(layoutCreateInfo);
 
 		vk::GraphicsPipelineCreateInfo graphicsPipeCreateInfo{};
-		//graphicsPipeCreateInfo.flags = vk::PipelineCreateFlagBits::
-		graphicsPipeCreateInfo.layout = pipelineLayout.layout;
+		graphicsPipeCreateInfo.layout = m_PipelineLayout;
 		graphicsPipeCreateInfo.setPColorBlendState(&colorBlendState);
 		graphicsPipeCreateInfo.setStages(shaderStages);
 		graphicsPipeCreateInfo.setPVertexInputState(&vertexStateCreateInfo);
 		graphicsPipeCreateInfo.setPInputAssemblyState(&inputAssemblyInfo);
 		graphicsPipeCreateInfo.setPRasterizationState(&rasterizationInfo);
 		graphicsPipeCreateInfo.setPDepthStencilState(&depthStencilState);
-		graphicsPipeCreateInfo.setRenderPass(renderPassInfo.renderPass);
-		graphicsPipeCreateInfo.setSubpass(renderPassInfo.subpassId);
-
+		graphicsPipeCreateInfo.setRenderPass(pipelineObjectDescriptor.renderPassObject->GetRenderPass());
+		graphicsPipeCreateInfo.setSubpass(pipelineObjectDescriptor.subpassIndex);
 		m_GraphicsPipeline = GetDevice().createGraphicsPipeline(nullptr, graphicsPipeCreateInfo).value;
-
-		//GetDevice().getPipelineCacheData()
 	}
 }

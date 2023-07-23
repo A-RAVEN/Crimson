@@ -12,23 +12,23 @@ namespace graphics_backend
 		HashPool(CVulkanApplication& application) : BaseApplicationSubobject(application)
 		{}
 
-		ValType& Get(DescType desc)
+		std::weak_ptr<ValType> Get(DescType desc)
 		{
 			auto it = m_InternalMap.find(desc);
 			if (it == m_InternalMap.end())
 			{
-				ValType val{ GetVulkanApplication() };
-				val.Create(desc);
+				std::shared_ptr<ValType> val(new ValType{ GetVulkanApplication() });
+				val->Create(desc);
 				m_InternalMap.insert(std::make_pair(desc, val));
-				return m_InternalMap[desc];
+				return std::weak_ptr<ValType>(m_InternalMap[desc]);
 			}
 			else
 			{
-				return it->second;
+				return std::weak_ptr<ValType>(it->second);
 			}
 		}
 
 	private:
-		std::unordered_map<DescType, ValType, hash_utils::default_hashAlg> m_InternalMap;
+		std::unordered_map<DescType, std::shared_ptr<ValType>, hash_utils::default_hashAlg> m_InternalMap;
 	};
 }

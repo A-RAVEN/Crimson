@@ -2,63 +2,10 @@
 #include <private/include/VulkanIncludes.h>
 #include <map>
 #include <deque>
+#include "ResourceUsageInfo.h"
 namespace graphics_backend
 {
-	enum EResourceUsageIDs
-	{
-		eTransferSourceID = 0,
-		eTransferDestID,
 
-		eVertexReadID,
-		eVertexWriteID,
-		eFragmentReadID,
-		eFragmentWriteID,
-		eComputeReadID,
-		eComputeWriteID,
-
-		eColorAttachmentOutputID,
-
-		ePresentID,
-
-		eMax,
-	};
-
-	enum ResourceUsage : uint32_t
-	{
-		eDontCare = 0,
-
-		eTransferSource = 1 << eTransferSourceID,
-		eTransferDest = 1 << eTransferDestID,
-
-		eVertexRead = 1 << eVertexReadID,
-		eVertexWrite = 1 << eVertexWriteID,
-		eFragmentRead = 1 << eFragmentReadID,
-		eFragmentWrite = 1 << eFragmentWriteID,
-		eComputeRead = 1 << eComputeReadID,
-		eComputeWrite = 1 << eComputeWriteID,
-
-		eColorAttachmentOutput = 1 << eColorAttachmentOutputID,
-
-		ePresent = 1 << ePresentID,
-	};
-
-	using ResourceUsageFlags = uint32_t;
-
-	struct ResourceUsageVulkanInfo
-	{
-	public:
-		vk::PipelineStageFlags m_UsageStageMask;
-		vk::AccessFlags m_UsageAccessFlags;
-		vk::ImageLayout m_UsageImageLayout;
-	};
-
-
-	enum class ReourceQueueFamily
-	{
-		eGraphics,
-		eComputeDedicate,
-		eTransferDedicate,
-	};
 
 	class VulkanBarrierCollector
 	{

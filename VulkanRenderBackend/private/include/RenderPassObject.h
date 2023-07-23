@@ -10,34 +10,17 @@ namespace graphics_backend
 {
 	struct RenderPassDescriptor
 	{
-		struct SubpassExternalDependencyInfo
-		{
-			std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>> attachmentExternalLayouts;
-
-			bool operator==(SubpassExternalDependencyInfo const& other) const noexcept
-			{
-				return attachmentExternalLayouts == other.attachmentExternalLayouts;
-			}
-
-			template <class HashAlgorithm>
-			friend void hash_append(HashAlgorithm& h, SubpassExternalDependencyInfo const& externalInfo) noexcept
-			{
-				hash_append(h, externalInfo.attachmentExternalLayouts);
-			}
-		};
 		CRenderPassInfo renderPassInfo{};
-		SubpassExternalDependencyInfo externalInfo{};
 
 		bool operator==(RenderPassDescriptor const& other) const noexcept
 		{
-			return renderPassInfo == other.renderPassInfo && externalInfo == other.externalInfo;
+			return renderPassInfo == other.renderPassInfo;
 		}
 
 		template <class HashAlgorithm>
 		friend void hash_append(HashAlgorithm& h, RenderPassDescriptor const& renderpass_desc) noexcept
 		{
 			hash_append(h, renderpass_desc.renderPassInfo);
-			hash_append(h, renderpass_desc.externalInfo);
 		}
 	};
 
@@ -50,7 +33,8 @@ namespace graphics_backend
 		vk::RenderPass GetRenderPass() const { return m_RenderPass; }
 	private:
 		vk::RenderPass m_RenderPass = nullptr;
+		std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>> m_AttachmentExternalLayouts;
 	};
 
-	using RenderPassObjectDic = HashPool<RenderPassDescriptor, vk::RenderPass>;
+	using RenderPassObjectDic = HashPool<RenderPassDescriptor, RenderPassObject>;
 }

@@ -27,23 +27,23 @@ namespace graphics_backend
 		}
 	};
 
-	class CGraphicsShaderStates
-	{
-	public:
-		std::shared_ptr<ShaderProvider> vertexShader;
-		std::shared_ptr<ShaderProvider> fragmentShader;
+	//class CGraphicsShaderStates
+	//{
+	//public:
+	//	std::shared_ptr<ShaderProvider> vertexShader;
+	//	std::shared_ptr<ShaderProvider> fragmentShader;
 
-		bool operator==(CGraphicsShaderStates const& other) const
-		{
-			return (vertexShader == other.vertexShader
-				&& fragmentShader == other.fragmentShader);
-		}
-		template <class HashAlgorithm>
-		friend void hash_append(HashAlgorithm& h, CGraphicsShaderStates const& graphics_states) noexcept
-		{
-			hash_append(h, graphics_states.vertexShader.get());
-			hash_append(h, graphics_states.fragmentShader.get());
-		}
-	};
+	//	bool operator==(CGraphicsShaderStates const& other) const
+	//	{
+	//		return (vertexShader == other.vertexShader
+	//			&& fragmentShader == other.fragmentShader);
+	//	}
+	//	template <class HashAlgorithm>
+	//	friend void hash_append(HashAlgorithm& h, CGraphicsShaderStates const& graphics_states) noexcept
+	//	{
+	//		hash_append(h, graphics_states.vertexShader.get());
+	//		hash_append(h, graphics_states.fragmentShader.get());
+	//	}
+	//};
 }
 
