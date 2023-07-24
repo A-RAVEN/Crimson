@@ -170,7 +170,6 @@
     <ClInclude Include="header\CVertexInputDescriptor.h" />
     <ClInclude Include="header\HashCommon.h" />
     <ClInclude Include="header\LayoutBuilder.h" />
-    <ClInclude Include="header\TEnumCommon.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="header\Common.h" />
     <ClInclude Include="header\CRenderGraph.h" />

@@ -18,6 +18,9 @@
     <ClInclude Include="header\uhash.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="header\uenum.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="header\SharedToolTest.cpp">

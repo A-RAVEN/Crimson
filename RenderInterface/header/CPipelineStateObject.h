@@ -1,8 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "TEnumCommon.h"
 #include <array>
-
 #include "Common.h"
 #include "HashCommon.h"
 #include <SharedTools/header/uhash.h>
@@ -93,7 +91,7 @@ struct is_contiguously_hashable<DepthStencilStates> : public std::true_type {};
 struct SingleColorAttachmentBlendStates
 {
 	bool blendEnable = false;
-	EColorChannelMaskFlags channelMask = ToFlags(EColorChannelMask::eRGBA);
+	EColorChannelMaskFlags channelMask = EColorChannelMask::eRGBA;
 	EBlendFactor sourceColorBlendFactor = EBlendFactor::eOne;
 	EBlendFactor destColorBlendFactor = EBlendFactor::eZero;
 	EBlendFactor sourceAlphaBlendFactor = EBlendFactor::eOne;

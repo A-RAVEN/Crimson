@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <SharedTools/header/uenum.h>
 
 #ifdef VULKANRENDERBACKEND_EXPORTS
 #define ANY_RENDER_BACKEND_EXPORTS 1
@@ -130,7 +131,13 @@ enum class EColorChannelMask : uint8_t
 	eRGBA = eR | eG | eB | eA,
 };
 
-using EColorChannelMaskFlags = std::underlying_type_t<EColorChannelMask>;
+template <>
+struct uenum::TEnumTraits<EColorChannelMask>
+{
+	static constexpr bool is_bitmask = true;
+};
+
+using EColorChannelMaskFlags = uenum::EnumFlags<EColorChannelMask>; //std::underlying_type_t<EColorChannelMask>;
 
 enum class EBlendFactor
 {

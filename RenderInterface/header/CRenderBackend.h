@@ -35,15 +35,6 @@ namespace graphics_backend
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) = 0;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) = 0;
-		virtual CShaderModule* NewShaderModule() = 0;
-		virtual void ReleaseShaderModule(CShaderModule* resource) = 0;
-		inline std::shared_ptr<CShaderModule> NewShaderModule_Ptr()
-		{
-			return std::shared_ptr<CShaderModule>(NewShaderModule(), [this](CShaderModule* removed)
-				{
-					ReleaseShaderModule(removed);
-				});
-		}
 	};
 
 	extern "C"

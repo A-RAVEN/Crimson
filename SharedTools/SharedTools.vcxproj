@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="header\uenum.h" />
     <ClInclude Include="header\uhash.h" />
   </ItemGroup>
   <ItemGroup>

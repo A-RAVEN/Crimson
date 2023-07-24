@@ -12,7 +12,7 @@ namespace graphics_backend
 		uint32_t attribute_count = 0;
 		for(auto& desc : vertexInputs.m_PrimitiveDescriptions)
 		{
-			attribute_count += std::get<1>(desc).size();
+			attribute_count += static_cast<uint32_t>(std::get<1>(desc).size());
 		}
 		inoutVertexBindingDescs.clear();
 		inoutVertexAttributeDescs.clear();

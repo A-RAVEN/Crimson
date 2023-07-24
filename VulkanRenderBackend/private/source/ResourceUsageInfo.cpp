@@ -98,7 +98,7 @@ namespace graphics_backend
 
 	const ResourceUsageVulkanInfo GetUsageInfo(ResourceUsageFlags usageFlags)
 	{
-		if (usageFlags == 0)
+		if (!usageFlags)
 		{
 			return s_NoneUsageVulkanInfo;
 		}
@@ -106,7 +106,7 @@ namespace graphics_backend
 		bool init = false;
 		for (uint32_t id = 0; id < EResourceUsageIDs::eMax; ++id)
 		{
-			if ((usageFlags & (1 << id)) != 0)
+			if ((usageFlags.m_mask & (1 << id)) != 0)
 			{
 				if (!init)
 				{

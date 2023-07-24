@@ -52,7 +52,7 @@ namespace graphics_backend
 			hash_append(h, pipeline_desc.pso);
 			hash_append(h, pipeline_desc.vertexInputs);
 			hash_append(h, pipeline_desc.shaderState);
-			hash_append(h, static_cast<size_t>(pipeline_desc.renderPassState.get()));
+			hash_append(h, static_cast<size_t>(pipeline_desc.renderPassObject.get()));
 			hash_append(h, pipeline_desc.subpassIndex);
 		}
 	};

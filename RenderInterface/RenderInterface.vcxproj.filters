@@ -45,9 +45,6 @@
     <ClInclude Include="header\CPipelineStateObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\TEnumCommon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\CShaderStateObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>

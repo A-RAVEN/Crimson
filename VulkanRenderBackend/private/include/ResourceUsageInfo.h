@@ -1,5 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <SharedTools/header/uenum.h>
+
+
+
 namespace graphics_backend
 {
 	enum EResourceUsageIDs
@@ -44,7 +48,8 @@ namespace graphics_backend
 		ePresent = 1 << ePresentID,
 	};
 
-	using ResourceUsageFlags = uint32_t;
+
+	using ResourceUsageFlags = uenum::EnumFlags<ResourceUsage>;
 
 	struct ResourceUsageVulkanInfo
 	{
@@ -64,3 +69,9 @@ namespace graphics_backend
 
 	const ResourceUsageVulkanInfo GetUsageInfo(ResourceUsageFlags usageFlags);
 }
+
+template<>
+struct uenum::TEnumTraits<graphics_backend::ResourceUsage>
+{
+	static constexpr bool is_bitmask = true;
+};

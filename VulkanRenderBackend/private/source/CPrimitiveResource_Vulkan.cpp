@@ -70,7 +70,9 @@ namespace graphics_backend
                 {
                     byteArray.insert(byteArray.end(), m_PrimitiveDataCache[i].begin(), m_PrimitiveDataCache[i].end());
                 }
-                m_PrimitiveDataBuffer = memoryManager.AllocateBuffer(EMemoryType::GPU, EMemoryLifetime::Persistent, byteArray.size(), vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
+                m_PrimitiveDataBuffer = memoryManager.AllocateBuffer(EMemoryType::GPU
+                    , EMemoryLifetime::Persistent
+                    , byteArray.size(), vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst);
                 auto tempBuffer = memoryManager.AllocateBuffer(EMemoryType::CPU_Sequential_Access, EMemoryLifetime::FrameBound, byteArray.size(), vk::BufferUsageFlagBits::eTransferSrc);
                 memcpy(tempBuffer.GetMappedPointer(), byteArray.data(), byteArray.size());
                 auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();

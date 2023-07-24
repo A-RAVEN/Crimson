@@ -446,6 +446,9 @@ namespace graphics_backend
 
 	CVulkanApplication::CVulkanApplication() :
 	m_PrimitiveResourcePool()
+	,m_ShaderModuleCache(*this)
+	,m_RenderPassCache(*this)
+	,m_PipelineObjectCache(*this)
 	{
 	}
 

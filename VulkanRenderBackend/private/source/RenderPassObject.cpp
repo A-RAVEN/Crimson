@@ -4,6 +4,9 @@
 #include <private/include/ResourceUsageInfo.h>
 #include <unordered_set>
 
+template<>
+struct hash_utils::is_contiguously_hashable<vk::SubpassDependency> : public std::true_type {};
+
 namespace graphics_backend
 {
 
@@ -26,6 +29,13 @@ namespace graphics_backend
 		}
 	}
 
+	bool operator==(vk::SubpassDependency const& lhs, vk::SubpassDependency const& rhs) noexcept
+	{
+		return memcmp(&lhs, &rhs, sizeof(vk::SubpassDependency));
+	}
+
+
+
 	void ExtractAttachmentsInOutLayoutsAndSubpassDependencies(RenderPassDescriptor const& descriptor
 		, std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>>& inoutLayouts
 		, std::vector<vk::SubpassDependency>& inoutSubpassDependencies)
@@ -46,7 +56,7 @@ namespace graphics_backend
 			, tracking_attachment_ref_subpass.end()
 			, VK_SUBPASS_EXTERNAL);
 
-		std::unordered_set<vk::SubpassDependency> dependencies{};
+		std::unordered_set<vk::SubpassDependency, hash_utils::default_hashAlg> dependencies{};
 
 		auto iterate_set_attachment_usage = [
 				&tracking_attachment_usages
@@ -80,7 +90,7 @@ namespace graphics_backend
 			}
 		};
 
-		for (size_t supassId = 0; supassId < subpassInfos.size(); ++supassId)
+		for (uint32_t supassId = 0; supassId < subpassInfos.size(); ++supassId)
 		{
 			auto& subpassInfo = subpassInfos[supassId];
 			for(uint32_t attachmentId : subpassInfo.colorAttachmentIDs)
@@ -185,8 +195,6 @@ namespace graphics_backend
 				subpassDesc.setPreserveAttachments(preserveAttachmentIDs);
 			}
 		}
-
-		std::vector<vk::SubpassDependency> subpassDependencies{};
 
 		vk::RenderPassCreateInfo renderpass_createInfo(
 			{}

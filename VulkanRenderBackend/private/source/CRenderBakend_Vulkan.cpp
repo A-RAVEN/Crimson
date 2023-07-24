@@ -57,12 +57,4 @@ namespace graphics_backend
 	{
 		m_Application.DestroyPrimitiveResource(static_cast<CGPUPrimitiveResource_Vulkan*>(resource));
 	}
-	CShaderModule* CRenderBackend_Vulkan::NewShaderModule()
-	{
-		return m_Application.NewShaderModule();
-	}
-	void CRenderBackend_Vulkan::ReleaseShaderModule(CShaderModule* module)
-	{
-		m_Application.DestroyShaderModule(static_cast<CShaderModule_Vulkan*>(module));
-	}
 }

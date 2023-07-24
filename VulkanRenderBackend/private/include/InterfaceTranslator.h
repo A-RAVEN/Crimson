@@ -2,7 +2,7 @@
 #include<RenderInterface/header/Common.h>
 namespace graphics_backend
 {
-	vk::Format VertexInputFormatToVkFormat(VertexInputFormat inFormat)
+	constexpr vk::Format VertexInputFormatToVkFormat(VertexInputFormat inFormat)
 	{
 		switch (inFormat)
 		{
@@ -16,7 +16,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::Format ETextureFormatToVkFotmat(ETextureFormat inFormat)
+	constexpr vk::Format ETextureFormatToVkFotmat(ETextureFormat inFormat)
 	{
 		switch (inFormat)
 		{
@@ -41,11 +41,12 @@ namespace graphics_backend
 			case ETextureFormat::E_R32G32B32A32_SFLOAT:
 				return vk::Format::eR32G32B32A32Sfloat;
 			case ETextureFormat::E_INVALID:
+			default:
 				return vk::Format::eUndefined;
 		}
 	}
 
-	vk::AttachmentLoadOp EAttachmentLoadOpToVkLoadOp(EAttachmentLoadOp inOp)
+	constexpr vk::AttachmentLoadOp EAttachmentLoadOpToVkLoadOp(EAttachmentLoadOp inOp)
 	{
 		switch (inOp)
 		{
@@ -54,22 +55,24 @@ namespace graphics_backend
 		case EAttachmentLoadOp::eClear:
 			return vk::AttachmentLoadOp::eClear;
 		case EAttachmentLoadOp::eDontCare:
+		default:
 			return vk::AttachmentLoadOp::eDontCare;
 		}
 	}
 
-	vk::AttachmentStoreOp EAttachmentStoreOpToVkStoreOp(EAttachmentStoreOp inOp)
+	constexpr vk::AttachmentStoreOp EAttachmentStoreOpToVkStoreOp(EAttachmentStoreOp inOp)
 	{
 		switch (inOp)
 		{
 		case EAttachmentStoreOp::eStore:
 			return vk::AttachmentStoreOp::eStore;
 		case EAttachmentStoreOp::eDontCare:
+		default:
 			return vk::AttachmentStoreOp::eDontCare;
 		}
 	}
 
-	vk::SampleCountFlagBits EMultiSampleCountToVkSampleCount(EMultiSampleCount sampleCount)
+	constexpr vk::SampleCountFlagBits EMultiSampleCountToVkSampleCount(EMultiSampleCount sampleCount)
 	{
 		switch (sampleCount)
 		{
@@ -100,7 +103,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::PrimitiveTopology ETopologyToVkTopology(ETopology inTopology)
+	constexpr vk::PrimitiveTopology ETopologyToVkTopology(ETopology inTopology)
 	{
 		switch (inTopology)
 		{
@@ -113,7 +116,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::PolygonMode EPolygonModeTranslate(EPolygonMode inPolygonMode)
+	constexpr vk::PolygonMode EPolygonModeTranslate(EPolygonMode inPolygonMode)
 	{
 		switch (inPolygonMode)
 		{
@@ -124,7 +127,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::CullModeFlags ECullModeTranslate(ECullMode inCullMode)
+	constexpr vk::CullModeFlags ECullModeTranslate(ECullMode inCullMode)
 	{
 		switch (inCullMode)
 		{
@@ -136,7 +139,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::FrontFace EFrontFaceTranslate(EFrontFace inFrontFace)
+	constexpr vk::FrontFace EFrontFaceTranslate(EFrontFace inFrontFace)
 	{
 		switch (inFrontFace)
 		{
@@ -146,7 +149,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::StencilOp EStencilOpTranslate(EStencilOp inStencilOp)
+	constexpr vk::StencilOp EStencilOpTranslate(EStencilOp inStencilOp)
 	{
 		switch (inStencilOp)
 		{
@@ -157,7 +160,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::CompareOp ECompareOpTranslate(ECompareOp inCompareOp)
+	constexpr vk::CompareOp ECompareOpTranslate(ECompareOp inCompareOp)
 	{
 		switch (inCompareOp)
 		{
@@ -173,7 +176,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::BlendFactor EBlendFactorTranslate(EBlendFactor inBlendFactor)
+	constexpr vk::BlendFactor EBlendFactorTranslate(EBlendFactor inBlendFactor)
 	{
 		switch (inBlendFactor)
 		{
@@ -191,7 +194,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::BlendOp EBlendOpTranslate(EBlendOp inBlendOp)
+	constexpr vk::BlendOp EBlendOpTranslate(EBlendOp inBlendOp)
 	{
 		switch (inBlendOp)
 		{
@@ -204,7 +207,7 @@ namespace graphics_backend
 		}
 	}
 
-	vk::ColorComponentFlags EColorChannelMaskTranslate(EColorChannelMaskFlags inColorMask)
+	constexpr vk::ColorComponentFlags EColorChannelMaskTranslate(EColorChannelMaskFlags inColorMask)
 	{
 		vk::ColorComponentFlags result = vk::ColorComponentFlags(0);
 		if (inColorMask & EColorChannelMask::eR)

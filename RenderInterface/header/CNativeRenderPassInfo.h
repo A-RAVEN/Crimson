@@ -17,6 +17,16 @@ struct CAttachmentInfo
 	EMultiSampleCount multiSampleCount = EMultiSampleCount::e1;
 	EAttachmentLoadOp stencilLoadOp = EAttachmentLoadOp::eDontCare;
 	EAttachmentStoreOp stencilStoreOp = EAttachmentStoreOp::eDontCare;
+
+	bool operator==(CAttachmentInfo const& rhs) const
+	{
+		return format == rhs.format
+			&& loadOp == rhs.loadOp
+			&& storeOp == rhs.storeOp
+			&& multiSampleCount == rhs.multiSampleCount
+			&& stencilLoadOp == rhs.stencilLoadOp
+			&& stencilStoreOp == rhs.stencilStoreOp;
+	}
 };
 
 template<>
