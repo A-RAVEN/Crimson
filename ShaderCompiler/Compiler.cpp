@@ -1,4 +1,5 @@
 #ifdef _WIN32
+#define NOMINMAX
 #include <Windows.h>
 #endif
 #define NV_EXTENSIONS
@@ -32,6 +33,12 @@ namespace ShaderCompiler
 		shaderc_miss_shader,
 		shaderc_intersection_shader,
 		shaderc_callable_shader,
+	};
+
+	static shaderc_source_language SOURCE_LANGUAGE_TABLE[] =
+	{
+		shaderc_source_language_hlsl,
+		shaderc_source_language_glsl
 	};
 
 	class Compiler_Impl : public IShaderCompiler
@@ -71,8 +78,15 @@ namespace ShaderCompiler
 				m_Options.AddMacroDefinition(macro_name, macro_value);
 			}
 		}
-		virtual std::string PreprocessGLSLShader(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type) override
+		virtual std::string PreprocessShader(
+			EShaderSourceType shader_source_type
+			, std::string const& file_name
+			, std::string const& shader_src
+			, ECompileShaderType shader_type) override
 		{
+
+			shaderc_source_language source_language = SOURCE_LANGUAGE_TABLE[static_cast<uint32_t>(shader_source_type)];
+
 			shaderc::PreprocessedSourceCompilationResult result = 
 				m_Compiler.PreprocessGlsl(shader_src, SHADER_KIND_TABLE[static_cast<uint32_t>(shader_type)], file_name.c_str(), m_Options);
 			
@@ -90,15 +104,28 @@ namespace ShaderCompiler
 
 			return { result.cbegin(), result.cend() };
 		}
-		virtual std::vector<uint32_t> CompileGLSLShaderSource(std::string const& file_name, std::string const& shader_src, ECompileShaderType shader_type, bool optimize = true)
+		virtual std::vector<uint32_t> CompileShaderSource(
+			EShaderSourceType shader_source_type
+			, std::string const& file_name
+			, std::string const& shader_src
+			, ECompileShaderType shader_type
+			, bool optimize) override
 		{
 			if (optimize)
 			{
 				m_Options.SetOptimizationLevel(shaderc_optimization_level_performance);
 			}
 
-			shaderc::SpvCompilationResult result =
-				m_Compiler.CompileGlslToSpv(shader_src, SHADER_KIND_TABLE[static_cast<uint32_t>(shader_type)], file_name.c_str(), m_Options);
+			shaderc_source_language source_language = SOURCE_LANGUAGE_TABLE[static_cast<uint32_t>(shader_source_type)];
+
+			m_Options.SetSourceLanguage(source_language);
+
+			shaderc::SpvCompilationResult result = m_Compiler.CompileGlslToSpv(shader_src.data(),
+				shader_src.size(),
+				SHADER_KIND_TABLE[static_cast<uint32_t>(shader_type)],
+				file_name.data(),
+				"main",
+				m_Options);
 
 			if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
 				if (result.GetCompilationStatus() != shaderc_compilation_status_null_result_object)

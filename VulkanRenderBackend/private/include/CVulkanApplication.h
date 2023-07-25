@@ -108,6 +108,8 @@ namespace graphics_backend
 
 		void ReleaseAllWindowContexts();
 
+		void TestCode();
+
 	private:
 		vk::Instance m_Instance = nullptr;
 		vk::PhysicalDevice m_PhysicalDevice = nullptr;

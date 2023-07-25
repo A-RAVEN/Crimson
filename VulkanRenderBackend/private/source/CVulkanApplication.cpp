@@ -444,6 +444,24 @@ namespace graphics_backend
 		m_WindowContexts.clear();
 	}
 
+	void CVulkanApplication::TestCode()
+	{
+		CRenderpassBuilder newRenderPass{ {
+			CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
+		} };
+
+		newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, [](CInlineCommandList& cmd)
+		{
+
+		});
+
+		auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
+		RenderPassDescriptor rpDesc{ renderPassInfo };
+		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);
+
+
+	}
+
 	CVulkanApplication::CVulkanApplication() :
 	m_PrimitiveResourcePool()
 	,m_ShaderModuleCache(*this)

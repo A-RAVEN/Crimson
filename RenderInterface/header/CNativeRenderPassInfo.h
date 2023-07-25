@@ -78,13 +78,22 @@ struct CRenderPassInfo
 class CRenderpassBuilder
 {
 public:
-	CRenderpassBuilder(CAttachmentInfo const& inAttachmentInfo);
+	CRenderpassBuilder(std::vector<CAttachmentInfo> const& inAttachmentInfo)
+	{
+		mRenderPassInfo.attachmentInfos = inAttachmentInfo;
+	}
 	CRenderpassBuilder& Subpass(CSubpassInfo const& inSubpassInfo
 		, CPipelineStateObject const& pipelineStates
-		, std::function<void* (CInlineCommandList&)> commandFunction);
+		, std::function<void(CInlineCommandList&)> commandFunction)
+	{
+		mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
+		mSubpassPipelineStateObjects.push_back(pipelineStates);
+		mSubpassFunctions.push_back(commandFunction);
+	}
 
 	CRenderPassInfo const& GetRenderPassInfo() const { return mRenderPassInfo; }
 private:
 	CRenderPassInfo mRenderPassInfo{};
-	std::vector<std::function<void* (CInlineCommandList&)>> mSubpassFunctions{};
+	std::vector<CPipelineStateObject> mSubpassPipelineStateObjects{};
+	std::vector<std::function<void(CInlineCommandList&)>> mSubpassFunctions{};
 };

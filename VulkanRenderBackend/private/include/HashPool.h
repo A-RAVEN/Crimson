@@ -12,7 +12,7 @@ namespace graphics_backend
 		HashPool(CVulkanApplication& application) : BaseApplicationSubobject(application)
 		{}
 
-		std::weak_ptr<ValType> Get(DescType desc)
+		std::weak_ptr<ValType> GetOrCreate(DescType desc)
 		{
 			auto it = m_InternalMap.find(desc);
 			if (it == m_InternalMap.end())

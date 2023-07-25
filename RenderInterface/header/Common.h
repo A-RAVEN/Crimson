@@ -21,6 +21,33 @@
 using TIndex = uint32_t;
 constexpr TIndex INVALID_INDEX = std::numeric_limits<TIndex>::max();
 
+enum class ECompileShaderType : uint8_t
+{
+	eVert = 0,
+	eTessCtr,
+	eTessEvl,
+	eGeom,
+	eFrag,
+	eComp,
+	//nvidia mesh shader
+	eTask,
+	eMesh,
+	//nvidia ray tracing shader
+	eRaygen,
+	eAnyhit,
+	eClosehit,
+	eMiss,
+	eIntersect,
+	eCallable,
+	eMax,
+};
+
+enum class EShaderSourceType : uint8_t
+{
+	eHLSL = 0,
+	eGLSL,
+};
+
 enum class ETextureFormat : uint8_t
 {
 	E_R8_UNORM,

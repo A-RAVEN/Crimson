@@ -1,7 +1,6 @@
 #include "FileIncluder.h"
 #include <filesystem>
 #include <fstream>
-
 #include <stdint.h>
 
 namespace ShaderCompiler
