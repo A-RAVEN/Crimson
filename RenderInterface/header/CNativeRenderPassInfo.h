@@ -89,6 +89,7 @@ public:
 		mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
 		mSubpassPipelineStateObjects.push_back(pipelineStates);
 		mSubpassFunctions.push_back(commandFunction);
+		return *this;
 	}
 
 	CRenderPassInfo const& GetRenderPassInfo() const { return mRenderPassInfo; }

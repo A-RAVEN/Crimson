@@ -5,6 +5,8 @@
 #include "private/include/CVulkanThreadContext.h"
 #include <private/include/CVulkanBufferObject.h>
 #include <private/include/VulkanBarrierCollector.h>
+#include <ShaderCompiler/header/Compiler.h>
+#include <SharedTools/header/library_loader.h>
 
 namespace graphics_backend
 {
@@ -455,6 +457,9 @@ namespace graphics_backend
 
 		});
 
+		library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader{ L"ShaderCompiler" };
+		ShaderCompiler::IShaderCompiler* pCompiler = compilerLoader.NewModuleInstance();
+		compilerLoader.DeleteModuleInstance(pCompiler);
 		auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
 		RenderPassDescriptor rpDesc{ renderPassInfo };
 		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);

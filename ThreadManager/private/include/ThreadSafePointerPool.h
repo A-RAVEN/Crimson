@@ -16,7 +16,7 @@ namespace threadmanager_utils
 		}
 
 		template<typename...TArgs>
-		T* Alloc(TArgs&&...Args)
+		T* Alloc(TArgs&&...Args)NewModuleInstance
 		{
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			T* result = nullptr;

@@ -21,6 +21,12 @@
     <ClInclude Include="header\uenum.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="header\ModuleLoadingFunctions.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="header\library_loader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="header\SharedToolTest.cpp">

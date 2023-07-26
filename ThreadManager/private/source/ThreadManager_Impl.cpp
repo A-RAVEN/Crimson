@@ -210,14 +210,17 @@ namespace thread_management
         }
     }
 
-    CThreadManager* NewModuleInstance()
+    extern "C"
     {
-        return new CThreadManager_Impl();
-    }
-    void DeleteModuleInstance(CThreadManager* removingManager)
-    {
-        CThreadManager_Impl* removal = static_cast<CThreadManager_Impl*>(removingManager);
-        delete removal;
+        CThreadManager* NewModuleInstance()
+        {
+            return new CThreadManager_Impl();
+        }
+        void DeleteModuleInstance(CThreadManager* removingManager)
+        {
+            CThreadManager_Impl* removal = static_cast<CThreadManager_Impl*>(removingManager);
+            delete removal;
+        }
     }
 }
 

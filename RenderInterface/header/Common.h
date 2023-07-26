@@ -2,21 +2,6 @@
 #include <cstdint>
 #include <SharedTools/header/uenum.h>
 
-#ifdef VULKANRENDERBACKEND_EXPORTS
-#define ANY_RENDER_BACKEND_EXPORTS 1
-#endif
-
-#ifdef ANY_RENDER_BACKEND_EXPORTS
-#define RENDERBACKEND_API __declspec(dllexport)
-#else
-#define RENDERBACKEND_API
-#endif
-
-#ifdef RENDERINTERFACE_EXPORTS
-#define RENDERINTERFACE_API __declspec(dllexport)
-#else
-#define RENDERINTERFACE_API
-#endif
 
 using TIndex = uint32_t;
 constexpr TIndex INVALID_INDEX = std::numeric_limits<TIndex>::max();

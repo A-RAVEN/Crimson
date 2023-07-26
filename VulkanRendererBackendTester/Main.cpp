@@ -1,29 +1,32 @@
 #include <cstdlib>
 #define NOMINMAX
 #include <windows.h>
-#define DEFINE_RENDERBACKEND_LOAD_FUNCTIONS
 #include <RenderInterface/header/CRenderBackend.h>
 #include <RenderInterface/header/CGPUPrimitiveResource.h>
-#define DEFINE_THREADMANAGER_LOAD_FUNCTIONS
 #include <ThreadManager/header/ThreadManager.h>
+#include <ShaderCompiler/header/Compiler.h>
 #include <iostream>
+#include <SharedTools/header/library_loader.h>
 using namespace thread_management;
+using namespace library_loader;
+using namespace graphics_backend;
+using namespace ShaderCompiler;
 
 int main(int argc, char *argv[])
 {
-	thread_management::LoadModuleLibrary();
+	TModuleLoader<CThreadManager> threadManagerLoader(L"ThreadManager");
+	TModuleLoader<CRenderBackend> renderBackendLoader(L"VulkanRenderBackend");
+	TModuleLoader<IShaderCompiler> shaderCompilerLoader(L"ShaderCompiler");
 
-	CThreadManager* pThreadManager = thread_management::NewModuleInstance();
+	auto pThreadManager = threadManagerLoader.New();
 	pThreadManager->InitializeThreadCount(5);
 
-	graphics_backend::LoadRenderBackend();
+	auto pShaderCompiler = shaderCompilerLoader.New();
 
-	graphics_backend::CRenderBackend* pBackend = graphics_backend::NewRenderBackend();
+	auto pBackend = renderBackendLoader.New();
 	pBackend->Initialize("Test Vulkan Backend", "CRIMSON Engine");
-	pBackend->InitializeThreadContextCount(pThreadManager, 1);
+	pBackend->InitializeThreadContextCount(pThreadManager.get(), 1);
 	pBackend->NewWindow(1024, 512, "Test Window");
-
-	auto shaderModule = pBackend->NewShaderModule_Ptr();
 
 	int32_t frame = 0;
 
@@ -47,12 +50,11 @@ int main(int argc, char *argv[])
 		++frame;
 		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
-	shaderModule = nullptr;
 	pBackend->ReleaseGPUPrimitiveResource(pPrimitive);
 	pBackend->Release();
-	graphics_backend::DeleteRenderBackend(pBackend);
+	pBackend.reset();
 
-	graphics_backend::UnloadRenderBackend();
-	thread_management::UnloadModuleLibrary();
+	pThreadManager.reset();
+
 	return EXIT_SUCCESS;
 }

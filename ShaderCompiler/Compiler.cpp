@@ -3,7 +3,7 @@
 #include <Windows.h>
 #endif
 #define NV_EXTENSIONS
-#include <include/Compiler.h>
+#include <header/Compiler.h>
 #include <FileIncluder.h>
 #include <shaderc/shaderc.hpp>
 #include <iostream>
@@ -48,7 +48,7 @@ namespace ShaderCompiler
 		{
 			m_Options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 			m_Options.SetTargetSpirv(shaderc_spirv_version_1_3);
-			m_Options.SetIncluder(std::unique_ptr<shaderc::CompileOptions::IncluderInterface>(&m_Includer));
+			m_Options.SetIncluder(std::unique_ptr <shaderc::CompileOptions::IncluderInterface> (new FileIncluder()));
 		}
 		~Compiler_Impl()
 		{
@@ -56,17 +56,17 @@ namespace ShaderCompiler
 		}
 		virtual void AddInlcudePath(std::string const& path) override
 		{
-			if (!m_Includer.AddIncludePath(path))
-			{
-#ifdef _WIN32
-				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
-#endif
-				std::cerr << "Shader Compiler Add Path:\n" << path << "\nFailed!" << std::endl;
-#ifdef _WIN32
-				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
-#endif
-			}
+//			if (!m_Includer.AddIncludePath(path))
+//			{
+//#ifdef _WIN32
+//				HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+//				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
+//#endif
+//				std::cerr << "Shader Compiler Add Path:\n" << path << "\nFailed!" << std::endl;
+//#ifdef _WIN32
+//				SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN);
+//#endif
+//			}
 		}
 		virtual void AddMacro(std::string const& macro_name, std::string const& macro_value) override
 		{
@@ -147,27 +147,25 @@ namespace ShaderCompiler
 		}
 	private:
 		shaderc::CompileOptions m_Options;
-		FileIncluder			m_Includer;
 		shaderc::Compiler		m_Compiler;
 	};
 
-	IShaderCompiler* IShaderCompiler::GetCompiler()
+
+#ifdef SHADERCOMPILER_EXPORTS
+#define SHADERCOMPILER_API __declspec(dllexport)
+#else
+#define SHADERCOMPILER_API
+#endif
+	extern "C"
 	{
-		if (m_Singleton == nullptr)
+		SHADERCOMPILER_API IShaderCompiler* NewModuleInstance()
 		{
-			m_Singleton = new Compiler_Impl();
+			return new Compiler_Impl();;
 		}
-		return m_Singleton;
-	}
 
-	void IShaderCompiler::DisposeCompiler()
-	{
-		if (m_Singleton != nullptr)
+		SHADERCOMPILER_API void DeleteModuleInstance(IShaderCompiler* pCompiler)
 		{
-			delete m_Singleton;
-			m_Singleton = nullptr;
+			return delete pCompiler;
 		}
 	}
-
-
 }

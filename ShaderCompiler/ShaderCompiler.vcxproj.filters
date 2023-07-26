@@ -26,7 +26,7 @@
     <ClInclude Include="FileIncluder.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\Compiler.h">
+    <ClInclude Include="header\Compiler.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

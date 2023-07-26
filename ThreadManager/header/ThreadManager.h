@@ -53,57 +53,57 @@ namespace thread_management
 		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 
-	extern "C"
-	{
-		THREADMANAGER_API CThreadManager* NewModuleInstance();
-		THREADMANAGER_API void DeleteModuleInstance(CThreadManager* removingManager);
-	}
+	//extern "C"
+	//{
+	//	THREADMANAGER_API CThreadManager* NewModuleInstance();
+	//	THREADMANAGER_API void DeleteModuleInstance(CThreadManager* removingManager);
+	//}
 
-#define GETNAME(VAR) #VAR
-
-	typedef CThreadManager* (*FTP_NewThreadManager)();
-	typedef void(*FPT_DeleteThreadManager)(CThreadManager*);
-
-#ifndef THREADMANAGER_EXPORTS
-	void LoadModuleLibrary();
-	void UnloadModuleLibrary();
-#endif
-
-#if defined(DEFINE_THREADMANAGER_LOAD_FUNCTIONS) && !defined(THREADMANAGER_EXPORTS)
-
-	HINSTANCE hModuleLib = nullptr;
-	FTP_NewThreadManager pNewInstanceFunc = nullptr;
-	FPT_DeleteThreadManager pDeleteInstanceFunc = nullptr;
-
-	void LoadModuleLibrary()
-	{
-		hModuleLib = LoadLibrary(L"ThreadManager");
-		if (hModuleLib != nullptr)
-		{
-			pNewInstanceFunc = reinterpret_cast<FTP_NewThreadManager>(GetProcAddress(hModuleLib, GETNAME(NewModuleInstance)));
-			pDeleteInstanceFunc = reinterpret_cast<FPT_DeleteThreadManager>(GetProcAddress(hModuleLib, GETNAME(DeleteModuleInstance)));
-		}
-	}
-
-	void UnloadModuleLibrary()
-	{
-		pNewInstanceFunc = nullptr;
-		pDeleteInstanceFunc = nullptr;
-		if (hModuleLib != nullptr)
-		{
-			FreeLibrary(hModuleLib);
-			hModuleLib = nullptr;
-		}
-	}
-
-	CThreadManager* NewModuleInstance()
-	{
-		return pNewInstanceFunc();
-	}
-
-	void DeleteModuleInstance(CThreadManager* removingBackend)
-	{
-		pDeleteInstanceFunc(removingBackend);
-	}
-#endif
+//#define GETNAME(VAR) #VAR
+//
+//	typedef CThreadManager* (*FTP_NewThreadManager)();
+//	typedef void(*FPT_DeleteThreadManager)(CThreadManager*);
+//
+//#ifndef THREADMANAGER_EXPORTS
+//	void LoadModuleLibrary();
+//	void UnloadModuleLibrary();
+//#endif
+//
+//#if defined(DEFINE_THREADMANAGER_LOAD_FUNCTIONS) && !defined(THREADMANAGER_EXPORTS)
+//
+//	HINSTANCE hModuleLib = nullptr;
+//	FTP_NewThreadManager pNewInstanceFunc = nullptr;
+//	FPT_DeleteThreadManager pDeleteInstanceFunc = nullptr;
+//
+//	void LoadModuleLibrary()
+//	{
+//		hModuleLib = LoadLibrary(L"ThreadManager");
+//		if (hModuleLib != nullptr)
+//		{
+//			pNewInstanceFunc = reinterpret_cast<FTP_NewThreadManager>(GetProcAddress(hModuleLib, GETNAME(NewModuleInstance)));
+//			pDeleteInstanceFunc = reinterpret_cast<FPT_DeleteThreadManager>(GetProcAddress(hModuleLib, GETNAME(DeleteModuleInstance)));
+//		}
+//	}
+//
+//	void UnloadModuleLibrary()
+//	{
+//		pNewInstanceFunc = nullptr;
+//		pDeleteInstanceFunc = nullptr;
+//		if (hModuleLib != nullptr)
+//		{
+//			FreeLibrary(hModuleLib);
+//			hModuleLib = nullptr;
+//		}
+//	}
+//
+//	CThreadManager* NewModuleInstance()
+//	{
+//		return pNewInstanceFunc();
+//	}
+//
+//	void DeleteModuleInstance(CThreadManager* removingBackend)
+//	{
+//		pDeleteInstanceFunc(removingBackend);
+//	}
+//#endif
 }

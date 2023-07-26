@@ -1,6 +1,7 @@
 #include <iostream>
-
+#include "library_loader.h"
 #include "uhash.h"
+#include <ShaderCompiler/header/Compiler.h>
 
 namespace TestNamespace
 {
@@ -61,5 +62,8 @@ int main(int argc, char* argv[])
 	std::cout << hash_generator(testpair) << std::endl;
 	std::cout << hash_generator(en) << std::endl;
 	std::cout << hash_generator(test2) << std::endl;
+
+	library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader(L"ShaderCompiler");
+	auto compiler = compilerLoader.New();
 	return EXIT_SUCCESS;
 }
