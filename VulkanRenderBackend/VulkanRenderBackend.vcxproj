@@ -177,6 +177,7 @@
     <ClInclude Include="private\include\VulkanBarrierCollector.h" />
     <ClInclude Include="private\include\VulkanIncludes.h" />
     <ClInclude Include="private\include\WindowContext.h" />
+    <ClInclude Include="private\test\TestShaderProvider.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />
@@ -203,6 +204,7 @@
     <ClCompile Include="private\source\VulkanBarrierCollector.cpp" />
     <ClCompile Include="private\source\VulkanPipelineObject.cpp" />
     <ClCompile Include="private\source\WindowContext.cpp" />
+    <ClCompile Include="private\test\TestShaderProvider.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
