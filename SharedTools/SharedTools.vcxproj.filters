@@ -21,10 +21,13 @@
     <ClInclude Include="header\uenum.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="header\ModuleLoadingFunctions.h">
+    <ClInclude Include="header\library_loader.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="header\library_loader.h">
+    <ClInclude Include="header\ThreadSafePool.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="header\FileLoader.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

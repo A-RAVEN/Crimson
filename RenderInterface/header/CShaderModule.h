@@ -12,7 +12,7 @@ namespace graphics_backend
 	{
 	public:
 		virtual uint64_t GetDataLength(std::string const& codeType) const = 0;
-		virtual void* GetDataPtr(std::string const& codeType) const = 0;
+		virtual void const* GetDataPtr(std::string const& codeType) const = 0;
 		virtual std::string GetUniqueName() const = 0;
 		bool operator==(ShaderProvider const& other) const
 		{

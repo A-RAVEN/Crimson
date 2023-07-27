@@ -1,6 +1,6 @@
 #pragma once
 #include <header/ThreadManager.h>
-#include "ThreadSafePointerPool.h"
+#include <SharedTools/header/ThreadSafePool.h>
 #include <deque>
 
 namespace thread_management
@@ -78,7 +78,6 @@ namespace thread_management
 		std::vector<std::thread> m_WorkerThreads;
 		std::mutex m_Mutex;
 		std::condition_variable m_ConditinalVariable;
-
-		threadmanager_utils::TThreadSafePointerPool<CTaskGraph_Impl> m_TaskGraphPool;
+		threadsafe_utils::TThreadSafePointerPool<CTaskGraph_Impl> m_TaskGraphPool;
 	};
 }

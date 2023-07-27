@@ -3,20 +3,19 @@
 #include <deque>
 #include <functional>
 
-namespace threadmanager_utils
+namespace threadsafe_utils
 {
 	template<typename T>
 	class TThreadSafePointerPool
 	{
 	public:
-		TThreadSafePointerPool(std::function<void(T*)> initializer, std::function<void(T*)> releaser):
+		TThreadSafePointerPool(std::function<void(T*)> initializer, std::function<void(T*)> releaser) :
 			m_Initializer(initializer)
 			, m_Releaser(releaser)
 		{
 		}
-
 		template<typename...TArgs>
-		T* Alloc(TArgs&&...Args)NewModuleInstance
+		T* Alloc(TArgs&&...Args)
 		{
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			T* result = nullptr;
@@ -33,6 +32,7 @@ namespace threadmanager_utils
 			m_Initializer(result);
 			return result;
 		}
+
 		void Release(T* releaseObj)
 		{
 			assert(releaseObj != nullptr);

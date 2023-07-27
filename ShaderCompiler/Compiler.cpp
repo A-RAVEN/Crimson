@@ -108,6 +108,7 @@ namespace ShaderCompiler
 			EShaderSourceType shader_source_type
 			, std::string const& file_name
 			, std::string const& shader_src
+			, std::string const& entry_point
 			, ECompileShaderType shader_type
 			, bool optimize) override
 		{

@@ -7,6 +7,8 @@
 #include <private/include/VulkanBarrierCollector.h>
 #include <ShaderCompiler/header/Compiler.h>
 #include <SharedTools/header/library_loader.h>
+#include <SharedTools/header/FileLoader.h>
+#include <private/test/TestShaderProvider.h>
 
 namespace graphics_backend
 {
@@ -458,8 +460,30 @@ namespace graphics_backend
 		});
 
 		library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader{ L"ShaderCompiler" };
-		ShaderCompiler::IShaderCompiler* pCompiler = compilerLoader.NewModuleInstance();
-		compilerLoader.DeleteModuleInstance(pCompiler);
+		auto pCompiler = compilerLoader.New();
+		auto shaderSource = fileloading_utils::LoadStringFile("testShader.hlsl");
+
+		auto spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
+			, "testShader.hlsl"
+			, shaderSource
+			, "vert"
+			, ECompileShaderType::eVert);
+
+		ShaderProvider_Impl provider;
+		provider.SetUniqueName("testShader.hlsl.vert");
+		provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+
+		auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
+
+		spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
+			, "testShader.hlsl"
+			, shaderSource
+			, "frag"
+			, ECompileShaderType::eFrag);
+		provider.SetUniqueName("testShader.hlsl.frag");
+		provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+		auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
+
 		auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
 		RenderPassDescriptor rpDesc{ renderPassInfo };
 		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);

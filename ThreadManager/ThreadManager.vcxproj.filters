@@ -30,9 +30,6 @@
     <ClInclude Include="header\ThreadManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\ThreadSafePointerPool.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="private\include\IGraphComponent.h">
       <Filter>头文件</Filter>
     </ClInclude>
