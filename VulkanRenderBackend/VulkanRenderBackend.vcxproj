@@ -163,6 +163,7 @@
     <ClInclude Include="private\include\CVulkanBufferObject.h" />
     <ClInclude Include="private\include\CVulkanMemoryManager.h" />
     <ClInclude Include="private\include\CVulkanThreadContext.h" />
+    <ClInclude Include="private\include\FramebufferObject.h" />
     <ClInclude Include="private\include\FrameCountContext.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="private\include\HashPool.h" />
@@ -188,6 +189,7 @@
     <ClCompile Include="private\source\CVulkanMemoryManager.cpp" />
     <ClCompile Include="private\source\CVulkanThreadContext.cpp" />
     <ClCompile Include="private\source\dllmain.cpp" />
+    <ClCompile Include="private\source\FramebufferObject.cpp" />
     <ClCompile Include="private\source\FrameCountContext.cpp" />
     <ClCompile Include="private\source\MRenderBackendImpl_Vulkan.cpp" />
     <ClCompile Include="private\source\pch.cpp">

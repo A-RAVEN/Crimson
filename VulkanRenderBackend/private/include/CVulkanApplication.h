@@ -13,6 +13,7 @@
 #include "CShaderModuleObject.h"
 #include "RenderPassObject.h"
 #include "VulkanPipelineObject.h"
+#include "FramebufferObject.h"
 
 namespace graphics_backend
 {
@@ -133,6 +134,7 @@ namespace graphics_backend
 		ShaderModuleObjectDic m_ShaderModuleCache;
 		RenderPassObjectDic m_RenderPassCache;
 		PipelineObjectDic m_PipelineObjectCache;
+		FramebufferObjectDic m_FramebufferObjectCache;
 
 		mutable CVulkanMemoryManager m_MemoryManager;
 	};

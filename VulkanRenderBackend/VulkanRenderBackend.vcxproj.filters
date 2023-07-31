@@ -84,6 +84,9 @@
     <ClInclude Include="private\test\TestShaderProvider.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\FramebufferObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -144,6 +147,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\test\TestShaderProvider.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\source\FramebufferObject.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

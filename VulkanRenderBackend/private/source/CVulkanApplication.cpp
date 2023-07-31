@@ -489,6 +489,10 @@ namespace graphics_backend
 		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);
 
 
+		FramebufferDescriptor fbDesc{ renderPassInfo, 800, 600 };
+		m_FramebufferObjectCache.GetOrCreate()
+
+
 	}
 
 	CVulkanApplication::CVulkanApplication() :
