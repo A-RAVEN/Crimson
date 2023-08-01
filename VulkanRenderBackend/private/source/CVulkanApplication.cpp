@@ -450,49 +450,50 @@ namespace graphics_backend
 
 	void CVulkanApplication::TestCode()
 	{
-		CRenderpassBuilder newRenderPass{ {
+		auto newTask = NewTask();
+		newTask->Functor([this]()
+			{
+				CRenderpassBuilder newRenderPass{ {
 			CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
 		} };
 
-		newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, [](CInlineCommandList& cmd)
-		{
+				newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, [](CInlineCommandList& cmd)
+					{
 
-		});
+					});
 
-		library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader{ L"ShaderCompiler" };
-		auto pCompiler = compilerLoader.New();
-		auto shaderSource = fileloading_utils::LoadStringFile("testShader.hlsl");
+				library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader{ L"ShaderCompiler" };
+				auto pCompiler = compilerLoader.New();
+				auto shaderSource = fileloading_utils::LoadStringFile("testShader.hlsl");
 
-		auto spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
-			, "testShader.hlsl"
-			, shaderSource
-			, "vert"
-			, ECompileShaderType::eVert);
+				auto spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
+					, "testShader.hlsl"
+					, shaderSource
+					, "vert"
+					, ECompileShaderType::eVert);
 
-		ShaderProvider_Impl provider;
-		provider.SetUniqueName("testShader.hlsl.vert");
-		provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+				ShaderProvider_Impl provider;
+				provider.SetUniqueName("testShader.hlsl.vert");
+				provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
 
-		auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
+				auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
 
-		spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
-			, "testShader.hlsl"
-			, shaderSource
-			, "frag"
-			, ECompileShaderType::eFrag);
-		provider.SetUniqueName("testShader.hlsl.frag");
-		provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
-		auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
+				spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
+					, "testShader.hlsl"
+					, shaderSource
+					, "frag"
+					, ECompileShaderType::eFrag);
+				provider.SetUniqueName("testShader.hlsl.frag");
+				provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+				auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
 
-		auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
-		RenderPassDescriptor rpDesc{ renderPassInfo };
-		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);
+				auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
+				RenderPassDescriptor rpDesc{ renderPassInfo };
+				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);
 
-
-		FramebufferDescriptor fbDesc{ renderPassInfo, 800, 600 };
-		m_FramebufferObjectCache.GetOrCreate()
-
-
+				FramebufferDescriptor fbDesc{ renderPassInfo, 800, 600 };
+				m_FramebufferObjectCache.GetOrCreate()
+			});
 	}
 
 	CVulkanApplication::CVulkanApplication() :
