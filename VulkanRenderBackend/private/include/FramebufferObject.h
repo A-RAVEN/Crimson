@@ -36,8 +36,10 @@ namespace graphics_backend
 
 	class FramebufferObject final : public BaseApplicationSubobject
 	{
+	public:
 		FramebufferObject(CVulkanApplication& owner) : BaseApplicationSubobject(owner) {};
 		void Create(FramebufferDescriptor const& framebufferDescriptor);
+		vk::Framebuffer const& GetFramebuffer() const { return mFramebuffer; }
 	private:
 		vk::Framebuffer mFramebuffer;
 	};

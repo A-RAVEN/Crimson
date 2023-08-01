@@ -93,6 +93,7 @@ public:
 	}
 
 	CRenderPassInfo const& GetRenderPassInfo() const { return mRenderPassInfo; }
+	CPipelineStateObject const& GetPipelineStateObject(uint32_t subpassIndex) const { return mSubpassPipelineStateObjects[subpassIndex]; }
 private:
 	CRenderPassInfo mRenderPassInfo{};
 	std::vector<CPipelineStateObject> mSubpassPipelineStateObjects{};

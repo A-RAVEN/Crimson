@@ -453,9 +453,15 @@ namespace graphics_backend
 		auto newTask = NewTask();
 		newTask->Functor([this]()
 			{
+				vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
+					m_WindowContexts[0].m_Swapchain
+					, std::numeric_limits<uint64_t>::max()
+					, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
+
+
 				CRenderpassBuilder newRenderPass{ {
-			CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
-		} };
+					CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
+				} };
 
 				newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, [](CInlineCommandList& cmd)
 					{
@@ -476,7 +482,7 @@ namespace graphics_backend
 				provider.SetUniqueName("testShader.hlsl.vert");
 				provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
 
-				auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
+				auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
 
 				spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
 					, "testShader.hlsl"
@@ -485,14 +491,44 @@ namespace graphics_backend
 					, ECompileShaderType::eFrag);
 				provider.SetUniqueName("testShader.hlsl.frag");
 				provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
-				auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) });
+				auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
 
 				auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
 				RenderPassDescriptor rpDesc{ renderPassInfo };
-				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc);
+				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
 
-				FramebufferDescriptor fbDesc{ renderPassInfo, 800, 600 };
-				m_FramebufferObjectCache.GetOrCreate()
+				auto& pso = newRenderPass.GetPipelineStateObject(0);
+
+				CVertexInputDescriptor vertexInputDesc{};
+				vertexInputDesc.AddPrimitiveDescriptor(12, { VertexAttribute{0, 0, VertexInputFormat::eR32G32B32_SFloat} });
+
+				CPipelineObjectDescriptor pipelineDesc{ pso
+					, vertexInputDesc
+					, ShaderStateDescriptor{vertModule, fragModule}
+					, pRenderPass
+					, 0};
+				auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
+
+				FramebufferDescriptor fbDesc{ {m_WindowContexts[0].m_SwapchainImageViews[currentBuffer.value]},  pRenderPass, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height };
+				auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
+
+				auto& threadContext0 = m_ThreadContexts[0];
+				auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+
+				std::vector<vk::ClearValue> clearValues = { {vk::ClearColorValue{ std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f} }} };
+
+				cmd.beginRenderPass(
+					vk::RenderPassBeginInfo{
+					pRenderPass->GetRenderPass()
+						, pFrameBufferObject->GetFramebuffer()
+						, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
+					, vk::SubpassContents::eInline);
+
+				cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
+				//cmd.bindver
+
+				cmd.endRenderPass();
+				cmd.end();
 			});
 	}
 
@@ -501,6 +537,7 @@ namespace graphics_backend
 	,m_ShaderModuleCache(*this)
 	,m_RenderPassCache(*this)
 	,m_PipelineObjectCache(*this)
+	,m_FramebufferObjectCache(*this)
 	{
 	}
 
