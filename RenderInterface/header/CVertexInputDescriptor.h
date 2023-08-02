@@ -16,6 +16,9 @@ public:
 	}
 };
 
+template<>
+struct hash_utils::is_contiguously_hashable<InputAssemblyStates> : public std::true_type {};
+
 struct VertexAttribute
 {
 public:
@@ -59,12 +62,12 @@ public:
 	friend void hash_append(HashAlgorithm& h, CVertexInputDescriptor const& vertex_input_desc) noexcept
 	{
 		hash_append(h, vertex_input_desc.assemblyStates);
-		for (auto& tup : m_PrimitiveDescriptions)
+		for (auto& tup : vertex_input_desc.m_PrimitiveDescriptions)
 		{
 			hash_append(h, std::get<0>(tup));
 			hash_append(h, std::get<1>(tup));
 			hash_append(h, std::get<2>(tup));
 		}
-		hash_append(h, m_PrimitiveDescriptions.size());
+		hash_append(h, vertex_input_desc.m_PrimitiveDescriptions.size());
 	}
 };

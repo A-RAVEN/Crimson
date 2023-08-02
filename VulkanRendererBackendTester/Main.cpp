@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 	while (pBackend->AnyWindowRunning())
 	{
 		pBackend->StartCurrentFrame();
-
+		pBackend->TestCode();
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;

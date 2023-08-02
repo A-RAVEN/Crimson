@@ -35,6 +35,7 @@ namespace graphics_backend
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) = 0;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) = 0;
+		virtual void TestCode() = 0;
 	};
 }
 

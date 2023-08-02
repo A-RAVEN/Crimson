@@ -24,8 +24,8 @@ namespace graphics_backend
 		template <class HashAlgorithm>
 		friend void hash_append(HashAlgorithm& h, ShaderStateDescriptor const& shaderstate_desc) noexcept
 		{
-			hash_append(h, static_cast<size_t>(shaderstate_desc.vertexShader.get()));
-			hash_append(h, static_cast<size_t>(shaderstate_desc.fragmentShader.get()));
+			hash_append(h, reinterpret_cast<size_t>(shaderstate_desc.vertexShader.get()));
+			hash_append(h, reinterpret_cast<size_t>(shaderstate_desc.fragmentShader.get()));
 		}
 	};
 
@@ -52,7 +52,7 @@ namespace graphics_backend
 			hash_append(h, pipeline_desc.pso);
 			hash_append(h, pipeline_desc.vertexInputs);
 			hash_append(h, pipeline_desc.shaderState);
-			hash_append(h, static_cast<size_t>(pipeline_desc.renderPassObject.get()));
+			hash_append(h, reinterpret_cast<size_t>(pipeline_desc.renderPassObject.get()));
 			hash_append(h, pipeline_desc.subpassIndex);
 		}
 	};

@@ -10,12 +10,6 @@ CTextureMetadata::CTextureMetadata(CTextureInfo const& textureInfo, bool importe
 {
 }
 
-void CRenderGraph_Impl::AddPass(CRenderGraphPassConfig const& passConfig, std::function<void(CInlineCommandList& commandList)> const& func)
-{
-	CRenderGraphPassObject newPassObject;
-	newPassObject.m_Config = passConfig;
-	newPassObject.m_Functor = func;
-}
 
 CTextureHandle CRenderGraph_Impl::NewTextureHandle(CTextureInfo const& textureInfo)
 {

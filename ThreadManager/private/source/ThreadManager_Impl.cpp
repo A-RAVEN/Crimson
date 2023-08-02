@@ -210,13 +210,18 @@ namespace thread_management
         }
     }
 
+#ifdef THREADMANAGER_EXPORTS
+#define THREADMANAGER_API __declspec(dllexport)
+#else
+#define THREADMANAGER_API
+#endif
     extern "C"
     {
-        CThreadManager* NewModuleInstance()
+        THREADMANAGER_API CThreadManager* NewModuleInstance()
         {
             return new CThreadManager_Impl();
         }
-        void DeleteModuleInstance(CThreadManager* removingManager)
+        THREADMANAGER_API void DeleteModuleInstance(CThreadManager* removingManager)
         {
             CThreadManager_Impl* removal = static_cast<CThreadManager_Impl*>(removingManager);
             delete removal;

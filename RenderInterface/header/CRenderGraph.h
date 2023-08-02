@@ -27,11 +27,11 @@ public:
 class CRenderGraph
 {
 public:
-	RENDERINTERFACE_API virtual CTextureHandle NewTextureHandle(CTextureInfo const& textureInfo) = 0;
-	RENDERINTERFACE_API virtual void ImportTexture(graphics_backend::CGPUTextureResource const& textureResource) = 0;
-	RENDERINTERFACE_API virtual void NewBufferHandle() = 0;
-	RENDERINTERFACE_API virtual void ImportBuffer() = 0;
-	RENDERINTERFACE_API virtual void PassGlobalShaderValueOverride(std::string const& overrideBufferName) = 0;
+	virtual CTextureHandle NewTextureHandle(CTextureInfo const& textureInfo) = 0;
+	virtual void ImportTexture(graphics_backend::CGPUTextureResource const& textureResource) = 0;
+	virtual void NewBufferHandle() = 0;
+	virtual void ImportBuffer() = 0;
+	virtual void PassGlobalShaderValueOverride(std::string const& overrideBufferName) = 0;
 
 	virtual CRenderpassBuilder BeginRenderPass();
 };

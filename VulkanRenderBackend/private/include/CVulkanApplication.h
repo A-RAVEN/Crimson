@@ -94,6 +94,7 @@ namespace graphics_backend
 
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
 
+		void TestCode();
 	public:
 		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
 		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);
@@ -109,7 +110,6 @@ namespace graphics_backend
 
 		void ReleaseAllWindowContexts();
 
-		void TestCode();
 
 	private:
 		vk::Instance m_Instance = nullptr;

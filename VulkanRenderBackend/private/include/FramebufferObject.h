@@ -29,8 +29,8 @@ namespace graphics_backend
 		template <class HashAlgorithm>
 		friend void hash_append(HashAlgorithm& h, FramebufferDescriptor const& x) noexcept
 		{
-			hash_append(h, renderImageViews);
-			hash_append(h, renderpassObject);
+			hash_append(h, x.renderImageViews);
+			hash_append(h, reinterpret_cast<size_t>(x.renderpassObject.get()));
 		}
 	};
 

@@ -15,7 +15,8 @@ namespace graphics_backend
 		const std::string codeType = "spirv";
 		uint64_t length = descriptor.provider->GetDataLength(codeType);
 		uint32_t codeLength_integer = length / sizeof(uint32_t);
-		std::vector<uint32_t> dataArray{codeLength_integer};
+		std::vector<uint32_t> dataArray;
+		dataArray.resize(codeLength_integer);
 		memcpy(dataArray.data(), descriptor.provider->GetDataPtr(codeType), length);
 		vk::ShaderModuleCreateInfo shaderModuelCreateInfo(
 			{}

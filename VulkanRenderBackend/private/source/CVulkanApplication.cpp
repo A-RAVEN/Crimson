@@ -470,7 +470,7 @@ namespace graphics_backend
 
 				library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader{ L"ShaderCompiler" };
 				auto pCompiler = compilerLoader.New();
-				auto shaderSource = fileloading_utils::LoadStringFile("testShader.hlsl");
+				auto shaderSource = fileloading_utils::LoadStringFile("D:/Projects/Crimson/Build/x64/Debug/testShader.hlsl");
 
 				auto spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
 					, "testShader.hlsl"

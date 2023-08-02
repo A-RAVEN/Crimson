@@ -1,3 +1,4 @@
+#include <private/include/pch.h>
 #include <private/include/FramebufferObject.h>
 
 namespace graphics_backend

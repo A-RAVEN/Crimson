@@ -173,6 +173,19 @@ namespace graphics_backend
 		vk::PipelineLayoutCreateInfo layoutCreateInfo{};
 		m_PipelineLayout = GetDevice().createPipelineLayout(layoutCreateInfo);
 
+		std::array<vk::Viewport, 1> dummyViewports = { vk::Viewport{0, 0, 1, 1, 0, 1} };
+		std::array<vk::Rect2D, 1> dummySissors = { vk::Rect2D{{0, 0}, {1, 1}} };
+		vk::PipelineViewportStateCreateInfo viewportStateInfo{
+			{}, dummyViewports, dummySissors };
+
+		std::array<vk::DynamicState, 2> dynamicStates{
+			vk::DynamicState::eViewport
+			, vk::DynamicState::eScissor
+		};
+		vk::PipelineDynamicStateCreateInfo dynamicStateInfo{
+			{}, dynamicStates
+		};
+
 		vk::GraphicsPipelineCreateInfo graphicsPipeCreateInfo{};
 		graphicsPipeCreateInfo.layout = m_PipelineLayout;
 		graphicsPipeCreateInfo.setPColorBlendState(&colorBlendState);
@@ -183,6 +196,8 @@ namespace graphics_backend
 		graphicsPipeCreateInfo.setPDepthStencilState(&depthStencilState);
 		graphicsPipeCreateInfo.setRenderPass(pipelineObjectDescriptor.renderPassObject->GetRenderPass());
 		graphicsPipeCreateInfo.setSubpass(pipelineObjectDescriptor.subpassIndex);
+		graphicsPipeCreateInfo.setPViewportState(&viewportStateInfo);
+		graphicsPipeCreateInfo.setPDynamicState(&dynamicStateInfo);
 		m_GraphicsPipeline = GetDevice().createGraphicsPipeline(nullptr, graphicsPipeCreateInfo).value;
 	}
 }

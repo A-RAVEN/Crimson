@@ -46,8 +46,8 @@ namespace ShaderCompiler
 	public:
 		Compiler_Impl()
 		{
-			m_Options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-			m_Options.SetTargetSpirv(shaderc_spirv_version_1_3);
+			m_Options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+			//m_Options.SetTargetSpirv(shaderc_spirv_version_1_6);
 			m_Options.SetIncluder(std::unique_ptr <shaderc::CompileOptions::IncluderInterface> (new FileIncluder()));
 		}
 		~Compiler_Impl()
@@ -125,7 +125,7 @@ namespace ShaderCompiler
 				shader_src.size(),
 				SHADER_KIND_TABLE[static_cast<uint32_t>(shader_type)],
 				file_name.data(),
-				"main",
+				entry_point.c_str(),
 				m_Options);
 
 			if (result.GetCompilationStatus() != shaderc_compilation_status_success) {

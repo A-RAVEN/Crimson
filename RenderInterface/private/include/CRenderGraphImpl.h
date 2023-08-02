@@ -21,7 +21,6 @@ public:
 class CRenderGraph_Impl : public CRenderGraph
 {
 public:
-	virtual void AddPass(CRenderGraphPassConfig const& passConfig, std::function<void(CInlineCommandList& commandList)> const& func) override;
 	virtual CTextureHandle NewTextureHandle(CTextureInfo const& textureInfo) override;
 private:
 	std::vector<CRenderGraphPassObject> m_GraphPassObjectList;

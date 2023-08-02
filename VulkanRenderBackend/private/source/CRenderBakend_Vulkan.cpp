@@ -57,4 +57,8 @@ namespace graphics_backend
 	{
 		m_Application.DestroyPrimitiveResource(static_cast<CGPUPrimitiveResource_Vulkan*>(resource));
 	}
+	void CRenderBackend_Vulkan::TestCode()
+	{
+		m_Application.TestCode();
+	}
 }
