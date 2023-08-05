@@ -33,6 +33,12 @@ enum class EShaderSourceType : uint8_t
 	eGLSL,
 };
 
+enum class EIndexBufferType : uint8_t
+{
+	e16,
+	e32
+};
+
 enum class ETextureFormat : uint8_t
 {
 	E_R8_UNORM,
@@ -50,6 +56,24 @@ enum class ETextureFormat : uint8_t
 	E_R32G32B32A32_SFLOAT,
 	E_INVALID,
 };
+
+enum class EBufferUsage : uint8_t
+{
+	eConstantBuffer = 1,
+	eStructuredBuffer = 1 << 1,
+	eVertexBuffer = 1 << 2,
+	eIndexBuffer = 1 << 3,
+	eMaxBit = 3
+};
+
+template <>
+struct uenum::TEnumTraits<EBufferUsage>
+{
+	static constexpr bool is_bitmask = true;
+};
+
+using EBufferUsageFlags = uenum::EnumFlags<EBufferUsage>;
+
 
 enum class CTextureAccessType
 {
@@ -149,7 +173,7 @@ struct uenum::TEnumTraits<EColorChannelMask>
 	static constexpr bool is_bitmask = true;
 };
 
-using EColorChannelMaskFlags = uenum::EnumFlags<EColorChannelMask>; //std::underlying_type_t<EColorChannelMask>;
+using EColorChannelMaskFlags = uenum::EnumFlags<EColorChannelMask>;
 
 enum class EBlendFactor
 {

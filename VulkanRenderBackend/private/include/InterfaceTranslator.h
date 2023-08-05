@@ -243,4 +243,35 @@ namespace graphics_backend
 		default: return vk::SampleCountFlagBits::e1;
 		}
 	}
+
+	constexpr vk::BufferUsageFlagBits EBufferUsageTranslate(EBufferUsage inUsage)
+	{
+		switch (inUsage)
+		{
+		case EBufferUsage::eConstantBuffer:
+			return vk::BufferUsageFlagBits::eUniformBuffer;
+		case EBufferUsage::eStructuredBuffer:
+			return vk::BufferUsageFlagBits::eStorageBuffer;
+		case EBufferUsage::eVertexBuffer:
+			return vk::BufferUsageFlagBits::eVertexBuffer;
+		case EBufferUsage::eIndexBuffer:
+			return vk::BufferUsageFlagBits::eIndexBuffer;
+		default: return vk::BufferUsageFlagBits::eUniformBuffer;
+		}
+	}
+
+	constexpr vk::BufferUsageFlags EBufferUsageFlagsTranslate(EBufferUsageFlags inUsageFlags)
+	{
+		vk::BufferUsageFlags result;
+		for (uint32_t i = 0
+			; i <= static_cast<uint32_t>(EBufferUsage::eMaxBit)
+			; ++i)
+		{
+			EBufferUsage itrUsage = static_cast<EBufferUsage>(1 << i);
+			if (inUsageFlags & itrUsage)
+			{
+				result |= EBufferUsageTranslate(itrUsage);
+			}
+		}
+	}
 }

@@ -530,6 +530,7 @@ namespace graphics_backend
 					, vk::SubpassContents::eInline);
 
 				cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
+				cmd.drawIndexed()
 				//cmd.bindver
 
 				cmd.endRenderPass();
