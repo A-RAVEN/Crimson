@@ -3,8 +3,7 @@
 #include <RenderInterface/header/CPipelineStateObject.h>
 #include <private/include/VulkanIncludes.h>
 #include <private/include/CShaderModuleObject.h>
-#include "RenderInterface/header/CShaderModule.h"
-#include "RenderInterface/header/CVertexInputDescriptor.h"
+#include <RenderInterface/header/CVertexInputDescriptor.h>
 #include "RenderPassObject.h"
 
 namespace graphics_backend

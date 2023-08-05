@@ -50,7 +50,7 @@ namespace graphics_backend
 		std::fill(inoutLayouts.begin(), inoutLayouts.end(), std::make_pair(vk::ImageLayout::eUndefined, vk::ImageLayout::eUndefined));
 
 
-		//正在被引用的subpassid
+		//姝ｅ湪琚紩鐢ㄧ殑subpassid
 		std::vector<uint32_t> tracking_attachment_ref_subpass(attachmentInfo.size());
 		std::fill(tracking_attachment_ref_subpass.begin()
 			, tracking_attachment_ref_subpass.end()
@@ -118,6 +118,9 @@ namespace graphics_backend
 	{
 		auto& attachmentInfo = descriptor.renderPassInfo.attachmentInfos;
 		auto& subpassInfos = descriptor.renderPassInfo.subpassInfos;
+
+		m_AttachmentCounrt = attachmentInfo.size();
+		m_SubpassCount = subpassInfos.size();
 
 		std::vector<vk::SubpassDependency> subpassDependencies{};
 		ExtractAttachmentsInOutLayoutsAndSubpassDependencies(

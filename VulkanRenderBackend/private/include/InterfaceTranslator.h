@@ -229,4 +229,18 @@ namespace graphics_backend
 		return result;
 	}
 
+	constexpr vk::SampleCountFlagBits ESampleCountTranslate(EMultiSampleCount inSampleCount)
+	{
+		switch (inSampleCount)
+		{
+		case EMultiSampleCount::e1: return vk::SampleCountFlagBits::e1;
+		case EMultiSampleCount::e2: return vk::SampleCountFlagBits::e2;
+		case EMultiSampleCount::e4: return vk::SampleCountFlagBits::e4;
+		case EMultiSampleCount::e8: return vk::SampleCountFlagBits::e8;
+		case EMultiSampleCount::e16: return vk::SampleCountFlagBits::e16;
+		case EMultiSampleCount::e32: return vk::SampleCountFlagBits::e32;
+		case EMultiSampleCount::e64: return vk::SampleCountFlagBits::e64;
+		default: return vk::SampleCountFlagBits::e1;
+		}
+	}
 }

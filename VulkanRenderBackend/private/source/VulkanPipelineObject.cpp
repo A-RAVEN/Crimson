@@ -67,6 +67,15 @@ namespace graphics_backend
 		return result;
 	}
 
+	vk::PipelineMultisampleStateCreateInfo PopulateMultiSampleStateInfo(MultiSampleStates const& msState)
+	{
+		vk::PipelineMultisampleStateCreateInfo result{
+			{}
+			, ESampleCountTranslate(msState.msCount)
+		};
+		return result;
+	}
+
 	void PopulateStencilOpState(DepthStencilStates::StencilStates const& stencilState, vk::StencilOpState& inoutVulkanStencilOp)
 	{
 		inoutVulkanStencilOp.failOp = EStencilOpTranslate(stencilState.failOp);
@@ -96,13 +105,14 @@ namespace graphics_backend
 
 	vk::PipelineColorBlendStateCreateInfo PopulateColorBlendStateInfo(
 		CPipelineStateObject const& srcPSO
+		, RenderPassObject const* pRenderPassObj
 		, std::vector<vk::PipelineColorBlendAttachmentState>& inoutBlendAttachmentStates)
 	{
 		auto& colorAttachments = srcPSO.colorAttachments;
 		vk::PipelineColorBlendStateCreateInfo result{};
 		uint32_t attachmentCount = std::min(
 			static_cast<uint32_t>(colorAttachments.attachmentBlendStates.size())
-			, colorAttachments.attachmentCount);
+			, pRenderPassObj->GetAttachmentCount());
 		inoutBlendAttachmentStates.resize(attachmentCount);
 		for(uint32_t i = 0; i < attachmentCount; ++i)
 		{
@@ -128,16 +138,16 @@ namespace graphics_backend
 		auto fragmentModdule = shaderStates.fragmentShader->GetShaderModule();
 		inoutShaderStages.clear();
 		inoutShaderStages.push_back(vk::PipelineShaderStageCreateInfo{
-			vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
+			{}//vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
 				, vk::ShaderStageFlagBits::eVertex
 				, vertexModdule
-				, "Vertex Shader"
+				, shaderStates.vertexShader->GetEntryPointName().c_str()
 		});
 		inoutShaderStages.push_back(vk::PipelineShaderStageCreateInfo{
-			vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
+			{}//vk::PipelineShaderStageCreateFlagBits::eAllowVaryingSubgroupSize
 				, vk::ShaderStageFlagBits::eFragment
 				, fragmentModdule
-				, "Fragment Shader"
+				, shaderStates.fragmentShader->GetEntryPointName().c_str()
 		});
 	}
 
@@ -159,12 +169,18 @@ namespace graphics_backend
 		//Rasterization States
 		vk::PipelineRasterizationStateCreateInfo rasterizationInfo = PopulateRasterizationStateInfo(pipelineObjectDescriptor.pso);
 
+		//MultiSample States
+		vk::PipelineMultisampleStateCreateInfo multisampleInfo = PopulateMultiSampleStateInfo(pipelineObjectDescriptor.pso.multiSampleStates);
+		
 		//Depth Stencil
 		vk::PipelineDepthStencilStateCreateInfo depthStencilState = PopulateDepthStencilStateInfo(pipelineObjectDescriptor.pso);
 
 		//Color Attachment State
 		std::vector<vk::PipelineColorBlendAttachmentState> inoutBlendAttachmentStates;
-		vk::PipelineColorBlendStateCreateInfo colorBlendState = PopulateColorBlendStateInfo(pipelineObjectDescriptor.pso, inoutBlendAttachmentStates);
+		vk::PipelineColorBlendStateCreateInfo colorBlendState = PopulateColorBlendStateInfo(
+			pipelineObjectDescriptor.pso
+			, pipelineObjectDescriptor.renderPassObject.get()
+			, inoutBlendAttachmentStates);
 
 		//Shader Stages
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
@@ -194,6 +210,7 @@ namespace graphics_backend
 		graphicsPipeCreateInfo.setPInputAssemblyState(&inputAssemblyInfo);
 		graphicsPipeCreateInfo.setPRasterizationState(&rasterizationInfo);
 		graphicsPipeCreateInfo.setPDepthStencilState(&depthStencilState);
+		graphicsPipeCreateInfo.setPMultisampleState(&multisampleInfo);
 		graphicsPipeCreateInfo.setRenderPass(pipelineObjectDescriptor.renderPassObject->GetRenderPass());
 		graphicsPipeCreateInfo.setSubpass(pipelineObjectDescriptor.subpassIndex);
 		graphicsPipeCreateInfo.setPViewportState(&viewportStateInfo);

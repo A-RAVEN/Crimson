@@ -31,7 +31,11 @@ namespace graphics_backend
 		void Create(RenderPassDescriptor const& descriptor);
 		virtual void Release() override;
 		vk::RenderPass GetRenderPass() const { return m_RenderPass; }
+		uint32_t GetAttachmentCount() const { return m_AttachmentCounrt; }
+		uint32_t GetSubpassCount() const { return m_SubpassCount; }
 	private:
+		uint32_t m_AttachmentCounrt = 0;
+		uint32_t m_SubpassCount = 0;
 		vk::RenderPass m_RenderPass = nullptr;
 		std::vector<std::pair<vk::ImageLayout, vk::ImageLayout>> m_AttachmentExternalLayouts;
 	};

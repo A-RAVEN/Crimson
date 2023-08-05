@@ -164,7 +164,8 @@
     <ClInclude Include="header\CNativeRenderPassInfo.h" />
     <ClInclude Include="header\CPipelineStateObject.h" />
     <ClInclude Include="header\CRenderBackend.h" />
-    <ClInclude Include="header\CShaderModule.h" />
+    <ClInclude Include="header\GPUBuffer.h" />
+    <ClInclude Include="header\ShaderProvider.h" />
     <ClInclude Include="header\CShaderStateObject.h" />
     <ClInclude Include="header\CTextureResource.h" />
     <ClInclude Include="header\CVertexInputDescriptor.h" />

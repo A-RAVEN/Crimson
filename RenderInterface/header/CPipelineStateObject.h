@@ -118,15 +118,10 @@ struct is_contiguously_hashable<SingleColorAttachmentBlendStates> : public std::
 struct ColorAttachmentsBlendStates
 {
 	std::array<SingleColorAttachmentBlendStates, 8> attachmentBlendStates = {};
-	uint32_t attachmentCount = 0;
 
 	bool operator==(ColorAttachmentsBlendStates const& rhs) const
 	{
-		if (attachmentCount != rhs.attachmentCount)
-		{
-			return false;
-		}
-		for (uint32_t i = 0; i < attachmentCount; ++i)
+		for (uint32_t i = 0; i < 8; ++i)
 		{
 			if (!(attachmentBlendStates[i] == rhs.attachmentBlendStates[i]))
 			{

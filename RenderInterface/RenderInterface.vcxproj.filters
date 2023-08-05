@@ -51,7 +51,7 @@
     <ClInclude Include="header\CVertexInputDescriptor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\CShaderModule.h">
+    <ClInclude Include="header\ShaderProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\LayoutBuilder.h">
@@ -64,6 +64,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\CCommandList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\GPUBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

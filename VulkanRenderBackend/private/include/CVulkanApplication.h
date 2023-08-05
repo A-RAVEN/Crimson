@@ -9,8 +9,6 @@
 #include <unordered_map>
 
 #include "CShaderModuleObject.h"
-#include "RenderInterface/header/CShaderModule.h"
-#include "CShaderModuleObject.h"
 #include "RenderPassObject.h"
 #include "VulkanPipelineObject.h"
 #include "FramebufferObject.h"

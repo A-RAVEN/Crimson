@@ -480,7 +480,7 @@ namespace graphics_backend
 
 				ShaderProvider_Impl provider;
 				provider.SetUniqueName("testShader.hlsl.vert");
-				provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+				provider.SetData("spirv", "vert", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
 
 				auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
 
@@ -490,7 +490,7 @@ namespace graphics_backend
 					, "frag"
 					, ECompileShaderType::eFrag);
 				provider.SetUniqueName("testShader.hlsl.frag");
-				provider.SetData("spirv", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+				provider.SetData("spirv", "frag", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
 				auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
 
 				auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
@@ -500,7 +500,10 @@ namespace graphics_backend
 				auto& pso = newRenderPass.GetPipelineStateObject(0);
 
 				CVertexInputDescriptor vertexInputDesc{};
-				vertexInputDesc.AddPrimitiveDescriptor(12, { VertexAttribute{0, 0, VertexInputFormat::eR32G32B32_SFloat} });
+				vertexInputDesc.AddPrimitiveDescriptor(20, { 
+					VertexAttribute{0, 0, VertexInputFormat::eR32G32_SFloat}
+					, VertexAttribute{1, 8, VertexInputFormat::eR32G32B32_SFloat}
+					});
 
 				CPipelineObjectDescriptor pipelineDesc{ pso
 					, vertexInputDesc
@@ -509,7 +512,9 @@ namespace graphics_backend
 					, 0};
 				auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
 
-				FramebufferDescriptor fbDesc{ {m_WindowContexts[0].m_SwapchainImageViews[currentBuffer.value]},  pRenderPass, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height };
+				FramebufferDescriptor fbDesc{ {m_WindowContexts[0].m_SwapchainImageViews[currentBuffer.value]}
+				,  pRenderPass
+				, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1};
 				auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
 
 				auto& threadContext0 = m_ThreadContexts[0];

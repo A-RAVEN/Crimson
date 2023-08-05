@@ -6,7 +6,6 @@
 #include <string>
 #include "Common.h"
 #include "CGPUPrimitiveResource.h"
-#include "CShaderModule.h"
 
 namespace thread_management
 {

@@ -62,7 +62,7 @@ namespace graphics_backend
 		ResourceUsageVulkanInfo{
 			vk::PipelineStageFlagBits::eColorAttachmentOutput,
 			vk::AccessFlagBits::eColorAttachmentWrite,
-			vk::ImageLayout::eAttachmentOptimal,
+			vk::ImageLayout::eColorAttachmentOptimal,
 		},
 		//eDepthStencilAttachment,
 		ResourceUsageVulkanInfo{
