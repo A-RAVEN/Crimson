@@ -9,6 +9,7 @@
 #include <SharedTools/header/library_loader.h>
 #include <SharedTools/header/FileLoader.h>
 #include <private/test/TestShaderProvider.h>
+#include <private/include/CommandList_Impl.h>
 
 namespace graphics_backend
 {
@@ -28,6 +29,10 @@ namespace graphics_backend
 						itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
 					}
 					m_MemoryManager.ReleaseCurrentFrameResource();
+					for (auto& context : m_WindowContexts)
+					{
+						context.WaitCurrentFrameBufferIndex();
+					}
 				});
 	}
 
@@ -43,10 +48,7 @@ namespace graphics_backend
 
 				if(!m_WindowContexts.empty())
 				{
-					vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
-						m_WindowContexts[0].m_Swapchain
-						, std::numeric_limits<uint64_t>::max()
-						, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
+					TIndex currentBuffer = m_WindowContexts[0].GetCurrentFrameBufferIndex();
 
 					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0].m_WaitNextFrameSemaphore };
 					std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
@@ -56,17 +58,17 @@ namespace graphics_backend
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
 					VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+					barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
 						, ResourceUsage::eDontCare, ResourceUsage::eTransferDest);
 
 					VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+					barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
 						, ResourceUsage::eTransferDest, ResourceUsage::ePresent);
 
 					barrier0.ExecuteBarrier(cmd);
 
 					cmd.clearColorImage(
-						m_WindowContexts[0].m_SwapchainImages[currentBuffer.value]
+						m_WindowContexts[0].m_SwapchainImages[currentBuffer]
 						, vk::ImageLayout::eTransferDstOptimal
 						, vk::ClearColorValue(std::array<float, 4>{ 0.0f, 0.0f, 1.0f, 1.0f }), vulkan_backend::utils::DefaultColorSubresourceRange());
 
@@ -84,7 +86,7 @@ namespace graphics_backend
 					vk::PresentInfoKHR presenttInfo(
 						presentSemaphore
 						, m_WindowContexts[0].m_Swapchain
-						, currentBuffer.value
+						, currentBuffer
 					);
 					m_WindowContexts[0].m_PresentQueue.second.presentKHR(presenttInfo);
 				}
@@ -461,7 +463,7 @@ namespace graphics_backend
 
 	void CVulkanApplication::TestCode()
 	{
-		auto newTask = NewTask();
+		/*auto newTask = NewTask();
 		newTask->Functor([this]()
 			{
 				vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
@@ -507,6 +509,8 @@ namespace graphics_backend
 					, ECompileShaderType::eFrag);
 				provider.SetUniqueName("testShader.hlsl.frag");
 				provider.SetData("spirv", "frag", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+				
+				
 				auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
 
 				auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
@@ -543,7 +547,56 @@ namespace graphics_backend
 
 				cmd.endRenderPass();
 				cmd.end();
-			});
+			});*/
+	}
+
+	void CVulkanApplication::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)
+	{
+		auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
+		RenderPassDescriptor rpDesc{ renderPassInfo };
+		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
+
+		for (uint32_t subpassId = 0; subpassId < renderPassInfo.subpassInfos.size(); ++subpassId)
+		{
+			auto& vertexInputDesc = inRenderPass.GetVertexDescriptor(subpassId);
+			auto& shaderSet = inRenderPass.GetShaderSet(subpassId);
+			auto& pso = inRenderPass.GetPipelineStateObject(subpassId);
+			auto functor = inRenderPass.GetSubpassFunctor(subpassId);
+
+			auto vertModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.vert }).lock();
+			auto fragModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.frag }).lock();
+
+			CPipelineObjectDescriptor pipelineDesc{
+				pso
+				, vertexInputDesc
+				, ShaderStateDescriptor{vertModule, fragModule}
+				, pRenderPass
+				, subpassId };
+
+			auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
+			TIndex currentFrameIndex = m_WindowContexts[0].GetCurrentFrameBufferIndex();
+
+			FramebufferDescriptor fbDesc{ {m_WindowContexts[0].m_SwapchainImageViews[currentFrameIndex]}
+			,  pRenderPass
+			, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1 };
+			auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
+
+			auto& threadContext0 = m_ThreadContexts[0];
+			auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+
+			std::vector<vk::ClearValue> clearValues = { {vk::ClearColorValue{ std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f} }} };
+			cmd.beginRenderPass(
+				vk::RenderPassBeginInfo{
+				pRenderPass->GetRenderPass()
+					, pFrameBufferObject->GetFramebuffer()
+					, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
+			, vk::SubpassContents::eInline);
+			cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
+			CCommandList_Impl cmdListInterface{ cmd };
+			functor(cmdListInterface);
+			cmd.endRenderPass();
+			cmd.end();
+		}
 	}
 
 	CVulkanApplication::CVulkanApplication() :

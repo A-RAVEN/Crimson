@@ -94,6 +94,8 @@ namespace graphics_backend
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
 
 		void TestCode();
+
+		void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass);
 	public:
 		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
 		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);

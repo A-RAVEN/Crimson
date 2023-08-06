@@ -5,6 +5,7 @@
 
 #include "Common.h"
 #include "CPipelineStateObject.h"
+#include "ShaderProvider.h"
 
 constexpr uint32_t INVALID_ATTACHMENT_INDEX = 256;
 
@@ -85,20 +86,26 @@ public:
 	CRenderpassBuilder& Subpass(CSubpassInfo const& inSubpassInfo
 		, CPipelineStateObject const& pipelineStates
 		, CVertexInputDescriptor const& vertexInputs
+		, GraphicsShaderSet const& shaderSet
 		, std::function<void(CInlineCommandList&)> commandFunction)
 	{
 		mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
 		mSubpassPipelineStateObjects.push_back(pipelineStates);
+		mSubpassVertexInputs.push_back(vertexInputs);
+		mSubpassShaderSets.push_back(shaderSet);
 		mSubpassFunctions.push_back(commandFunction);
 		return *this;
 	}
 
 	CRenderPassInfo const& GetRenderPassInfo() const { return mRenderPassInfo; }
 	CPipelineStateObject const& GetPipelineStateObject(uint32_t subpassIndex) const { return mSubpassPipelineStateObjects[subpassIndex]; }
-	CVertexInputDescriptor const& GetVertexDescriptor(uint32_t subpassIndex) const { return CVertexInputDescriptor[subpassIndex]; }
+	CVertexInputDescriptor const& GetVertexDescriptor(uint32_t subpassIndex) const { return mSubpassVertexInputs[subpassIndex]; }
+	GraphicsShaderSet const& GetShaderSet(uint32_t subpassIndex) const { return mSubpassShaderSets[subpassIndex]; }
+	std::function<void(CInlineCommandList&)> GetSubpassFunctor(uint32_t subpassIndex) const { return mSubpassFunctions[subpassIndex]; }
 private:
 	CRenderPassInfo mRenderPassInfo{};
 	std::vector<CPipelineStateObject> mSubpassPipelineStateObjects{};
 	std::vector<CVertexInputDescriptor> mSubpassVertexInputs{};
+	std::vector<GraphicsShaderSet> mSubpassShaderSets{};
 	std::vector<std::function<void(CInlineCommandList&)>> mSubpassFunctions{};
 };

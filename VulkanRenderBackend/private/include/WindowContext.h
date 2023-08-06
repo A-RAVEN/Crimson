@@ -11,6 +11,8 @@ namespace graphics_backend
 		CWindowContext(std::string const& windowName, uint32_t initialWidth, uint32_t initialHeight);
 		bool NeedClose() const;
 		std::string GetName() const { return m_WindowName; }
+		void WaitCurrentFrameBufferIndex();
+		TIndex GetCurrentFrameBufferIndex() const { return m_CurrentBufferIndex; }
 	protected:
 		void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		void Release_Internal() override;
@@ -27,6 +29,8 @@ namespace graphics_backend
 		std::vector<vk::ImageView> m_SwapchainImageViews;
 		vk::Semaphore m_WaitNextFrameSemaphore = nullptr;
 		vk::Semaphore m_CanPresentSemaphore = nullptr;
+
+		TIndex m_CurrentBufferIndex = INVALID_INDEX;
 
 		friend class CVulkanApplication;
 	};

@@ -40,6 +40,19 @@ namespace graphics_backend
 		return false;
 	}
 
+	void CWindowContext::WaitCurrentFrameBufferIndex()
+	{
+		vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
+			m_Swapchain
+			, std::numeric_limits<uint64_t>::max()
+			, m_WaitNextFrameSemaphore, nullptr);
+
+		if (currentBuffer.result == vk::Result::eSuccess)
+		{
+			m_CurrentBufferIndex = currentBuffer.value;
+		}
+	}
+
 	void CWindowContext::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
 		assert(ValidContext());

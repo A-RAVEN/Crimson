@@ -9,6 +9,8 @@
 #include <SharedTools/header/library_loader.h>
 #include <RenderInterface/header/CNativeRenderPassInfo.h>
 #include <RenderInterface/header/CCommandList.h>
+#include <SharedTools/header/FileLoader.h>
+#include "TestShaderProvider.h"
 using namespace thread_management;
 using namespace library_loader;
 using namespace graphics_backend;
@@ -34,6 +36,35 @@ int main(int argc, char *argv[])
 	pThreadManager->InitializeThreadCount(5);
 
 	auto pShaderCompiler = shaderCompilerLoader.New();
+
+	auto shaderSource = fileloading_utils::LoadStringFile("D:/Projects/Crimson/Build/x64/Debug/testShader.hlsl");
+
+	auto spirVResult = pShaderCompiler->CompileShaderSource(EShaderSourceType::eHLSL
+		, "testShader.hlsl"
+		, shaderSource
+		, "vert"
+		, ECompileShaderType::eVert);
+
+
+	std::shared_ptr<TestShaderProvider> vertProvider = std::make_shared<TestShaderProvider>();
+	vertProvider->SetUniqueName("testShader.hlsl.vert");
+	vertProvider->SetData("spirv", "vert", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+
+
+	spirVResult = pShaderCompiler->CompileShaderSource(EShaderSourceType::eHLSL
+		, "testShader.hlsl"
+		, shaderSource
+		, "frag"
+		, ECompileShaderType::eFrag);
+
+	std::shared_ptr<TestShaderProvider> fragProvider = std::make_shared<TestShaderProvider>();
+	fragProvider->SetUniqueName("testShader.hlsl.frag");
+	fragProvider->SetData("spirv", "frag", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+
+	GraphicsShaderSet shaderSet{};
+	shaderSet.vert = vertProvider;
+	shaderSet.frag = fragProvider;
+
 
 	auto pBackend = renderBackendLoader.New();
 	pBackend->Initialize("Test Vulkan Backend", "CRIMSON Engine");
@@ -83,7 +114,7 @@ int main(int argc, char *argv[])
 		CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
 	} };
 
-	newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
+	newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
 	{
 		cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
 		cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
