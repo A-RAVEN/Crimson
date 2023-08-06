@@ -93,38 +93,46 @@ int main(int argc, char *argv[])
 
 	CGPUPrimitiveResource* pPrimitive = nullptr;
 
-	pBackend->StartCurrentFrame();
-	vertexBuffer->DoUpload();
-	indexBuffer->DoUpload();
-	//pPrimitive = pBackend->NewGPUPrimitiveResource();
-	//pPrimitive->m_VertexInputDescriptor.AddPrimitiveDescriptor(sizeof(int), { {0, 0, VertexInputFormat::eR32_SInt} });
-	//std::vector<int> tmpData = { 1, 2, 3, 4, 5 };
-	//pPrimitive->SetPrimitiveData(0, tmpData.size() * sizeof(tmpData[0]), tmpData.data());
-	//pPrimitive->Submit();
-	pBackend->EndCurrentFrame();
-
 	CVertexInputDescriptor vertexInputDesc{};
 	vertexInputDesc.AddPrimitiveDescriptor(20, {
-		VertexAttribute{0, 0, VertexInputFormat::eR32G32_SFloat}
-		, VertexAttribute{1, 8, VertexInputFormat::eR32G32B32_SFloat}
+		VertexAttribute{0, offsetof(VertexData, x), VertexInputFormat::eR32G32_SFloat}
+		, VertexAttribute{1, offsetof(VertexData, r), VertexInputFormat::eR32G32B32_SFloat}
 		});
 
 
+	CAttachmentInfo attachmentInfo{};
+	attachmentInfo.format = ETextureFormat::E_R8G8B8A8_UNORM;
+	attachmentInfo.loadOp = EAttachmentLoadOp::eClear;
+	attachmentInfo.clearValue = GraphicsClearValue::ClearColor(0.0f, 1.0f, 1.0f, 1.0f);
 	CRenderpassBuilder newRenderPass{ {
-		CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
+		attachmentInfo
 	} };
 
 	newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
-	{
-		cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
-		cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-		cmd.DrawIndexed(3);
-	});
+		{
+			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
+			{
+				cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
+				cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+				cmd.DrawIndexed(3);
+			}
+			else
+			{
+				std::cout << "Not Finish Yet" << std::endl;
+			}
+		});
 
 	while (pBackend->AnyWindowRunning())
 	{
 		pBackend->StartCurrentFrame();
-		//pBackend->TestCode();
+
+		if (frame == 0)
+		{
+			vertexBuffer->DoUpload();
+			indexBuffer->DoUpload();
+		}
+
+		pBackend->ExecuteRenderPass(newRenderPass);
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;

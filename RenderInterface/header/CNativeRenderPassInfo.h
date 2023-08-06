@@ -6,18 +6,21 @@
 #include "Common.h"
 #include "CPipelineStateObject.h"
 #include "ShaderProvider.h"
+#include "CVertexInputDescriptor.h"
 
 constexpr uint32_t INVALID_ATTACHMENT_INDEX = 256;
 
 class CInlineCommandList;
+
 struct CAttachmentInfo
 {
 	ETextureFormat format = ETextureFormat::E_R8G8B8A8_UNORM;
 	EAttachmentLoadOp loadOp = EAttachmentLoadOp::eLoad;
 	EAttachmentStoreOp storeOp = EAttachmentStoreOp::eStore;
-	EMultiSampleCount multiSampleCount = EMultiSampleCount::e1;
 	EAttachmentLoadOp stencilLoadOp = EAttachmentLoadOp::eDontCare;
 	EAttachmentStoreOp stencilStoreOp = EAttachmentStoreOp::eDontCare;
+	GraphicsClearValue clearValue = GraphicsClearValue::ClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	EMultiSampleCount multiSampleCount = EMultiSampleCount::e1;
 
 	bool operator==(CAttachmentInfo const& rhs) const
 	{
@@ -26,7 +29,8 @@ struct CAttachmentInfo
 			&& storeOp == rhs.storeOp
 			&& multiSampleCount == rhs.multiSampleCount
 			&& stencilLoadOp == rhs.stencilLoadOp
-			&& stencilStoreOp == rhs.stencilStoreOp;
+			&& stencilStoreOp == rhs.stencilStoreOp
+			&& clearValue == rhs.clearValue;
 	}
 };
 

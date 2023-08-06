@@ -10,6 +10,7 @@
 #include <SharedTools/header/FileLoader.h>
 #include <private/test/TestShaderProvider.h>
 #include <private/include/CommandList_Impl.h>
+#include <private/include/InterfaceTranslator.h>
 
 namespace graphics_backend
 {
@@ -57,23 +58,28 @@ namespace graphics_backend
 					auto& threadContext0 = m_ThreadContexts[0];
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
-						, ResourceUsage::eDontCare, ResourceUsage::eTransferDest);
+					//VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+					//barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
+					//	, ResourceUsage::eDontCare, ResourceUsage::eTransferDest);
 
-					VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
-						, ResourceUsage::eTransferDest, ResourceUsage::ePresent);
+					//VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+					//barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
+					//	, ResourceUsage::eTransferDest, ResourceUsage::ePresent);
 
-					barrier0.ExecuteBarrier(cmd);
+					//barrier0.ExecuteBarrier(cmd);
 
-					cmd.clearColorImage(
-						m_WindowContexts[0].m_SwapchainImages[currentBuffer]
-						, vk::ImageLayout::eTransferDstOptimal
-						, vk::ClearColorValue(std::array<float, 4>{ 0.0f, 0.0f, 1.0f, 1.0f }), vulkan_backend::utils::DefaultColorSubresourceRange());
+					//cmd.clearColorImage(
+					//	m_WindowContexts[0].m_SwapchainImages[currentBuffer]
+					//	, vk::ImageLayout::eTransferDstOptimal
+					//	, vk::ClearColorValue(std::array<float, 4>{ 0.0f, 0.0f, 1.0f, 1.0f }), vulkan_backend::utils::DefaultColorSubresourceRange());
 
 
-					barrier1.ExecuteBarrier(cmd);
+					//barrier1.ExecuteBarrier(cmd);
+
+					VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+					presentBarrier.PushImageBarrier(m_WindowContexts[0].GetCurrentFrameImage()
+						, ResourceUsage::eColorAttachmentOutput, ResourceUsage::ePresent);
+					presentBarrier.ExecuteBarrier(cmd);
 
 					cmd.end();
 					waitingSubmitCommands.push_back(cmd);
@@ -552,51 +558,83 @@ namespace graphics_backend
 
 	void CVulkanApplication::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)
 	{
-		auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
-		RenderPassDescriptor rpDesc{ renderPassInfo };
-		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
+		auto newTask = NewTask();
+		newTask->Functor([this, inRenderPass]()
+			{
+				auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
+				RenderPassDescriptor rpDesc{ renderPassInfo };
+				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
 
-		for (uint32_t subpassId = 0; subpassId < renderPassInfo.subpassInfos.size(); ++subpassId)
-		{
-			auto& vertexInputDesc = inRenderPass.GetVertexDescriptor(subpassId);
-			auto& shaderSet = inRenderPass.GetShaderSet(subpassId);
-			auto& pso = inRenderPass.GetPipelineStateObject(subpassId);
-			auto functor = inRenderPass.GetSubpassFunctor(subpassId);
+				for (uint32_t subpassId = 0; subpassId < renderPassInfo.subpassInfos.size(); ++subpassId)
+				{
+					auto& vertexInputDesc = inRenderPass.GetVertexDescriptor(subpassId);
+					auto& shaderSet = inRenderPass.GetShaderSet(subpassId);
+					auto& pso = inRenderPass.GetPipelineStateObject(subpassId);
+					auto functor = inRenderPass.GetSubpassFunctor(subpassId);
 
-			auto vertModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.vert }).lock();
-			auto fragModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.frag }).lock();
+					auto vertModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.vert }).lock();
+					auto fragModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.frag }).lock();
 
-			CPipelineObjectDescriptor pipelineDesc{
-				pso
-				, vertexInputDesc
-				, ShaderStateDescriptor{vertModule, fragModule}
-				, pRenderPass
-				, subpassId };
+					CPipelineObjectDescriptor pipelineDesc{
+						pso
+						, vertexInputDesc
+						, ShaderStateDescriptor{vertModule, fragModule}
+						, pRenderPass
+						, subpassId };
 
-			auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
-			TIndex currentFrameIndex = m_WindowContexts[0].GetCurrentFrameBufferIndex();
+					auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
 
-			FramebufferDescriptor fbDesc{ {m_WindowContexts[0].m_SwapchainImageViews[currentFrameIndex]}
-			,  pRenderPass
-			, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1 };
-			auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
+					FramebufferDescriptor fbDesc{ {m_WindowContexts[0].GetCurrentFrameImageView()}
+					,  pRenderPass
+					, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1 };
+					auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
 
-			auto& threadContext0 = m_ThreadContexts[0];
-			auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+					auto& threadContext = AquireThreadContext();// m_ThreadContexts[0];
+					auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-			std::vector<vk::ClearValue> clearValues = { {vk::ClearColorValue{ std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f} }} };
-			cmd.beginRenderPass(
-				vk::RenderPassBeginInfo{
-				pRenderPass->GetRenderPass()
-					, pFrameBufferObject->GetFramebuffer()
-					, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
-			, vk::SubpassContents::eInline);
-			cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-			CCommandList_Impl cmdListInterface{ cmd };
-			functor(cmdListInterface);
-			cmd.endRenderPass();
-			cmd.end();
-		}
+					std::vector<vk::ClearValue> clearValues;// = { {vk::ClearColorValue{ std::array<float, 4>{0.0f, 0.0f, 1.0f, 1.0f} }} };
+
+					clearValues.resize(renderPassInfo.attachmentInfos.size());
+					for (uint32_t attachmentID = 0; attachmentID < renderPassInfo.attachmentInfos.size(); ++attachmentID)
+					{
+						auto& attachmentInfo = renderPassInfo.attachmentInfos[attachmentID];
+						clearValues[attachmentID] = AttachmentClearValueTranslate(
+							attachmentInfo.clearValue
+							, attachmentInfo.format);
+					}
+
+					VulkanBarrierCollector barrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+					barrier.PushImageBarrier(m_WindowContexts[0].GetCurrentFrameImage()
+						, ResourceUsage::eDontCare, ResourceUsage::eColorAttachmentOutput);
+					barrier.ExecuteBarrier(cmd);
+
+					cmd.beginRenderPass(
+						vk::RenderPassBeginInfo{
+						pRenderPass->GetRenderPass()
+							, pFrameBufferObject->GetFramebuffer()
+							, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
+					, vk::SubpassContents::eInline);
+					cmd.setViewport(0
+						, {
+							vk::Viewport{0.0f, 0.0f
+							, static_cast<float>(m_WindowContexts[0].m_Width)
+							, static_cast<float>(m_WindowContexts[0].m_Height)
+							, 0.0f, 1.0f}
+						}
+					);
+					cmd.setScissor(0
+						, {
+							vk::Rect2D{{0, 0}, {m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height}}
+						}
+					);
+					cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
+					CCommandList_Impl cmdListInterface{ cmd };
+					functor(cmdListInterface);
+					cmd.endRenderPass();
+					cmd.end();
+					ReturnThreadContext(threadContext);
+				}
+			});
 	}
 
 	CVulkanApplication::CVulkanApplication() :

@@ -54,6 +54,19 @@ enum class ETextureFormat : uint8_t
 
 	E_R32_SFLOAT,
 	E_R32G32B32A32_SFLOAT,
+
+	//标记浮点值
+	E_FLOAT_TYPE_CATEGORY,
+
+	//标记整形值
+	E_INT_TYPE_CATEGORY,
+
+	//标记无符号整形值
+	E_UINT_TYPE_CATEGORY,
+
+	//标记深度，模板值
+	E_DEPTHSTENCIL_TYPE_CATEGORY,
+
 	E_INVALID,
 };
 
@@ -218,3 +231,42 @@ enum class VertexInputFormat
 	eR32_UInt,
 	eR32_SInt,
 };
+
+union GraphicsClearValue
+{
+public:
+	struct ClearColorValue
+	{
+		float r;
+		float g;
+		float b;
+		float a;
+	} color;
+	struct ClearDepthStencilValue
+	{
+		float depth;
+		uint32_t stencil;
+	} depthStencil;
+
+	static constexpr GraphicsClearValue ClearColor(float r, float g, float b, float a)
+	{
+		GraphicsClearValue result{};
+		result.color = ClearColorValue{ r, g, b, a };
+		return result;
+	}
+
+	static constexpr GraphicsClearValue ClearDepthStencil(float depth, uint32_t stencil)
+	{
+		GraphicsClearValue result{};
+		result.depthStencil = ClearDepthStencilValue{ depth, stencil };
+		return result;
+	}
+
+	bool operator==(GraphicsClearValue const& rhs) const
+	{
+		return (std::memcmp(this, &rhs, sizeof(GraphicsClearValue)) == 0);
+	}
+};
+
+template<>
+struct hash_utils::is_contiguously_hashable<GraphicsClearValue> : public std::true_type {};

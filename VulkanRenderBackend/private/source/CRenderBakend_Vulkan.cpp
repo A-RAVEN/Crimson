@@ -43,6 +43,11 @@ namespace graphics_backend
 		m_Application.EndThisFrame();
 	}
 
+	void CRenderBackend_Vulkan::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)
+	{
+		m_Application.ExecuteRenderPass(inRenderPass);
+	}
+
 	void CRenderBackend_Vulkan::RunGraphWithPresentTarget(std::string const& windowName)
 	{
 		m_Application.RunGraphWithPresentTarget(windowName);

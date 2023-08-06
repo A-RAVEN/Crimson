@@ -8,7 +8,7 @@
 struct InputAssemblyStates
 {
 public:
-	ETopology topology = ETopology::eLineList;
+	ETopology topology = ETopology::eTriangleList;
 
 	bool operator==(InputAssemblyStates const& rhs) const
 	{

@@ -291,4 +291,34 @@ namespace graphics_backend
 		default: return vk::IndexType::eUint32;
 		}
 	}
+
+	constexpr vk::ClearValue AttachmentClearValueTranslate(GraphicsClearValue const& inClearValue, ETextureFormat inFormat)
+	{
+		vk::ClearValue result{};
+		//标记浮点值
+		if (inFormat < ETextureFormat::E_FLOAT_TYPE_CATEGORY)
+		{
+			result.color = vk::ClearColorValue(
+				inClearValue.color.r
+				, inClearValue.color.g
+				, inClearValue.color.b
+				, inClearValue.color.a);
+		}
+		//标记整形值
+		else if (inFormat < ETextureFormat::E_INT_TYPE_CATEGORY)
+		{
+
+		}
+		//标记无符号整形值
+		else if (inFormat < ETextureFormat::E_UINT_TYPE_CATEGORY)
+		{
+
+		}
+		//标记深度，模板值
+		else if (inFormat < ETextureFormat::E_DEPTHSTENCIL_TYPE_CATEGORY)
+		{
+
+		}
+		return result;
+	}
 }

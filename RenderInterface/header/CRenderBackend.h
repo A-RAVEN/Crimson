@@ -8,6 +8,7 @@
 #include "Common.h"
 #include "CGPUPrimitiveResource.h"
 #include "GPUBuffer.h"
+#include "CNativeRenderPassInfo.h"
 
 namespace thread_management
 {
@@ -33,6 +34,7 @@ namespace graphics_backend
 		virtual void TickWindows() = 0;
 		virtual void StartCurrentFrame() = 0;
 		virtual void EndCurrentFrame() = 0;
+		virtual void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass) = 0;
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) = 0;
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count

@@ -13,6 +13,8 @@ namespace graphics_backend
 		std::string GetName() const { return m_WindowName; }
 		void WaitCurrentFrameBufferIndex();
 		TIndex GetCurrentFrameBufferIndex() const { return m_CurrentBufferIndex; }
+		vk::Image GetCurrentFrameImage() const { return m_SwapchainImages[m_CurrentBufferIndex]; }
+		vk::ImageView GetCurrentFrameImageView() const { return m_SwapchainImageViews[m_CurrentBufferIndex]; }
 	protected:
 		void Initialize_Internal(CVulkanApplication const* owningApplication) override;
 		void Release_Internal() override;

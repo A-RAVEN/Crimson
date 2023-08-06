@@ -15,6 +15,7 @@ namespace graphics_backend
 		void TickWindows() override;
 		virtual void StartCurrentFrame() override;
 		virtual void EndCurrentFrame() override;
+		virtual void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass) override;
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) override;
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
