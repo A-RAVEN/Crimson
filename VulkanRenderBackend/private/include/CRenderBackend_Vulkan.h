@@ -16,6 +16,9 @@ namespace graphics_backend
 		virtual void StartCurrentFrame() override;
 		virtual void EndCurrentFrame() override;
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) override;
+		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
+			, uint64_t count
+			, uint64_t stride) override;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() override;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) override;
 		virtual void TestCode() override;

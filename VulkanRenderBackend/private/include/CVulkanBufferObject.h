@@ -24,6 +24,7 @@ namespace graphics_backend
 		friend class CVulkanMemoryManager;
 		friend class CFrameBoundMemoryPool;
 		friend class CGlobalMemoryPool;
+		friend class GPUBuffer_Impl;
 		TIndex m_OwningFrameBoundPoolId = INVALID_INDEX;
 	};
 }

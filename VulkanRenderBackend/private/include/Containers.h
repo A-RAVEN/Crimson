@@ -72,7 +72,7 @@ namespace graphics_backend
 				{
 					if (emptySet.find(&itrT) == emptySet.end())
 					{
-						m_Releaser(itrT);
+						m_Releaser(&itrT);
 					}
 				});
 			m_Pool.clear();

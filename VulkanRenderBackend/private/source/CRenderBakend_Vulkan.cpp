@@ -48,6 +48,16 @@ namespace graphics_backend
 		m_Application.RunGraphWithPresentTarget(windowName);
 	}
 
+	std::shared_ptr<GPUBuffer> CRenderBackend_Vulkan::CreateGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride)
+	{
+		return std::shared_ptr<GPUBuffer>(m_Application.NewGPUBuffer(usageFlags
+			, count
+			, stride), [this](GPUBuffer* releaseBuffer)
+			{
+				m_Application.ReleaseGPUBuffer(releaseBuffer);
+			});
+	}
+
 	CGPUPrimitiveResource* CRenderBackend_Vulkan::NewGPUPrimitiveResource()
 	{
 		return m_Application.NewPrimitiveResource();

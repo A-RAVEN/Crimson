@@ -2,9 +2,9 @@
 #include <stdint.h>
 #include <vector>
 #include "Common.h"
+#include "GPUBuffer.h"
 
 class CGPUPrimitiveResource;
-class GPUBuffer;
 
 class CInlineCommandList
 {

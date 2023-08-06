@@ -12,6 +12,7 @@
 #include "RenderPassObject.h"
 #include "VulkanPipelineObject.h"
 #include "FramebufferObject.h"
+#include "GPUBuffer_Impl.h"
 
 namespace graphics_backend
 {
@@ -96,6 +97,9 @@ namespace graphics_backend
 	public:
 		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
 		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);
+	public:
+		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
+		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);
@@ -128,6 +132,7 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
+		TThreadSafePointerPool<GPUBuffer_Impl> m_GPUBufferPool;
 
 		ShaderModuleObjectDic m_ShaderModuleCache;
 		RenderPassObjectDic m_RenderPassCache;

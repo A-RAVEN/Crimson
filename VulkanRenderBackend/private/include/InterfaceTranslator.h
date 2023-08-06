@@ -256,11 +256,15 @@ namespace graphics_backend
 			return vk::BufferUsageFlagBits::eVertexBuffer;
 		case EBufferUsage::eIndexBuffer:
 			return vk::BufferUsageFlagBits::eIndexBuffer;
+		case EBufferUsage::eDataDst:
+			return vk::BufferUsageFlagBits::eTransferDst;
+		case EBufferUsage::eDataSrc:
+			return vk::BufferUsageFlagBits::eTransferSrc;
 		default: return vk::BufferUsageFlagBits::eUniformBuffer;
 		}
 	}
 
-	constexpr vk::BufferUsageFlags EBufferUsageFlagsTranslate(EBufferUsageFlags inUsageFlags)
+	static vk::BufferUsageFlags EBufferUsageFlagsTranslate(EBufferUsageFlags inUsageFlags)
 	{
 		vk::BufferUsageFlags result;
 		for (uint32_t i = 0
@@ -272,6 +276,19 @@ namespace graphics_backend
 			{
 				result |= EBufferUsageTranslate(itrUsage);
 			}
+		}
+		return result;
+	}
+
+	constexpr vk::IndexType EIndexBufferTypeTranslate(EIndexBufferType inIndexType)
+	{
+		switch (inIndexType)
+		{
+		case EIndexBufferType::e16:
+			return vk::IndexType::eUint16;
+		case EIndexBufferType::e32:
+			return vk::IndexType::eUint32;
+		default: return vk::IndexType::eUint32;
 		}
 	}
 }

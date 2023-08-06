@@ -4,8 +4,10 @@
 
 
 #include <string>
+#include <memory>
 #include "Common.h"
 #include "CGPUPrimitiveResource.h"
+#include "GPUBuffer.h"
 
 namespace thread_management
 {
@@ -32,6 +34,9 @@ namespace graphics_backend
 		virtual void StartCurrentFrame() = 0;
 		virtual void EndCurrentFrame() = 0;
 		virtual void RunGraphWithPresentTarget(std::string const& windowName) = 0;
+		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
+			, uint64_t count
+			, uint64_t stride) = 0;
 		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
 		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) = 0;
 		virtual void TestCode() = 0;

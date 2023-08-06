@@ -154,6 +154,17 @@ namespace graphics_backend
 		m_PrimitiveResourcePool.Release(resource);
 	}
 
+	GPUBuffer* CVulkanApplication::NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride)
+	{
+		GPUBuffer_Impl* result = m_GPUBufferPool.Alloc(*this);
+		result->InitializeGPUBuffer(usageFlags, count, stride);
+		return result;
+	}
+
+	void CVulkanApplication::ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer)
+	{
+		m_GPUBufferPool.Release(static_cast<GPUBuffer_Impl*>(releaseGPUBuffer));
+	}
 
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
@@ -530,8 +541,6 @@ namespace graphics_backend
 					, vk::SubpassContents::eInline);
 
 				cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-				cmd.drawIndexed()
-				//cmd.bindver
 
 				cmd.endRenderPass();
 				cmd.end();
@@ -540,6 +549,7 @@ namespace graphics_backend
 
 	CVulkanApplication::CVulkanApplication() :
 	m_PrimitiveResourcePool()
+	,m_GPUBufferPool()
 	,m_ShaderModuleCache(*this)
 	,m_RenderPassCache(*this)
 	,m_PipelineObjectCache(*this)
@@ -563,6 +573,7 @@ namespace graphics_backend
 	void CVulkanApplication::ReleaseApp()
 	{
 		DeviceWaitIdle();
+		m_GPUBufferPool.ReleaseAll();
 		m_MemoryManager.Release();
 		DestroyThreadContexts();
 		ReleaseAllWindowContexts();

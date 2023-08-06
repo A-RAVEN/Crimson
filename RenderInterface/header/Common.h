@@ -57,13 +57,15 @@ enum class ETextureFormat : uint8_t
 	E_INVALID,
 };
 
-enum class EBufferUsage : uint8_t
+enum class EBufferUsage : uint16_t
 {
 	eConstantBuffer = 1,
 	eStructuredBuffer = 1 << 1,
 	eVertexBuffer = 1 << 2,
 	eIndexBuffer = 1 << 3,
-	eMaxBit = 3
+	eDataSrc = 1 << 4,
+	eDataDst = 1 << 5,
+	eMaxBit = 5
 };
 
 template <>
