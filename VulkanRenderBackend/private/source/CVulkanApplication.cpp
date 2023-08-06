@@ -469,12 +469,17 @@ namespace graphics_backend
 					, std::numeric_limits<uint64_t>::max()
 					, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
 
+				CVertexInputDescriptor vertexInputDesc{};
+				vertexInputDesc.AddPrimitiveDescriptor(20, {
+					VertexAttribute{0, 0, VertexInputFormat::eR32G32_SFloat}
+					, VertexAttribute{1, 8, VertexInputFormat::eR32G32B32_SFloat}
+					});
 
 				CRenderpassBuilder newRenderPass{ {
 					CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
 				} };
 
-				newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, [](CInlineCommandList& cmd)
+				newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, [](CInlineCommandList& cmd)
 					{
 
 					});
@@ -508,16 +513,10 @@ namespace graphics_backend
 				RenderPassDescriptor rpDesc{ renderPassInfo };
 				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
 
-				auto& pso = newRenderPass.GetPipelineStateObject(0);
 
-				CVertexInputDescriptor vertexInputDesc{};
-				vertexInputDesc.AddPrimitiveDescriptor(20, { 
-					VertexAttribute{0, 0, VertexInputFormat::eR32G32_SFloat}
-					, VertexAttribute{1, 8, VertexInputFormat::eR32G32B32_SFloat}
-					});
-
-				CPipelineObjectDescriptor pipelineDesc{ pso
-					, vertexInputDesc
+				CPipelineObjectDescriptor pipelineDesc{ 
+					newRenderPass.GetPipelineStateObject(0)
+					, newRenderPass.GetVertexDescriptor(0)
 					, ShaderStateDescriptor{vertModule, fragModule}
 					, pRenderPass
 					, 0};

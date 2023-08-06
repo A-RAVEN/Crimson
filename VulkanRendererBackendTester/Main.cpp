@@ -7,6 +7,8 @@
 #include <ShaderCompiler/header/Compiler.h>
 #include <iostream>
 #include <SharedTools/header/library_loader.h>
+#include <RenderInterface/header/CNativeRenderPassInfo.h>
+#include <RenderInterface/header/CCommandList.h>
 using namespace thread_management;
 using namespace library_loader;
 using namespace graphics_backend;
@@ -70,6 +72,23 @@ int main(int argc, char *argv[])
 	//pPrimitive->Submit();
 	pBackend->EndCurrentFrame();
 
+	CVertexInputDescriptor vertexInputDesc{};
+	vertexInputDesc.AddPrimitiveDescriptor(20, {
+		VertexAttribute{0, 0, VertexInputFormat::eR32G32_SFloat}
+		, VertexAttribute{1, 8, VertexInputFormat::eR32G32B32_SFloat}
+		});
+
+
+	CRenderpassBuilder newRenderPass{ {
+		CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
+	} };
+
+	newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
+	{
+		cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
+		cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+		cmd.DrawIndexed(3);
+	});
 
 	while (pBackend->AnyWindowRunning())
 	{

@@ -84,6 +84,7 @@ public:
 	}
 	CRenderpassBuilder& Subpass(CSubpassInfo const& inSubpassInfo
 		, CPipelineStateObject const& pipelineStates
+		, CVertexInputDescriptor const& vertexInputs
 		, std::function<void(CInlineCommandList&)> commandFunction)
 	{
 		mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
@@ -94,8 +95,10 @@ public:
 
 	CRenderPassInfo const& GetRenderPassInfo() const { return mRenderPassInfo; }
 	CPipelineStateObject const& GetPipelineStateObject(uint32_t subpassIndex) const { return mSubpassPipelineStateObjects[subpassIndex]; }
+	CVertexInputDescriptor const& GetVertexDescriptor(uint32_t subpassIndex) const { return CVertexInputDescriptor[subpassIndex]; }
 private:
 	CRenderPassInfo mRenderPassInfo{};
 	std::vector<CPipelineStateObject> mSubpassPipelineStateObjects{};
+	std::vector<CVertexInputDescriptor> mSubpassVertexInputs{};
 	std::vector<std::function<void(CInlineCommandList&)>> mSubpassFunctions{};
 };
