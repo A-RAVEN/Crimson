@@ -62,18 +62,4 @@ namespace graphics_backend
 				m_Application.ReleaseGPUBuffer(releaseBuffer);
 			});
 	}
-
-	CGPUPrimitiveResource* CRenderBackend_Vulkan::NewGPUPrimitiveResource()
-	{
-		return m_Application.NewPrimitiveResource();
-	}
-
-	void CRenderBackend_Vulkan::ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource)
-	{
-		m_Application.DestroyPrimitiveResource(static_cast<CGPUPrimitiveResource_Vulkan*>(resource));
-	}
-	void CRenderBackend_Vulkan::TestCode()
-	{
-		m_Application.TestCode();
-	}
 }

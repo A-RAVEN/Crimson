@@ -53,7 +53,7 @@ namespace graphics_backend
 		}
 		void Release(T* releaseObj)
 		{
-			assert(releaseObj != nullptr);
+			CA_ASSERT(releaseObj != nullptr, (std::string{"TThreadSafePointerPool: null pointer released! "} + std::string{typeid(T).name()}));
 			m_Releaser(releaseObj);
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			m_EmptySpaces.push_back(releaseObj);

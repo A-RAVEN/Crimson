@@ -39,9 +39,6 @@ namespace graphics_backend
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) = 0;
-		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() = 0;
-		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) = 0;
-		virtual void TestCode() = 0;
 	};
 }
 

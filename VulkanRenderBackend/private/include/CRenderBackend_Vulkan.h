@@ -20,9 +20,6 @@ namespace graphics_backend
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) override;
-		virtual CGPUPrimitiveResource* NewGPUPrimitiveResource() override;
-		virtual void ReleaseGPUPrimitiveResource(CGPUPrimitiveResource* resource) override;
-		virtual void TestCode() override;
 	private:
 		CVulkanApplication m_Application;
 	};

@@ -80,6 +80,20 @@ struct CRenderPassInfo
 	}
 };
 
+enum class ESubpassType
+{
+	eSimpleDraw,
+	eMultiDrawInterface,
+};
+
+struct SimpleDrawcallSubpassData
+{
+	CPipelineStateObject pipelineStateObject;
+	CVertexInputDescriptor vertexInputDescriptor;
+	GraphicsShaderSet shaderSet;
+	std::function<void(CInlineCommandList&)> commandFunction;
+};
+
 class CRenderpassBuilder
 {
 public:
@@ -94,22 +108,35 @@ public:
 		, std::function<void(CInlineCommandList&)> commandFunction)
 	{
 		mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
-		mSubpassPipelineStateObjects.push_back(pipelineStates);
-		mSubpassVertexInputs.push_back(vertexInputs);
-		mSubpassShaderSets.push_back(shaderSet);
-		mSubpassFunctions.push_back(commandFunction);
+		m_SubpassData_SimpleDraws.push_back(SimpleDrawcallSubpassData{
+			pipelineStates
+			, vertexInputs
+			, shaderSet
+			, commandFunction
+			});
+		m_SubpassDataReferences.emplace_back(ESubpassType::eSimpleDraw
+			, static_cast<uint32_t>(m_SubpassData_SimpleDraws.size() - 1));
 		return *this;
 	}
 
-	CRenderPassInfo const& GetRenderPassInfo() const { return mRenderPassInfo; }
-	CPipelineStateObject const& GetPipelineStateObject(uint32_t subpassIndex) const { return mSubpassPipelineStateObjects[subpassIndex]; }
-	CVertexInputDescriptor const& GetVertexDescriptor(uint32_t subpassIndex) const { return mSubpassVertexInputs[subpassIndex]; }
-	GraphicsShaderSet const& GetShaderSet(uint32_t subpassIndex) const { return mSubpassShaderSets[subpassIndex]; }
-	std::function<void(CInlineCommandList&)> GetSubpassFunctor(uint32_t subpassIndex) const { return mSubpassFunctions[subpassIndex]; }
+	CRenderPassInfo const& GetRenderPassInfo() const
+	{
+		return mRenderPassInfo;
+	}
+
+	ESubpassType GetSubpassType(uint32_t subpassIndex) const
+	{
+		return m_SubpassDataReferences[subpassIndex].first;
+	}
+
+	SimpleDrawcallSubpassData const& GetSubpassData_SimpleDrawcall(uint32_t subpassIndex) const
+	{
+		CA_ASSERT(m_SubpassDataReferences[subpassIndex].first == ESubpassType::eSimpleDraw, "Wrong Subpass Type");
+		return m_SubpassData_SimpleDraws[m_SubpassDataReferences[subpassIndex].second];
+	}
+
 private:
 	CRenderPassInfo mRenderPassInfo{};
-	std::vector<CPipelineStateObject> mSubpassPipelineStateObjects{};
-	std::vector<CVertexInputDescriptor> mSubpassVertexInputs{};
-	std::vector<GraphicsShaderSet> mSubpassShaderSets{};
-	std::vector<std::function<void(CInlineCommandList&)>> mSubpassFunctions{};
+	std::vector<SimpleDrawcallSubpassData> m_SubpassData_SimpleDraws{};
+	std::vector<std::pair<ESubpassType, uint32_t>> m_SubpassDataReferences{};
 };

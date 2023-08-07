@@ -91,8 +91,6 @@ int main(int argc, char *argv[])
 
 	int32_t frame = 0;
 
-	CGPUPrimitiveResource* pPrimitive = nullptr;
-
 	CVertexInputDescriptor vertexInputDesc{};
 	vertexInputDesc.AddPrimitiveDescriptor(20, {
 		VertexAttribute{0, offsetof(VertexData, x), VertexInputFormat::eR32G32_SFloat}
@@ -138,7 +136,6 @@ int main(int argc, char *argv[])
 		++frame;
 		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
-	pBackend->ReleaseGPUPrimitiveResource(pPrimitive);
 	pBackend->Release();
 	pBackend.reset();
 

@@ -93,8 +93,9 @@ namespace graphics_backend
 
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
 
-		void TestCode();
-
+		void ExecuteSubpass_SimpleDraw(CRenderpassBuilder const& inRenderPass
+			, uint32_t subpassID
+			, CVulkanThreadContext& threadContext);
 		void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass);
 	public:
 		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();

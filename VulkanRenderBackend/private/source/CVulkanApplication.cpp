@@ -259,7 +259,7 @@ namespace graphics_backend
 			}
 		}
 
-		assert(!generalUsageQueues.empty());
+		CA_ASSERT(!generalUsageQueues.empty(), "Vulkan: No General Usage Queue Found!");
 
 		if (computeDedicateQueues.empty())
 		{
@@ -365,8 +365,8 @@ namespace graphics_backend
 
 	void CVulkanApplication::InitializeThreadContext(CThreadManager* threadManager, uint32_t threadCount)
 	{
-		assert(threadCount > 0);
-		assert(m_ThreadContexts.size() == 0);
+		CA_ASSERT(threadCount > 0, "Thread Count Should Be Greater Than 0");
+		CA_ASSERT(m_ThreadContexts.size() == 0, "Thread Contexts Are Already Initialized");
 		p_ThreadManager = threadManager;
 		m_ThreadContexts.reserve(threadCount);
 		for (uint32_t threadContextId = 0; threadContextId < threadCount; ++threadContextId)
@@ -467,93 +467,75 @@ namespace graphics_backend
 		m_WindowContexts.clear();
 	}
 
-	void CVulkanApplication::TestCode()
+	void CVulkanApplication::ExecuteSubpass_SimpleDraw(
+		CRenderpassBuilder const& inRenderPass
+		, uint32_t subpassID
+		, CVulkanThreadContext& threadContext)
 	{
-		/*auto newTask = NewTask();
-		newTask->Functor([this]()
-			{
-				vk::ResultValue<uint32_t> currentBuffer = GetDevice().acquireNextImageKHR(
-					m_WindowContexts[0].m_Swapchain
-					, std::numeric_limits<uint64_t>::max()
-					, m_WindowContexts[0].m_WaitNextFrameSemaphore, nullptr);
+		auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
+		RenderPassDescriptor rpDesc{ renderPassInfo };
+		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
 
-				CVertexInputDescriptor vertexInputDesc{};
-				vertexInputDesc.AddPrimitiveDescriptor(20, {
-					VertexAttribute{0, 0, VertexInputFormat::eR32G32_SFloat}
-					, VertexAttribute{1, 8, VertexInputFormat::eR32G32B32_SFloat}
-					});
+		auto& subpassData = inRenderPass.GetSubpassData_SimpleDrawcall(subpassID);
+		auto vertModule = m_ShaderModuleCache.GetOrCreate({ subpassData.shaderSet.vert }).lock();
+		auto fragModule = m_ShaderModuleCache.GetOrCreate({ subpassData.shaderSet.frag }).lock();
 
-				CRenderpassBuilder newRenderPass{ {
-					CAttachmentInfo{ETextureFormat::E_R8G8B8A8_UNORM, EAttachmentLoadOp::eClear}
-				} };
+		CPipelineObjectDescriptor pipelineDesc{
+			subpassData.pipelineStateObject
+			, subpassData.vertexInputDescriptor
+			, ShaderStateDescriptor{vertModule, fragModule}
+			, pRenderPass
+			, subpassID };
 
-				newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, [](CInlineCommandList& cmd)
-					{
+		auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
 
-					});
+		FramebufferDescriptor fbDesc{ {m_WindowContexts[0].GetCurrentFrameImageView()}
+		,  pRenderPass
+		, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1 };
+		auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
 
-				library_loader::TModuleLoader<ShaderCompiler::IShaderCompiler> compilerLoader{ L"ShaderCompiler" };
-				auto pCompiler = compilerLoader.New();
-				auto shaderSource = fileloading_utils::LoadStringFile("D:/Projects/Crimson/Build/x64/Debug/testShader.hlsl");
+		auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-				auto spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
-					, "testShader.hlsl"
-					, shaderSource
-					, "vert"
-					, ECompileShaderType::eVert);
+		std::vector<vk::ClearValue> clearValues;
 
-				ShaderProvider_Impl provider;
-				provider.SetUniqueName("testShader.hlsl.vert");
-				provider.SetData("spirv", "vert", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
+		clearValues.resize(renderPassInfo.attachmentInfos.size());
+		for (uint32_t attachmentID = 0; attachmentID < renderPassInfo.attachmentInfos.size(); ++attachmentID)
+		{
+			auto& attachmentInfo = renderPassInfo.attachmentInfos[attachmentID];
+			clearValues[attachmentID] = AttachmentClearValueTranslate(
+				attachmentInfo.clearValue
+				, attachmentInfo.format);
+		}
 
-				auto vertModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
+		VulkanBarrierCollector barrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+		barrier.PushImageBarrier(m_WindowContexts[0].GetCurrentFrameImage()
+			, ResourceUsage::eDontCare, ResourceUsage::eColorAttachmentOutput);
+		barrier.ExecuteBarrier(cmd);
 
-				spirVResult = pCompiler->CompileShaderSource(EShaderSourceType::eHLSL
-					, "testShader.hlsl"
-					, shaderSource
-					, "frag"
-					, ECompileShaderType::eFrag);
-				provider.SetUniqueName("testShader.hlsl.frag");
-				provider.SetData("spirv", "frag", spirVResult.data(), spirVResult.size() * sizeof(uint32_t));
-				
-				
-				auto fragModule = m_ShaderModuleCache.GetOrCreate({ std::make_shared<ShaderProvider_Impl>(provider) }).lock();
-
-				auto& renderPassInfo = newRenderPass.GetRenderPassInfo();
-				RenderPassDescriptor rpDesc{ renderPassInfo };
-				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
-
-
-				CPipelineObjectDescriptor pipelineDesc{ 
-					newRenderPass.GetPipelineStateObject(0)
-					, newRenderPass.GetVertexDescriptor(0)
-					, ShaderStateDescriptor{vertModule, fragModule}
-					, pRenderPass
-					, 0};
-				auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
-
-				FramebufferDescriptor fbDesc{ {m_WindowContexts[0].m_SwapchainImageViews[currentBuffer.value]}
-				,  pRenderPass
-				, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1};
-				auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
-
-				auto& threadContext0 = m_ThreadContexts[0];
-				auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-
-				std::vector<vk::ClearValue> clearValues = { {vk::ClearColorValue{ std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f} }} };
-
-				cmd.beginRenderPass(
-					vk::RenderPassBeginInfo{
-					pRenderPass->GetRenderPass()
-						, pFrameBufferObject->GetFramebuffer()
-						, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
-					, vk::SubpassContents::eInline);
-
-				cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-
-				cmd.endRenderPass();
-				cmd.end();
-			});*/
+		cmd.beginRenderPass(
+			vk::RenderPassBeginInfo{
+			pRenderPass->GetRenderPass()
+				, pFrameBufferObject->GetFramebuffer()
+				, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
+		, vk::SubpassContents::eInline);
+		cmd.setViewport(0
+			, {
+				vk::Viewport{0.0f, 0.0f
+				, static_cast<float>(m_WindowContexts[0].m_Width)
+				, static_cast<float>(m_WindowContexts[0].m_Height)
+				, 0.0f, 1.0f}
+			}
+		);
+		cmd.setScissor(0
+			, {
+				vk::Rect2D{{0, 0}, {m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height}}
+			}
+		);
+		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
+		CCommandList_Impl cmdListInterface{ cmd };
+		subpassData.commandFunction(cmdListInterface);
+		cmd.endRenderPass();
+		cmd.end();
 	}
 
 	void CVulkanApplication::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)
@@ -562,78 +544,20 @@ namespace graphics_backend
 		newTask->Functor([this, inRenderPass]()
 			{
 				auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
-				RenderPassDescriptor rpDesc{ renderPassInfo };
-				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
-
+				auto& threadContext = AquireThreadContext();
 				for (uint32_t subpassId = 0; subpassId < renderPassInfo.subpassInfos.size(); ++subpassId)
 				{
-					auto& vertexInputDesc = inRenderPass.GetVertexDescriptor(subpassId);
-					auto& shaderSet = inRenderPass.GetShaderSet(subpassId);
-					auto& pso = inRenderPass.GetPipelineStateObject(subpassId);
-					auto functor = inRenderPass.GetSubpassFunctor(subpassId);
-
-					auto vertModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.vert }).lock();
-					auto fragModule = m_ShaderModuleCache.GetOrCreate({ shaderSet.frag }).lock();
-
-					CPipelineObjectDescriptor pipelineDesc{
-						pso
-						, vertexInputDesc
-						, ShaderStateDescriptor{vertModule, fragModule}
-						, pRenderPass
-						, subpassId };
-
-					auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
-
-					FramebufferDescriptor fbDesc{ {m_WindowContexts[0].GetCurrentFrameImageView()}
-					,  pRenderPass
-					, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1 };
-					auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
-
-					auto& threadContext = AquireThreadContext();// m_ThreadContexts[0];
-					auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-
-					std::vector<vk::ClearValue> clearValues;// = { {vk::ClearColorValue{ std::array<float, 4>{0.0f, 0.0f, 1.0f, 1.0f} }} };
-
-					clearValues.resize(renderPassInfo.attachmentInfos.size());
-					for (uint32_t attachmentID = 0; attachmentID < renderPassInfo.attachmentInfos.size(); ++attachmentID)
+					ESubpassType subpasType = inRenderPass.GetSubpassType(subpassId);
+					switch (subpasType)
 					{
-						auto& attachmentInfo = renderPassInfo.attachmentInfos[attachmentID];
-						clearValues[attachmentID] = AttachmentClearValueTranslate(
-							attachmentInfo.clearValue
-							, attachmentInfo.format);
+					case ESubpassType::eSimpleDraw:
+						ExecuteSubpass_SimpleDraw(inRenderPass, subpassId, threadContext);
+						break;
+					case ESubpassType::eMultiDrawInterface:
+						break;
 					}
-
-					VulkanBarrierCollector barrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					barrier.PushImageBarrier(m_WindowContexts[0].GetCurrentFrameImage()
-						, ResourceUsage::eDontCare, ResourceUsage::eColorAttachmentOutput);
-					barrier.ExecuteBarrier(cmd);
-
-					cmd.beginRenderPass(
-						vk::RenderPassBeginInfo{
-						pRenderPass->GetRenderPass()
-							, pFrameBufferObject->GetFramebuffer()
-							, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
-					, vk::SubpassContents::eInline);
-					cmd.setViewport(0
-						, {
-							vk::Viewport{0.0f, 0.0f
-							, static_cast<float>(m_WindowContexts[0].m_Width)
-							, static_cast<float>(m_WindowContexts[0].m_Height)
-							, 0.0f, 1.0f}
-						}
-					);
-					cmd.setScissor(0
-						, {
-							vk::Rect2D{{0, 0}, {m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height}}
-						}
-					);
-					cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-					CCommandList_Impl cmdListInterface{ cmd };
-					functor(cmdListInterface);
-					cmd.endRenderPass();
-					cmd.end();
-					ReturnThreadContext(threadContext);
 				}
+				ReturnThreadContext(threadContext);
 			});
 	}
 

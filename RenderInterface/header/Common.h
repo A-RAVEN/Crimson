@@ -1,4 +1,5 @@
 #pragma once
+#include <SharedTools/DebugUtils.h>
 #include <cstdint>
 #include <SharedTools/header/uenum.h>
 

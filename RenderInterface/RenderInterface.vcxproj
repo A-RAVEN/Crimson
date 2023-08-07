@@ -165,6 +165,7 @@
     <ClInclude Include="header\CPipelineStateObject.h" />
     <ClInclude Include="header\CRenderBackend.h" />
     <ClInclude Include="header\GPUBuffer.h" />
+    <ClInclude Include="header\GPUTexture.h" />
     <ClInclude Include="header\ShaderProvider.h" />
     <ClInclude Include="header\CShaderStateObject.h" />
     <ClInclude Include="header\CTextureResource.h" />
