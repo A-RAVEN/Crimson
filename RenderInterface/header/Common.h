@@ -99,17 +99,6 @@ enum class CTextureAccessType
 	E_AccessType_Invalid,
 };
 
-class CTextureInfo
-{
-	uint32_t m_Width = 0;
-	uint32_t m_Height = 0;
-	uint32_t m_Slices = 0;
-	uint32_t m_MipCount = 0;
-	ETextureFormat m_TextureFormat = ETextureFormat::E_INVALID;
-	CTextureAccessType m_AccessType = CTextureAccessType::E_AccessType_Invalid;
-};
-
-
 enum class EAttachmentLoadOp
 {
 	eLoad = 0,

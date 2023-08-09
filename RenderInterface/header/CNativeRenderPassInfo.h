@@ -101,6 +101,9 @@ public:
 	{
 		mRenderPassInfo.attachmentInfos = inAttachmentInfo;
 	}
+	void SetAttachmentTarget(TextureHandle const& textureHandle, uint32_t attachmentIndex)
+	{
+	}
 	CRenderpassBuilder& Subpass(CSubpassInfo const& inSubpassInfo
 		, CPipelineStateObject const& pipelineStates
 		, CVertexInputDescriptor const& vertexInputs
