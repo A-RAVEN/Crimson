@@ -26,17 +26,16 @@ namespace graphics_backend
 		FrameBound,
 	};
 
-	class CFrameBoundMemoryPool : public ApplicationSubobjectBase
+	class CFrameBoundMemoryPool : public BaseApplicationSubobject
 	{
 	public:
-		CFrameBoundMemoryPool(uint32_t pool_id);
+		CFrameBoundMemoryPool(uint32_t pool_id, CVulkanApplication& owner);
 		CFrameBoundMemoryPool(CFrameBoundMemoryPool&& other) noexcept;
 		CVulkanBufferObject AllocateFrameBoundBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
 		void ReleaseAllBuffers();
-	protected:
-		void Initialize_Internal(CVulkanApplication const* owningApplication) override;
-		void Release_Internal() override;
+		void Initialize() override;
+		void Release() override;
 	private:
 		std::mutex m_Mutex;
 		VmaAllocator m_FrameBoundAllocator = nullptr;
@@ -44,32 +43,32 @@ namespace graphics_backend
 		uint32_t m_PoolId;
 	};
 
-	class CGlobalMemoryPool : public ApplicationSubobjectBase
+	class CGlobalMemoryPool : public BaseApplicationSubobject
 	{
 	public:
+		CGlobalMemoryPool(CVulkanApplication& owner);
 		CVulkanBufferObject AllocatePersistantBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
 		void ReleaseResourcesBeforeFrame(FrameType frame);
-	protected:
-		void Initialize_Internal(CVulkanApplication const* owningApplication) override;
-		void Release_Internal() override;
+		void Initialize() override;
+		void Release() override;
 	private:
 		VmaAllocator m_BufferAllocator = nullptr;
-
 		std::mutex m_Mutex;
 		std::deque<std::tuple<vk::Buffer, VmaAllocation, FrameType>> m_PendingReleasingBuffers;
 		std::map<vk::Buffer, VmaAllocation> m_ActiveBuffers;
 	};
 
-	class CVulkanMemoryManager : public ApplicationSubobjectBase
+	class CVulkanMemoryManager : public BaseApplicationSubobject
 	{
 	public:
+		CVulkanMemoryManager(CVulkanApplication& owner);
 		CVulkanBufferObject AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
 		void ReleaseCurrentFrameResource();
 	protected:
-		void Initialize_Internal(CVulkanApplication const* owningApplication) override;
-		void Release_Internal() override;
+		void Initialize() override;
+		void Release() override;
 	private:
 		CGlobalMemoryPool m_GlobalMemoryPool;
 		std::vector<CFrameBoundMemoryPool> m_FrameBoundPool;

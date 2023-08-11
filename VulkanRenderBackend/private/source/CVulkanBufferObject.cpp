@@ -10,11 +10,11 @@ namespace graphics_backend
 	{
 		return m_BufferAllocationInfo.pMappedData;
 	}
-	void CVulkanBufferObject::Release_Internal()
+	void CVulkanBufferObject::Release()
 	{
 		if(m_Buffer != vk::Buffer(nullptr) && m_BufferAllocation != nullptr)
 		{
-			CVulkanMemoryManager& memoryManager = GetVulkanApplication()->GetMemoryManager();
+			CVulkanMemoryManager& memoryManager = GetVulkanApplication().GetMemoryManager();
 			memoryManager.ReleaseBuffer(*this);
 		}
 		m_Buffer = nullptr;

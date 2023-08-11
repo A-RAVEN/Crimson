@@ -58,6 +58,7 @@ namespace graphics_backend
 		vk::Device const& GetDevice() const;
 		vk::PhysicalDevice const& GetPhysicalDevice() const;
 		CVulkanThreadContext* GetThreadContext(uint32_t threadIndex);
+		CVulkanMemoryManager &GetMemoryManager() const;
 	private:
 		CVulkanApplication& m_OwningApplication;
 	};

@@ -9,6 +9,7 @@
 
 #define CA_ASSERT( _condition , _log ) {if(!(_condition)){CALogError(_log, __LINE__, __FILE__);}}
 #define CA_LOG_ERR(_log) {CALogError(_log, __LINE__, __FILE__);}
+#define CA_CLASS_NAME(_class) (typeid(_class).name())
 
 static inline void CALogError(std::string const& log, int line, std::string const& file)
 {

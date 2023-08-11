@@ -30,7 +30,7 @@
     <ClInclude Include="header\FileLoader.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="DebugUtils.h">
+    <ClInclude Include="header\DebugUtils.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

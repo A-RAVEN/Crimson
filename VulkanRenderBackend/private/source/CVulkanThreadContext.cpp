@@ -31,6 +31,9 @@ namespace graphics_backend
 			m_SecondaryCommandBufferList.CollectCommandBufferList(inoutCommandBufferList);
 		}
 	}
+
+
+
 	void CVulkanFrameBoundCommandBufferPool::Initialize_Internal(CVulkanApplication const* owningApplication)
 	{
 		vk::CommandPoolCreateInfo commandPoolCreateInfo(vk::CommandPoolCreateFlagBits::eTransient, 0);
@@ -57,56 +60,19 @@ namespace graphics_backend
 		return m_FrameBoundCommandBufferPools[currentFrameId];
 	}
 
+	CVulkanFrameBoundCommandBufferPool& CVulkanThreadContext::GetPoolByFrame(uint32_t poolID)
+	{
+		return m_FrameBoundCommandBufferPools[poolID];
+	}
+
 	void CVulkanThreadContext::CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList)
 	{
 		GetCurrentFramePool().CollectCommandBufferList(inoutCommandBufferList);
 	}
 
-	std::shared_ptr<CVulkanBufferObject> CVulkanThreadContext::AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage)
-	{
-		std::shared_ptr<CVulkanBufferObject> result = GetVulkanApplication()->SubObject_Shared<CVulkanBufferObject>();
-
-		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
-			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
-		);
-		VmaAllocationCreateInfo allocationCreateInfo{};
-		allocationCreateInfo.flags = gpuBuffer ? 0 : (VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
-		allocationCreateInfo.usage = gpuBuffer ? VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE : VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		VkBuffer vkbuffer_c;
-		vmaCreateBuffer(m_ThreadGPUAllocator, &bufferCreateInfo, &allocationCreateInfo, &vkbuffer_c, &result->m_BufferAllocation, &result->m_BufferAllocationInfo);
-		result->m_Buffer = vkbuffer_c;
-		m_HoldingAllocations.insert(result->m_BufferAllocation);
-		result->m_OwningThreadContextId = m_ThreadID;
-		return result;
-	}
-
-	void CVulkanThreadContext::ReleaseBufferObject(CVulkanBufferObject* bufferObject)
-	{
-		if (bufferObject == nullptr)
-			return;
-		assert(bufferObject->m_OwningThreadContextId == m_ThreadID);
-		if (bufferObject->GetMappedPointer() != nullptr)
-		{
-			vmaUnmapMemory(m_ThreadGPUAllocator, bufferObject->m_BufferAllocation);
-		}
-		auto currentFrame = GetVulkanApplication()
-			->GetSubmitCounterContext().GetCurrentFrameID();
-		m_PendingRemovalBuffers.push_back(std::make_tuple(bufferObject->m_Buffer
-			, bufferObject->m_BufferAllocation
-			, currentFrame));
-	}
-
 	void CVulkanThreadContext::DoReleaseResourceBeforeFrame(uint32_t releasingFrame)
 	{
-		GetCurrentFramePool().ResetCommandBufferPool();
-		while ((!m_PendingRemovalBuffers.empty()) && std::get<2>(m_PendingRemovalBuffers[0]) <= releasingFrame)
-		{
-			auto buffer = std::get<0>(m_PendingRemovalBuffers[0]);
-			auto allocation = std::get<1>(m_PendingRemovalBuffers[0]);
-			m_PendingRemovalBuffers.pop_front();
-			m_HoldingAllocations.erase(allocation);
-			vmaDestroyBuffer(m_ThreadGPUAllocator, buffer, allocation);
-		}
+		GetPoolByFrame(releasingFrame).ResetCommandBufferPool();
 	}
 
 	void CVulkanThreadContext::Initialize_Internal(CVulkanApplication const* owningApplication)
@@ -118,27 +84,9 @@ namespace graphics_backend
 			{
 				itrPool.Initialize(owningApplication);
 			});
-
-		VmaAllocatorCreateInfo vmaCreateInfo{};
-		vmaCreateInfo.vulkanApiVersion = VULKAN_API_VERSION_IN_USE;
-		vmaCreateInfo.flags = VMA_ALLOCATOR_CREATE_EXTERNALLY_SYNCHRONIZED_BIT;
-		vmaCreateInfo.physicalDevice = static_cast<VkPhysicalDevice>(GetPhysicalDevice());
-		vmaCreateInfo.device = GetDevice();
-		vmaCreateInfo.instance = GetInstance();
-		vmaCreateAllocator(&vmaCreateInfo, &m_ThreadGPUAllocator);
 	}
 	void CVulkanThreadContext::Release_Internal()
 	{
-		{
-			std::vector<VmaAllocation> allocation;
-			allocation.resize(m_HoldingAllocations.size());
-			std::copy(m_HoldingAllocations.begin(), m_HoldingAllocations.end(), allocation.begin());
-			vmaFreeMemoryPages(m_ThreadGPUAllocator, allocation.size(), allocation.data());
-			m_HoldingAllocations.clear();
-		}
-		vmaDestroyAllocator(m_ThreadGPUAllocator);
-		m_ThreadGPUAllocator = nullptr;
-
 		if (!m_FrameBoundCommandBufferPools.empty())
 		{
 			std::for_each(m_FrameBoundCommandBufferPools.begin(), m_FrameBoundCommandBufferPools.end()

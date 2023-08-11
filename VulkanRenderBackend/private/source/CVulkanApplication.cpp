@@ -164,8 +164,7 @@ namespace graphics_backend
 
 	GPUBuffer* CVulkanApplication::NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride)
 	{
-		GPUBuffer_Impl* result = m_GPUBufferPool.Alloc(*this);
-		result->InitializeGPUBuffer(usageFlags, count, stride);
+		GPUBuffer_Impl* result = m_GPUBufferPool.Alloc(usageFlags, count, stride);
 		return result;
 	}
 
@@ -563,7 +562,7 @@ namespace graphics_backend
 
 	CVulkanApplication::CVulkanApplication() :
 	m_PrimitiveResourcePool()
-	,m_GPUBufferPool()
+	,m_GPUBufferPool(*this)
 	,m_ShaderModuleCache(*this)
 	,m_RenderPassCache(*this)
 	,m_PipelineObjectCache(*this)

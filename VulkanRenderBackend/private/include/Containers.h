@@ -1,36 +1,27 @@
 #pragma once
 #include <deque>
 #include <functional>
+#include <SharedTools/header/ThreadSafePool.h>
 namespace graphics_backend
 {
 	template<typename T>
-	class DefaultInitializer
+	class TVulkanApplicationPool
 	{
 	public:
-		void operator()(T* initialize)
-		{
-			initialize->Initialize();
-		}
-	};
+		TVulkanApplicationPool() = delete;
+		TVulkanApplicationPool(TVulkanApplicationPool const& other) = delete;
+		TVulkanApplicationPool& operator=(TVulkanApplicationPool const&) = delete;
+		TVulkanApplicationPool(TVulkanApplicationPool&& other) = delete
+		TVulkanApplicationPool & operator=(TVulkanApplicationPool&&) = delete;
 
-	template<typename T>
-	class DefaultReleaser
-	{
-	public:
-		void operator()(T* release)
+		TVulkanApplicationPool(CVulkanApplication& owner) :
+			m_Owner(owner)
 		{
-			release->Release();
 		}
-	};
 
-	template<typename T>
-	class TThreadSafePointerPool
-	{
-	public:
-		TThreadSafePointerPool(std::function<void(T*)> initializer = DefaultInitializer<T>(), std::function<void(T*)> releaser = DefaultReleaser<T>()) :
-			m_Initializer(initializer)
-			, m_Releaser(releaser)
+		virtual ~TVulkanApplicationPool()
 		{
+			CA_ASSERT(IsEmpty(), std::string{"ThreadSafe Pointer Pool Is Not Released Before Destruct: "} + CA_CLASS_NAME(T));
 		}
 
 		template<typename...TArgs>
@@ -40,7 +31,7 @@ namespace graphics_backend
 			T* result = nullptr;
 			if (m_EmptySpaces.empty())
 			{
-				m_Pool.emplace_back(std::forward<TArgs>(Args)...);
+				m_Pool.emplace_back(m_Owner);
 				result = &m_Pool.back();
 			}
 			else
@@ -48,60 +39,33 @@ namespace graphics_backend
 				result = m_EmptySpaces.front();
 				m_EmptySpaces.pop_front();
 			}
-			m_Initializer(result);
+			result->Initialize(std::forward<TArgs>(Args)...);
 			return result;
 		}
+
 		void Release(T* releaseObj)
 		{
-			CA_ASSERT(releaseObj != nullptr, (std::string{"TThreadSafePointerPool: null pointer released! "} + std::string{typeid(T).name()}));
-			m_Releaser(releaseObj);
+			CA_ASSERT(releaseObj != nullptr, std::string{"Try Release nullptr: "} + CA_CLASS_NAME(T));
+			result->Release();
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			m_EmptySpaces.push_back(releaseObj);
 		}
 
-		void ReleaseAll()
+		template<typename...TArgs>
+		std::shared_ptr<T> AllocShared(TArgs&&...Args)
+		{
+			return std::shared_ptr<T>(Alloc(std::forward<TArgs>(Args)...), [this](T* releaseObj) { Release(releaseObj); });
+		}
+
+		bool IsEmpty() const
 		{
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
-			std::set<T*> emptySet;
-			for(auto itr = m_EmptySpaces.begin(); itr != m_EmptySpaces.end(); ++itr)
-			{
-				emptySet.insert(*itr);
-			}
-			m_EmptySpaces.clear();
-			std::for_each(m_Pool.begin(), m_Pool.end(), [this, &emptySet](T& itrT)
-				{
-					if (emptySet.find(&itrT) == emptySet.end())
-					{
-						m_Releaser(&itrT);
-					}
-				});
-			m_Pool.clear();
+			return m_EmptySpaces.size() == m_Pool.size();
 		}
 	private:
+		CVulkanApplication& m_Owner;
 		std::mutex m_Mutex;
 		std::deque<T> m_Pool;
 		std::deque<T*> m_EmptySpaces;
-		std::function<void(T*)> m_Initializer;
-		std::function<void(T*)> m_Releaser;
 	};
-
-	template<typename T>
-	class TThreadSafeQueue
-	{
-	public:
-		void Enqueue(T const& newObj)
-		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
-			m_Queue.push_back(newObj);
-		}
-		void Pop()
-		{
-			std::lock_guard<std::mutex> lock(m_Mutex);
-			m_Queue.pop_front();
-		}
-	private:
-		std::deque<T> m_Queue;
-		std::mutex m_Mutex;
-	};
-
 }

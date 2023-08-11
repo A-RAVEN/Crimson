@@ -86,13 +86,11 @@ namespace graphics_backend
 	{
 	public:
 		CVulkanThreadContext(uint32_t threadId);
-
 		CVulkanFrameBoundCommandBufferPool& GetCurrentFramePool();
+		CVulkanFrameBoundCommandBufferPool& GetPoolByFrame(uint32_t poolID);
 		void CollectSubmittingCommandBuffers(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
-		std::shared_ptr<CVulkanBufferObject> AllocBufferObject(bool gpuBuffer, uint32_t bufferSize, vk::BufferUsageFlags bufferUsage);
-		void ReleaseBufferObject(CVulkanBufferObject* bufferObject);
-		void DoReleaseResourceBeforeFrame(uint32_t releasingFrame);
 		uint32_t GetThreadID() const { return m_ThreadID; }
+		void DoReleaseResourceBeforeFrame(uint32_t releasingFrame);
 	private:
 		// 通过 ApplicationSubobjectBase 继承
 		virtual void Initialize_Internal(CVulkanApplication const* owningApplication) override;
@@ -100,9 +98,5 @@ namespace graphics_backend
 	private:
 		uint32_t m_ThreadID;
 		std::vector<CVulkanFrameBoundCommandBufferPool> m_FrameBoundCommandBufferPools;
-		VmaAllocator m_ThreadGPUAllocator = nullptr;
-		std::set<VmaAllocation> m_HoldingAllocations;
-
-		std::deque<std::tuple<vk::Buffer, VmaAllocation, uint32_t>> m_PendingRemovalBuffers;
 	};
 }

@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="private\include\GPUTexture_Impl.h" />
     <ClInclude Include="private\include\GPUBuffer_Impl.h" />
     <ClInclude Include="private\include\CommandList_Impl.h" />
     <ClInclude Include="private\include\Containers.h" />
@@ -183,6 +184,7 @@
     <ClInclude Include="private\test\TestShaderProvider.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private\include\GPUTexture_Impl.cpp" />
     <ClCompile Include="private\include\GPUBuffer_Impl.cpp" />
     <ClCompile Include="private\source\CommandList_Impl.cpp" />
     <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />

@@ -6,25 +6,20 @@
 
 namespace graphics_backend
 {
-	class CVulkanBufferObject : public ApplicationSubobjectBase
+	struct CVulkanBufferObject
 	{
 	public:
 		vk::Buffer GetBuffer() const { return m_Buffer; }
 		VmaAllocationInfo const& GetAllocationInfo() const { return m_BufferAllocationInfo; }
 		void* GetMappedPointer() const;
-	protected:
-		void Initialize_Internal(CVulkanApplication const* owningApplication) override {};
-		void Release_Internal() override;
 	private:
 		vk::Buffer m_Buffer = nullptr;
 		VmaAllocation m_BufferAllocation = nullptr;
 		VmaAllocationInfo m_BufferAllocationInfo {};
-		uint32_t m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();
-		friend class CVulkanThreadContext;
+		TIndex m_OwningFrameBoundPoolId = INVALID_INDEX;
 		friend class CVulkanMemoryManager;
 		friend class CFrameBoundMemoryPool;
 		friend class CGlobalMemoryPool;
 		friend class GPUBuffer_Impl;
-		TIndex m_OwningFrameBoundPoolId = INVALID_INDEX;
 	};
 }

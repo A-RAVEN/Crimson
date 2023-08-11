@@ -83,4 +83,8 @@ namespace graphics_backend
 	{
 		return m_OwningApplication.GetThreadContext(threadIndex);
 	}
+	CVulkanMemoryManager& BaseApplicationSubobject::GetMemoryManager() const
+	{
+		return m_OwningApplication.GetMemoryManager();
+	}
 }

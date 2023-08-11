@@ -11,9 +11,9 @@ namespace graphics_backend
 	}
 	void GPUBuffer_Impl::Release()
 	{
-		m_BufferObject.Release();
+		GetMemoryManager().ReleaseBuffer(m_BufferObject);
 	}
-	void GPUBuffer_Impl::InitializeGPUBuffer(EBufferUsageFlags usages, uint64_t count, uint64_t stride)
+	void GPUBuffer_Impl::Initialize(EBufferUsageFlags usages, uint64_t count, uint64_t stride)
 	{
         m_Usages = usages;
 		m_Count = count;
@@ -55,7 +55,7 @@ namespace graphics_backend
                 auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
                 cmdBuffer.copyBuffer(tempBuffer.GetBuffer(), m_BufferObject.GetBuffer(), vk::BufferCopy(0, 0, byteSize));
                 cmdBuffer.end();
-                tempBuffer.Release();
+				memoryManager.ReleaseBuffer(tempBuffer);
                 std::atomic_thread_fence(std::memory_order_release);
                 m_SubmitFrame = currentFrame;
 				GetVulkanApplication().ReturnThreadContext(threadContext);

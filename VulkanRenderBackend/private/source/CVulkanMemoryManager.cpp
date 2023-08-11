@@ -5,11 +5,13 @@
 
 namespace graphics_backend
 {
-	CFrameBoundMemoryPool::CFrameBoundMemoryPool(uint32_t pool_id) : m_PoolId(pool_id)
+	CFrameBoundMemoryPool::CFrameBoundMemoryPool(uint32_t pool_id, CVulkanApplication& owner) :
+		BaseApplicationSubobject(owner)
+		,m_PoolId(pool_id)
 	{
 	}
 
-	CFrameBoundMemoryPool::CFrameBoundMemoryPool(CFrameBoundMemoryPool&& other) noexcept : ApplicationSubobjectBase(std::move(other))
+	CFrameBoundMemoryPool::CFrameBoundMemoryPool(CFrameBoundMemoryPool&& other) noexcept : BaseApplicationSubobject(other.GetVulkanApplication())
 	{
 		m_FrameBoundAllocator = other.m_FrameBoundAllocator;
 		m_ActiveBuffers = other.m_ActiveBuffers;
@@ -19,7 +21,7 @@ namespace graphics_backend
 	CVulkanBufferObject CFrameBoundMemoryPool::AllocateFrameBoundBuffer(EMemoryType memoryType, size_t bufferSize,
 	                                                                    vk::BufferUsageFlags bufferUsage)
 	{
-		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
+		CVulkanBufferObject result{};
 		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
@@ -82,7 +84,7 @@ namespace graphics_backend
 		m_ActiveBuffers.clear();
 	}
 
-	void CFrameBoundMemoryPool::Initialize_Internal(CVulkanApplication const* owningApplication)
+	void CFrameBoundMemoryPool::Initialize()
 	{
 		VmaAllocatorCreateInfo vmaCreateInfo{};
 		vmaCreateInfo.vulkanApiVersion = VULKAN_API_VERSION_IN_USE;
@@ -92,7 +94,7 @@ namespace graphics_backend
 		vmaCreateAllocator(&vmaCreateInfo, &m_FrameBoundAllocator);
 	}
 
-	void CFrameBoundMemoryPool::Release_Internal()
+	void CFrameBoundMemoryPool::Release()
 	{
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		for (auto pending_release_buffer : m_ActiveBuffers)
@@ -105,10 +107,14 @@ namespace graphics_backend
 		vmaDestroyAllocator(m_FrameBoundAllocator);
 	}
 
+	CGlobalMemoryPool::CGlobalMemoryPool(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
+	{
+	}
+
 	CVulkanBufferObject CGlobalMemoryPool::AllocatePersistantBuffer(EMemoryType memoryType, size_t bufferSize,
 	                                                                vk::BufferUsageFlags bufferUsage)
 	{
-		CVulkanBufferObject result = GetVulkanApplication()->SubObject<CVulkanBufferObject>();
+		CVulkanBufferObject result{};
 		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
@@ -177,7 +183,7 @@ namespace graphics_backend
 		}
 	}
 
-	void CGlobalMemoryPool::Initialize_Internal(CVulkanApplication const* owningApplication)
+	void CGlobalMemoryPool::Initialize()
 	{
 		VmaAllocatorCreateInfo vmaCreateInfo{};
 		vmaCreateInfo.vulkanApiVersion = VULKAN_API_VERSION_IN_USE;
@@ -187,7 +193,7 @@ namespace graphics_backend
 		vmaCreateAllocator(&vmaCreateInfo, &m_BufferAllocator);
 	}
 
-	void CGlobalMemoryPool::Release_Internal()
+	void CGlobalMemoryPool::Release()
 	{
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		for(auto pending_release_buffer : m_PendingReleasingBuffers)
@@ -206,6 +212,12 @@ namespace graphics_backend
 		m_ActiveBuffers.clear();
 		vmaDestroyAllocator(m_BufferAllocator);
 		m_BufferAllocator = nullptr;
+	}
+
+	CVulkanMemoryManager::CVulkanMemoryManager(CVulkanApplication& owner) : 
+		BaseApplicationSubobject(owner)
+		, m_GlobalMemoryPool(owner)
+	{
 	}
 
 	CVulkanBufferObject CVulkanMemoryManager::AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime,
@@ -234,6 +246,7 @@ namespace graphics_backend
 		{
 			m_FrameBoundPool[returnBuffer.m_OwningFrameBoundPoolId].ReleaseBuffer(returnBuffer);
 		}
+		returnBuffer = CVulkanBufferObject{};
 	}
 
 	void CVulkanMemoryManager::ReleaseCurrentFrameResource()
@@ -246,19 +259,19 @@ namespace graphics_backend
 		m_FrameBoundPool[releasingPoolIndex].ReleaseAllBuffers();
 	}
 
-	void CVulkanMemoryManager::Initialize_Internal(CVulkanApplication const* owningApplication)
+	void CVulkanMemoryManager::Initialize()
 	{
-		m_GlobalMemoryPool.Initialize(owningApplication);
+		m_GlobalMemoryPool.Initialize();
 		m_FrameBoundPool.clear();
 		m_FrameBoundPool.reserve(FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT);
 		for(uint32_t i = 0; i < FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT; ++i)
 		{
-			m_FrameBoundPool.emplace_back(i);
-			m_FrameBoundPool[i].Initialize(owningApplication);
+			m_FrameBoundPool.emplace_back(i, GetVulkanApplication());
+			m_FrameBoundPool[i].Initialize();
 		}
 	}
 
-	void CVulkanMemoryManager::Release_Internal()
+	void CVulkanMemoryManager::Release()
 	{
 		m_GlobalMemoryPool.Release();
 		for(auto& itrPool : m_FrameBoundPool)

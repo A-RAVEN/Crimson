@@ -17,6 +17,7 @@
 namespace graphics_backend
 {
 	using namespace thread_management;
+	using namespace threadsafe_utils;
 
 	class CVulkanApplication
 	{
@@ -82,6 +83,14 @@ namespace graphics_backend
 			return newSubObject;
 		}
 
+		template<typename T, typename...TArgs>
+		T NewObject(TArgs&&...Args) const {
+			static_assert(std::is_base_of<BaseApplicationSubobject, T>::value, "Type T not derived from BaseApplicationSubobject");
+			T newObject(*this);
+			newObject.Initialize(std::forward<TArgs>(Args)...);
+			return newObject;
+		}
+
 		void ReleaseSubObject(ApplicationSubobjectBase& subobject) const
 		{
 			subobject.Release();
@@ -135,13 +144,13 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
-		TThreadSafePointerPool<GPUBuffer_Impl> m_GPUBufferPool;
+		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
 
 		ShaderModuleObjectDic m_ShaderModuleCache;
 		RenderPassObjectDic m_RenderPassCache;
 		PipelineObjectDic m_PipelineObjectCache;
 		FramebufferObjectDic m_FramebufferObjectCache;
 
-		mutable CVulkanMemoryManager m_MemoryManager;
+		CVulkanMemoryManager m_MemoryManager;
 	};
 }
