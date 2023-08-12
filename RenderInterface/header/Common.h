@@ -1,5 +1,5 @@
 #pragma once
-#include <SharedTools/DebugUtils.h>
+#include <SharedTools/header/DebugUtils.h>
 #include <cstdint>
 #include <SharedTools/header/uenum.h>
 

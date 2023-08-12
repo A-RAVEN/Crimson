@@ -7,6 +7,7 @@
 #include "CPipelineStateObject.h"
 #include "ShaderProvider.h"
 #include "CVertexInputDescriptor.h"
+#include "CTextureHandle.h"
 
 constexpr uint32_t INVALID_ATTACHMENT_INDEX = 256;
 
@@ -140,6 +141,7 @@ public:
 
 private:
 	CRenderPassInfo mRenderPassInfo{};
+	std::vector<TextureaHandle> m_TextureHandles;
 	std::vector<SimpleDrawcallSubpassData> m_SubpassData_SimpleDraws{};
 	std::vector<std::pair<ESubpassType, uint32_t>> m_SubpassDataReferences{};
 };
