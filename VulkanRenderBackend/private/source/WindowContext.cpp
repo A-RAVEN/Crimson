@@ -25,8 +25,7 @@ namespace graphics_backend
 
 	static glfwContext s_GLFWContext = glfwContext();
 
-	CWindowContext::CWindowContext(std::string const& windowName, uint32_t initialWidth, uint32_t initialHeight) :
-		m_WindowName(windowName), m_Width(initialWidth), m_Height(initialHeight)
+	CWindowContext::CWindowContext(CVulkanApplication& inOwner) : BaseApplicationSubobject(inOwner)
 	{
 	}
 
@@ -53,16 +52,23 @@ namespace graphics_backend
 		}
 	}
 
-	void CWindowContext::Initialize_Internal(CVulkanApplication const* owningApplication)
+	void CWindowContext::Initialize(
+		std::string const& windowName
+		, uint32_t initialWidth
+		, uint32_t initialHeight)
 	{
+		m_WindowName = windowName;
+		m_Width = initialWidth;
+		m_Height = initialHeight;
+
 		assert(ValidContext());
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		m_Window = glfwCreateWindow(m_Width, m_Height, m_WindowName.c_str(), nullptr, nullptr);
 		VkSurfaceKHR surface;
-		glfwCreateWindowSurface(static_cast<VkInstance>(m_OwningApplication->GetInstance()), m_Window, nullptr, &surface);
+		glfwCreateWindowSurface(static_cast<VkInstance>(GetInstance()), m_Window, nullptr, &surface);
 		m_Surface = vk::SurfaceKHR(surface);
 
-		m_PresentQueue = GetVulkanApplication()->GetSubmitCounterContext().FindPresentQueue(m_Surface);
+		m_PresentQueue = GetVulkanApplication().GetSubmitCounterContext().FindPresentQueue(m_Surface);
 
 		std::vector<vk::SurfaceFormatKHR> formats = GetPhysicalDevice().getSurfaceFormatsKHR(surface);
 		assert(!formats.empty());

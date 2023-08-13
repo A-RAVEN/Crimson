@@ -20,7 +20,7 @@ namespace graphics_backend
 		m_Application.ReleaseApp();
 	}
 
-	void CRenderBackend_Vulkan::NewWindow(uint32_t width, uint32_t height, std::string const& windowName)
+	std::shared_ptr<WindowHandle> CRenderBackend_Vulkan::NewWindow(uint32_t width, uint32_t height, std::string const& windowName)
 	{
 		m_Application.CreateWindowContext(windowName, width, height);
 	}

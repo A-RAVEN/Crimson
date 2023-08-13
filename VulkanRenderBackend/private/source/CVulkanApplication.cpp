@@ -152,16 +152,6 @@ namespace graphics_backend
 		}
 	}
 
-	CGPUPrimitiveResource_Vulkan* CVulkanApplication::NewPrimitiveResource()
-	{
-		return m_PrimitiveResourcePool.Alloc(this);
-	}
-
-	void CVulkanApplication::DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan* resource)
-	{
-		m_PrimitiveResourcePool.Release(resource);
-	}
-
 	GPUBuffer* CVulkanApplication::NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride)
 	{
 		GPUBuffer_Impl* result = m_GPUBufferPool.Alloc(usageFlags, count, stride);
@@ -370,7 +360,6 @@ namespace graphics_backend
 		m_ThreadContexts.reserve(threadCount);
 		for (uint32_t threadContextId = 0; threadContextId < threadCount; ++threadContextId)
 		{
-			//SubObject_EmplaceBack(m_ThreadContexts, threadContextId);
 			m_ThreadContexts.push_back(SubObject<CVulkanThreadContext>(threadContextId));
 		}
 		std::vector<uint32_t> threadInitializeValue;
@@ -392,7 +381,7 @@ namespace graphics_backend
 		m_ThreadContexts.clear();
 	}
 
-	CVulkanMemoryManager& CVulkanApplication::GetMemoryManager() const
+	CVulkanMemoryManager& CVulkanApplication::GetMemoryManager()
 	{
 		return m_MemoryManager;
 	}
@@ -407,11 +396,6 @@ namespace graphics_backend
 	{
 		return p_ThreadManager;
 	}
-
-	//CTaskGraph* CVulkanApplication::GetCurrentFrameTaskGraph() const
-	//{
-	//	return p_TaskGraph;
-	//}
 
 	CTask* CVulkanApplication::NewTask()
 	{
@@ -428,9 +412,9 @@ namespace graphics_backend
 
 	void CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
 	{
-		m_WindowContexts.emplace_back(windowName, initialWidth, initialHeight);
-		auto& newContext = m_WindowContexts.back();
-		newContext.Initialize(this);
+		m_WindowContexts.emplace_back(std::make_shared<CWindowContext>(*this));
+		auto newContext = m_WindowContexts.back();
+		newContext->Initialize(windowName, initialWidth, initialHeight);
 	}
 
 	void CVulkanApplication::TickWindowContexts()
@@ -561,12 +545,12 @@ namespace graphics_backend
 	}
 
 	CVulkanApplication::CVulkanApplication() :
-	m_PrimitiveResourcePool()
-	,m_GPUBufferPool(*this)
+	m_GPUBufferPool(*this)
 	,m_ShaderModuleCache(*this)
 	,m_RenderPassCache(*this)
 	,m_PipelineObjectCache(*this)
 	,m_FramebufferObjectCache(*this)
+	, m_MemoryManager(*this)
 	{
 	}
 
@@ -580,7 +564,7 @@ namespace graphics_backend
 		InitializeInstance(appName, engineName);
 		EnumeratePhysicalDevices();
 		CreateDevice();
-		m_MemoryManager.Initialize(this);
+		m_MemoryManager.Initialize();
 	}
 
 	void CVulkanApplication::ReleaseApp()

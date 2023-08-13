@@ -1,22 +1,22 @@
 #pragma once
 #include <private/include/VulkanApplicationSubobjectBase.h>
 #include "RenderInterface/header/Common.h"
+#include <RenderInterface/header/WindowHandle.h>
 
 namespace graphics_backend
 {
-	class CWindowContext : public ApplicationSubobjectBase
+	class CWindowContext : public BaseApplicationSubobject, public WindowHandle
 	{
 	public:
 		inline bool ValidContext() const { return m_Width > 0 && m_Height > 0; }
-		CWindowContext(std::string const& windowName, uint32_t initialWidth, uint32_t initialHeight);
+		CWindowContext(CVulkanApplication& inOwner);
 		bool NeedClose() const;
 		std::string GetName() const { return m_WindowName; }
 		void WaitCurrentFrameBufferIndex();
 		TIndex GetCurrentFrameBufferIndex() const { return m_CurrentBufferIndex; }
 		vk::Image GetCurrentFrameImage() const { return m_SwapchainImages[m_CurrentBufferIndex]; }
 		vk::ImageView GetCurrentFrameImageView() const { return m_SwapchainImageViews[m_CurrentBufferIndex]; }
-	protected:
-		void Initialize_Internal(CVulkanApplication const* owningApplication) override;
+		void Initialize(std::string const& windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void Release_Internal() override;
 	private:
 		std::string m_WindowName;

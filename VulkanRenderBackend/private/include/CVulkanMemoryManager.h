@@ -12,11 +12,11 @@ namespace graphics_backend
 {
 	enum class EMemoryType
 	{
-		//gpu¿É¼û
+		//gpuå¯è§
 		GPU,
-		//cpu¿É¼û£¬Ëæ»ú¶ÁĞ´
+		//cpuå¯è§ï¼Œéšæœºè¯»å†™
 		CPU_Random_Access,
-		//cpu¿É¼û£¬Ë³Ğò¶ÁĞ´
+		//cpuå¯è§ï¼Œé¡ºåºè¯»å†™
 		CPU_Sequential_Access,
 	};
 
@@ -66,7 +66,6 @@ namespace graphics_backend
 		CVulkanBufferObject AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
 		void ReleaseCurrentFrameResource();
-	protected:
 		void Initialize() override;
 		void Release() override;
 	private:

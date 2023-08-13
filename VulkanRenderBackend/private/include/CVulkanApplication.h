@@ -47,7 +47,7 @@ namespace graphics_backend
 			}
 			return &m_ThreadContexts[threadKey];
 		}
-		CVulkanMemoryManager& GetMemoryManager() const;
+		CVulkanMemoryManager& GetMemoryManager();
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
 		CTask* NewTask();
@@ -134,7 +134,7 @@ namespace graphics_backend
 	#endif
 
 		CFrameCountContext m_SubmitCounterContext;
-		std::vector<CWindowContext> m_WindowContexts;
+		std::vector<std::shared_ptr<CWindowContext>> m_WindowContexts;
 
 		Internal_InterlockedQueue<uint32_t> m_AvailableThreadQueue;
 		mutable std::vector<CVulkanThreadContext> m_ThreadContexts;
@@ -143,7 +143,6 @@ namespace graphics_backend
 		CTask* p_RootTask = nullptr;
 		std::shared_future<void> m_TaskFuture;
 
-		TThreadSafePointerPool<CGPUPrimitiveResource_Vulkan> m_PrimitiveResourcePool;
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
 
 		ShaderModuleObjectDic m_ShaderModuleCache;

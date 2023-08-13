@@ -46,9 +46,19 @@ namespace graphics_backend
 		void Release(T* releaseObj)
 		{
 			CA_ASSERT(releaseObj != nullptr, std::string{"Try Release nullptr: "} + CA_CLASS_NAME(T));
-			result->Release();
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			releaseObj->Release();
 			m_EmptySpaces.push_back(releaseObj);
+		}
+
+		void ReleaseAll()
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			for (size_t i = 0; i < m_Pool.size(); ++i)
+			{
+				m_Pool[i].Release();
+			}
+			m_EmptySpaces.clear();
 		}
 
 		template<typename...TArgs>
