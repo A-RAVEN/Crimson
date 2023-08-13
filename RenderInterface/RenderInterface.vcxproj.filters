@@ -72,6 +72,12 @@
     <ClInclude Include="header\GPUTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\TextureView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="header\WindowHandle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">

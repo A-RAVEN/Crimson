@@ -71,16 +71,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);$(SolutionDir)ExternalLib\mathfu\dependencies\vectorial\include;$(SolutionDir)ExternalLib\mathfu\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);$(SolutionDir)ExternalLib\mathfu\dependencies\vectorial\include;$(SolutionDir)ExternalLib\mathfu\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);$(SolutionDir)ExternalLib\mathfu\dependencies\vectorial\include;$(SolutionDir)ExternalLib\mathfu\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir);$(SolutionDir)ExternalLib\mathfu\dependencies\vectorial\include;$(SolutionDir)ExternalLib\mathfu\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -172,6 +172,8 @@
     <ClInclude Include="header\CVertexInputDescriptor.h" />
     <ClInclude Include="header\HashCommon.h" />
     <ClInclude Include="header\LayoutBuilder.h" />
+    <ClInclude Include="header\TextureView.h" />
+    <ClInclude Include="header\WindowHandle.h" />
     <ClInclude Include="private\include\framework.h" />
     <ClInclude Include="header\Common.h" />
     <ClInclude Include="header\CRenderGraph.h" />

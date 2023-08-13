@@ -1,28 +1,31 @@
 #pragma once
 #include <header/CRenderGraph.h>
 
-class CRenderGraphPassObject
-{
-public:
-	CRenderGraphPassConfig m_Config;
-	std::function<void(CInlineCommandList& commandList)> m_Functor;
-};
 
-class CTextureMetadata
-{
-public:
-	CTextureMetadata(CTextureInfo const& textureInfo, bool imported = false, bool readonly = false, TIndex texturePoolId = INVALID_INDEX);
-	CTextureInfo m_TextureInfo;
-	bool m_Imported = false;
-	bool m_Readonly = false;
-	TIndex m_ImportedTextureID;
-};
 
 class CRenderGraph_Impl : public CRenderGraph
 {
 public:
-	virtual CTextureHandle NewTextureHandle(CTextureInfo const& textureInfo) override;
+	virtual TextureHandle NewTextureHandle(GPUTextureDescriptor const& textureDesc) override;
+	virtual TextureHandle RegisterWindowBackbuffer(std::shared_ptr<WindowHandle> window) override;
+	//virtual TextureHandle RegisterGPUTexture()
+	//virtual void SetTextureToBlackboard(std::string const& name, TextureHandle handle) override;
+	virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) override;
+
+	struct TextureHandleInternalInfo
+	{
+	public:
+		TIndex m_DescriptorIndex = INVALID_INDEX;
+		std::shared_ptr<WindowHandle> p_WindowsHandle = nullptr;
+	};
 private:
-	std::vector<CRenderGraphPassObject> m_GraphPassObjectList;
-	std::vector<CTextureMetadata> m_TextureMetadataList;
-};
+	TextureHandle NewTextureHandle_Internal(GPUTextureDescriptor const& textureDesc, std::shared_ptr<WindowHandle> window);
+private:
+	std::deque<CRenderpassBuilder> m_RenderPasses;
+
+	std::vector<GPUTextureDescriptor> m_DescriptorList;
+	std::unordered_map<GPUTextureDescriptor, uint32_t, hash_utils::default_hashAlg> m_DescriptorToDataID;
+	std::vector<TextureHandleInternalInfo> m_TextureHandleIdToDescriptorID;
+
+	std::unordered_map<std::shared_ptr<WindowHandle>, TIndex> m_WindowToTextureHandleID;
+}; 

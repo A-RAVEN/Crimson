@@ -5,9 +5,19 @@
 class TextureHandle
 {
 public:
-	virtual GPUTextureDescriptor const& GetDescriptor() const {
+
+	TextureHandle(GPUTextureDescriptor const descriptor, TIndex handleIndex) : 
+		m_Descriptor(descriptor)
+		, m_HandleIndex(handleIndex)
+	{
+	}
+
+	GPUTextureDescriptor const& GetDescriptor() const {
 		return m_Descriptor;
 	}
+
+	TIndex GetHandleIndex() const { return m_HandleIndex; }
 private:
 	GPUTextureDescriptor m_Descriptor;
+	TIndex m_HandleIndex;
 };

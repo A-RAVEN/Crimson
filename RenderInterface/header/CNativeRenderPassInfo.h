@@ -98,13 +98,16 @@ struct SimpleDrawcallSubpassData
 class CRenderpassBuilder
 {
 public:
-	CRenderpassBuilder(std::vector<CAttachmentInfo> const& inAttachmentInfo)
+	CRenderpassBuilder(std::vector<CAttachmentInfo> const& inAttachmentInfo) : m_TextureHandles{ static_cast<uint32_t>(inAttachmentInfo.size()), INVALID_INDEX }
 	{
 		mRenderPassInfo.attachmentInfos = inAttachmentInfo;
 	}
-	void SetAttachmentTarget(TextureHandle const& textureHandle, uint32_t attachmentIndex)
+
+	void SetAttachmentTarget(uint32_t attachmentIndex, TextureHandle const& textureHandle)
 	{
+		m_TextureHandles[attachmentIndex] = textureHandle.GetHandleIndex();
 	}
+
 	CRenderpassBuilder& Subpass(CSubpassInfo const& inSubpassInfo
 		, CPipelineStateObject const& pipelineStates
 		, CVertexInputDescriptor const& vertexInputs
@@ -141,7 +144,7 @@ public:
 
 private:
 	CRenderPassInfo mRenderPassInfo{};
-	std::vector<TextureaHandle> m_TextureHandles;
+	std::vector<TIndex> m_TextureHandles;
 	std::vector<SimpleDrawcallSubpassData> m_SubpassData_SimpleDraws{};
 	std::vector<std::pair<ESubpassType, uint32_t>> m_SubpassDataReferences{};
 };
