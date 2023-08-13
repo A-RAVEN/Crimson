@@ -5,6 +5,7 @@ namespace graphics_backend
 	class CVulkanApplication;
 	class CVulkanThreadContext;
 	class CFrameCountContext;
+	class CVulkanMemoryManager;
 #pragma endregion
 
 	class ApplicationSubobjectBase

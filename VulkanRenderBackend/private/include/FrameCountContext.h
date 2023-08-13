@@ -22,12 +22,12 @@ namespace graphics_backend
 			, std::pair<uint32_t, uint32_t> const& computeQueue
 			, std::pair<uint32_t, uint32_t> const& transferQueue);
 		void InitializeDefaultQueues(std::vector<vk::Queue> defaultQueues);
-		uint32_t FindPresentQueueFamily(vk::SurfaceKHR surface) const;
+		TIndex FindPresentQueueFamily(vk::SurfaceKHR surface) const;
 		std::pair<uint32_t, vk::Queue> FindPresentQueue(vk::SurfaceKHR surface) const;
-		uint32_t GetCurrentFrameBufferIndex() const {
+		TIndex GetCurrentFrameBufferIndex() const {
 			return m_CurrentFrameID % FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT;
 		}
-		uint32_t GetReleasedResourcePoolIndex() const
+		TIndex GetReleasedResourcePoolIndex() const
 		{
 			return m_LastFinshedFrameID % FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT;
 		}

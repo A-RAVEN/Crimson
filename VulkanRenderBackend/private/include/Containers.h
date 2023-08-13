@@ -1,7 +1,8 @@
 #pragma once
+#include <mutex>
 #include <deque>
 #include <functional>
-#include <SharedTools/header/ThreadSafePool.h>
+#include <unordered_set>
 namespace graphics_backend
 {
 	template<typename T>
@@ -11,7 +12,7 @@ namespace graphics_backend
 		TVulkanApplicationPool() = delete;
 		TVulkanApplicationPool(TVulkanApplicationPool const& other) = delete;
 		TVulkanApplicationPool& operator=(TVulkanApplicationPool const&) = delete;
-		TVulkanApplicationPool(TVulkanApplicationPool&& other) = delete
+		TVulkanApplicationPool(TVulkanApplicationPool&& other) = delete;
 		TVulkanApplicationPool & operator=(TVulkanApplicationPool&&) = delete;
 
 		TVulkanApplicationPool(CVulkanApplication& owner) :
@@ -21,7 +22,7 @@ namespace graphics_backend
 
 		virtual ~TVulkanApplicationPool()
 		{
-			CA_ASSERT(IsEmpty(), std::string{"ThreadSafe Pointer Pool Is Not Released Before Destruct: "} + CA_CLASS_NAME(T));
+			CA_ASSERT(IsEmpty(), std::string{"Vulkan Application Pointer Pool Is Not Released Before Destruct: "} + CA_CLASS_NAME(T));
 		}
 
 		template<typename...TArgs>
@@ -54,10 +55,22 @@ namespace graphics_backend
 		void ReleaseAll()
 		{
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+
+			std::unordered_set<T*> emptySet;
+			for (T* emptyPtr : m_EmptySpaces)
+			{
+				emptySet.insert(emptyPtr);
+			}
+
 			for (size_t i = 0; i < m_Pool.size(); ++i)
 			{
-				m_Pool[i].Release();
+				if (emptySet.find(&m_Pool[i]) == emptySet.end())
+				{
+					m_Pool[i].Release();
+				}
 			}
+			m_Pool.clear();
+			emptySet.clear();
 			m_EmptySpaces.clear();
 		}
 
@@ -67,7 +80,7 @@ namespace graphics_backend
 			return std::shared_ptr<T>(Alloc(std::forward<TArgs>(Args)...), [this](T* releaseObj) { Release(releaseObj); });
 		}
 
-		bool IsEmpty() const
+		bool IsEmpty()
 		{
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			return m_EmptySpaces.size() == m_Pool.size();

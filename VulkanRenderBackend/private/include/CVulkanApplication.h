@@ -17,8 +17,6 @@
 namespace graphics_backend
 {
 	using namespace thread_management;
-	using namespace threadsafe_utils;
-
 	class CVulkanApplication
 	{
 	public:
@@ -53,7 +51,7 @@ namespace graphics_backend
 		CTask* NewTask();
 		void ReturnThreadContext(CVulkanThreadContext& returningContext);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
-		void CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
+		std::shared_ptr<WindowHandle> CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void TickWindowContexts();
 
 		CFrameCountContext const& GetSubmitCounterContext() const { return m_SubmitCounterContext; }

@@ -7,8 +7,8 @@ namespace graphics_backend
 {
 	void CFrameCountContext::WaitingForCurrentFrame()
 	{
-		uint32_t currentIndex = GetCurrentFrameBufferIndex();
-		uint32_t waitingFrame = m_FenceSubmitFrameIDs[currentIndex];
+		TIndex currentIndex = GetCurrentFrameBufferIndex();
+		FrameType waitingFrame = m_FenceSubmitFrameIDs[currentIndex];
 		std::atomic_thread_fence(std::memory_order_acquire);
 		std::vector<vk::Fence> fences = {
 			m_SubmitFrameFences[currentIndex]
@@ -115,7 +115,7 @@ namespace graphics_backend
 			m_SubmitFrameFences.push_back(newFence);
 		}
 		m_FenceSubmitFrameIDs.resize(SWAPCHAIN_BUFFER_COUNT);
-		std::fill(m_FenceSubmitFrameIDs.begin(), m_FenceSubmitFrameIDs.end(), std::numeric_limits<uint32_t>::max());
+		std::fill(m_FenceSubmitFrameIDs.begin(), m_FenceSubmitFrameIDs.end(), INVALID_FRAMEID);
 	}
 
 	void CFrameCountContext::Release_Internal()

@@ -22,7 +22,7 @@ namespace graphics_backend
 
 	std::shared_ptr<WindowHandle> CRenderBackend_Vulkan::NewWindow(uint32_t width, uint32_t height, std::string const& windowName)
 	{
-		m_Application.CreateWindowContext(windowName, width, height);
+		return m_Application.CreateWindowContext(windowName, width, height);
 	}
 
 	bool CRenderBackend_Vulkan::AnyWindowRunning()

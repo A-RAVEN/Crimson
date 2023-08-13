@@ -46,6 +46,35 @@ namespace graphics_backend
 		}
 	}
 
+	constexpr ETextureFormat VkFotmatToETextureFormat(vk::Format inFormat)
+	{
+		switch (inFormat)
+		{
+		case vk::Format::eR8Unorm:
+			return ETextureFormat::E_R8_UNORM;
+		case vk::Format::eR16Unorm:
+			return ETextureFormat::E_R16_UNORM;
+		case vk::Format::eR16Sfloat:
+			return ETextureFormat::E_R16_SFLOAT;
+		case vk::Format::eR8G8Unorm:
+			return ETextureFormat::E_R8G8_UNORM;
+		case vk::Format::eR16G16Sfloat:
+			return ETextureFormat::E_R16G16_SFLOAT;
+		case vk::Format::eR8G8B8A8Unorm:
+			return ETextureFormat::E_R8G8B8A8_UNORM;
+		case vk::Format::eR16G16B16A16Unorm:
+			return ETextureFormat::E_R16G16B16A16_UNORM;
+		case vk::Format::eR16G16B16A16Sfloat:
+			return ETextureFormat::E_R16G16B16A16_SFLOAT;
+		case vk::Format::eR32Sfloat:
+			return ETextureFormat::E_R32_SFLOAT;
+		case vk::Format::eR32G32B32A32Sfloat:
+			return ETextureFormat::E_R32G32B32A32_SFLOAT;
+		default:
+			return ETextureFormat::E_INVALID;
+		}
+	}
+
 	constexpr vk::AttachmentLoadOp EAttachmentLoadOpToVkLoadOp(EAttachmentLoadOp inOp)
 	{
 		switch (inOp)

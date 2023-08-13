@@ -1,11 +1,17 @@
 #pragma once
 #include <string>
-#include <mathfu/vector.h>
+#include "GPUTexture.h"
+
+struct uint2
+{
+	uint32_t x;
+	uint32_t y;
+};
 
 class WindowHandle
 {
 public:
 	virtual std::string GetName() const = 0;
-	virtual mathfu::Vector<uint32_t, 2> const& GetSize() = 0;
+	virtual uint2 const& GetSize() = 0;
 	virtual GPUTextureDescriptor const& GetBackbufferDescriptor() const = 0;
 };

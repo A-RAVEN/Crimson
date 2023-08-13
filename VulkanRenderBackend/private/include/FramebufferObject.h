@@ -40,8 +40,19 @@ namespace graphics_backend
 		FramebufferObject(CVulkanApplication& owner) : BaseApplicationSubobject(owner) {};
 		void Create(FramebufferDescriptor const& framebufferDescriptor);
 		vk::Framebuffer const& GetFramebuffer() const { return mFramebuffer; }
+		uint32_t GetWidth() const 
+		{
+			return m_Width;
+		}
+		uint32_t GetHeight() const
+		{
+			return m_Height;
+		}
 	private:
 		vk::Framebuffer mFramebuffer;
+		uint32_t m_Width = 0;
+		uint32_t m_Height = 0;
+		uint32_t m_Layers = 0;
 	};
 
 	using FramebufferObjectDic = HashPool<FramebufferDescriptor, FramebufferObject>;

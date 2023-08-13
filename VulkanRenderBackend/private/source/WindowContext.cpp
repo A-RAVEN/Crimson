@@ -2,6 +2,7 @@
 #include <private/include/WindowContext.h>
 #include <math.h>
 #include "private/include/CVulkanApplication.h"
+#include <private/include/InterfaceTranslator.h>
 
 namespace graphics_backend
 {
@@ -24,6 +25,20 @@ namespace graphics_backend
 	};
 
 	static glfwContext s_GLFWContext = glfwContext();
+
+	std::string CWindowContext::GetName() const
+	{ return m_WindowName; }
+
+	uint2 const& CWindowContext::GetSize()
+	{
+		return uint2{ m_Width, m_Height, };
+	}
+
+	GPUTextureDescriptor const& CWindowContext::GetBackbufferDescriptor() const
+	{
+		return m_TextureDesc;
+	}
+
 
 	CWindowContext::CWindowContext(CVulkanApplication& inOwner) : BaseApplicationSubobject(inOwner)
 	{
@@ -116,7 +131,14 @@ namespace graphics_backend
 			true,
 			nullptr);
 
-		uint32_t graphicsFamily = GetVulkanApplication()->GetSubmitCounterContext().GetGraphicsQueueRef().first;
+		m_TextureDesc.width = swapchainExtent.width;
+		m_TextureDesc.height = swapchainExtent.height;
+		m_TextureDesc.layers = 1;
+		m_TextureDesc.mipLevels = 1;
+		m_TextureDesc.unorderedAccess = false;
+		m_TextureDesc.format = VkFotmatToETextureFormat(format);
+
+		uint32_t graphicsFamily = GetVulkanApplication().GetSubmitCounterContext().GetGraphicsQueueRef().first;
 
 		uint32_t queueFamilyIndices[2] = { graphicsFamily, m_PresentQueue.first };
 		if (graphicsFamily != m_PresentQueue.first)
@@ -131,12 +153,12 @@ namespace graphics_backend
 
 		m_Swapchain = GetDevice().createSwapchainKHR(swapChainCreateInfo);
 		m_SwapchainImages = GetDevice().getSwapchainImagesKHR(m_Swapchain);
-		GetVulkanApplication()->CreateImageViews2D(format, m_SwapchainImages, m_SwapchainImageViews);
+		GetVulkanApplication().CreateImageViews2D(format, m_SwapchainImages, m_SwapchainImageViews);
 		m_WaitNextFrameSemaphore = GetDevice().createSemaphore(vk::SemaphoreCreateInfo());
 		m_CanPresentSemaphore = GetDevice().createSemaphore(vk::SemaphoreCreateInfo());
 	}
 
-	void CWindowContext::Release_Internal()
+	void CWindowContext::Release()
 	{
 		GetDevice().destroySemaphore(m_CanPresentSemaphore);
 		m_CanPresentSemaphore = nullptr;
@@ -152,7 +174,7 @@ namespace graphics_backend
 		m_Swapchain = nullptr;
 		if(m_Surface != vk::SurfaceKHR(nullptr))
 		{
-			m_OwningApplication->GetInstance().destroySurfaceKHR(m_Surface);
+			GetInstance().destroySurfaceKHR(m_Surface);
 			m_Surface = nullptr;
 		}
 		if(m_Window != nullptr)

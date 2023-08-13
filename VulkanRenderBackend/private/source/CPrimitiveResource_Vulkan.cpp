@@ -78,7 +78,7 @@ namespace graphics_backend
                 auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
                 cmdBuffer.copyBuffer(tempBuffer.GetBuffer(), m_PrimitiveDataBuffer.GetBuffer(), vk::BufferCopy(0, 0, byteArray.size()));
                 cmdBuffer.end();
-                tempBuffer.Release();
+                memoryManager.ReleaseBuffer(tempBuffer);
                 std::atomic_thread_fence(std::memory_order_release);
                 m_SubmitFrame = currentFrame;
                 p_OwningApplication->ReturnThreadContext(threadContext);
@@ -97,8 +97,10 @@ namespace graphics_backend
 
     void CGPUPrimitiveResource_Vulkan::Release()
     {
-        m_PrimitiveDataBuffer.Release();
-        m_PrimitiveIndexDataBuffer.Release();
+        auto& memoryManager = p_OwningApplication->GetMemoryManager();
+        memoryManager.ReleaseBuffer(m_PrimitiveDataBuffer);
+        memoryManager.ReleaseBuffer(m_PrimitiveIndexDataBuffer);
+
         m_PrimitiveDataBuffer = CVulkanBufferObject{};
         m_PrimitiveIndexDataBuffer = CVulkanBufferObject{};
 		m_16BitIndices = false;

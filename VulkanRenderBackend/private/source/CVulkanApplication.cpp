@@ -24,15 +24,18 @@ namespace graphics_backend
 			->Functor([this]()
 				{
 					m_SubmitCounterContext.WaitingForCurrentFrame();
-					uint32_t const releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
-					for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+					if (m_SubmitCounterContext.AnyFrameFinished())
 					{
-						itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
+						FrameType const releasedFrame = m_SubmitCounterContext.GetReleasedFrameID();
+						for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+						{
+							itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
+						}
 					}
 					m_MemoryManager.ReleaseCurrentFrameResource();
 					for (auto& context : m_WindowContexts)
 					{
-						context.WaitCurrentFrameBufferIndex();
+						context->WaitCurrentFrameBufferIndex();
 					}
 				});
 	}
@@ -49,35 +52,17 @@ namespace graphics_backend
 
 				if(!m_WindowContexts.empty())
 				{
-					TIndex currentBuffer = m_WindowContexts[0].GetCurrentFrameBufferIndex();
+					TIndex currentBuffer = m_WindowContexts[0]->GetCurrentFrameBufferIndex();
 
-					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0].m_WaitNextFrameSemaphore };
+					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0]->m_WaitNextFrameSemaphore };
 					std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
-					std::array<const vk::Semaphore, 1> presentSemaphore = { m_WindowContexts[0].m_CanPresentSemaphore };
+					std::array<const vk::Semaphore, 1> presentSemaphore = { m_WindowContexts[0]->m_CanPresentSemaphore };
 
 					auto& threadContext0 = m_ThreadContexts[0];
 					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					//VulkanBarrierCollector barrier0{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					//barrier0.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
-					//	, ResourceUsage::eDontCare, ResourceUsage::eTransferDest);
-
-					//VulkanBarrierCollector barrier1{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					//barrier1.PushImageBarrier(m_WindowContexts[0].m_SwapchainImages[currentBuffer]
-					//	, ResourceUsage::eTransferDest, ResourceUsage::ePresent);
-
-					//barrier0.ExecuteBarrier(cmd);
-
-					//cmd.clearColorImage(
-					//	m_WindowContexts[0].m_SwapchainImages[currentBuffer]
-					//	, vk::ImageLayout::eTransferDstOptimal
-					//	, vk::ClearColorValue(std::array<float, 4>{ 0.0f, 0.0f, 1.0f, 1.0f }), vulkan_backend::utils::DefaultColorSubresourceRange());
-
-
-					//barrier1.ExecuteBarrier(cmd);
-
 					VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					presentBarrier.PushImageBarrier(m_WindowContexts[0].GetCurrentFrameImage()
+					presentBarrier.PushImageBarrier(m_WindowContexts[0]->GetCurrentFrameImage()
 						, ResourceUsage::eColorAttachmentOutput, ResourceUsage::ePresent);
 					presentBarrier.ExecuteBarrier(cmd);
 
@@ -91,10 +76,10 @@ namespace graphics_backend
 
 					vk::PresentInfoKHR presenttInfo(
 						presentSemaphore
-						, m_WindowContexts[0].m_Swapchain
+						, m_WindowContexts[0]->m_Swapchain
 						, currentBuffer
 					);
-					m_WindowContexts[0].m_PresentQueue.second.presentKHR(presenttInfo);
+					m_WindowContexts[0]->m_PresentQueue.second.presentKHR(presenttInfo);
 				}
 				else
 				{
@@ -410,18 +395,19 @@ namespace graphics_backend
 		m_AvailableThreadQueue.Enqueue(id);
 	}
 
-	void CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
+	std::shared_ptr<WindowHandle> CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
 	{
 		m_WindowContexts.emplace_back(std::make_shared<CWindowContext>(*this));
 		auto newContext = m_WindowContexts.back();
 		newContext->Initialize(windowName, initialWidth, initialHeight);
+		return newContext;
 	}
 
 	void CVulkanApplication::TickWindowContexts()
 	{
-		bool anyNeedClose = std::any_of(m_WindowContexts.begin(), m_WindowContexts.end(), [](CWindowContext const& wcontest)
+		bool anyNeedClose = std::any_of(m_WindowContexts.begin(), m_WindowContexts.end(), [](auto& wcontest)
 			{
-				return wcontest.NeedClose();
+				return wcontest->NeedClose();
 			});
 		if(anyNeedClose)
 		{
@@ -430,9 +416,9 @@ namespace graphics_backend
 			size_t currentIndex = 0;
 			while (currentIndex < m_WindowContexts.size())
 			{
-				if (m_WindowContexts[currentIndex].NeedClose())
+				if (m_WindowContexts[currentIndex]->NeedClose())
 				{
-					m_WindowContexts[currentIndex].Release();
+					m_WindowContexts[currentIndex]->Release();
 					std::swap(m_WindowContexts[currentIndex], m_WindowContexts.back());
 					m_WindowContexts.pop_back();
 				}
@@ -472,9 +458,10 @@ namespace graphics_backend
 
 		auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
 
-		FramebufferDescriptor fbDesc{ {m_WindowContexts[0].GetCurrentFrameImageView()}
+		auto textureSize = m_WindowContexts[0]->GetSize();
+		FramebufferDescriptor fbDesc{ {m_WindowContexts[0]->GetCurrentFrameImageView()}
 		,  pRenderPass
-		, m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height, 1 };
+		, textureSize.x, textureSize.y, 1 };
 		auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
 
 		auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
@@ -491,7 +478,7 @@ namespace graphics_backend
 		}
 
 		VulkanBarrierCollector barrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-		barrier.PushImageBarrier(m_WindowContexts[0].GetCurrentFrameImage()
+		barrier.PushImageBarrier(m_WindowContexts[0]->GetCurrentFrameImage()
 			, ResourceUsage::eDontCare, ResourceUsage::eColorAttachmentOutput);
 		barrier.ExecuteBarrier(cmd);
 
@@ -499,19 +486,27 @@ namespace graphics_backend
 			vk::RenderPassBeginInfo{
 			pRenderPass->GetRenderPass()
 				, pFrameBufferObject->GetFramebuffer()
-				, vk::Rect2D{{0, 0}, { m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height }}, clearValues}
+				, vk::Rect2D{{0, 0}
+				, { pFrameBufferObject->GetWidth()
+					, pFrameBufferObject->GetHeight() }}
+				, clearValues}
 		, vk::SubpassContents::eInline);
+
 		cmd.setViewport(0
 			, {
 				vk::Viewport{0.0f, 0.0f
-				, static_cast<float>(m_WindowContexts[0].m_Width)
-				, static_cast<float>(m_WindowContexts[0].m_Height)
+				, static_cast<float>(pFrameBufferObject->GetWidth())
+				, static_cast<float>(pFrameBufferObject->GetHeight())
 				, 0.0f, 1.0f}
 			}
 		);
 		cmd.setScissor(0
 			, {
-				vk::Rect2D{{0, 0}, {m_WindowContexts[0].m_Width, m_WindowContexts[0].m_Height}}
+				vk::Rect2D{
+					{0, 0}
+					, { pFrameBufferObject->GetWidth()
+						, pFrameBufferObject->GetHeight() }
+				}
 			}
 		);
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());

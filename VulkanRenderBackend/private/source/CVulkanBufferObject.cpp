@@ -10,17 +10,17 @@ namespace graphics_backend
 	{
 		return m_BufferAllocationInfo.pMappedData;
 	}
-	void CVulkanBufferObject::Release()
-	{
-		if(m_Buffer != vk::Buffer(nullptr) && m_BufferAllocation != nullptr)
-		{
-			CVulkanMemoryManager& memoryManager = GetVulkanApplication().GetMemoryManager();
-			memoryManager.ReleaseBuffer(*this);
-		}
-		m_Buffer = nullptr;
-		m_BufferAllocation = nullptr;
-		m_BufferAllocationInfo = {};
-		m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();
-		m_OwningFrameBoundPoolId = INVALID_INDEX;
-	}
+	//void CVulkanBufferObject::Release()
+	//{
+	//	if(m_Buffer != vk::Buffer(nullptr) && m_BufferAllocation != nullptr)
+	//	{
+	//		CVulkanMemoryManager& memoryManager = GetVulkanApplication().GetMemoryManager();
+	//		memoryManager.ReleaseBuffer(*this);
+	//	}
+	//	m_Buffer = nullptr;
+	//	m_BufferAllocation = nullptr;
+	//	m_BufferAllocationInfo = {};
+	//	m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();
+	//	m_OwningFrameBoundPoolId = INVALID_INDEX;
+	//}
 }
