@@ -100,13 +100,13 @@ namespace graphics_backend
 
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
 
-		void ExecuteSubpass_SimpleDraw(CRenderpassBuilder const& inRenderPass
+		void ExecuteSubpass_SimpleDraw(
+			CRenderpassBuilder const& inRenderPass
 			, uint32_t subpassID
-			, CVulkanThreadContext& threadContext);
+			, uint32_t width
+			, uint32_t height
+			, vk::CommandBuffer cmd);
 		void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass);
-	public:
-		CGPUPrimitiveResource_Vulkan* NewPrimitiveResource();
-		void DestroyPrimitiveResource(CGPUPrimitiveResource_Vulkan*);
 	public:
 		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
 		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);

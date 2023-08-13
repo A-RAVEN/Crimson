@@ -28,6 +28,8 @@ namespace graphics_backend
 				return vk::Format::eR16Sfloat;
 			case ETextureFormat::E_R8G8_UNORM:
 				return vk::Format::eR8G8Unorm;
+			case ETextureFormat::E_B8G8R8A8_UNORM:
+				return vk::Format::eB8G8R8A8Unorm;
 			case ETextureFormat::E_R16G16_SFLOAT:
 				return vk::Format::eR16G16Sfloat;
 			case ETextureFormat::E_R8G8B8A8_UNORM:
@@ -58,6 +60,8 @@ namespace graphics_backend
 			return ETextureFormat::E_R16_SFLOAT;
 		case vk::Format::eR8G8Unorm:
 			return ETextureFormat::E_R8G8_UNORM;
+		case vk::Format::eB8G8R8A8Unorm:
+			return ETextureFormat::E_B8G8R8A8_UNORM;
 		case vk::Format::eR16G16Sfloat:
 			return ETextureFormat::E_R16G16_SFLOAT;
 		case vk::Format::eR8G8B8A8Unorm:
@@ -327,11 +331,12 @@ namespace graphics_backend
 		//标记浮点值
 		if (inFormat < ETextureFormat::E_FLOAT_TYPE_CATEGORY)
 		{
-			result.color = vk::ClearColorValue(
-				inClearValue.color.r
-				, inClearValue.color.g
-				, inClearValue.color.b
-				, inClearValue.color.a);
+			result.color = vk::ClearColorValue(std::array<float, 4>{
+					inClearValue.color.r
+					, inClearValue.color.g
+					, inClearValue.color.b
+					, inClearValue.color.a
+				});
 		}
 		//标记整形值
 		else if (inFormat < ETextureFormat::E_INT_TYPE_CATEGORY)

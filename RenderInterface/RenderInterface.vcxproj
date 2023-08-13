@@ -89,7 +89,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;RENDERINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -108,7 +108,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;RENDERINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -127,7 +127,7 @@
       <PreprocessorDefinitions>_DEBUG;RENDERINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -146,7 +146,7 @@
       <PreprocessorDefinitions>NDEBUG;RENDERINTERFACE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -166,6 +166,7 @@
     <ClInclude Include="header\CRenderBackend.h" />
     <ClInclude Include="header\GPUBuffer.h" />
     <ClInclude Include="header\GPUTexture.h" />
+    <ClInclude Include="header\RenderInterfaceManager.h" />
     <ClInclude Include="header\ShaderProvider.h" />
     <ClInclude Include="header\CShaderStateObject.h" />
     <ClInclude Include="header\CTextureResource.h" />
@@ -174,22 +175,24 @@
     <ClInclude Include="header\LayoutBuilder.h" />
     <ClInclude Include="header\TextureView.h" />
     <ClInclude Include="header\WindowHandle.h" />
-    <ClInclude Include="private\include\framework.h" />
+    <ClInclude Include="private\framework.h" />
     <ClInclude Include="header\Common.h" />
     <ClInclude Include="header\CRenderGraph.h" />
     <ClInclude Include="header\CTextureHandle.h" />
-    <ClInclude Include="private\include\pch.h" />
-    <ClInclude Include="private\include\CRenderGraphImpl.h" />
+    <ClInclude Include="private\pch.h" />
+    <ClInclude Include="private\CRenderGraphImpl.h" />
+    <ClInclude Include="private\RenderInterfaceManager_Impl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="private\source\dllmain.cpp" />
-    <ClCompile Include="private\source\pch.cpp">
+    <ClCompile Include="private\dllmain.cpp" />
+    <ClCompile Include="private\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="private\source\CRenderGraphImpl.cpp" />
+    <ClCompile Include="private\CRenderGraphImpl.cpp" />
+    <ClCompile Include="private\RenderInterfaceManager_Impl.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -68,12 +68,12 @@ namespace threadsafe_utils
 		void Release(T* releaseObj)
 		{
 			assert(releaseObj != nullptr);
-			m_Releaser(releaseObj);
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			m_Releaser(releaseObj);
 			m_EmptySpaces.push_back(releaseObj);
 		}
 
-		bool IsEmpty() const
+		bool IsEmpty()
 		{
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			return m_EmptySpaces.size() == m_Pool.size();

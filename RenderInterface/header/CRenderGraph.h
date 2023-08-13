@@ -11,10 +11,11 @@
 class CRenderGraph
 {
 public:
+	//Used By Client
 	virtual TextureHandle NewTextureHandle(GPUTextureDescriptor const& textureDesc) = 0;
 	virtual TextureHandle RegisterWindowBackbuffer(std::shared_ptr<WindowHandle> window) = 0;
 	virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) = 0;
-
+	//Used By Backend
 	virtual uint32_t GetRenderNodeCount() const = 0;
 	virtual CRenderpassBuilder GetRenderPass(uint32_t nodeID) = 0;
 };

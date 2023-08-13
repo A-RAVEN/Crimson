@@ -1,5 +1,5 @@
-#include <private/include/pch.h>
-#include <private/include/ThreadManager_Impl.h>
+#include "pch.h"
+#include "ThreadManager_Impl.h"
 
 namespace thread_management
 {
@@ -210,23 +210,7 @@ namespace thread_management
         }
     }
 
-#ifdef THREADMANAGER_EXPORTS
-#define THREADMANAGER_API __declspec(dllexport)
-#else
-#define THREADMANAGER_API
-#endif
-    extern "C"
-    {
-        THREADMANAGER_API CThreadManager* NewModuleInstance()
-        {
-            return new CThreadManager_Impl();
-        }
-        THREADMANAGER_API void DeleteModuleInstance(CThreadManager* removingManager)
-        {
-            CThreadManager_Impl* removal = static_cast<CThreadManager_Impl*>(removingManager);
-            delete removal;
-        }
-    }
+    CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(CThreadManager, CThreadManager_Impl)
 }
 
 

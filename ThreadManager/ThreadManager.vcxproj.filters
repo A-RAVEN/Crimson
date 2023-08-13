@@ -18,30 +18,30 @@
     <ClInclude Include="header\ThreadManger.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\framework.h">
+    <ClInclude Include="private\framework.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\pch.h">
+    <ClInclude Include="private\pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\ThreadManager_Impl.h">
+    <ClInclude Include="private\ThreadManager_Impl.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="header\ThreadManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\IGraphComponent.h">
+    <ClInclude Include="private\IGraphComponent.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="private\source\ThreadManager_Impl.cpp">
+    <ClCompile Include="private\ThreadManager_Impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="private\source\dllmain.cpp">
+    <ClCompile Include="private\dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="private\source\pch.cpp">
+    <ClCompile Include="private\pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

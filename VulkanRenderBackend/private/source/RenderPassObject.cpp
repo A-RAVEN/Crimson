@@ -66,8 +66,8 @@ namespace graphics_backend
 		(uint32_t subpassId, size_t attachment_id, ResourceUsage new_usage)
 		{
 			auto& tracking_usage = tracking_attachment_usages[attachment_id];
-			auto& layout_pair = inoutLayouts[attachment_id];
 			uint32_t& tracking_subpass_id = tracking_attachment_ref_subpass[attachment_id];
+			auto& layout_pair = inoutLayouts[attachment_id];
 
 			auto srcUsageInfo = GetUsageInfo(tracking_usage);
 			auto dstUsageInfo = GetUsageInfo(new_usage);
@@ -82,7 +82,7 @@ namespace graphics_backend
 			dependencies.insert(dependency);
 
 			tracking_usage = new_usage;
-
+			tracking_subpass_id = subpassId;
 			layout_pair.second = dstUsageInfo.m_UsageImageLayout;
 			if (layout_pair.first == vk::ImageLayout::eUndefined)
 			{

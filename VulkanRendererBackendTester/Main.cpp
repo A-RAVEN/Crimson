@@ -7,6 +7,7 @@
 #include <ShaderCompiler/header/Compiler.h>
 #include <iostream>
 #include <SharedTools/header/library_loader.h>
+#include <RenderInterface/header/RenderInterfaceManager.h>
 #include <RenderInterface/header/CNativeRenderPassInfo.h>
 #include <RenderInterface/header/CCommandList.h>
 #include <SharedTools/header/FileLoader.h>
@@ -31,9 +32,15 @@ int main(int argc, char *argv[])
 	TModuleLoader<CThreadManager> threadManagerLoader(L"ThreadManager");
 	TModuleLoader<CRenderBackend> renderBackendLoader(L"VulkanRenderBackend");
 	TModuleLoader<IShaderCompiler> shaderCompilerLoader(L"ShaderCompiler");
+	TModuleLoader<RenderInterfaceManager> renderInterfaceLoader(L"RenderInterface");
+
 
 	auto pThreadManager = threadManagerLoader.New();
 	pThreadManager->InitializeThreadCount(5);
+
+	auto pRenderInterface = renderInterfaceLoader.New();
+
+	auto pRenderGraph = pRenderInterface->NewRenderGraph();
 
 	auto pShaderCompiler = shaderCompilerLoader.New();
 
@@ -69,12 +76,20 @@ int main(int argc, char *argv[])
 	auto pBackend = renderBackendLoader.New();
 	pBackend->Initialize("Test Vulkan Backend", "CRIMSON Engine");
 	pBackend->InitializeThreadContextCount(pThreadManager.get(), 1);
-	pBackend->NewWindow(1024, 512, "Test Window");
+	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
+
+
 
 	std::vector<VertexData> vertexDataList = {
-		VertexData{-0.4f, -0.4f, 1.0f, 0.0f, 0.0f},
-		VertexData{0.4f, -0.4f, 1.0f, 0.0f, 0.0f},
-		VertexData{0.0f, 0.4f, 1.0f, 0.0f, 0.0f},
+		VertexData{-0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
+		VertexData{0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
+		VertexData{0.0f, 0.8f, 1.0f, 0.0f, 0.0f},
+	};
+
+	std::vector<VertexData> vertexDataList1 = {
+		VertexData{-0.4f, -0.8f, 1.0f, 0.0f, 0.0f},
+		VertexData{0.4f, -0.8f, 1.0f, 0.0f, 0.0f},
+		VertexData{0.0f, -0.2f, 1.0f, 0.0f, 0.0f},
 	};
 
 	std::vector<uint16_t> indexDataList = {
@@ -84,6 +99,10 @@ int main(int argc, char *argv[])
 	auto vertexBuffer = pBackend->CreateGPUBuffer(
 		EBufferUsage::eVertexBuffer | EBufferUsage::eDataDst, 3, sizeof(VertexData));
 	vertexBuffer->ScheduleBufferData(0, vertexDataList.size() * sizeof(VertexData), vertexDataList.data());
+
+	auto vertexBuffer1 = pBackend->CreateGPUBuffer(
+		EBufferUsage::eVertexBuffer | EBufferUsage::eDataDst, 3, sizeof(VertexData));
+	vertexBuffer1->ScheduleBufferData(0, vertexDataList1.size() * sizeof(VertexData), vertexDataList1.data());
 
 	auto indexBuffer = pBackend->CreateGPUBuffer(
 		EBufferUsage::eIndexBuffer | EBufferUsage::eDataDst, 3, sizeof(uint16_t));
@@ -98,14 +117,13 @@ int main(int argc, char *argv[])
 		});
 
 
+	auto windowBackBuffer = pRenderGraph->RegisterWindowBackbuffer(windowHandle);
 	CAttachmentInfo attachmentInfo{};
-	attachmentInfo.format = ETextureFormat::E_R8G8B8A8_UNORM;
+	attachmentInfo.format = windowBackBuffer.GetDescriptor().format;
 	attachmentInfo.loadOp = EAttachmentLoadOp::eClear;
 	attachmentInfo.clearValue = GraphicsClearValue::ClearColor(0.0f, 1.0f, 1.0f, 1.0f);
-	CRenderpassBuilder newRenderPass{ {
-		attachmentInfo
-	} };
-
+	CRenderpassBuilder& newRenderPass = pRenderGraph->NewRenderPass({ attachmentInfo });
+	newRenderPass.SetAttachmentTarget(0, windowBackBuffer);
 	newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
@@ -118,7 +136,20 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "Not Finish Yet" << std::endl;
 			}
-		});
+		})
+		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+			{
+				if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
+				{
+					cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
+					cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+					cmd.DrawIndexed(3);
+				}
+				else
+				{
+					std::cout << "Not Finish Yet" << std::endl;
+				}
+			});
 
 	while (pBackend->AnyWindowRunning())
 	{
@@ -127,6 +158,7 @@ int main(int argc, char *argv[])
 		if (frame == 0)
 		{
 			vertexBuffer->DoUpload();
+			vertexBuffer1->DoUpload();
 			indexBuffer->DoUpload();
 		}
 

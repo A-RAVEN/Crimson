@@ -89,7 +89,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;THREADMANAGER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -106,7 +106,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;THREADMANAGER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,7 +123,7 @@
       <PreprocessorDefinitions>_DEBUG;THREADMANAGER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -140,7 +140,7 @@
       <PreprocessorDefinitions>NDEBUG;THREADMANAGER_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>private/include/pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -153,15 +153,15 @@
   <ItemGroup>
     <ClInclude Include="header\ThreadManager.h" />
     <ClInclude Include="header\ThreadManger.h" />
-    <ClInclude Include="private\include\IGraphComponent.h" />
-    <ClInclude Include="private\include\framework.h" />
-    <ClInclude Include="private\include\pch.h" />
-    <ClInclude Include="private\include\ThreadManager_Impl.h" />
+    <ClInclude Include="private\IGraphComponent.h" />
+    <ClInclude Include="private\framework.h" />
+    <ClInclude Include="private\pch.h" />
+    <ClInclude Include="private\ThreadManager_Impl.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="private\source\ThreadManager_Impl.cpp" />
-    <ClCompile Include="private\source\dllmain.cpp" />
-    <ClCompile Include="private\source\pch.cpp">
+    <ClCompile Include="private\ThreadManager_Impl.cpp" />
+    <ClCompile Include="private\dllmain.cpp" />
+    <ClCompile Include="private\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

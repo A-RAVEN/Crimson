@@ -7,6 +7,7 @@
 #include <FileIncluder.h>
 #include <shaderc/shaderc.hpp>
 #include <iostream>
+#include <SharedTools/header/LibraryExportCommon.h>
 
 
 namespace ShaderCompiler
@@ -151,22 +152,6 @@ namespace ShaderCompiler
 		shaderc::Compiler		m_Compiler;
 	};
 
-
-#ifdef SHADERCOMPILER_EXPORTS
-#define SHADERCOMPILER_API __declspec(dllexport)
-#else
-#define SHADERCOMPILER_API
-#endif
-	extern "C"
-	{
-		SHADERCOMPILER_API IShaderCompiler* NewModuleInstance()
-		{
-			return new Compiler_Impl();;
-		}
-
-		SHADERCOMPILER_API void DeleteModuleInstance(IShaderCompiler* pCompiler)
-		{
-			return delete pCompiler;
-		}
-	}
+	CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(IShaderCompiler, Compiler_Impl)
 }
+

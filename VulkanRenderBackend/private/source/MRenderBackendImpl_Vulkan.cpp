@@ -11,15 +11,17 @@
 
 namespace graphics_backend
 {
-	extern "C"
-	{
-		RENDERINTERFACE_API CRenderBackend* NewModuleInstance()
-		{
-			return new graphics_backend::CRenderBackend_Vulkan();
-		}
-		RENDERINTERFACE_API void DeleteModuleInstance(graphics_backend::CRenderBackend* removingBackend)
-		{
-			delete static_cast<graphics_backend::CRenderBackend_Vulkan*>(removingBackend);
-		}
-	}
+	//extern "C"
+	//{
+	//	RENDERINTERFACE_API CRenderBackend* NewModuleInstance()
+	//	{
+	//		return new graphics_backend::CRenderBackend_Vulkan();
+	//	}
+	//	RENDERINTERFACE_API void DeleteModuleInstance(graphics_backend::CRenderBackend* removingBackend)
+	//	{
+	//		delete static_cast<graphics_backend::CRenderBackend_Vulkan*>(removingBackend);
+	//	}
+	//}
+
+	CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(CRenderBackend, CRenderBackend_Vulkan)
 }
