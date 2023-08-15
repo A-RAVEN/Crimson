@@ -10,7 +10,7 @@ public:
 	virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) override;
 
 	virtual uint32_t GetRenderNodeCount() const override;
-	virtual CRenderpassBuilder GetRenderPass(uint32_t nodeID) override;
+	virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) override;
 
 	struct TextureHandleInternalInfo
 	{

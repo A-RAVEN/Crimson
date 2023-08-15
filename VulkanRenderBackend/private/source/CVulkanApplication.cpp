@@ -95,21 +95,17 @@ namespace graphics_backend
 		m_TaskFuture = p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
 	}
 
-	void CVulkanApplication::RunGraphWithPresentTarget(std::string const& targetName)
+	void CVulkanApplication::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
-		CTaskGraph* newGraph = GetThreadManager()->NewTaskGraph()->Name("SubGraph");
-
-		newGraph->FinalizeFunctor([this, targetName]()
+		auto prepareGraphTask = NewTask()->Name("Prepare RenderGraph");
+		prepareGraphTask->Functor([this, inRenderGraph]()
 			{
-
-				std::cout << targetName << std::endl;
-			});
-		CTask* subGraphTask = NewTask()
-			->Name("SubGraph Task")
-			->Functor([this, newGraph]()
+				uint32_t passCount = inRenderGraph->GetRenderNodeCount();
+				for (uint32_t i = 0; i < passCount; ++i)
 				{
-					GetThreadManager()->ExecuteTaskGraph(newGraph);
-				});
+					CRenderpassBuilder const& renderPassBuilder = inRenderGraph->GetRenderPass(i);
+				}
+			});
 	}
 
 	void CVulkanApplication::CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages,
@@ -480,7 +476,7 @@ namespace graphics_backend
 			}
 		);
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-		CCommandList_Impl cmdListInterface{ cmd };
+		CCommandList_Impl cmdListInterface{ cmd, pRenderPass, subpassID };
 		subpassData.commandFunction(cmdListInterface);
 	}
 

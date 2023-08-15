@@ -23,7 +23,7 @@ uint32_t CRenderGraph_Impl::GetRenderNodeCount() const
 	return m_RenderPasses.size();
 }
 
-CRenderpassBuilder CRenderGraph_Impl::GetRenderPass(uint32_t nodeID)
+CRenderpassBuilder const& CRenderGraph_Impl::GetRenderPass(uint32_t nodeID)
 {
 	return m_RenderPasses[nodeID];
 }

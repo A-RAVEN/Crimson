@@ -16,7 +16,7 @@ namespace graphics_backend
 		virtual void StartCurrentFrame() override;
 		virtual void EndCurrentFrame() override;
 		virtual void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass) override;
-		virtual void RunGraphWithPresentTarget(std::string const& windowName) override;
+		virtual void ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph) override;
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) override;

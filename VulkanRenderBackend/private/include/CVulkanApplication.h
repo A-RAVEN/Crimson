@@ -13,6 +13,7 @@
 #include "VulkanPipelineObject.h"
 #include "FramebufferObject.h"
 #include "GPUBuffer_Impl.h"
+#include <RenderInterface/header/CRenderGraph.h>
 
 namespace graphics_backend
 {
@@ -96,7 +97,7 @@ namespace graphics_backend
 
 		void PrepareBeforeTick();
 		void EndThisFrame();
-		void RunGraphWithPresentTarget(std::string const& targetName);
+		void ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph);
 
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
 

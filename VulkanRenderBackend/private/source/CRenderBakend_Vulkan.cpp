@@ -48,9 +48,9 @@ namespace graphics_backend
 		m_Application.ExecuteRenderPass(inRenderPass);
 	}
 
-	void CRenderBackend_Vulkan::RunGraphWithPresentTarget(std::string const& windowName)
+	void CRenderBackend_Vulkan::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
-		m_Application.RunGraphWithPresentTarget(windowName);
+		m_Application.ExecuteRenderGraph(inRenderGraph);
 	}
 
 	std::shared_ptr<GPUBuffer> CRenderBackend_Vulkan::CreateGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride)

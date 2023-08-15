@@ -5,7 +5,10 @@
 
 namespace graphics_backend
 {
-	CCommandList_Impl::CCommandList_Impl(vk::CommandBuffer cmd) : m_CommandBuffer(cmd)
+	CCommandList_Impl::CCommandList_Impl(vk::CommandBuffer cmd, std::shared_ptr<RenderPassObject> renderPassObj, TIndex subpassIndex) :
+		m_CommandBuffer(cmd)
+		, m_RenderPassObject(renderPassObj)
+		, m_SubpassIndex(subpassIndex)
 	{
 	}
 	void CCommandList_Impl::BindVertexBuffers(std::vector<GPUBuffer const*> pGPUBuffers, std::vector<uint32_t> offsets)

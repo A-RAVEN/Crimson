@@ -124,7 +124,8 @@ int main(int argc, char *argv[])
 	attachmentInfo.clearValue = GraphicsClearValue::ClearColor(0.0f, 1.0f, 1.0f, 1.0f);
 	CRenderpassBuilder& newRenderPass = pRenderGraph->NewRenderPass({ attachmentInfo });
 	newRenderPass.SetAttachmentTarget(0, windowBackBuffer);
-	newRenderPass.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
+	newRenderPass
+		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
 			{
@@ -138,18 +139,18 @@ int main(int argc, char *argv[])
 			}
 		})
 		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+		{
+			if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
 			{
-				if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
-				{
-					cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
-					cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-					cmd.DrawIndexed(3);
-				}
-				else
-				{
-					std::cout << "Not Finish Yet" << std::endl;
-				}
-			});
+				cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
+				cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+				cmd.DrawIndexed(3);
+			}
+			else
+			{
+				std::cout << "Not Finish Yet" << std::endl;
+			}
+		});
 
 	while (pBackend->AnyWindowRunning())
 	{

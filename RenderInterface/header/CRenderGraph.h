@@ -17,5 +17,5 @@ public:
 	virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) = 0;
 	//Used By Backend
 	virtual uint32_t GetRenderNodeCount() const = 0;
-	virtual CRenderpassBuilder GetRenderPass(uint32_t nodeID) = 0;
+	virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) = 0;
 };

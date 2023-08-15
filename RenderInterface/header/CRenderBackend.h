@@ -10,6 +10,7 @@
 #include "GPUBuffer.h"
 #include "CNativeRenderPassInfo.h"
 #include "WindowHandle.h"
+#include "CRenderGraph.h"
 
 namespace thread_management
 {
@@ -30,7 +31,7 @@ namespace graphics_backend
 		virtual void StartCurrentFrame() = 0;
 		virtual void EndCurrentFrame() = 0;
 		virtual void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass) = 0;
-		virtual void RunGraphWithPresentTarget(std::string const& windowName) = 0;
+		virtual void ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph) = 0;
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) = 0;
