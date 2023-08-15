@@ -442,11 +442,11 @@ namespace graphics_backend
 	{
 		auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
 		RenderPassDescriptor rpDesc{ renderPassInfo };
-		auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
+		auto pRenderPass = m_GPUObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
 
 		auto& subpassData = inRenderPass.GetSubpassData_SimpleDrawcall(subpassID);
-		auto vertModule = m_ShaderModuleCache.GetOrCreate({ subpassData.shaderSet.vert }).lock();
-		auto fragModule = m_ShaderModuleCache.GetOrCreate({ subpassData.shaderSet.frag }).lock();
+		auto vertModule = m_GPUObjectManager.GetShaderModuleCache().GetOrCreate({subpassData.shaderSet.vert}).lock();
+		auto fragModule = m_GPUObjectManager.GetShaderModuleCache().GetOrCreate({subpassData.shaderSet.frag}).lock();
 
 		CPipelineObjectDescriptor pipelineDesc{
 			subpassData.pipelineStateObject
@@ -455,7 +455,7 @@ namespace graphics_backend
 			, pRenderPass
 			, subpassID };
 
-		auto pPipeline = m_PipelineObjectCache.GetOrCreate(pipelineDesc).lock();
+		auto pPipeline = m_GPUObjectManager.GetPipelineCache().GetOrCreate(pipelineDesc).lock();
 
 	
 
@@ -488,12 +488,12 @@ namespace graphics_backend
 				auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
 				auto& threadContext = AquireThreadContext();
 				RenderPassDescriptor rpDesc{ renderPassInfo };
-				auto pRenderPass = m_RenderPassCache.GetOrCreate(rpDesc).lock();
+				auto pRenderPass = m_GPUObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
 				auto textureSize = m_WindowContexts[0]->GetSize();
 				FramebufferDescriptor fbDesc{ {m_WindowContexts[0]->GetCurrentFrameImageView()}
 				,  pRenderPass
 				, textureSize.x, textureSize.y, 1 };
-				auto pFrameBufferObject = m_FramebufferObjectCache.GetOrCreate(fbDesc).lock();
+				auto pFrameBufferObject = m_GPUObjectManager.GetFramebufferCache().GetOrCreate(fbDesc).lock();
 				std::vector<vk::ClearValue> clearValues;
 				clearValues.resize(renderPassInfo.attachmentInfos.size());
 				for (uint32_t attachmentID = 0; attachmentID < renderPassInfo.attachmentInfos.size(); ++attachmentID)
@@ -550,10 +550,11 @@ namespace graphics_backend
 
 	CVulkanApplication::CVulkanApplication() :
 	m_GPUBufferPool(*this)
-	,m_ShaderModuleCache(*this)
-	,m_RenderPassCache(*this)
-	,m_PipelineObjectCache(*this)
-	,m_FramebufferObjectCache(*this)
+	, m_GPUObjectManager(*this)
+	//,m_ShaderModuleCache(*this)
+	//,m_RenderPassCache(*this)
+	//,m_PipelineObjectCache(*this)
+	//,m_FramebufferObjectCache(*this)
 	, m_MemoryManager(*this)
 	{
 	}

@@ -22,19 +22,23 @@ namespace graphics_backend
 					auto& renderPass = m_RenderGraph->GetRenderPass(itr_node);
 					m_RenderPasses.emplace_back(*m_RenderGraph, renderPass);
 					m_RenderPasses.back().Compile();
-
-
 				}
 			});
 	}
-	RenderPassExecutor::RenderPassExecutor(CRenderGraph const& renderGraph, CRenderpassBuilder const& renderpassBuilder) : 
-		m_RenderGraph(renderGraph)
+	RenderPassExecutor::RenderPassExecutor(RenderGraphExecutor& owningExecutor, CRenderGraph const& renderGraph, CRenderpassBuilder const& renderpassBuilder) :
+		m_OwningExecutor(owningExecutor)
+		, m_RenderGraph(renderGraph)
 		, m_RenderpassBuilder(renderpassBuilder)
 	{
 	}
 	void RenderPassExecutor::Compile()
 	{
 		auto& renderpassInfo = m_RenderpassBuilder.GetRenderPassInfo();
+
+		RenderPassDescriptor rpDesc{ renderpassInfo };
+		GPUObjectManager& gpuObjectManager = m_OwningExecutor.GetGPUObjectManager();
+		m_RenderPassObject = gpuObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
+
 		auto& handles = m_RenderpassBuilder.GetTextureHandles();
 		m_FrameBufferImageViews.reserve(handles.size());
 		for (TIndex handleIDS : handles)
@@ -42,7 +46,7 @@ namespace graphics_backend
 			TextureHandleInternalInfo const& textureInfo = m_RenderGraph.GetTextureHandleInternalInfo(handleIDS);
 			if (textureInfo.p_WindowsHandle != nullptr)
 			{
-
+				m_FrameBufferImageViews.push_back(static_cast<CWindowContext*>(textureInfo.p_WindowsHandle.get())->GetCurrentFrameImageView());
 			}
 		}
 	}

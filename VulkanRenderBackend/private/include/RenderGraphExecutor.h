@@ -6,15 +6,19 @@
 
 namespace graphics_backend
 {
+	class RenderGraphExecutor;
+
 	class RenderPassExecutor
 	{
 	public:
-		RenderPassExecutor(CRenderGraph const& renderGraph, CRenderpassBuilder const& renderpassBuilder);
+		RenderPassExecutor(RenderGraphExecutor& owningExecutor, CRenderGraph const& renderGraph, CRenderpassBuilder const& renderpassBuilder);
 		void Compile();
 	private:
+		RenderGraphExecutor& m_OwningExecutor;
 		CRenderpassBuilder const& m_RenderpassBuilder;
 		CRenderGraph const& m_RenderGraph;
 		std::vector<vk::ImageView> m_FrameBufferImageViews;
+		std::shared_ptr<RenderPassObject> m_RenderPassObject;
 	};
 
 	class RenderGraphExecutor : public BaseApplicationSubobject

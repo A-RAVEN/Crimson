@@ -6,6 +6,7 @@ namespace graphics_backend
 	class CVulkanThreadContext;
 	class CFrameCountContext;
 	class CVulkanMemoryManager;
+	class GPUObjectManager;
 #pragma endregion
 
 	class ApplicationSubobjectBase
@@ -59,6 +60,7 @@ namespace graphics_backend
 		vk::Device const& GetDevice() const;
 		vk::PhysicalDevice const& GetPhysicalDevice() const;
 		CVulkanThreadContext* GetThreadContext(uint32_t threadIndex);
+		GPUObjectManager& GetGPUObjectManager();
 		CVulkanMemoryManager &GetMemoryManager() const;
 	private:
 		CVulkanApplication& m_OwningApplication;

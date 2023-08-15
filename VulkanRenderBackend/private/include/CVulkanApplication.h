@@ -14,6 +14,7 @@
 #include "FramebufferObject.h"
 #include "GPUBuffer_Impl.h"
 #include <RenderInterface/header/CRenderGraph.h>
+#include "GPUObjectManager.h"
 
 namespace graphics_backend
 {
@@ -46,6 +47,7 @@ namespace graphics_backend
 			}
 			return &m_ThreadContexts[threadKey];
 		}
+		GPUObjectManager& GetGPUObjectManager() { return m_GPUObjectManager; }
 		CVulkanMemoryManager& GetMemoryManager();
 		CVulkanThreadContext& AquireThreadContext();
 		CThreadManager* GetThreadManager() const;
@@ -144,10 +146,7 @@ namespace graphics_backend
 
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
 
-		ShaderModuleObjectDic m_ShaderModuleCache;
-		RenderPassObjectDic m_RenderPassCache;
-		PipelineObjectDic m_PipelineObjectCache;
-		FramebufferObjectDic m_FramebufferObjectCache;
+		GPUObjectManager m_GPUObjectManager;
 
 		CVulkanMemoryManager m_MemoryManager;
 	};
