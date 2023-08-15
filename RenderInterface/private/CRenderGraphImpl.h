@@ -2,6 +2,8 @@
 #include <header/CRenderGraph.h>
 #include <unordered_set>
 
+
+
 class CRenderGraph_Impl : public CRenderGraph
 {
 public:
@@ -11,16 +13,12 @@ public:
 
 	virtual uint32_t GetRenderNodeCount() const override;
 	virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) override;
+	virtual TextureHandle TextureHandleByIndex(TIndex index) override;
 
-	struct TextureHandleInternalInfo
-	{
-	public:
-		TIndex m_DescriptorIndex = INVALID_INDEX;
-		std::shared_ptr<WindowHandle> p_WindowsHandle = nullptr;
-	};
+	virtual TextureHandleInternalInfo const& GetTextureHandleInternalInfo(TIndex index) const override { return m_TextureHandleIdToInternalInfo[index]; }
+
 private:
 	TextureHandle NewTextureHandle_Internal(GPUTextureDescriptor const& textureDesc, std::shared_ptr<WindowHandle> window);
-	TextureHandle TextureHandleByIndex(TIndex index);
 private:
 	std::deque<CRenderpassBuilder> m_RenderPasses;
 

@@ -142,6 +142,11 @@ public:
 		return m_SubpassData_SimpleDraws[m_SubpassDataReferences[subpassIndex].second];
 	}
 
+	std::vector<TIndex> const& GetTextureHandles() const
+	{
+		return m_TextureHandles;
+	}
+
 private:
 	CRenderPassInfo mRenderPassInfo{};
 	std::vector<TIndex> m_TextureHandles;
