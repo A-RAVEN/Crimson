@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="private\include\GPUObjectManager.h" />
     <ClInclude Include="private\include\GPUTexture_Impl.h" />
     <ClInclude Include="private\include\GPUBuffer_Impl.h" />
     <ClInclude Include="private\include\CommandList_Impl.h" />
@@ -172,6 +173,7 @@
     <ClInclude Include="private\include\HashPool.h" />
     <ClInclude Include="private\include\InterfaceTranslator.h" />
     <ClInclude Include="private\include\pch.h" />
+    <ClInclude Include="private\include\RenderGraphExecutor.h" />
     <ClInclude Include="private\include\RenderPassObject.h" />
     <ClInclude Include="private\include\ResourceUsageInfo.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
@@ -184,8 +186,10 @@
     <ClInclude Include="private\test\TestShaderProvider.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private\include\GPUObjectManager.cpp" />
     <ClCompile Include="private\include\GPUTexture_Impl.cpp" />
     <ClCompile Include="private\include\GPUBuffer_Impl.cpp" />
+    <ClCompile Include="private\include\RenderGraphExecutor.cpp" />
     <ClCompile Include="private\source\CommandList_Impl.cpp" />
     <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />
     <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp" />

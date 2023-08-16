@@ -96,6 +96,12 @@
     <ClInclude Include="private\include\GPUTexture_Impl.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\RenderGraphExecutor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\GPUObjectManager.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -168,6 +174,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\include\GPUTexture_Impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\RenderGraphExecutor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\GPUObjectManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
