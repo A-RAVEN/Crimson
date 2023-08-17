@@ -18,17 +18,21 @@ CRenderpassBuilder& CRenderGraph_Impl::NewRenderPass(std::vector<CAttachmentInfo
 	return m_RenderPasses.emplace_back(inAttachmentInfo);
 }
 
+void CRenderGraph_Impl::PresentWindow(std::shared_ptr<WindowHandle> window)
+{
+}
+
 uint32_t CRenderGraph_Impl::GetRenderNodeCount() const
 {
 	return m_RenderPasses.size();
 }
 
-CRenderpassBuilder const& CRenderGraph_Impl::GetRenderPass(uint32_t nodeID)
+CRenderpassBuilder const& CRenderGraph_Impl::GetRenderPass(uint32_t nodeID) const
 {
 	return m_RenderPasses[nodeID];
 }
 
-TextureHandle CRenderGraph_Impl::TextureHandleByIndex(TIndex index)
+TextureHandle CRenderGraph_Impl::TextureHandleByIndex(TIndex index) const
 {
 	auto& handleInternalInfo = m_TextureHandleIdToInternalInfo[index];
 	auto& textureDescriptor = m_TextureDescriptorList[handleInternalInfo.m_DescriptorIndex];

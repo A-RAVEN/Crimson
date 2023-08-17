@@ -192,6 +192,19 @@ void hash_append(HashAlgorithm& h, T* const pT) noexcept
         hash_append(h, *pT);
     }
 }
+
+template <class HashAlgorithm, class T>
+void hash_append(HashAlgorithm& h, std::shared_ptr<T> const pT) noexcept
+{
+    if (pT == nullptr)
+    {
+        hash_append(h, size_t{ 0 });
+    }
+    else
+    {
+        hash_append(h, reinterpret_cast<size_t>(pT.get()));
+    }
+}
 #pragma endregion
 
 #pragma region basic types hash_append

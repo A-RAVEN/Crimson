@@ -9,26 +9,44 @@ namespace graphics_backend
 	class HashPool : public BaseApplicationSubobject
 	{
 	public:
+
+		HashPool() = delete;
+		HashPool(HashPool const& other) = delete;
+		HashPool& operator=(HashPool const&) = delete;
+		HashPool(HashPool&& other) = delete;
+		HashPool& operator=(HashPool&&) = delete;
+
 		HashPool(CVulkanApplication& application) : BaseApplicationSubobject(application)
 		{}
 
 		std::weak_ptr<ValType> GetOrCreate(DescType desc)
 		{
-			auto it = m_InternalMap.find(desc);
-			if (it == m_InternalMap.end())
+			std::shared_ptr<ValType> result;
+			bool newResult = false;
 			{
-				std::shared_ptr<ValType> val(new ValType{ GetVulkanApplication() });
-				val->Create(desc);
-				m_InternalMap.insert(std::make_pair(desc, val));
-				return std::weak_ptr<ValType>(m_InternalMap[desc]);
+				std::lock_guard<std::mutex> lockGuard(m_Mutex);
+				auto it = m_InternalMap.find(desc);
+				newResult = it == m_InternalMap.end();
+				if (newResult)
+				{
+					result = std::shared_ptr<ValType>{ new ValType{ GetVulkanApplication() } };
+					m_InternalMap.insert(std::make_pair(desc, result));
+					result = m_InternalMap[desc];
+				}
+				else
+				{
+					result = it->second;
+				}
 			}
-			else
+			if (newResult)
 			{
-				return std::weak_ptr<ValType>(it->second);
+				result->Create(desc);
 			}
+			return std::weak_ptr<ValType>(result);
 		}
 
 	private:
+		std::mutex m_Mutex;
 		std::unordered_map<DescType, std::shared_ptr<ValType>, hash_utils::default_hashAlg> m_InternalMap;
 	};
 }

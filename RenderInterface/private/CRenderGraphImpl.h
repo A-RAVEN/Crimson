@@ -10,10 +10,11 @@ public:
 	virtual TextureHandle NewTextureHandle(GPUTextureDescriptor const& textureDesc) override;
 	virtual TextureHandle RegisterWindowBackbuffer(std::shared_ptr<WindowHandle> window) override;
 	virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) override;
+	virtual void PresentWindow(std::shared_ptr<WindowHandle> window) override;
 
 	virtual uint32_t GetRenderNodeCount() const override;
-	virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) override;
-	virtual TextureHandle TextureHandleByIndex(TIndex index) override;
+	virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) const override;
+	virtual TextureHandle TextureHandleByIndex(TIndex index) const override;
 
 	virtual TextureHandleInternalInfo const& GetTextureHandleInternalInfo(TIndex index) const override { return m_TextureHandleIdToInternalInfo[index]; }
 

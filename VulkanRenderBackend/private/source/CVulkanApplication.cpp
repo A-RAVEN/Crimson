@@ -11,6 +11,7 @@
 #include <private/test/TestShaderProvider.h>
 #include <private/include/CommandList_Impl.h>
 #include <private/include/InterfaceTranslator.h>
+#include <private/include/RenderGraphExecutor.h>
 
 namespace graphics_backend
 {
@@ -97,15 +98,8 @@ namespace graphics_backend
 
 	void CVulkanApplication::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
-		auto prepareGraphTask = NewTask()->Name("Prepare RenderGraph");
-		prepareGraphTask->Functor([this, inRenderGraph]()
-			{
-				uint32_t passCount = inRenderGraph->GetRenderNodeCount();
-				for (uint32_t i = 0; i < passCount; ++i)
-				{
-					CRenderpassBuilder const& renderPassBuilder = inRenderGraph->GetRenderPass(i);
-				}
-			});
+		std::shared_ptr<RenderGraphExecutor> executor = m_RenderGraphDic.GetOrCreate(inRenderGraph).lock();
+		executor->Run();
 	}
 
 	void CVulkanApplication::CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages,
@@ -551,11 +545,8 @@ namespace graphics_backend
 	CVulkanApplication::CVulkanApplication() :
 	m_GPUBufferPool(*this)
 	, m_GPUObjectManager(*this)
-	//,m_ShaderModuleCache(*this)
-	//,m_RenderPassCache(*this)
-	//,m_PipelineObjectCache(*this)
-	//,m_FramebufferObjectCache(*this)
 	, m_MemoryManager(*this)
+	, m_RenderGraphDic(*this)
 	{
 	}
 

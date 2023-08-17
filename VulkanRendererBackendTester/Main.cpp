@@ -152,6 +152,8 @@ int main(int argc, char *argv[])
 			}
 		});
 
+	pRenderGraph->PresentWindow(windowHandle);
+
 	while (pBackend->AnyWindowRunning())
 	{
 		pBackend->StartCurrentFrame();
@@ -163,7 +165,8 @@ int main(int argc, char *argv[])
 			indexBuffer->DoUpload();
 		}
 
-		pBackend->ExecuteRenderPass(newRenderPass);
+		pBackend->ExecuteRenderGraph(pRenderGraph);
+		//pBackend->ExecuteRenderPass(newRenderPass);
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;

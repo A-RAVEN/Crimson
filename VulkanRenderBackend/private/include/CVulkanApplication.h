@@ -15,6 +15,7 @@
 #include "GPUBuffer_Impl.h"
 #include <RenderInterface/header/CRenderGraph.h>
 #include "GPUObjectManager.h"
+#include "RenderGraphExecutor.h"
 
 namespace graphics_backend
 {
@@ -147,6 +148,7 @@ namespace graphics_backend
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
 
 		GPUObjectManager m_GPUObjectManager;
+		RenderGraphExecutorDic m_RenderGraphDic;
 
 		CVulkanMemoryManager m_MemoryManager;
 	};
