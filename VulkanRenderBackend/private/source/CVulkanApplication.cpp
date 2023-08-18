@@ -45,13 +45,13 @@ namespace graphics_backend
 	{
 		p_TaskGraph->FinalizeFunctor([this]()
 			{
-				std::vector<vk::CommandBuffer> waitingSubmitCommands;
-				for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
-				{
-					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
-				}
+				//std::vector<vk::CommandBuffer> waitingSubmitCommands;
+				//for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+				//{
+				//	itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
+				//}
 
-				if(!m_WindowContexts.empty())
+				if (!m_WindowContexts.empty())
 				{
 					TIndex currentBuffer = m_WindowContexts[0]->GetCurrentFrameBufferIndex();
 
@@ -59,18 +59,18 @@ namespace graphics_backend
 					std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
 					std::array<const vk::Semaphore, 1> presentSemaphore = { m_WindowContexts[0]->m_CanPresentSemaphore };
 
-					auto& threadContext0 = m_ThreadContexts[0];
-					auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+					//auto& threadContext0 = m_ThreadContexts[0];
+					//auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					presentBarrier.PushImageBarrier(m_WindowContexts[0]->GetCurrentFrameImage()
-						, ResourceUsage::eColorAttachmentOutput, ResourceUsage::ePresent);
-					presentBarrier.ExecuteBarrier(cmd);
+					//VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+					//presentBarrier.PushImageBarrier(m_WindowContexts[0]->GetCurrentFrameImage()
+					//	, ResourceUsage::eColorAttachmentOutput, ResourceUsage::ePresent);
+					//presentBarrier.ExecuteBarrier(cmd);
 
-					cmd.end();
-					waitingSubmitCommands.push_back(cmd);
+					//cmd.end();
+					//waitingSubmitCommands.push_back(cmd);
 
-					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
+					m_SubmitCounterContext.FinalizeCurrentFrameGraphics({}//waitingSubmitCommands
 						, semaphore
 						, waitStages
 						, presentSemaphore);
@@ -84,7 +84,7 @@ namespace graphics_backend
 				}
 				else
 				{
-					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
+					m_SubmitCounterContext.FinalizeCurrentFrameGraphics({});// waitingSubmitCommands);
 				}
 			});
 

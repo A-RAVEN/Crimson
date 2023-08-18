@@ -20,6 +20,7 @@ CRenderpassBuilder& CRenderGraph_Impl::NewRenderPass(std::vector<CAttachmentInfo
 
 void CRenderGraph_Impl::PresentWindow(std::shared_ptr<WindowHandle> window)
 {
+	m_TargetWindow = window;
 }
 
 uint32_t CRenderGraph_Impl::GetRenderNodeCount() const

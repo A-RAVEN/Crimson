@@ -29,4 +29,5 @@ private:
 	std::unordered_map<void*, TIndex> m_RegisteredTextureHandleIDs;
 
 	std::unordered_map<std::shared_ptr<WindowHandle>, TIndex> m_WindowToTextureHandleID;
+	std::shared_ptr<WindowHandle> m_TargetWindow;
 }; 

@@ -7,6 +7,7 @@
 #include "FramebufferObject.h"
 #include "VulkanPipelineObject.h"
 #include "RenderBackendSettings.h"
+#include "ResourceUsageInfo.h"
 
 namespace graphics_backend
 {
@@ -18,10 +19,16 @@ namespace graphics_backend
 	public:
 		RenderPassExecutor(RenderGraphExecutor& owningExecutor, CRenderGraph const& renderGraph, CRenderpassBuilder const& renderpassBuilder);
 		void Compile();
-		void Execute(vk::CommandBuffer cmd);
+
+		void ResolveTextureHandleUsages(std::unordered_map<TIndex, ResourceUsage>& TextureHandleUsageStates);
+
+		void PrepareCommandBuffers(CVulkanThreadContext& threadContext);
+		void AppendCommandBuffers(std::vector<vk::CommandBuffer>& outCommandBuffers);
 	private:
 		void CompileRenderPassAndFrameBuffer();
 		void CompilePSOs();
+
+		void ProcessAquireBarriers(vk::CommandBuffer cmd);
 
 		void ExecuteSubpass_SimpleDraw(
 			uint32_t subpassID
@@ -42,6 +49,16 @@ namespace graphics_backend
 		//Pipeline States
 		std::vector<std::shared_ptr<CPipelineObject>> m_GraphicsPipelineObjects;
 
+		//TextureUsages
+		std::vector<std::tuple<TIndex, ResourceUsage, ResourceUsage>> m_UsageBarriers;
+
+		//CommandBuffers
+		std::vector<vk::CommandBuffer> m_PendingGraphicsCommandBuffers;
+	};
+
+	class PresentExecutor
+	{
+
 	};
 
 	//RenderGraph Executor
@@ -59,6 +76,8 @@ namespace graphics_backend
 
 		std::shared_ptr<CRenderGraph> m_RenderGraph = nullptr;
 		std::vector<RenderPassExecutor> m_RenderPasses;
+
+		std::vector<vk::CommandBuffer> m_PendingGraphicsCommandBuffers;
 
 		FrameType m_CompiledFrame = INVALID_FRAMEID;
 	};

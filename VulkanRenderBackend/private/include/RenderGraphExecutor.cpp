@@ -4,6 +4,7 @@
 #include "InterfaceTranslator.h"
 #include "CommandList_Impl.h"
 #include "VulkanPipelineObject.h"
+#include "VulkanBarrierCollector.h"
 
 namespace graphics_backend
 {
@@ -19,10 +20,10 @@ namespace graphics_backend
 	{
 		if (CompileDone())
 			return;
-		auto task = GetVulkanApplication().NewTask();
-		task->Name("Compile RenderGraph");
+		auto creationTask = GetVulkanApplication().NewTask();
+		creationTask->Name("Initialize RenderGraph");
 		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
-		task->Functor([this, nodeCount]()
+		creationTask->Functor([this, nodeCount]()
 			{
 				m_RenderPasses.clear();
 				m_RenderPasses.reserve(nodeCount);
@@ -34,16 +35,28 @@ namespace graphics_backend
 				
 			});
 
-
+		//处理每个RenderPass的Barrier
+		auto resolvingTask = GetVulkanApplication().NewTask()
+			->Name("Resolve Resource Usages")
+			->Functor([this, nodeCount]()
+				{
+					std::unordered_map<TIndex, ResourceUsage> textureHandleUsageStates;
+					for (uint32_t itr_node = 0; itr_node < nodeCount; ++itr_node)
+					{
+						m_RenderPasses[itr_node].ResolveTextureHandleUsages(textureHandleUsageStates);
+					}
+				});
+		//编译每个RenderPass(FrameBuffer, RenderPass, PSO)
 		for (uint32_t i = 0; i < nodeCount; ++i)
 		{
 			auto compileTask = GetVulkanApplication().NewTask();
 			compileTask->Name("Compile RenderPass");
-			compileTask->Succeed(task);
+			compileTask->Succeed(creationTask);
 			compileTask->Functor([this, i]()
 				{
 					m_RenderPasses[i].Compile();
 				});
+			resolvingTask->Succeed(compileTask);
 		}
 		m_CompiledFrame = GetVulkanApplication().GetSubmitCounterContext().GetCurrentFrameID();
 	}
@@ -68,6 +81,11 @@ namespace graphics_backend
 	{
 		if (!CompileDone())
 			return;
+
+		auto collectCommandsTask = GetVulkanApplication().NewTask()
+			->Name("Collect RenderPass Commands");
+
+
 		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
 		for (uint32_t i = 0; i < nodeCount; ++i)
 		{
@@ -76,11 +94,21 @@ namespace graphics_backend
 			recorderTask->Functor([this, i]()
 				{
 					CVulkanThreadContext& threadContext = GetVulkanApplication().AquireThreadContext();
-					vk::CommandBuffer cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-					m_RenderPasses[i].Execute(cmd);
-					cmd.end();
+					m_RenderPasses[i].PrepareCommandBuffers(threadContext);
 				});
+			collectCommandsTask->Succeed(recorderTask);
 		}
+
+		collectCommandsTask->Functor([this, nodeCount]()
+			{
+				m_PendingGraphicsCommandBuffers.clear();
+				for (uint32_t i = 0; i < nodeCount; ++i)
+				{
+					m_RenderPasses[i].AppendCommandBuffers(m_PendingGraphicsCommandBuffers);
+				}
+
+				GetFrameCountContext().SubmitGraphics(m_PendingGraphicsCommandBuffers);
+			});
 	}
 
 
@@ -89,6 +117,28 @@ namespace graphics_backend
 		, m_RenderGraph(renderGraph)
 		, m_RenderpassBuilder(renderpassBuilder)
 	{
+	}
+	void RenderPassExecutor::ResolveTextureHandleUsages(std::unordered_map<TIndex, ResourceUsage>& textureHandleUsageStates)
+	{
+		auto& handles = m_RenderpassBuilder.GetTextureHandles();
+		for (auto handleID : handles)
+		{
+			if (handleID != INVALID_INDEX)
+			{
+				ResourceUsage srcUsage = ResourceUsage::eDontCare;
+				auto found = textureHandleUsageStates.find(handleID);
+				if (found != textureHandleUsageStates.end())
+				{
+					srcUsage = found->second;
+				}
+				ResourceUsage dstUsage = ResourceUsage::eColorAttachmentOutput;
+				textureHandleUsageStates[handleID] = dstUsage;
+				if (srcUsage != dstUsage)
+				{
+					m_UsageBarriers.push_back(std::make_tuple(handleID, srcUsage, dstUsage));
+				}
+			}
+		}
 	}
 	void RenderPassExecutor::Compile()
 	{
@@ -142,8 +192,27 @@ namespace graphics_backend
 		subpassData.commandFunction(cmdListInterface);
 	}
 
-	void RenderPassExecutor::Execute(vk::CommandBuffer cmd)
+	void RenderPassExecutor::ProcessAquireBarriers(vk::CommandBuffer cmd)
 	{
+		VulkanBarrierCollector textureBarrier{ m_OwningExecutor.GetFrameCountContext().GetGraphicsQueueFamily() };
+		for (auto& usageData : m_UsageBarriers)
+		{
+			auto& textureInfo = m_RenderGraph.GetTextureHandleInternalInfo(std::get<0>(usageData));
+			textureBarrier.PushImageBarrier(static_cast<CWindowContext*>(textureInfo.p_WindowsHandle.get())->GetCurrentFrameImage()
+				, std::get<1>(usageData)
+				, std::get<2>(usageData));
+		}
+		textureBarrier.ExecuteBarrier(cmd);
+	}
+
+	void RenderPassExecutor::PrepareCommandBuffers(CVulkanThreadContext& threadContext)
+	{
+		m_PendingGraphicsCommandBuffers.clear();
+
+		vk::CommandBuffer cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+
+		ProcessAquireBarriers(cmd);
+
 		auto& renderpassInfo = m_RenderpassBuilder.GetRenderPassInfo();
 
 		cmd.beginRenderPass(
@@ -176,8 +245,14 @@ namespace graphics_backend
 				break;
 			}
 		}
-
 		cmd.endRenderPass();
+		cmd.end();
+		m_PendingGraphicsCommandBuffers.push_back(cmd);
+	}
+	void RenderPassExecutor::AppendCommandBuffers(std::vector<vk::CommandBuffer>& outCommandBuffers)
+	{
+		outCommandBuffers.resize(outCommandBuffers.size() + m_PendingGraphicsCommandBuffers.size());
+		std::copy(m_PendingGraphicsCommandBuffers.begin(), m_PendingGraphicsCommandBuffers.end(), outCommandBuffers.end() - m_PendingGraphicsCommandBuffers.size());
 	}
 	void RenderPassExecutor::CompileRenderPassAndFrameBuffer()
 	{

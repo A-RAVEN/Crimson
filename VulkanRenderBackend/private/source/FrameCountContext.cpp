@@ -29,7 +29,7 @@ namespace graphics_backend
 
 	void CFrameCountContext::SubmitGraphics(std::vector<vk::CommandBuffer> const& commandbufferList,
 		vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores,
-		vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores)
+		vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores) const
 	{
 		if (commandbufferList.empty() && waitSemaphores.empty() && signalSemaphores.empty())
 			return;
