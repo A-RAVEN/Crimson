@@ -61,7 +61,7 @@ namespace graphics_backend
 		//eColorAttachmentOutput
 		ResourceUsageVulkanInfo{
 			vk::PipelineStageFlagBits::eColorAttachmentOutput,
-			vk::AccessFlagBits::eColorAttachmentWrite,
+			vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead,
 			vk::ImageLayout::eColorAttachmentOptimal,
 		},
 		//eDepthStencilAttachment,

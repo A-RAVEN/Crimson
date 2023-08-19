@@ -56,7 +56,8 @@ namespace graphics_backend
 	class CVulkanFrameBoundCommandBufferPool : public ApplicationSubobjectBase
 	{
 	public:
-		vk::CommandBuffer AllocateOnetimeCommandBuffer();
+		vk::CommandBuffer AllocateOnetimeCommandBuffer(const char* cmdName = "Default Cmd");
+		vk::CommandBuffer AllocateMiscCommandBuffer(const char* cmdName = "Default Cmd");
 		vk::CommandBuffer AllocateSecondaryCommandBuffer();
 		void ResetCommandBufferPool();
 		void CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
@@ -71,7 +72,7 @@ namespace graphics_backend
 		public:
 			size_t m_AvailableCommandBufferIndex = 0;
 			std::vector<vk::CommandBuffer> m_CommandBufferList;
-			vk::CommandBuffer AllocCommandBuffer(CVulkanFrameBoundCommandBufferPool& owner, bool secondary);
+			vk::CommandBuffer AllocCommandBuffer(CVulkanFrameBoundCommandBufferPool& owner, bool secondary, const char* cmdName = "Default Cmd");
 			void CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList);
 			void ResetBufferList();
 			void ClearBufferList();
@@ -80,6 +81,8 @@ namespace graphics_backend
 		CommandBufferList m_CommandBufferList;
 		CommandBufferList m_SecondaryCommandBufferList;
 		uint32_t m_BoundingFrameID = 0;
+		//Miscellaneous CommandBuffers
+		std::vector<vk::CommandBuffer> m_MiscCommandBufferList;
 	};
 
 	class CVulkanThreadContext : public ApplicationSubobjectBase

@@ -18,6 +18,11 @@ public:
 
 	virtual TextureHandleInternalInfo const& GetTextureHandleInternalInfo(TIndex index) const override { return m_TextureHandleIdToInternalInfo[index]; }
 
+	virtual std::shared_ptr<WindowHandle> GetTargetWindow() const override {
+		return m_TargetWindow;
+	}
+
+	virtual TIndex WindowHandleToTextureIndex(std::shared_ptr<WindowHandle> handle) const override;
 private:
 	TextureHandle NewTextureHandle_Internal(GPUTextureDescriptor const& textureDesc, std::shared_ptr<WindowHandle> window);
 private:
@@ -28,6 +33,5 @@ private:
 	std::vector<TextureHandleInternalInfo> m_TextureHandleIdToInternalInfo;
 	std::unordered_map<void*, TIndex> m_RegisteredTextureHandleIDs;
 
-	std::unordered_map<std::shared_ptr<WindowHandle>, TIndex> m_WindowToTextureHandleID;
 	std::shared_ptr<WindowHandle> m_TargetWindow;
 }; 

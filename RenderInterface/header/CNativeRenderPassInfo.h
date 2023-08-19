@@ -98,9 +98,11 @@ struct SimpleDrawcallSubpassData
 class CRenderpassBuilder
 {
 public:
-	CRenderpassBuilder(std::vector<CAttachmentInfo> const& inAttachmentInfo) : m_TextureHandles{ static_cast<uint32_t>(inAttachmentInfo.size()), INVALID_INDEX }
+	CRenderpassBuilder(std::vector<CAttachmentInfo> const& inAttachmentInfo)// : m_TextureHandles{ static_cast<uint32_t>(inAttachmentInfo.size()), INVALID_INDEX }
 	{
 		mRenderPassInfo.attachmentInfos = inAttachmentInfo;
+		m_TextureHandles.resize(inAttachmentInfo.size());
+		std::fill(m_TextureHandles.begin(), m_TextureHandles.end(), INVALID_INDEX);
 	}
 
 	void SetAttachmentTarget(uint32_t attachmentIndex, TextureHandle const& textureHandle)

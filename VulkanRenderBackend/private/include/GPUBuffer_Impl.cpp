@@ -52,7 +52,7 @@ namespace graphics_backend
 					, byteSize
 					, vk::BufferUsageFlagBits::eTransferSrc);
                 memcpy(tempBuffer.GetMappedPointer(), m_ScheduledData.data(), byteSize);
-                auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+                auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateMiscCommandBuffer("Upload GPU Buffer");
                 cmdBuffer.copyBuffer(tempBuffer.GetBuffer(), m_BufferObject.GetBuffer(), vk::BufferCopy(0, 0, byteSize));
                 cmdBuffer.end();
 				memoryManager.ReleaseBuffer(tempBuffer);

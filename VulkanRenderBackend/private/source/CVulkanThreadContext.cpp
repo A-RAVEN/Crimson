@@ -5,10 +5,16 @@
 
 namespace graphics_backend
 {
-	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateOnetimeCommandBuffer()
+	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateOnetimeCommandBuffer(const char* cmdName)
 	{
-		vk::CommandBuffer const result = m_CommandBufferList.AllocCommandBuffer(*this, false);
+		vk::CommandBuffer const result = m_CommandBufferList.AllocCommandBuffer(*this, false, cmdName);
 		result.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+		return result;
+	}
+	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateMiscCommandBuffer(const char* cmdName)
+	{
+		auto result = AllocateOnetimeCommandBuffer(cmdName);
+		m_MiscCommandBufferList.push_back(result);
 		return result;
 	}
 	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::AllocateSecondaryCommandBuffer()
@@ -20,15 +26,19 @@ namespace graphics_backend
 		GetDevice().resetCommandPool(m_CommandPool, vk::CommandPoolResetFlagBits::eReleaseResources);
 		m_CommandBufferList.ResetBufferList();
 		m_SecondaryCommandBufferList.ResetBufferList();
+		m_MiscCommandBufferList.clear();
 	}
 	void CVulkanFrameBoundCommandBufferPool::CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList)
 	{
-		size_t commandCount = m_CommandBufferList.m_AvailableCommandBufferIndex + m_SecondaryCommandBufferList.m_AvailableCommandBufferIndex;
+		size_t commandCount = m_MiscCommandBufferList.size();
 		if (commandCount > 0)
 		{
-			inoutCommandBufferList.reserve(inoutCommandBufferList.size() + commandCount);
-			m_CommandBufferList.CollectCommandBufferList(inoutCommandBufferList);
-			m_SecondaryCommandBufferList.CollectCommandBufferList(inoutCommandBufferList);
+			inoutCommandBufferList.resize(inoutCommandBufferList.size() + commandCount);
+			std::copy(m_MiscCommandBufferList.begin()
+				, m_MiscCommandBufferList.end()
+				, inoutCommandBufferList.end() - commandCount);
+			//m_CommandBufferList.CollectCommandBufferList(inoutCommandBufferList);
+			//m_SecondaryCommandBufferList.CollectCommandBufferList(inoutCommandBufferList);
 		}
 	}
 
@@ -96,7 +106,7 @@ namespace graphics_backend
 				});
 		}
 	}
-	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::CommandBufferList::AllocCommandBuffer(CVulkanFrameBoundCommandBufferPool& owner, bool secondary)
+	vk::CommandBuffer CVulkanFrameBoundCommandBufferPool::CommandBufferList::AllocCommandBuffer(CVulkanFrameBoundCommandBufferPool& owner, bool secondary, const char* cmdName)
 	{
 		vk::CommandBuffer result = nullptr;
 		if (m_AvailableCommandBufferIndex < m_CommandBufferList.size())
@@ -119,11 +129,13 @@ namespace graphics_backend
 #if !defined(NDEBUG)
 		VkCommandBuffer c_handle = result;
 		uint64_t handle = reinterpret_cast<uint64_t>(c_handle);
-		vk::DebugUtilsObjectNameInfoEXT debugName(result.objectType, handle, "Test Command Buffer");
+		vk::DebugUtilsObjectNameInfoEXT debugName(result.objectType, handle, cmdName);
 		owner.GetDevice().setDebugUtilsObjectNameEXT(debugName);
 #endif
 		return result;
 	}
+
+	//TODO Remove!!!
 	void CVulkanFrameBoundCommandBufferPool::CommandBufferList::CollectCommandBufferList(std::vector<vk::CommandBuffer>& inoutCommandBufferList)
 	{
 		for (int i = 0; i < m_AvailableCommandBufferIndex; ++i)

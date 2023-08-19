@@ -176,10 +176,10 @@
     <ClCompile Include="private\include\GPUTexture_Impl.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="private\include\RenderGraphExecutor.cpp">
+    <ClCompile Include="private\include\GPUObjectManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="private\include\GPUObjectManager.cpp">
+    <ClCompile Include="private\include\RenderGraphExecutor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

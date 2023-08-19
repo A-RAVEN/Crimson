@@ -24,8 +24,9 @@ namespace graphics_backend
 
 		void PrepareCommandBuffers(CVulkanThreadContext& threadContext);
 		void AppendCommandBuffers(std::vector<vk::CommandBuffer>& outCommandBuffers);
+		void SetupFrameBuffer();
 	private:
-		void CompileRenderPassAndFrameBuffer();
+		void CompileRenderPass();
 		void CompilePSOs();
 
 		void ProcessAquireBarriers(vk::CommandBuffer cmd);
@@ -41,10 +42,12 @@ namespace graphics_backend
 		CRenderGraph const& m_RenderGraph;
 
 		//RenderPass and Framebuffer
-		std::vector<vk::ImageView> m_FrameBufferImageViews;
 		std::shared_ptr<RenderPassObject> m_RenderPassObject;
-		std::shared_ptr<FramebufferObject> m_FrameBufferObject;
 		std::vector<vk::ClearValue> m_ClearValues;
+
+		//Framebuffer
+		std::vector<vk::ImageView> m_FrameBufferImageViews;
+		std::shared_ptr<FramebufferObject> m_FrameBufferObject;
 
 		//Pipeline States
 		std::vector<std::shared_ptr<CPipelineObject>> m_GraphicsPipelineObjects;
@@ -69,6 +72,8 @@ namespace graphics_backend
 		void Create(std::shared_ptr<CRenderGraph> inRenderGraph);
 		void Run();
 		bool CompileDone() const;
+		bool CompileIssued() const;
+		void CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands);
 	private:
 		void Compile();
 		void Execute();
@@ -77,6 +82,7 @@ namespace graphics_backend
 		std::shared_ptr<CRenderGraph> m_RenderGraph = nullptr;
 		std::vector<RenderPassExecutor> m_RenderPasses;
 
+		std::unordered_map<TIndex, ResourceUsage> m_TextureHandleUsageStates;
 		std::vector<vk::CommandBuffer> m_PendingGraphicsCommandBuffers;
 
 		FrameType m_CompiledFrame = INVALID_FRAMEID;

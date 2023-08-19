@@ -40,6 +40,16 @@ TextureHandle CRenderGraph_Impl::TextureHandleByIndex(TIndex index) const
 	return TextureHandle{ textureDescriptor, index };
 }
 
+TIndex CRenderGraph_Impl::WindowHandleToTextureIndex(std::shared_ptr<WindowHandle> handle) const
+{
+	auto found = m_RegisteredTextureHandleIDs.find(handle.get());
+	if (found != m_RegisteredTextureHandleIDs.end())
+	{
+		return found->second;
+	}
+	return INVALID_INDEX;
+}
+
 TextureHandle CRenderGraph_Impl::NewTextureHandle_Internal(GPUTextureDescriptor const& textureDesc, std::shared_ptr<WindowHandle> window)
 {
 	if (window != nullptr)

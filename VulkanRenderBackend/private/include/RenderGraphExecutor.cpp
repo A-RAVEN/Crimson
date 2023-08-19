@@ -14,11 +14,11 @@ namespace graphics_backend
 
 	void RenderGraphExecutor::Create(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
-		m_RenderGraph = m_RenderGraph;
+		m_RenderGraph = inRenderGraph;
 	}
 	void RenderGraphExecutor::Compile()
 	{
-		if (CompileDone())
+		if (CompileIssued())
 			return;
 		auto creationTask = GetVulkanApplication().NewTask();
 		creationTask->Name("Initialize RenderGraph");
@@ -35,18 +35,18 @@ namespace graphics_backend
 				
 			});
 
-		//处理每个RenderPass的Barrier
+		//澶勭悊姣忎釜RenderPass鐨凚arrier
 		auto resolvingTask = GetVulkanApplication().NewTask()
 			->Name("Resolve Resource Usages")
 			->Functor([this, nodeCount]()
 				{
-					std::unordered_map<TIndex, ResourceUsage> textureHandleUsageStates;
+					m_TextureHandleUsageStates.clear();
 					for (uint32_t itr_node = 0; itr_node < nodeCount; ++itr_node)
 					{
-						m_RenderPasses[itr_node].ResolveTextureHandleUsages(textureHandleUsageStates);
+						m_RenderPasses[itr_node].ResolveTextureHandleUsages(m_TextureHandleUsageStates);
 					}
 				});
-		//编译每个RenderPass(FrameBuffer, RenderPass, PSO)
+		//缂栬瘧姣忎釜RenderPass(FrameBuffer, RenderPass, PSO)
 		for (uint32_t i = 0; i < nodeCount; ++i)
 		{
 			auto compileTask = GetVulkanApplication().NewTask();
@@ -77,6 +77,19 @@ namespace graphics_backend
 		return frameContext.GetReleasedFrameID() >= m_CompiledFrame;
 	}
 
+	bool RenderGraphExecutor::CompileIssued() const
+	{
+		return m_CompiledFrame != INVALID_FRAMEID;
+	}
+
+	void RenderGraphExecutor::CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands)
+	{
+		inoutCommands.resize(inoutCommands.size() + m_PendingGraphicsCommandBuffers.size());
+		std::copy(m_PendingGraphicsCommandBuffers.begin()
+			, m_PendingGraphicsCommandBuffers.end()
+			, inoutCommands.end() - m_PendingGraphicsCommandBuffers.size());
+	}
+
 	void RenderGraphExecutor::Execute()
 	{
 		if (!CompileDone())
@@ -94,7 +107,9 @@ namespace graphics_backend
 			recorderTask->Functor([this, i]()
 				{
 					CVulkanThreadContext& threadContext = GetVulkanApplication().AquireThreadContext();
+					m_RenderPasses[i].SetupFrameBuffer();
 					m_RenderPasses[i].PrepareCommandBuffers(threadContext);
+					GetVulkanApplication().ReturnThreadContext(threadContext);
 				});
 			collectCommandsTask->Succeed(recorderTask);
 		}
@@ -106,8 +121,19 @@ namespace graphics_backend
 				{
 					m_RenderPasses[i].AppendCommandBuffers(m_PendingGraphicsCommandBuffers);
 				}
+				auto windowTarget = m_RenderGraph->GetTargetWindow<CWindowContext>();
 
-				GetFrameCountContext().SubmitGraphics(m_PendingGraphicsCommandBuffers);
+				std::array<const vk::Semaphore, 1> semaphore = { windowTarget->GetWaitDoneSemaphore()};
+				std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
+				std::array<const vk::Semaphore, 1> signalSemaphore = { windowTarget->GetPresentWaitingSemaphore() };
+
+				GetFrameCountContext().SubmitGraphics(m_PendingGraphicsCommandBuffers, semaphore, waitStages);
+				TIndex windowIndex = m_RenderGraph->WindowHandleToTextureIndex(windowTarget);
+				auto state = m_TextureHandleUsageStates.find(windowIndex);
+				if (state != m_TextureHandleUsageStates.end())
+				{
+					windowTarget->MarkUsages(state->second);
+				}
 			});
 	}
 
@@ -142,7 +168,7 @@ namespace graphics_backend
 	}
 	void RenderPassExecutor::Compile()
 	{
-		CompileRenderPassAndFrameBuffer();
+		CompileRenderPass();
 		CompilePSOs();
 	}
 
@@ -209,7 +235,7 @@ namespace graphics_backend
 	{
 		m_PendingGraphicsCommandBuffers.clear();
 
-		vk::CommandBuffer cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+		vk::CommandBuffer cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer("Render Pass Command Buffer");
 
 		ProcessAquireBarriers(cmd);
 
@@ -254,23 +280,11 @@ namespace graphics_backend
 		outCommandBuffers.resize(outCommandBuffers.size() + m_PendingGraphicsCommandBuffers.size());
 		std::copy(m_PendingGraphicsCommandBuffers.begin(), m_PendingGraphicsCommandBuffers.end(), outCommandBuffers.end() - m_PendingGraphicsCommandBuffers.size());
 	}
-	void RenderPassExecutor::CompileRenderPassAndFrameBuffer()
+	void RenderPassExecutor::SetupFrameBuffer()
 	{
-		auto& renderpassInfo = m_RenderpassBuilder.GetRenderPassInfo();
-		RenderPassDescriptor rpDesc{ renderpassInfo };
 		GPUObjectManager& gpuObjectManager = m_OwningExecutor.GetGPUObjectManager();
-		m_RenderPassObject = gpuObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
-
-		m_ClearValues.resize(renderpassInfo.attachmentInfos.size());
-		for (uint32_t attachmentID = 0; attachmentID < renderpassInfo.attachmentInfos.size(); ++attachmentID)
-		{
-			auto& attachmentInfo = renderpassInfo.attachmentInfos[attachmentID];
-			m_ClearValues[attachmentID] = AttachmentClearValueTranslate(
-				attachmentInfo.clearValue
-				, attachmentInfo.format);
-		}
-
 		auto& handles = m_RenderpassBuilder.GetTextureHandles();
+		m_FrameBufferImageViews.clear();
 		m_FrameBufferImageViews.reserve(handles.size());
 
 		uint32_t width = 0;
@@ -308,6 +322,24 @@ namespace graphics_backend
 			, width, height, layers
 		};
 		m_FrameBufferObject = gpuObjectManager.GetFramebufferCache().GetOrCreate(framebufferDesc).lock();
+	}
+	void RenderPassExecutor::CompileRenderPass()
+	{
+		auto& renderpassInfo = m_RenderpassBuilder.GetRenderPassInfo();
+		RenderPassDescriptor rpDesc{ renderpassInfo };
+		GPUObjectManager& gpuObjectManager = m_OwningExecutor.GetGPUObjectManager();
+		m_RenderPassObject = gpuObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
+
+		m_ClearValues.resize(renderpassInfo.attachmentInfos.size());
+		for (uint32_t attachmentID = 0; attachmentID < renderpassInfo.attachmentInfos.size(); ++attachmentID)
+		{
+			auto& attachmentInfo = renderpassInfo.attachmentInfos[attachmentID];
+			m_ClearValues[attachmentID] = AttachmentClearValueTranslate(
+				attachmentInfo.clearValue
+				, attachmentInfo.format);
+		}
+
+
 	}
 	void RenderPassExecutor::CompilePSOs()
 	{

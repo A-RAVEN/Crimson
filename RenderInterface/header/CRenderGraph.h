@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include "CGPUPrimitiveResource.h"
 #include "CNativeRenderPassInfo.h"
@@ -29,4 +30,13 @@ public:
 	virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) const = 0;
 	virtual TextureHandle TextureHandleByIndex(TIndex index) const = 0;
 	virtual TextureHandleInternalInfo const& GetTextureHandleInternalInfo(TIndex index) const = 0;
+	virtual std::shared_ptr<WindowHandle> GetTargetWindow() const = 0;
+	virtual TIndex WindowHandleToTextureIndex(std::shared_ptr<WindowHandle> handle) const = 0;
+
+	template<typename TWIN>
+	std::shared_ptr<TWIN> GetTargetWindow() const
+	{
+		static_assert(std::is_base_of<WindowHandle, TWIN>::value, "Invalid WindowHandle Type");
+		return std::static_pointer_cast<TWIN>(GetTargetWindow());
+	}
 };

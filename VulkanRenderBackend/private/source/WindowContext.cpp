@@ -67,6 +67,11 @@ namespace graphics_backend
 		}
 	}
 
+	void CWindowContext::MarkUsages(ResourceUsageFlags usages)
+	{
+		m_CurrentFrameUsageFlags = usages;
+	}
+
 	void CWindowContext::Initialize(
 		std::string const& windowName
 		, uint32_t initialWidth

@@ -34,9 +34,10 @@ namespace graphics_backend
 						}
 					}
 					m_MemoryManager.ReleaseCurrentFrameResource();
-					for (auto& context : m_WindowContexts)
+					for (auto& windowContext : m_WindowContexts)
 					{
-						context->WaitCurrentFrameBufferIndex();
+						windowContext->WaitCurrentFrameBufferIndex();
+						windowContext->MarkUsages(ResourceUsage::eDontCare);
 					}
 				});
 	}
@@ -45,46 +46,50 @@ namespace graphics_backend
 	{
 		p_TaskGraph->FinalizeFunctor([this]()
 			{
-				//std::vector<vk::CommandBuffer> waitingSubmitCommands;
-				//for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
-				//{
-				//	itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
-				//}
+				//收集 Misc Commandbuffers
+				std::vector<vk::CommandBuffer> waitingSubmitCommands;
+				for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+				{
+					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
+				}
 
 				if (!m_WindowContexts.empty())
 				{
-					TIndex currentBuffer = m_WindowContexts[0]->GetCurrentFrameBufferIndex();
+					auto windowContext = m_WindowContexts[0];
+					TIndex currentBuffer = windowContext->GetCurrentFrameBufferIndex();
 
-					std::array<const vk::Semaphore, 1> semaphore = { m_WindowContexts[0]->m_WaitNextFrameSemaphore };
+					std::array<const vk::Semaphore, 1> semaphore = { windowContext->m_WaitNextFrameSemaphore };
 					std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
-					std::array<const vk::Semaphore, 1> presentSemaphore = { m_WindowContexts[0]->m_CanPresentSemaphore };
+					std::array<const vk::Semaphore, 1> presentSemaphore = { windowContext->m_CanPresentSemaphore };
 
-					//auto& threadContext0 = m_ThreadContexts[0];
-					//auto cmd = threadContext0.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+					auto& threadContext = AquireThreadContext();
+					auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					//VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					//presentBarrier.PushImageBarrier(m_WindowContexts[0]->GetCurrentFrameImage()
-					//	, ResourceUsage::eColorAttachmentOutput, ResourceUsage::ePresent);
-					//presentBarrier.ExecuteBarrier(cmd);
+					VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+					presentBarrier.PushImageBarrier(windowContext->GetCurrentFrameImage()
+						, windowContext->m_CurrentFrameUsageFlags, ResourceUsage::ePresent);
+					presentBarrier.ExecuteBarrier(cmd);
 
-					//cmd.end();
-					//waitingSubmitCommands.push_back(cmd);
+					cmd.end();
+					waitingSubmitCommands.push_back(cmd);
 
-					m_SubmitCounterContext.FinalizeCurrentFrameGraphics({}//waitingSubmitCommands
-						, semaphore
-						, waitStages
-						, presentSemaphore);
+					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
+						, {}
+						, {}
+					, presentSemaphore);
 
 					vk::PresentInfoKHR presenttInfo(
 						presentSemaphore
-						, m_WindowContexts[0]->m_Swapchain
+						, windowContext->m_Swapchain
 						, currentBuffer
 					);
-					m_WindowContexts[0]->m_PresentQueue.second.presentKHR(presenttInfo);
+					windowContext->m_PresentQueue.second.presentKHR(presenttInfo);
+
+					ReturnThreadContext(threadContext);
 				}
 				else
 				{
-					m_SubmitCounterContext.FinalizeCurrentFrameGraphics({});// waitingSubmitCommands);
+					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
 				}
 			});
 

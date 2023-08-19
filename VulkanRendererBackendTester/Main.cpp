@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 	CRenderpassBuilder& newRenderPass = pRenderGraph->NewRenderPass({ attachmentInfo });
 	newRenderPass.SetAttachmentTarget(0, windowBackBuffer);
 	newRenderPass
-		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, indexBuffer](CInlineCommandList& cmd)
+		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
 			{
@@ -137,9 +137,6 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "Not Finish Yet" << std::endl;
 			}
-		})
-		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
-		{
 			if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
 			{
 				cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
@@ -150,7 +147,21 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "Not Finish Yet" << std::endl;
 			}
-		});
+		})
+		//.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+		//{
+		//	if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
+		//	{
+		//		cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
+		//		cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+		//		cmd.DrawIndexed(3);
+		//	}
+		//	else
+		//	{
+		//		std::cout << "Not Finish Yet" << std::endl;
+		//	}
+		//})
+			;
 
 	pRenderGraph->PresentWindow(windowHandle);
 
@@ -166,7 +177,6 @@ int main(int argc, char *argv[])
 		}
 
 		pBackend->ExecuteRenderGraph(pRenderGraph);
-		//pBackend->ExecuteRenderPass(newRenderPass);
 		pBackend->EndCurrentFrame();
 		pBackend->TickWindows();
 		++frame;

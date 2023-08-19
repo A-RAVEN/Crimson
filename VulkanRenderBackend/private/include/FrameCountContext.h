@@ -9,6 +9,7 @@ namespace graphics_backend
 		void EndCurrentFrame();
 		void SubmitGraphics(std::vector<vk::CommandBuffer> const& commandbufferList
 			, vk::ArrayProxyNoTemporaries<const vk::Semaphore> waitSemaphores = {}
+			, vk::ArrayProxyNoTemporaries<const vk::PipelineStageFlags> waitStages = {}
 			, vk::ArrayProxyNoTemporaries<const vk::Semaphore> signalSemaphores = {}) const;
 
 		void FinalizeCurrentFrameGraphics(std::vector<vk::CommandBuffer> const& commandbufferList

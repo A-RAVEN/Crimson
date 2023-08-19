@@ -1,7 +1,8 @@
 #pragma once
-#include <private/include/VulkanApplicationSubobjectBase.h>
-#include "RenderInterface/header/Common.h"
+#include <RenderInterface/header/Common.h>
 #include <RenderInterface/header/WindowHandle.h>
+#include "VulkanApplicationSubobjectBase.h";
+#include "ResourceUsageInfo.h"
 
 namespace graphics_backend
 {
@@ -20,6 +21,9 @@ namespace graphics_backend
 		TIndex GetCurrentFrameBufferIndex() const { return m_CurrentBufferIndex; }
 		vk::Image GetCurrentFrameImage() const { return m_SwapchainImages[m_CurrentBufferIndex]; }
 		vk::ImageView GetCurrentFrameImageView() const { return m_SwapchainImageViews[m_CurrentBufferIndex]; }
+		vk::Semaphore GetWaitDoneSemaphore() const { return m_WaitNextFrameSemaphore; }
+		vk::Semaphore GetPresentWaitingSemaphore() const { return m_CanPresentSemaphore; }
+		void MarkUsages(ResourceUsageFlags usages);
 		void Initialize(std::string const& windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void Release() override;
 	private:
@@ -39,6 +43,8 @@ namespace graphics_backend
 		TIndex m_CurrentBufferIndex = INVALID_INDEX;
 
 		GPUTextureDescriptor m_TextureDesc;
+
+		ResourceUsageFlags m_CurrentFrameUsageFlags;
 
 		friend class CVulkanApplication;
 	};
