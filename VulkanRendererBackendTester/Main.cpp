@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
 		, "testShader.hlsl"
 		, shaderSource
 		, "vert"
-		, ECompileShaderType::eVert);
+		, ECompileShaderType::eVert
+		, false, true);
 
 
 	std::shared_ptr<TestShaderProvider> vertProvider = std::make_shared<TestShaderProvider>();
@@ -62,7 +63,8 @@ int main(int argc, char *argv[])
 		, "testShader.hlsl"
 		, shaderSource
 		, "frag"
-		, ECompileShaderType::eFrag);
+		, ECompileShaderType::eFrag
+		, false, true);
 
 	std::shared_ptr<TestShaderProvider> fragProvider = std::make_shared<TestShaderProvider>();
 	fragProvider->SetUniqueName("testShader.hlsl.frag");
@@ -137,6 +139,9 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "Not Finish Yet" << std::endl;
 			}
+		})
+		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+		{
 			if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
 			{
 				cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
@@ -148,19 +153,6 @@ int main(int argc, char *argv[])
 				std::cout << "Not Finish Yet" << std::endl;
 			}
 		})
-		//.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
-		//{
-		//	if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
-		//	{
-		//		cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
-		//		cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-		//		cmd.DrawIndexed(3);
-		//	}
-		//	else
-		//	{
-		//		std::cout << "Not Finish Yet" << std::endl;
-		//	}
-		//})
 			;
 
 	pRenderGraph->PresentWindow(windowHandle);

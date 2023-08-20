@@ -28,6 +28,33 @@ enum class ECompileShaderType : uint8_t
 	eMax,
 };
 
+enum class EShaderTextureType : uint8_t
+{
+	eTexture1D = 0,
+	eRWTexture1D,
+	eTexture2D,
+	eRWTexture2D,
+	eTexture3D,
+	eRWTexture3D,
+	eTexelBuffer,
+	eRWTexelBuffer,
+	eTextureCube,
+	eSubpassInput,
+};
+
+enum class EShaderBufferType : uint8_t
+{
+	eConstantBuffer = 0,
+	eStructuredBuffer,
+	eRWStructuredBuffer,
+};
+
+enum class EShaderSamplerType : uint8_t
+{
+	eSampler = 0,
+	//eSamplerComparison,
+};
+
 enum class EShaderSourceType : uint8_t
 {
 	eHLSL = 0,

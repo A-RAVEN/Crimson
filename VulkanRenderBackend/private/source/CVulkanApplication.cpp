@@ -44,13 +44,18 @@ namespace graphics_backend
 
 	void CVulkanApplication::EndThisFrame()
 	{
-		p_TaskGraph->FinalizeFunctor([this]()
+		p_TaskGraph->FinalizeFunctor([this, executors = m_CurrentFrameRenderGraphExecutors]()
 			{
 				//收集 Misc Commandbuffers
 				std::vector<vk::CommandBuffer> waitingSubmitCommands;
 				for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
 				{
 					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
+				}
+
+				for (auto executor : executors)
+				{
+					executor->CollectCommands(waitingSubmitCommands);
 				}
 
 				if (!m_WindowContexts.empty())
@@ -74,9 +79,9 @@ namespace graphics_backend
 					waitingSubmitCommands.push_back(cmd);
 
 					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
-						, {}
-						, {}
-					, presentSemaphore);
+						, semaphore
+						, waitStages
+						, presentSemaphore);
 
 					vk::PresentInfoKHR presenttInfo(
 						presentSemaphore
@@ -93,6 +98,8 @@ namespace graphics_backend
 				}
 			});
 
+		m_CurrentFrameRenderGraphExecutors.clear();
+
 		if (m_TaskFuture.valid())
 		{
 			m_TaskFuture.wait();
@@ -104,6 +111,7 @@ namespace graphics_backend
 	void CVulkanApplication::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
 		std::shared_ptr<RenderGraphExecutor> executor = m_RenderGraphDic.GetOrCreate(inRenderGraph).lock();
+		m_CurrentFrameRenderGraphExecutors.push_back(executor.get());
 		executor->Run();
 	}
 

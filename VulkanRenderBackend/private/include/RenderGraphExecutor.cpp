@@ -127,7 +127,7 @@ namespace graphics_backend
 				std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
 				std::array<const vk::Semaphore, 1> signalSemaphore = { windowTarget->GetPresentWaitingSemaphore() };
 
-				GetFrameCountContext().SubmitGraphics(m_PendingGraphicsCommandBuffers, semaphore, waitStages);
+				//GetFrameCountContext().SubmitGraphics(m_PendingGraphicsCommandBuffers, semaphore, waitStages);
 				TIndex windowIndex = m_RenderGraph->WindowHandleToTextureIndex(windowTarget);
 				auto state = m_TextureHandleUsageStates.find(windowIndex);
 				if (state != m_TextureHandleUsageStates.end())
