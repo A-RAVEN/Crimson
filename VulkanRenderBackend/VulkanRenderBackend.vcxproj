@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="private\include\DescriptorSetLayoutObject.h" />
     <ClInclude Include="private\include\GPUObjectManager.h" />
     <ClInclude Include="private\include\GPUTexture_Impl.h" />
     <ClInclude Include="private\include\GPUBuffer_Impl.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="private\test\TestShaderProvider.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private\include\DescriptorSetLayoutObject.cpp" />
     <ClCompile Include="private\include\GPUObjectManager.cpp" />
     <ClCompile Include="private\include\GPUTexture_Impl.cpp" />
     <ClCompile Include="private\include\GPUBuffer_Impl.cpp" />
