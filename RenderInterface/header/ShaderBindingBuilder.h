@@ -1,38 +1,230 @@
 #pragma once
 #include <string>
+#include <map>
+#include <vector>
+#include <SharedTools/header/uhash.h>
+
+enum class EShaderBindingNumericType
+{
+	eFloat = 0,
+	eInt32,
+	eUInt32,
+};
+
+enum class ETextureDimension
+{
+	e2D = 0,
+	e3D
+};
+
+template <class T>
+struct is_shaderbinding_arighmetic_type : public std::integral_constant<bool, (std::is_integral<T>::value && sizeof(T) == 4)> 
+{
+public:
+	static constexpr EShaderBindingNumericType numericType = EShaderBindingNumericType::eUInt32;
+};
+
+template <>
+struct is_shaderbinding_arighmetic_type<float> : public std::true_type
+{
+public:
+	static constexpr EShaderBindingNumericType numericType = EShaderBindingNumericType::eFloat;
+};
+
+template <>
+struct is_shaderbinding_arighmetic_type<int32_t> : public std::true_type
+{
+public:
+	static constexpr EShaderBindingNumericType numericType = EShaderBindingNumericType::eInt32;
+};
+
+struct ShaderBindingDescriptor
+{
+public:
+	EShaderBindingNumericType numericType;
+	uint32_t count = 1;
+	uint32_t x = 1;
+	uint32_t y = 1;
+	ShaderBindingDescriptor(EShaderBindingNumericType inType
+		, uint32_t inX = 1, uint32_t inY = 1, uint32_t inCount = 1) :
+		numericType(inType)
+		, count(inCount)
+		, x(inX)
+		, y(inY)
+	{
+	}
+	bool operator==(ShaderBindingDescriptor const& other) const
+	{
+		return memory_equal(*this, other);
+	}
+};
+
+template<>
+struct is_contiguously_hashable<ShaderBindingDescriptor> : public std::true_type {};
+
+struct ShaderTextureDescriptor
+{
+public:
+	EShaderBindingNumericType numericType;
+	uint32_t channels = 4;
+	uint32_t count = 1;
+	ETextureDimension dimension = ETextureDimension::e2D;
+	bool isRW = false;
+	ShaderTextureDescriptor(EShaderBindingNumericType inType
+		, bool inIsRW, ETextureDimension inDim, uint32_t inChannel = 4, uint32_t inCount = 1) :
+		numericType(inType)
+		, channels(inChannel)
+		, count(inCount)
+		, dimension(inDim)
+		, isRW(inIsRW)
+	{
+	}
+
+	bool operator==(ShaderTextureDescriptor const& other) const
+	{
+		return memory_equal(*this, other);
+	}
+};
+
+template<>
+struct is_contiguously_hashable<ShaderTextureDescriptor> : public std::true_type {};
 
 class ShaderBindingBuilder
 {
 public:
-	virtual void Int(std::string const& name);
-	virtual void Int2(std::string const& name);
-	virtual void Int3(std::string const& name);
-	virtual void Int4(std::string const& name);
-	virtual void IntArray(std::string const& name, int size);
-	virtual void Int2Array(std::string const& name, int size);
-	virtual void Int3Array(std::string const& name, int size);
-	virtual void Int4Array(std::string const& name, int size);
+	ShaderBindingBuilder(std::string const& space_name) : m_SpaceName(space_name) {}
 
-	virtual void UInt(std::string const& name);
-	virtual void UInt2(std::string const& name);
-	virtual void UInt3(std::string const& name);
-	virtual void UInt4(std::string const& name);
-	virtual void UIntArray(std::string const& name, int size);
-	virtual void UInt2Array(std::string const& name, int size);
-	virtual void UInt3Array(std::string const& name, int size);
-	virtual void UInt4Array(std::string const& name, int size);
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Scalar(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
+			is_shaderbinding_arighmetic_type<T>::numericType, count }));
+		return *this;
+	}
 
-	virtual void Float(std::string const& name);
-	virtual void Float2(std::string const& name);
-	virtual void Float3(std::string const& name);
-	virtual void Float4(std::string const& name);
-	virtual void FloatArray(std::string const& name, int size);
-	virtual void Float2Array(std::string const& name, int size);
-	virtual void Float3Array(std::string const& name, int size);
-	virtual void Float4Array(std::string const& name, int size);
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Vec2(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{
+			is_shaderbinding_arighmetic_type<T>::numericType, count, 2 }));
+		return *this;
+	}
 
-	virtual void Mat4(std::string const& name, int size);
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Vec3(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{
+			is_shaderbinding_arighmetic_type<T>::numericType, count, 3 }));
+		return *this;
+	}
 
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Vec4(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
+			is_shaderbinding_arighmetic_type<T>::numericType, count, 4 }));
+		return *this;
+	}
 
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Mat2(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
+			is_shaderbinding_arighmetic_type<T>::numericType, count, 2, 2 }));
+		return *this;
+	}
 
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Mat3(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
+			is_shaderbinding_arighmetic_type<T>::numericType, count, 3, 3 }));
+		return *this;
+	}
+
+	template<typename T, uint32_t count = 1>
+	ShaderBindingBuilder& Mat4(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
+			is_shaderbinding_arighmetic_type<T>::numericType, count, 4, 4 }));
+		return *this;
+	}
+
+	template<typename T, uint32_t channels = 4, uint32_t count = 1>
+	ShaderBindingBuilder& Texture2D(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(channels > 0 && channels <= 4, "texture binding supports 1-4 channels");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_TextureDescriptors.push_back(std::make_pair(name, ShaderTextureDescriptor{ 
+		is_shaderbinding_arighmetic_type<T>::numericType
+		, false, ETextureDimension::e2D, channels, count }));
+		return *this;
+	}
+
+	template<typename T, uint32_t channels = 4, uint32_t count = 1>
+	ShaderBindingBuilder& Texture3D(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(channels > 0 && channels <= 4, "texture binding supports 1-4 channels");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_TextureDescriptors.push_back(std::make_pair(name, ShaderTextureDescriptor{ 
+		is_shaderbinding_arighmetic_type<T>::numericType
+		, false, ETextureDimension::e3D, channels, count }));
+		return *this;
+	}
+
+	template<typename T, uint32_t channels = 4, uint32_t count = 1>
+	ShaderBindingBuilder& RWTexture2D(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(channels > 0 && channels <= 4, "texture binding supports 1-4 channels");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_TextureDescriptors.push_back(std::make_pair(name, ShaderTextureDescriptor{ 
+		is_shaderbinding_arighmetic_type<T>::numericType
+		, true, ETextureDimension::e2D, channels, count }));
+		return *this;
+	}
+
+	template<typename T, uint32_t channels = 4, uint32_t count = 1>
+	ShaderBindingBuilder& RWTexture3D(std::string const& name)
+	{
+		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
+		static_assert(channels > 0 && channels <= 4, "texture binding supports 1-4 channels");
+		static_assert(count > 0, "shader binding count must be greater than 0");
+		m_TextureDescriptors.push_back(std::make_pair(name, ShaderTextureDescriptor{ 
+		is_shaderbinding_arighmetic_type<T>::numericType
+		, true, ETextureDimension::e3D, channels, count }));
+		return *this;
+	}
+
+	bool operator==(ShaderBindingBuilder const& rhs) const
+	{
+		return m_NumericDescriptors == rhs.m_NumericDescriptors && m_TextureDescriptors == rhs.m_TextureDescriptors;
+	}
+
+	template <class HashAlgorithm>
+	friend void hash_append(HashAlgorithm& h, ShaderBindingBuilder const& bindingBuilder) noexcept
+	{
+		hash_append(h, bindingBuilder.m_NumericDescriptors);
+		hash_append(h, bindingBuilder.m_TextureDescriptors);
+	}
+protected:
+	std::string m_SpaceName;
+	std::vector<std::pair<std::string, ShaderBindingDescriptor>> m_NumericDescriptors;
+	std::vector<std::pair<std::string, ShaderTextureDescriptor>> m_TextureDescriptors;
 };

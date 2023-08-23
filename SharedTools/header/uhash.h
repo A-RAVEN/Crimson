@@ -234,4 +234,13 @@ hash_append(HashAlgorithm& h, std::pair<T, U> const& p) noexcept
 
 
 #pragma endregion
+
+#pragma region
+template<typename T>
+bool memory_equal(T const& lhs, T const& rhs) noexcept
+{
+	return std::memcmp(&lhs, &rhs, sizeof(T)) == 0;
+};
+
+#pragma endregion
 }

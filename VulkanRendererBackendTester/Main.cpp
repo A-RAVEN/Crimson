@@ -12,6 +12,7 @@
 #include <RenderInterface/header/CCommandList.h>
 #include <SharedTools/header/FileLoader.h>
 #include "TestShaderProvider.h"
+#include <RenderInterface/header/ShaderBindingBuilder.h>
 using namespace thread_management;
 using namespace library_loader;
 using namespace graphics_backend;
@@ -34,6 +35,16 @@ int main(int argc, char *argv[])
 	TModuleLoader<IShaderCompiler> shaderCompilerLoader(L"ShaderCompiler");
 	TModuleLoader<RenderInterfaceManager> renderInterfaceLoader(L"RenderInterface");
 
+	ShaderBindingBuilder shaderBindingBuilder{ "TestBinding" };
+	shaderBindingBuilder.Scalar<float>("test0")
+		.Scalar<int>("test1")
+		.Scalar<uint32_t, 2>("test2")
+		.Vec2<float>("test4")
+		.Vec3<int, 3>("test5")
+		.Vec4<uint32_t, 2>("test6")
+		.Mat2<float>("test7")
+		.Mat3<int, 3>("test8")
+		.Mat4<uint32_t, 2>("test9");
 
 	auto pThreadManager = threadManagerLoader.New();
 	pThreadManager->InitializeThreadCount(5);

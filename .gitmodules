@@ -13,3 +13,7 @@
 [submodule "ExternalLib/glm"]
 	path = ExternalLib/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "ExternalLib/llvm-project"]
+	path = ExternalLib/llvm-project
+	url = https://github.com/llvm/llvm-project.git
+	branch = release/17.x
