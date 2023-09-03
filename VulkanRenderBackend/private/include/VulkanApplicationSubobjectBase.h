@@ -49,11 +49,7 @@ namespace graphics_backend
 		BaseApplicationSubobject(BaseApplicationSubobject&& other) = default;
 		BaseApplicationSubobject& operator=(BaseApplicationSubobject&&) = default;
 		virtual ~BaseApplicationSubobject() {};
-
-		virtual void Initialize() {};
 		virtual void Release() {};
-		virtual bool Done() const { return true; }
-
 		CVulkanApplication& GetVulkanApplication() const;
 		CFrameCountContext const& GetFrameCountContext() const;
 		vk::Instance const& GetInstance() const;

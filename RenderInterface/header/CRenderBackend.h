@@ -6,7 +6,6 @@
 #include <string>
 #include <memory>
 #include "Common.h"
-#include "CGPUPrimitiveResource.h"
 #include "GPUBuffer.h"
 #include "CNativeRenderPassInfo.h"
 #include "WindowHandle.h"
@@ -36,7 +35,6 @@ namespace graphics_backend
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) = 0;
-		virtual std::shared_ptr<ShaderBindingSet> CreateShaderBindingSet(ShaderBindingBuilder const& bindingBuilder) = 0;
 	};
 }
 

@@ -2,7 +2,6 @@
 #define NOMINMAX
 #include <windows.h>
 #include <RenderInterface/header/CRenderBackend.h>
-#include <RenderInterface/header/CGPUPrimitiveResource.h>
 #include <ThreadManager/header/ThreadManager.h>
 #include <ShaderCompiler/header/Compiler.h>
 #include <iostream>
@@ -174,9 +173,9 @@ int main(int argc, char *argv[])
 
 		if (frame == 0)
 		{
-			vertexBuffer->DoUpload();
-			vertexBuffer1->DoUpload();
-			indexBuffer->DoUpload();
+			vertexBuffer->UploadAsync();
+			vertexBuffer1->UploadAsync();
+			indexBuffer->UploadAsync();
 		}
 
 		pBackend->ExecuteRenderGraph(pRenderGraph);

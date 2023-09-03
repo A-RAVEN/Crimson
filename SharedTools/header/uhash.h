@@ -1,6 +1,7 @@
 #pragma once
 #include <deque>
 #include <vector>
+#include <memory>
 
 //在需要hash的类或结构体中实现hash_append，在其中自行将需要计算hash的成员变量累加
 //template <class HashAlgorithm>

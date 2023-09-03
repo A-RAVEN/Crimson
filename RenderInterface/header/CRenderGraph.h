@@ -3,8 +3,6 @@
 #include <string>
 #include <vector>
 #include <type_traits>
-
-#include "CGPUPrimitiveResource.h"
 #include "CNativeRenderPassInfo.h"
 #include "CTextureHandle.h"
 #include "WindowHandle.h"

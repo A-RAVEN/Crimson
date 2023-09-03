@@ -5,23 +5,9 @@
 
 namespace graphics_backend
 {
-	CFrameBoundMemoryPool::CFrameBoundMemoryPool(uint32_t pool_id, CVulkanApplication& owner) :
-		BaseApplicationSubobject(owner)
-		,m_PoolId(pool_id)
+	void AllocateBuffer_Common(VmaAllocator allocator, EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage
+		, vk::Buffer& outBuffer, VmaAllocation& outAllocation, VmaAllocationInfo& outAllocationInfo)
 	{
-	}
-
-	CFrameBoundMemoryPool::CFrameBoundMemoryPool(CFrameBoundMemoryPool&& other) noexcept : BaseApplicationSubobject(other.GetVulkanApplication())
-	{
-		m_FrameBoundAllocator = other.m_FrameBoundAllocator;
-		m_ActiveBuffers = other.m_ActiveBuffers;
-		m_PoolId = other.m_PoolId;
-	}
-
-	CVulkanBufferObject CFrameBoundMemoryPool::AllocateFrameBoundBuffer(EMemoryType memoryType, size_t bufferSize,
-	                                                                    vk::BufferUsageFlags bufferUsage)
-	{
-		CVulkanBufferObject result{};
 		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
 			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
 		);
@@ -36,7 +22,7 @@ namespace graphics_backend
 		break;
 		case EMemoryType::CPU_Random_Access:
 		{
-			allocationCreateInfo.flags = 
+			allocationCreateInfo.flags =
 				VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT
 				| VMA_ALLOCATION_CREATE_MAPPED_BIT;
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
@@ -44,7 +30,7 @@ namespace graphics_backend
 		break;
 		case EMemoryType::CPU_Sequential_Access:
 		{
-			allocationCreateInfo.flags = 
+			allocationCreateInfo.flags =
 				VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
 				| VMA_ALLOCATION_CREATE_MAPPED_BIT;
 			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
@@ -53,31 +39,50 @@ namespace graphics_backend
 		}
 		VkBuffer vkbuffer_c;
 		vmaCreateBuffer(
-			m_FrameBoundAllocator
+			allocator
 			, &bufferCreateInfo
 			, &allocationCreateInfo
 			, &vkbuffer_c
-			, &result.m_BufferAllocation
-			, &result.m_BufferAllocationInfo);
-		result.m_Buffer = vkbuffer_c;
-		result.m_OwningFrameBoundPoolId = m_PoolId;
+			, &outAllocation
+			, &outAllocationInfo);
+		outBuffer = vkbuffer_c;
+	}
 
+	CFrameBoundMemoryPool::CFrameBoundMemoryPool(uint32_t pool_id, CVulkanApplication& owner) :
+		BaseApplicationSubobject(owner)
+		, m_PoolId(pool_id)
+		, m_BufferObjectPool(owner)
+	{
+	}
+
+	CVulkanBufferObject* CFrameBoundMemoryPool::AllocateBuffer(
+		EMemoryType memoryType
+		, size_t bufferSize
+		, vk::BufferUsageFlags bufferUsage)
+	{
+		vk::Buffer buffer{};
+		VmaAllocation allocation{};
+		VmaAllocationInfo allocationInfo{};
+		AllocateBuffer_Common(m_BufferAllocator, memoryType, bufferSize, bufferUsage
+			, buffer, allocation, allocationInfo);
 		std::lock_guard<std::mutex> guard(m_Mutex);
-		m_ActiveBuffers.emplace_back(std::make_tuple(result.m_Buffer, result.m_BufferAllocation));
-
+		m_ActiveBuffers.emplace_back(std::make_tuple(buffer, allocation));
+		CVulkanBufferObject* result = m_BufferObjectPool.Alloc(buffer, allocation, allocationInfo);
 		return result;
 	}
 
-	void CFrameBoundMemoryPool::ReleaseBuffer(CVulkanBufferObject& returnBuffer)
+	void CFrameBoundMemoryPool::ReleaseBuffer(CVulkanBufferObject* returnBuffer)
 	{
+		m_BufferObjectPool.Release(returnBuffer);
 	}
 
 	void CFrameBoundMemoryPool::ReleaseAllBuffers()
 	{
+		m_BufferObjectPool.ReleaseAll();
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		for (auto pending_release_buffer : m_ActiveBuffers)
 		{
-			vmaDestroyBuffer(m_FrameBoundAllocator
+			vmaDestroyBuffer(m_BufferAllocator
 				, std::get<0>(pending_release_buffer)
 				, std::get<1>(pending_release_buffer));
 		}
@@ -91,7 +96,7 @@ namespace graphics_backend
 		vmaCreateInfo.physicalDevice = static_cast<VkPhysicalDevice>(GetPhysicalDevice());
 		vmaCreateInfo.device = GetDevice();
 		vmaCreateInfo.instance = GetInstance();
-		vmaCreateAllocator(&vmaCreateInfo, &m_FrameBoundAllocator);
+		vmaCreateAllocator(&vmaCreateInfo, &m_BufferAllocator);
 	}
 
 	void CFrameBoundMemoryPool::Release()
@@ -99,74 +104,47 @@ namespace graphics_backend
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		for (auto pending_release_buffer : m_ActiveBuffers)
 		{
-			vmaDestroyBuffer(m_FrameBoundAllocator
+			vmaDestroyBuffer(m_BufferAllocator
 				, std::get<0>(pending_release_buffer)
 				, std::get<1>(pending_release_buffer));
 		}
 		m_ActiveBuffers.clear();
-		vmaDestroyAllocator(m_FrameBoundAllocator);
+		vmaDestroyAllocator(m_BufferAllocator);
 	}
 
 	CGlobalMemoryPool::CGlobalMemoryPool(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
+		, m_BufferObjectPool(owner)
 	{
 	}
 
-	CVulkanBufferObject CGlobalMemoryPool::AllocatePersistantBuffer(EMemoryType memoryType, size_t bufferSize,
-	                                                                vk::BufferUsageFlags bufferUsage)
+	CVulkanBufferObject* CGlobalMemoryPool::AllocateBuffer(
+		EMemoryType memoryType
+		, size_t bufferSize
+		, vk::BufferUsageFlags bufferUsage)
 	{
-		CVulkanBufferObject result{};
-		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
-			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
-		);
-		VmaAllocationCreateInfo allocationCreateInfo{};
-		switch (memoryType)
-		{
-		case EMemoryType::GPU:
-		{
-			allocationCreateInfo.flags = 0;
-			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-		}
-		break;
-		case EMemoryType::CPU_Random_Access:
-		{
-			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
-			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		}
-		break;
-		case EMemoryType::CPU_Sequential_Access:
-		{
-			allocationCreateInfo.flags = VmaAllocationCreateFlagBits::VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-			allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-		}
-		break;
-		}
-		VkBuffer vkbuffer_c;
-		vmaCreateBuffer(
-			m_BufferAllocator
-			, &bufferCreateInfo
-			, &allocationCreateInfo
-			, &vkbuffer_c
-			, &result.m_BufferAllocation
-			, &result.m_BufferAllocationInfo);
-		result.m_Buffer = vkbuffer_c;
-		result.m_OwningFrameBoundPoolId = INVALID_INDEX;
 
+		vk::Buffer buffer{};
+		VmaAllocation allocation{};
+		VmaAllocationInfo allocationInfo{};
+		AllocateBuffer_Common(m_BufferAllocator, memoryType, bufferSize, bufferUsage
+			, buffer, allocation, allocationInfo);
 		std::lock_guard<std::mutex> guard(m_Mutex);
-		m_ActiveBuffers.insert(std::make_pair(result.m_Buffer, result.m_BufferAllocation));
-
+		m_ActiveBuffers.insert(std::make_pair(buffer, allocation));
+		CVulkanBufferObject* result = m_BufferObjectPool.Alloc(buffer, allocation, allocationInfo);
 		return result;
 	}
 
-	void CGlobalMemoryPool::ReleaseBuffer(CVulkanBufferObject& returnBuffer)
+	void CGlobalMemoryPool::ReleaseBuffer(CVulkanBufferObject* returnBuffer)
 	{
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		FrameType frameId = GetFrameCountContext().GetCurrentFrameID();
-		auto found = m_ActiveBuffers.find(returnBuffer.m_Buffer);
+		auto found = m_ActiveBuffers.find(returnBuffer->m_Buffer);
 		if(found != m_ActiveBuffers.end())
 		{
 			m_PendingReleasingBuffers.emplace_back(std::make_tuple(found->first, found->second, frameId));
 			m_ActiveBuffers.erase(found);
 		}
+		m_BufferObjectPool.Release(returnBuffer);
 	}
 
 	void CGlobalMemoryPool::ReleaseResourcesBeforeFrame(FrameType frame)
@@ -220,7 +198,7 @@ namespace graphics_backend
 	{
 	}
 
-	CVulkanBufferObject CVulkanMemoryManager::AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime,
+	std::shared_ptr<CVulkanBufferObject> CVulkanMemoryManager::AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime,
 	                                                         size_t bufferSize, vk::BufferUsageFlags bufferUsage)
 	{
 		switch(lifetime)
@@ -228,25 +206,21 @@ namespace graphics_backend
 		case EMemoryLifetime::FrameBound:
 			{
 				uint32_t poolIndex = GetFrameCountContext().GetCurrentFrameBufferIndex();
-				return m_FrameBoundPool[poolIndex].AllocateFrameBoundBuffer(memoryType, bufferSize, bufferUsage);
+				return m_FrameBoundPool[poolIndex].AllocateSharedBuffer(memoryType, bufferSize, bufferUsage);
 			}
 		case EMemoryLifetime::Persistent:
-			return m_GlobalMemoryPool.AllocatePersistantBuffer(memoryType, bufferSize, bufferUsage);
+			return m_GlobalMemoryPool.AllocateSharedBuffer(memoryType, bufferSize, bufferUsage);
 		}
-		return CVulkanBufferObject{};
+		return nullptr;
 	}
 
-	void CVulkanMemoryManager::ReleaseBuffer(CVulkanBufferObject& returnBuffer)
+	std::shared_ptr<CVulkanBufferObject> CVulkanMemoryManager::AllocateFrameBoundTransferStagingBuffer(size_t bufferSize)
 	{
-		if(returnBuffer.m_OwningFrameBoundPoolId == INVALID_INDEX)
-		{
-			m_GlobalMemoryPool.ReleaseBuffer(returnBuffer);
-		}
-		else
-		{
-			m_FrameBoundPool[returnBuffer.m_OwningFrameBoundPoolId].ReleaseBuffer(returnBuffer);
-		}
-		returnBuffer = CVulkanBufferObject{};
+		return AllocateBuffer(
+			EMemoryType::CPU_Sequential_Access
+			, EMemoryLifetime::FrameBound
+			, bufferSize
+			, vk::BufferUsageFlagBits::eTransferSrc);
 	}
 
 	void CVulkanMemoryManager::ReleaseCurrentFrameResource()
@@ -263,7 +237,7 @@ namespace graphics_backend
 	{
 		m_GlobalMemoryPool.Initialize();
 		m_FrameBoundPool.clear();
-		m_FrameBoundPool.reserve(FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT);
+		//m_FrameBoundPool.reserve(FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT);
 		for(uint32_t i = 0; i < FRAMEBOUND_RESOURCE_POOL_SWAP_COUNT_PER_CONTEXT; ++i)
 		{
 			m_FrameBoundPool.emplace_back(i, GetVulkanApplication());
@@ -279,5 +253,15 @@ namespace graphics_backend
 			itrPool.Release();
 		}
 		m_FrameBoundPool.clear();
+	}
+	std::shared_ptr<CVulkanBufferObject> IVulkanBufferPool::AllocateSharedBuffer(
+		EMemoryType memoryType
+		, size_t bufferSize
+		, vk::BufferUsageFlags bufferUsage)
+	{
+		return std::shared_ptr<CVulkanBufferObject>(AllocateBuffer(memoryType, bufferSize, bufferUsage), [this](CVulkanBufferObject* removingBuffer)
+			{
+				ReleaseBuffer(removingBuffer);
+			});
 	}
 }

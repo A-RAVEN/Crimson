@@ -4,7 +4,6 @@
 #include <private/include/FrameCountContext.h>
 #include <private/include/CVulkanMemoryManager.h>
 #include <ThreadManager/header/ThreadManager.h>
-#include <private/include/CPrimitiveResource_Vulkan.h>
 #include <private/include/Containers.h>
 #include <unordered_map>
 
@@ -52,10 +51,13 @@ namespace graphics_backend
 		}
 		GPUObjectManager& GetGPUObjectManager() { return m_GPUObjectManager; }
 		CVulkanMemoryManager& GetMemoryManager();
+
 		CVulkanThreadContext& AquireThreadContext();
+		void ReturnThreadContext(CVulkanThreadContext& returningContext);
+		std::shared_ptr<CVulkanThreadContext> AquireThreadContextPtr();
+
 		CThreadManager* GetThreadManager() const;
 		CTask* NewTask();
-		void ReturnThreadContext(CVulkanThreadContext& returningContext);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		std::shared_ptr<WindowHandle> CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void TickWindowContexts();
@@ -116,9 +118,8 @@ namespace graphics_backend
 	public:
 		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
 		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);
-
-		ShaderBindingSet* NewShaderBindingSet(ShaderBindingBuilder const& builder);
-		void ReleaseShaderBindingSet(ShaderBindingSet* releaseShaderBindingSet);
+		//ShaderBindingSet* NewShaderBindingSet(ShaderBindingBuilder const& builder);
+		//void ReleaseShaderBindingSet(ShaderBindingSet* releaseShaderBindingSet);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);

@@ -48,9 +48,6 @@
     <ClInclude Include="private\include\VulkanIncludes.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="private\include\CPrimitiveResource_Vulkan.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="private\include\CVulkanBufferObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -108,6 +105,9 @@
     <ClInclude Include="private\include\ShaderBindingSet_Impl.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\IUploadingResource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -138,9 +138,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\WindowContext.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\source\CVulkanBufferObject.cpp">
@@ -192,6 +189,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\include\ShaderBindingSet_Impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\IUploadingResource.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -147,7 +147,7 @@ public:
 	}
 
 	template <class HashAlgorithm>
-	friend void hash_append(HashAlgorithm& h, ShaderBindingBuilder const& bindingBuilder) noexcept
+	friend void hash_append(HashAlgorithm& h, ShaderConstantsBuilder const& bindingBuilder) noexcept
 	{
 		hash_append(h, bindingBuilder.m_NumericDescriptors);
 	}
@@ -168,6 +168,7 @@ public:
 	ShaderBindingBuilder& ConstantBuffer(std::string const& name, ShaderConstantsBuilder const& constantDescs)
 	{
 		m_ConstantBufferDescriptors.emplace_back(name, constantDescs);
+		return *this;
 	}
 
 	template<typename T, uint32_t channels = 4, uint32_t count = 1>

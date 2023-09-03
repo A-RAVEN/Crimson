@@ -6,12 +6,12 @@
 
 namespace graphics_backend
 {
-	GPUBuffer_Impl::GPUBuffer_Impl(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
+	GPUBuffer_Impl::GPUBuffer_Impl(CVulkanApplication& owner) : BaseUploadingResource(owner)
 	{
 	}
 	void GPUBuffer_Impl::Release()
 	{
-		GetMemoryManager().ReleaseBuffer(m_BufferObject);
+		m_BufferObject = nullptr;
 	}
 	void GPUBuffer_Impl::Initialize(EBufferUsageFlags usages, uint64_t count, uint64_t stride)
 	{
@@ -25,6 +25,14 @@ namespace graphics_backend
 			, count * stride
 			, EBufferUsageFlagsTranslate(usages) | vk::BufferUsageFlagBits::eTransferDst);
 	}
+	void GPUBuffer_Impl::UploadAsync()
+	{
+		BaseUploadingResource::UploadAsync();
+	}
+	bool GPUBuffer_Impl::UploadingDone() const
+	{
+		return BaseUploadingResource::UploadingDone();
+	}
 	void GPUBuffer_Impl::ScheduleBufferData(uint64_t bufferOffset, uint64_t dataSize, void* pData)
 	{
 		size_t scheduleSize = bufferOffset + dataSize;
@@ -36,38 +44,18 @@ namespace graphics_backend
 	}
 	void GPUBuffer_Impl::DoUpload()
 	{
-        auto task = GetVulkanApplication().NewTask()->Name("Upload BufferData Task");
-        task->Functor([this]()
-            {
-                auto& memoryManager = GetVulkanApplication().GetMemoryManager();
-                auto& threadContext = GetVulkanApplication().AquireThreadContext();
-                auto currentFrame = GetVulkanApplication().GetSubmitCounterContext().GetCurrentFrameID();
+        auto& memoryManager = GetMemoryManager();
+        auto threadContext = GetVulkanApplication().AquireThreadContextPtr();
+        auto currentFrame = GetFrameCountContext().GetCurrentFrameID();
 
-                std::atomic_thread_fence(std::memory_order_acquire);
+        std::atomic_thread_fence(std::memory_order_acquire);
 
-				uint64_t byteSize = std::min(m_Count * m_Stride, m_ScheduledData.size());
-                auto tempBuffer = memoryManager.AllocateBuffer(
-					EMemoryType::CPU_Sequential_Access
-					, EMemoryLifetime::FrameBound
-					, byteSize
-					, vk::BufferUsageFlagBits::eTransferSrc);
-                memcpy(tempBuffer.GetMappedPointer(), m_ScheduledData.data(), byteSize);
-                auto cmdBuffer = threadContext.GetCurrentFramePool().AllocateMiscCommandBuffer("Upload GPU Buffer");
-                cmdBuffer.copyBuffer(tempBuffer.GetBuffer(), m_BufferObject.GetBuffer(), vk::BufferCopy(0, 0, byteSize));
-                cmdBuffer.end();
-				memoryManager.ReleaseBuffer(tempBuffer);
-                std::atomic_thread_fence(std::memory_order_release);
-                m_SubmitFrame = currentFrame;
-				GetVulkanApplication().ReturnThreadContext(threadContext);
-            });
-	}
-	bool GPUBuffer_Impl::UploadingDone() const
-	{
-		if (m_SubmitFrame == INVALID_FRAMEID)
-			return false;
-		auto& frameContext = GetVulkanApplication().GetSubmitCounterContext();
-		if (!frameContext.AnyFrameFinished())
-			return false;
-		return frameContext.GetReleasedFrameID() >= m_SubmitFrame;
+		uint64_t byteSize = std::min(m_Count * m_Stride, m_ScheduledData.size());
+        auto tempBuffer = memoryManager.AllocateFrameBoundTransferStagingBuffer(byteSize);
+        memcpy(tempBuffer->GetMappedPointer(), m_ScheduledData.data(), byteSize);
+        auto cmdBuffer = threadContext->GetCurrentFramePool().AllocateMiscCommandBuffer("Upload GPU Buffer");
+        cmdBuffer.copyBuffer(tempBuffer->GetBuffer(), m_BufferObject->GetBuffer(), vk::BufferCopy(0, 0, byteSize));
+        cmdBuffer.end();
+		MarkUploadingDoneThisFrame();
 	}
 }

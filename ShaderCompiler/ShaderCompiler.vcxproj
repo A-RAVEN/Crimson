@@ -157,7 +157,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>shaderc_combined.lib;spirv-cross-cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shaderc_combined.lib;spirv-cross-cpp.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;spirv-cross-hlsl.lib;spirv-cross-reflect.lib;spirv-cross-util.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>shaderc_combined.lib</AdditionalDependencies>
@@ -180,7 +180,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(VK_SDK_PATH)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>shaderc_combined.lib;spirv-cross-cpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shaderc_combined.lib;spirv-cross-cpp.lib;spirv-cross-core.lib;spirv-cross-glsl.lib;spirv-cross-hlsl.lib;spirv-cross-reflect.lib;spirv-cross-util.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
       <AdditionalDependencies>shaderc_combined.lib</AdditionalDependencies>

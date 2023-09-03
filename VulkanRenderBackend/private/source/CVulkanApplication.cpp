@@ -380,6 +380,20 @@ namespace graphics_backend
 		return m_ThreadContexts[available];
 	}
 
+	void CVulkanApplication::ReturnThreadContext(CVulkanThreadContext& returningContext)
+	{
+		uint32_t id = returningContext.GetThreadID();
+		m_AvailableThreadQueue.Enqueue(id);
+	}
+
+	std::shared_ptr<CVulkanThreadContext> CVulkanApplication::AquireThreadContextPtr()
+	{
+		return std::shared_ptr<CVulkanThreadContext>(&AquireThreadContext(), [this](CVulkanThreadContext* releasingContext)
+			{
+				ReturnThreadContext(*releasingContext);
+			});
+	}
+
 	CThreadManager* CVulkanApplication::GetThreadManager() const
 	{
 		return p_ThreadManager;
@@ -392,11 +406,7 @@ namespace graphics_backend
 		return newTask;
 	}
 
-	void CVulkanApplication::ReturnThreadContext(CVulkanThreadContext& returningContext)
-	{
-		uint32_t id = returningContext.GetThreadID();
-		m_AvailableThreadQueue.Enqueue(id);
-	}
+
 
 	std::shared_ptr<WindowHandle> CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
 	{

@@ -1,6 +1,5 @@
 #include <private/include/pch.h>
 #include <private/include/CRenderBackend_Vulkan.h>
-#include <RenderInterface/header/CGPUPrimitiveResource.h>
 
 
 namespace graphics_backend
@@ -61,9 +60,5 @@ namespace graphics_backend
 			{
 				m_Application.ReleaseGPUBuffer(releaseBuffer);
 			});
-	}
-	std::shared_ptr<ShaderBindingSet> CRenderBackend_Vulkan::CreateShaderBindingSet(ShaderBindingBuilder const& bindingBuilder)
-	{
-		return std::shared_ptr<ShaderBindingSet>();
 	}
 }

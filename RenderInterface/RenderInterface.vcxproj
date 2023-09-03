@@ -160,7 +160,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="header\CCommandList.h" />
-    <ClInclude Include="header\CGPUPrimitiveResource.h" />
     <ClInclude Include="header\CNativeRenderPassInfo.h" />
     <ClInclude Include="header\CPipelineStateObject.h" />
     <ClInclude Include="header\CRenderBackend.h" />

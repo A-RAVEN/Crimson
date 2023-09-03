@@ -39,9 +39,6 @@
     <ClInclude Include="header\CTextureResource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\CGPUPrimitiveResource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="header\CPipelineStateObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>

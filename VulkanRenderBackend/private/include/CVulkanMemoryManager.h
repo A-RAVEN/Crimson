@@ -4,9 +4,9 @@
 #include <private/include/VulkanApplicationSubobjectBase.h>
 #include <VulkanMemoryAllocator/include/vk_mem_alloc.h>
 #include <deque>
-
-#include "CVulkanBufferObject.h"
 #include <map>
+#include "CVulkanBufferObject.h"
+#include "Containers.h"
 
 namespace graphics_backend
 {
@@ -26,50 +26,60 @@ namespace graphics_backend
 		FrameBound,
 	};
 
-	class CFrameBoundMemoryPool : public BaseApplicationSubobject
+	class IVulkanBufferPool
+	{
+	public:
+		virtual CVulkanBufferObject* AllocateBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage) = 0;
+		virtual void ReleaseBuffer(CVulkanBufferObject* returnBuffer) = 0;
+		std::shared_ptr<CVulkanBufferObject> AllocateSharedBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
+	};
+
+	class CFrameBoundMemoryPool : public BaseApplicationSubobject, public IVulkanBufferPool
 	{
 	public:
 		CFrameBoundMemoryPool(uint32_t pool_id, CVulkanApplication& owner);
-		CFrameBoundMemoryPool(CFrameBoundMemoryPool&& other) noexcept;
-		CVulkanBufferObject AllocateFrameBoundBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
-		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
+		//CFrameBoundMemoryPool(CFrameBoundMemoryPool&& other) noexcept;
+		virtual CVulkanBufferObject* AllocateBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage) override;
+		virtual void ReleaseBuffer(CVulkanBufferObject* returnBuffer) override;
 		void ReleaseAllBuffers();
-		void Initialize() override;
+		void Initialize();
 		void Release() override;
 	private:
 		std::mutex m_Mutex;
-		VmaAllocator m_FrameBoundAllocator = nullptr;
+		VmaAllocator m_BufferAllocator = nullptr;
 		std::deque<std::tuple<vk::Buffer, VmaAllocation>> m_ActiveBuffers;
 		uint32_t m_PoolId;
+		TVulkanApplicationPool<CVulkanBufferObject> m_BufferObjectPool;
 	};
 
-	class CGlobalMemoryPool : public BaseApplicationSubobject
+	class CGlobalMemoryPool : public BaseApplicationSubobject, public IVulkanBufferPool
 	{
 	public:
 		CGlobalMemoryPool(CVulkanApplication& owner);
-		CVulkanBufferObject AllocatePersistantBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
-		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
+		CVulkanBufferObject* AllocateBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
+		void ReleaseBuffer(CVulkanBufferObject* returnBuffer);
 		void ReleaseResourcesBeforeFrame(FrameType frame);
-		void Initialize() override;
+		void Initialize();
 		void Release() override;
 	private:
 		VmaAllocator m_BufferAllocator = nullptr;
 		std::mutex m_Mutex;
 		std::deque<std::tuple<vk::Buffer, VmaAllocation, FrameType>> m_PendingReleasingBuffers;
 		std::map<vk::Buffer, VmaAllocation> m_ActiveBuffers;
+		TVulkanApplicationPool<CVulkanBufferObject> m_BufferObjectPool;
 	};
 
 	class CVulkanMemoryManager : public BaseApplicationSubobject
 	{
 	public:
 		CVulkanMemoryManager(CVulkanApplication& owner);
-		CVulkanBufferObject AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
-		void ReleaseBuffer(CVulkanBufferObject& returnBuffer);
+		std::shared_ptr<CVulkanBufferObject> AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
+		std::shared_ptr<CVulkanBufferObject> AllocateFrameBoundTransferStagingBuffer(size_t bufferSize);
 		void ReleaseCurrentFrameResource();
-		void Initialize() override;
+		void Initialize();
 		void Release() override;
 	private:
 		CGlobalMemoryPool m_GlobalMemoryPool;
-		std::vector<CFrameBoundMemoryPool> m_FrameBoundPool;
+		std::deque<CFrameBoundMemoryPool> m_FrameBoundPool;
 	};
 }

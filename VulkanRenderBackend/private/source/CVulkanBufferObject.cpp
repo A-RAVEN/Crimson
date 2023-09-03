@@ -6,21 +6,25 @@
 
 namespace graphics_backend
 {
+	CVulkanBufferObject::CVulkanBufferObject(CVulkanApplication& owner) : 
+		BaseApplicationSubobject(owner)
+	{
+	}
+	void CVulkanBufferObject::Initialize(vk::Buffer const& buffer, VmaAllocation const& allocation, VmaAllocationInfo const& allocationInfo)
+	{
+		m_Buffer = buffer;
+		m_BufferAllocation = allocation;
+		m_BufferAllocationInfo = allocationInfo;
+	}
 	void* CVulkanBufferObject::GetMappedPointer() const
 	{
 		return m_BufferAllocationInfo.pMappedData;
 	}
-	//void CVulkanBufferObject::Release()
-	//{
-	//	if(m_Buffer != vk::Buffer(nullptr) && m_BufferAllocation != nullptr)
-	//	{
-	//		CVulkanMemoryManager& memoryManager = GetVulkanApplication().GetMemoryManager();
-	//		memoryManager.ReleaseBuffer(*this);
-	//	}
-	//	m_Buffer = nullptr;
-	//	m_BufferAllocation = nullptr;
-	//	m_BufferAllocationInfo = {};
-	//	m_OwningThreadContextId = std::numeric_limits<uint32_t>::max();
-	//	m_OwningFrameBoundPoolId = INVALID_INDEX;
-	//}
+	void CVulkanBufferObject::Release()
+	{
+		m_Buffer = nullptr;
+		m_BufferAllocation = nullptr;
+		m_BufferAllocationInfo = {};
+		m_OwningFrameBoundPoolId = INVALID_INDEX;
+	}
 }
