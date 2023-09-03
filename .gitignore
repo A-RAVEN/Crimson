@@ -50,3 +50,4 @@ Profiler/
 ExternalLib/llvm_clang/bin/
 ExternalLib/llvm_clang/libexec/
 ExternalLib/llvm_clang/share/
+x64/
