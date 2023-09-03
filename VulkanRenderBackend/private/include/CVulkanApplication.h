@@ -14,6 +14,8 @@
 #include "FramebufferObject.h"
 #include "GPUBuffer_Impl.h"
 #include <RenderInterface/header/CRenderGraph.h>
+#include <RenderInterface/header/ShaderBindingBuilder.h>
+#include <RenderInterface/header/ShaderBindingSet.h>
 #include "GPUObjectManager.h"
 #include "RenderGraphExecutor.h"
 
@@ -114,6 +116,9 @@ namespace graphics_backend
 	public:
 		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
 		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);
+
+		ShaderBindingSet* NewShaderBindingSet(ShaderBindingBuilder const& builder);
+		void ReleaseShaderBindingSet(ShaderBindingSet* releaseShaderBindingSet);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);

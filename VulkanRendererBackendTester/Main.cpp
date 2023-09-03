@@ -91,8 +91,6 @@ int main(int argc, char *argv[])
 	pBackend->InitializeThreadContextCount(pThreadManager.get(), 1);
 	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
 
-
-
 	std::vector<VertexData> vertexDataList = {
 		VertexData{-0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
 		VertexData{0.4f, 0.2f, 1.0f, 0.0f, 0.0f},

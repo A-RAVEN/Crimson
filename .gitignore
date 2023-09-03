@@ -47,3 +47,6 @@ RequiemEngine/Temp/x64/Debug/vc142.idb
 Profiler/
 *.iobj
 *.ipdb
+ExternalLib/llvm_clang/bin/
+ExternalLib/llvm_clang/libexec/
+ExternalLib/llvm_clang/share/

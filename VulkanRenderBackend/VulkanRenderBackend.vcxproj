@@ -177,6 +177,7 @@
     <ClInclude Include="private\include\RenderGraphExecutor.h" />
     <ClInclude Include="private\include\RenderPassObject.h" />
     <ClInclude Include="private\include\ResourceUsageInfo.h" />
+    <ClInclude Include="private\include\ShaderBindingSet_Impl.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="private\include\GPUTexture_Impl.cpp" />
     <ClCompile Include="private\include\GPUBuffer_Impl.cpp" />
     <ClCompile Include="private\include\RenderGraphExecutor.cpp" />
+    <ClCompile Include="private\include\ShaderBindingSet_Impl.cpp" />
     <ClCompile Include="private\source\CommandList_Impl.cpp" />
     <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />
     <ClCompile Include="private\source\CPrimitiveResource_Vulkan.cpp" />

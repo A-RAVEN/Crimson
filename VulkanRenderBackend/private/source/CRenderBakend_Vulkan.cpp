@@ -62,4 +62,8 @@ namespace graphics_backend
 				m_Application.ReleaseGPUBuffer(releaseBuffer);
 			});
 	}
+	std::shared_ptr<ShaderBindingSet> CRenderBackend_Vulkan::CreateShaderBindingSet(ShaderBindingBuilder const& bindingBuilder)
+	{
+		return std::shared_ptr<ShaderBindingSet>();
+	}
 }

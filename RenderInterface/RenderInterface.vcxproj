@@ -168,6 +168,7 @@
     <ClInclude Include="header\GPUTexture.h" />
     <ClInclude Include="header\RenderInterfaceManager.h" />
     <ClInclude Include="header\ShaderBindingBuilder.h" />
+    <ClInclude Include="header\ShaderBindingSet.h" />
     <ClInclude Include="header\ShaderProvider.h" />
     <ClInclude Include="header\CShaderStateObject.h" />
     <ClInclude Include="header\CTextureResource.h" />

@@ -55,12 +55,12 @@ public:
 	}
 	bool operator==(ShaderBindingDescriptor const& other) const
 	{
-		return memory_equal(*this, other);
+		return hash_utils::memory_equal(*this, other);
 	}
 };
 
 template<>
-struct is_contiguously_hashable<ShaderBindingDescriptor> : public std::true_type {};
+struct hash_utils::is_contiguously_hashable<ShaderBindingDescriptor> : public std::true_type {};
 
 struct ShaderTextureDescriptor
 {
@@ -82,45 +82,42 @@ public:
 
 	bool operator==(ShaderTextureDescriptor const& other) const
 	{
-		return memory_equal(*this, other);
+		return hash_utils::memory_equal(*this, other);
 	}
 };
 
 template<>
-struct is_contiguously_hashable<ShaderTextureDescriptor> : public std::true_type {};
+struct hash_utils::is_contiguously_hashable<ShaderTextureDescriptor> : public std::true_type {};
 
 class ShaderBindingBuilder
 {
 public:
 	ShaderBindingBuilder(std::string const& space_name) : m_SpaceName(space_name) {}
 
-	template<typename T, uint32_t count = 1>
+	template<typename T>
 	ShaderBindingBuilder& Scalar(std::string const& name)
 	{
 		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
-		static_assert(count > 0, "shader binding count must be greater than 0");
 		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
-			is_shaderbinding_arighmetic_type<T>::numericType, count }));
+			is_shaderbinding_arighmetic_type<T>::numericType, 1 }));
 		return *this;
 	}
 
-	template<typename T, uint32_t count = 1>
+	template<typename T>
 	ShaderBindingBuilder& Vec2(std::string const& name)
 	{
 		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
-		static_assert(count > 0, "shader binding count must be greater than 0");
 		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{
-			is_shaderbinding_arighmetic_type<T>::numericType, count, 2 }));
+			is_shaderbinding_arighmetic_type<T>::numericType, 1, 2 }));
 		return *this;
 	}
 
-	template<typename T, uint32_t count = 1>
+	template<typename T>
 	ShaderBindingBuilder& Vec3(std::string const& name)
 	{
 		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
-		static_assert(count > 0, "shader binding count must be greater than 0");
 		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{
-			is_shaderbinding_arighmetic_type<T>::numericType, count, 3 }));
+			is_shaderbinding_arighmetic_type<T>::numericType, 1, 3 }));
 		return *this;
 	}
 
@@ -131,26 +128,6 @@ public:
 		static_assert(count > 0, "shader binding count must be greater than 0");
 		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
 			is_shaderbinding_arighmetic_type<T>::numericType, count, 4 }));
-		return *this;
-	}
-
-	template<typename T, uint32_t count = 1>
-	ShaderBindingBuilder& Mat2(std::string const& name)
-	{
-		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
-		static_assert(count > 0, "shader binding count must be greater than 0");
-		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
-			is_shaderbinding_arighmetic_type<T>::numericType, count, 2, 2 }));
-		return *this;
-	}
-
-	template<typename T, uint32_t count = 1>
-	ShaderBindingBuilder& Mat3(std::string const& name)
-	{
-		static_assert(is_shaderbinding_arighmetic_type<T>::value, "shader binding arighmetic type only support 32 bit arithmetic type");
-		static_assert(count > 0, "shader binding count must be greater than 0");
-		m_NumericDescriptors.push_back(std::make_pair(name, ShaderBindingDescriptor{ 
-			is_shaderbinding_arighmetic_type<T>::numericType, count, 3, 3 }));
 		return *this;
 	}
 
@@ -222,6 +199,10 @@ public:
 	{
 		hash_append(h, bindingBuilder.m_NumericDescriptors);
 		hash_append(h, bindingBuilder.m_TextureDescriptors);
+	}
+
+	std::vector<std::pair<std::string, ShaderBindingDescriptor>> const& GetNumericDescriptors() const{
+		return m_NumericDescriptors;
 	}
 protected:
 	std::string m_SpaceName;

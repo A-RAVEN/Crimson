@@ -87,6 +87,9 @@
     <ClInclude Include="header\ShaderBindingBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\ShaderBindingSet.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\dllmain.cpp">

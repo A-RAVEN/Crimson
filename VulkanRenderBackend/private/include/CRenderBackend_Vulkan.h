@@ -1,6 +1,7 @@
 #pragma once
 #include <private/include/CVulkanApplication.h>
 #include <RenderInterface/header/CRenderBackend.h>
+#include <RenderInterface/header/ShaderBindingBuilder.h>
 
 namespace graphics_backend
 {
@@ -20,6 +21,7 @@ namespace graphics_backend
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) override;
+		virtual std::shared_ptr<ShaderBindingSet> CreateShaderBindingSet(ShaderBindingBuilder const& bindingBuilder) override;
 	private:
 		CVulkanApplication m_Application;
 	};
