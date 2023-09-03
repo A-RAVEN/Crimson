@@ -35,16 +35,18 @@ int main(int argc, char *argv[])
 	TModuleLoader<IShaderCompiler> shaderCompilerLoader(L"ShaderCompiler");
 	TModuleLoader<RenderInterfaceManager> renderInterfaceLoader(L"RenderInterface");
 
-	ShaderBindingBuilder shaderBindingBuilder{ "TestBinding" };
-	shaderBindingBuilder.Scalar<float>("test0")
+	ShaderConstantsBuilder shaderConstantBuilder{};
+	shaderConstantBuilder.Scalar<float>("test0")
 		.Scalar<int>("test1")
-		.Scalar<uint32_t, 2>("test2")
+		.Scalar<uint32_t>("test2")
 		.Vec2<float>("test4")
-		.Vec3<int, 3>("test5")
-		.Vec4<uint32_t, 2>("test6")
-		.Mat2<float>("test7")
-		.Mat3<int, 3>("test8")
+		.Vec3<int>("test5")
+		.Vec4<uint32_t, 4>("test6")
 		.Mat4<uint32_t, 2>("test9");
+
+	ShaderBindingBuilder shaderBindingBuilder{ "TestBinding" };
+	shaderBindingBuilder.ConstantBuffer("TestConstants", shaderConstantBuilder);
+
 
 	auto pThreadManager = threadManagerLoader.New();
 	pThreadManager->InitializeThreadCount(5);
