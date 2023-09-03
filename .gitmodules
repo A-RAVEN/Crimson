@@ -1,9 +1,6 @@
 [submodule "ExternalLib/VulkanMemoryAllocator"]
 	path = ExternalLib/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "ExternalLib/mathfu"]
-	path = ExternalLib/mathfu
-	url = https://github.com/google/mathfu.git
 [submodule "ExternalLib/glfw"]
 	path = ExternalLib/glfw
 	url = https://github.com/glfw/glfw.git
