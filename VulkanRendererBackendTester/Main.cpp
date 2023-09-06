@@ -12,6 +12,7 @@
 #include <SharedTools/header/FileLoader.h>
 #include "TestShaderProvider.h"
 #include <RenderInterface/header/ShaderBindingBuilder.h>
+#include <ExternalLib/glm/glm/mat4x4.hpp>
 using namespace thread_management;
 using namespace library_loader;
 using namespace graphics_backend;
@@ -34,18 +35,12 @@ int main(int argc, char *argv[])
 	TModuleLoader<IShaderCompiler> shaderCompilerLoader(L"ShaderCompiler");
 	TModuleLoader<RenderInterfaceManager> renderInterfaceLoader(L"RenderInterface");
 
-	ShaderConstantsBuilder shaderConstantBuilder{};
-	shaderConstantBuilder.Scalar<float>("test0")
-		.Scalar<int>("test1")
-		.Scalar<uint32_t>("test2")
-		.Vec2<float>("test4")
-		.Vec3<int>("test5")
-		.Vec4<uint32_t, 4>("test6")
-		.Mat4<uint32_t, 2>("test9");
+	ShaderConstantsBuilder shaderConstantBuilder{ "Default Camera Constants" };
+	shaderConstantBuilder
+		.Mat4<float>("viewProjectionMatrix");
 
 	ShaderBindingBuilder shaderBindingBuilder{ "TestBinding" };
-	shaderBindingBuilder.ConstantBuffer("TestConstants", shaderConstantBuilder);
-
+	shaderBindingBuilder.ConstantBuffer(shaderConstantBuilder);
 
 	auto pThreadManager = threadManagerLoader.New();
 	pThreadManager->InitializeThreadCount(5);
@@ -88,9 +83,14 @@ int main(int argc, char *argv[])
 
 
 	auto pBackend = renderBackendLoader.New();
-	pBackend->Initialize("Test Vulkan Backend", "CRIMSON Engine");
+	pBackend->Initialize("Test Vulkan Backend", "CASCADED Engine");
 	pBackend->InitializeThreadContextCount(pThreadManager.get(), 1);
 	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
+
+	auto shaderConstants = pBackend->CreateShaderConstantSet(shaderConstantBuilder);
+
+	glm::mat4 data{1};
+	shaderConstants->SetValue("viewProjectionMatrix", data);
 
 	std::vector<VertexData> vertexDataList = {
 		VertexData{-0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
@@ -176,6 +176,7 @@ int main(int argc, char *argv[])
 			vertexBuffer->UploadAsync();
 			vertexBuffer1->UploadAsync();
 			indexBuffer->UploadAsync();
+			shaderConstants->UploadAsync();
 		}
 
 		pBackend->ExecuteRenderGraph(pRenderGraph);

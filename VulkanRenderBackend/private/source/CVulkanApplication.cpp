@@ -151,6 +151,12 @@ namespace graphics_backend
 		m_GPUBufferPool.Release(static_cast<GPUBuffer_Impl*>(releaseGPUBuffer));
 	}
 
+	std::shared_ptr<ShaderConstantSet> CVulkanApplication::NewShaderConstantSet(ShaderConstantsBuilder const& builder)
+	{
+		auto subAllocator = m_ConstantSetAllocator.GetOrCreate(builder).lock();
+		return subAllocator->AllocateSet();
+	}
+
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
 		vk::ApplicationInfo application_info(
@@ -570,6 +576,7 @@ namespace graphics_backend
 	, m_GPUObjectManager(*this)
 	, m_MemoryManager(*this)
 	, m_RenderGraphDic(*this)
+	, m_ConstantSetAllocator(*this)
 	{
 	}
 

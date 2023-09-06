@@ -10,13 +10,13 @@ namespace graphics_backend {
 		switch (vector_size)
 		{
 		case 1:
-			return { 1, 1 };
+			return std::pair<size_t, size_t>{ 1, 1 };
 		case 2:
-			return { 2, 2 };
+			return std::pair<size_t, size_t>{ 2, 2 };
 		case 3:
-			return { 4, 3 };
+			return std::pair<size_t, size_t>{ 4, 3 };
 		case 4:
-			return { 4, 4 };
+			return std::pair<size_t, size_t>{ 4, 4 };
 		default:
 			CA_LOG_ERR(std::string("UnSupported Vector Size: %d", vector_size));
 		}
@@ -88,7 +88,7 @@ namespace graphics_backend {
 		cmdBuffer.copyBuffer(tempBuffer->GetBuffer(), m_BufferObject->GetBuffer(), vk::BufferCopy(0, 0, bufferSize));
 		cmdBuffer.end();
 		std::atomic_thread_fence(std::memory_order_release);
-		m_SubmitFrame = currentFrame;
+		MarkUploadingDoneThisFrame();
 	}
 
 	size_t AccumulateOnOffset(size_t& inoutOffset, std::pair<size_t, size_t> const& inAlign_Size)
@@ -108,21 +108,33 @@ namespace graphics_backend {
 		{
 			auto& desc = descPairs.second;
 			auto& descName = descPairs.first;
-			uint32_t vectorSize = desc.x * desc.y;
 			uint32_t count = desc.count;
 			CA_ASSERT(count > 0
 				, "descriptor must have at least one element");
 			CA_ASSERT(m_ArithmeticValuePositions.find(descName) == m_ArithmeticValuePositions.end()
 				, "descriptor must have at least one element");
 			std::pair<size_t, size_t>align_size;
-			if (count == 1)
+			if (desc.y == 1)
 			{
-				align_size = GetVectorAlignment(vectorSize);
+				uint32_t vectorSize = desc.x * desc.y;
+				if (count == 1)
+				{
+					align_size = GetVectorAlignment(vectorSize);
+				}
+				else
+				{
+					align_size = std::make_pair(4, 4 * count);
+				}
 			}
 			else
 			{
-				align_size = std::make_pair(4, 4 * count);
+				//Matrix always align at 4
+				uint32_t vectorSize = desc.x;
+				align_size = std::make_pair(4, 4 * count * desc.y);
 			}
+
+			CA_ASSERT(align_size.first > 0 && align_size.second > 0
+				, "invalid align size");
 			size_t descOffset = AccumulateOnOffset(m_TotalSize, align_size);
 			m_ArithmeticValuePositions.emplace(descName, std::make_pair(descOffset, align_size.second));
 		}
@@ -138,24 +150,24 @@ namespace graphics_backend {
 		return m_TotalSize;
 	}
 
-	ShaderBindingSetAllocator::ShaderBindingSetAllocator(CVulkanApplication& owner) : 
+	ShaderConstantSetAllocator::ShaderConstantSetAllocator(CVulkanApplication& owner) :
 		BaseApplicationSubobject(owner)
 		, m_ShaderConstantSetPool(owner)
 	{
 	}
 
-	void ShaderBindingSetAllocator::Create(ShaderConstantsBuilder const& builder)
+	void ShaderConstantSetAllocator::Create(ShaderConstantsBuilder const& builder)
 	{
 		m_ShaderConstantSetPool.ReleaseAll();
 		m_Metadata.Initialize(builder);
 	}
 
-	std::shared_ptr<ShaderConstantSet> ShaderBindingSetAllocator::AllocateSet()
+	std::shared_ptr<ShaderConstantSet> ShaderConstantSetAllocator::AllocateSet()
 	{
 		return m_ShaderConstantSetPool.AllocShared(&m_Metadata);
 	}
 
-	void ShaderBindingSetAllocator::Release()
+	void ShaderConstantSetAllocator::Release()
 	{
 		m_ShaderConstantSetPool.ReleaseAll();
 	}

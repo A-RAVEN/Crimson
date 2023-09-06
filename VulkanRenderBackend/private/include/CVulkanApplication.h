@@ -17,6 +17,7 @@
 #include <RenderInterface/header/ShaderBindingSet.h>
 #include "GPUObjectManager.h"
 #include "RenderGraphExecutor.h"
+#include "ShaderBindingSet_Impl.h"
 
 namespace graphics_backend
 {
@@ -116,10 +117,11 @@ namespace graphics_backend
 			, vk::CommandBuffer cmd);
 		void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass);
 	public:
+		//Allocation
 		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
 		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);
-		//ShaderBindingSet* NewShaderBindingSet(ShaderBindingBuilder const& builder);
-		//void ReleaseShaderBindingSet(ShaderBindingSet* releaseShaderBindingSet);
+
+		std::shared_ptr<ShaderConstantSet> NewShaderConstantSet(ShaderConstantsBuilder const& builder);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);
@@ -152,6 +154,7 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
+		HashPool<ShaderConstantsBuilder, ShaderConstantSetAllocator> m_ConstantSetAllocator;
 
 		GPUObjectManager m_GPUObjectManager;
 		RenderGraphExecutorDic m_RenderGraphDic;

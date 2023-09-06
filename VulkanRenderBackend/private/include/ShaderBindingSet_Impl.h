@@ -24,7 +24,6 @@ namespace graphics_backend
 		ShaderConstantSetMetadata const* p_Metadata;
 		std::vector<uint8_t> m_UploadData;
 		std::shared_ptr<CVulkanBufferObject> m_BufferObject;
-		FrameType m_SubmitFrame = INVALID_FRAMEID;
 	};
 
 	class ShaderConstantSetMetadata
@@ -39,10 +38,10 @@ namespace graphics_backend
 		std::unordered_map<std::string, std::pair<size_t, size_t>> m_ArithmeticValuePositions;
 	};
 
-	class ShaderBindingSetAllocator : public BaseApplicationSubobject
+	class ShaderConstantSetAllocator : public BaseApplicationSubobject
 	{
 	public:
-		ShaderBindingSetAllocator(CVulkanApplication& owner);
+		ShaderConstantSetAllocator(CVulkanApplication& owner);
 		void Create(ShaderConstantsBuilder const& builder);
 		std::shared_ptr<ShaderConstantSet> AllocateSet();
 		virtual void Release() override;

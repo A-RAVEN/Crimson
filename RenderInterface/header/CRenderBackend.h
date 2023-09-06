@@ -10,6 +10,7 @@
 #include "CNativeRenderPassInfo.h"
 #include "WindowHandle.h"
 #include "CRenderGraph.h"
+#include "ShaderBindingBuilder.h"
 #include "ShaderBindingSet.h"
 
 namespace thread_management
@@ -35,6 +36,7 @@ namespace graphics_backend
 		virtual std::shared_ptr<GPUBuffer> CreateGPUBuffer(EBufferUsageFlags usageFlags
 			, uint64_t count
 			, uint64_t stride) = 0;
+		virtual std::shared_ptr<ShaderConstantSet> CreateShaderConstantSet(ShaderConstantsBuilder const& inBuilder) = 0;
 	};
 }
 

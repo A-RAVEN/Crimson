@@ -92,7 +92,7 @@ struct hash_utils::is_contiguously_hashable<ShaderTextureDescriptor> : public st
 class ShaderConstantsBuilder
 {
 public:
-	ShaderConstantsBuilder(){}
+	ShaderConstantsBuilder(std::string const& name) : m_Name(name){}
 
 	template<typename T>
 	ShaderConstantsBuilder& Scalar(std::string const& name)
@@ -143,12 +143,14 @@ public:
 
 	bool operator==(ShaderConstantsBuilder const& rhs) const
 	{
-		return m_NumericDescriptors == rhs.m_NumericDescriptors;
+		return m_NumericDescriptors == rhs.m_NumericDescriptors
+			&& m_Name == rhs.m_Name;
 	}
 
 	template <class HashAlgorithm>
 	friend void hash_append(HashAlgorithm& h, ShaderConstantsBuilder const& bindingBuilder) noexcept
 	{
+		hash_append(h, bindingBuilder.m_Name);
 		hash_append(h, bindingBuilder.m_NumericDescriptors);
 	}
 
@@ -156,6 +158,7 @@ public:
 		return m_NumericDescriptors;
 	}
 protected:
+	std::string m_Name;
 	std::vector<std::pair<std::string, ShaderBindingDescriptor>> m_NumericDescriptors;
 };
 
@@ -165,9 +168,9 @@ class ShaderBindingBuilder
 public:
 	ShaderBindingBuilder(std::string const& space_name) : m_SpaceName(space_name) {}
 
-	ShaderBindingBuilder& ConstantBuffer(std::string const& name, ShaderConstantsBuilder const& constantDescs)
+	ShaderBindingBuilder& ConstantBuffer(ShaderConstantsBuilder const& constantDescs)
 	{
-		m_ConstantBufferDescriptors.emplace_back(name, constantDescs);
+		m_ConstantBufferDescriptors.emplace_back(constantDescs);
 		return *this;
 	}
 
@@ -238,6 +241,6 @@ public:
 
 protected:
 	std::string m_SpaceName;
-	std::vector<std::pair<std::string, ShaderConstantsBuilder>> m_ConstantBufferDescriptors;
+	std::vector<ShaderConstantsBuilder> m_ConstantBufferDescriptors;
 	std::vector<std::pair<std::string, ShaderTextureDescriptor>> m_TextureDescriptors;
 };
