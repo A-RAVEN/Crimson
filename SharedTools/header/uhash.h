@@ -11,7 +11,7 @@
 //	hash_append(h, x.two);
 //}
 
-//如果结构体本身是连续的内存（有指针和堆内存容器）可以声明一个is contiguous
+//如果结构体本身是连续的内存（没有指针和堆内存容器）可以声明一个is contiguous
 //template<>
 //struct is_contiguously_hashable<TestStruct> : public std::true_type {};
 

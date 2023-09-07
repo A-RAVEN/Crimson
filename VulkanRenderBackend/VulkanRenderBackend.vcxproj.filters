@@ -108,6 +108,9 @@
     <ClInclude Include="private\include\IUploadingResource.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\ShaderDescriptorSetAllocator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -192,6 +195,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\include\IUploadingResource.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\ShaderDescriptorSetAllocator.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

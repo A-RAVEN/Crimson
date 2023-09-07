@@ -49,4 +49,39 @@ namespace graphics_backend
 		ShaderConstantSetMetadata m_Metadata;
 		TVulkanApplicationPool<ShaderConstantSet_Impl> m_ShaderConstantSetPool;
 	};
+
+	class ShaderBindingSetMetadata
+	{
+	public:
+		void Initialize(ShaderConstantsBuilder const& builder);
+	private:
+		std::unordered_map<std::string, uint32_t> m_NameToBindingIndex;
+	};
+
+	class ShaderBindingSet_Impl : public BaseUploadingResource, public ShaderBindingSet
+	{
+	public:
+		ShaderBindingSet_Impl(CVulkanApplication& owner);
+		void Initialize(ShaderBindingSetMetadata const* inMetaData);
+		virtual void SetConstantSet(std::string const& name, std::shared_ptr<ShaderConstantSet> const& pConstantSet) override;
+		virtual void UploadAsync() override;
+		virtual bool UploadingDone() const override;
+	protected:
+		virtual void DoUpload() override;
+	private:
+		ShaderBindingSetMetadata const* p_Metadata;
+		vk::DescriptorSet m_DescriptorSet;
+	};
+
+	class ShaderDescriptorSetAllocator : public BaseApplicationSubobject
+	{
+	public:
+		ShaderDescriptorSetAllocator(CVulkanApplication& owner);
+		void Create(ShaderBindingBuilder const& builder);
+		std::shared_ptr<ShaderBindingSet> AllocateSet();
+		virtual void Release() override;
+	private:
+		ShaderConstantSetMetadata m_Metadata;
+		TVulkanApplicationPool<ShaderConstantSet_Impl> m_ShaderConstantSetPool;
+	};
 }

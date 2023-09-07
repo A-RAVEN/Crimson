@@ -178,6 +178,7 @@
     <ClInclude Include="private\include\RenderPassObject.h" />
     <ClInclude Include="private\include\ResourceUsageInfo.h" />
     <ClInclude Include="private\include\ShaderBindingSet_Impl.h" />
+    <ClInclude Include="private\include\ShaderDescriptorSetAllocator.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
@@ -195,6 +196,7 @@
     <ClCompile Include="private\include\IUploadingResource.cpp" />
     <ClCompile Include="private\include\RenderGraphExecutor.cpp" />
     <ClCompile Include="private\include\ShaderBindingSet_Impl.cpp" />
+    <ClCompile Include="private\include\ShaderDescriptorSetAllocator.cpp" />
     <ClCompile Include="private\source\CommandList_Impl.cpp" />
     <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />
     <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
