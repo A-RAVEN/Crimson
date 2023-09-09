@@ -2,9 +2,13 @@
 #include <SharedTools/header/uhash.h>
 #include "VulkanIncludes.h"
 #include "VulkanApplicationSubobjectBase.h"
+#include <list>
 
 namespace graphics_backend
 {
+	class DescriptorSetPool;
+	class ShaderDescriptorSetAllocator;
+
 	class ShaderDescriptorSetLayoutInfo
 	{
 	public:
@@ -15,19 +19,55 @@ namespace graphics_backend
 		}
 	};
 
+	class ShaderDescriptorSetObject
+	{
+	public:
+		ShaderDescriptorSetObject(vk::DescriptorSet descriptorSet
+			, ChunkedDescriptorPoolWrapper* pPoolWrapper
+			, vk::DescriptorPool pool);
+	private:
+		friend class ChunkedDescriptorPoolWrapper;
+
+		vk::DescriptorSet m_DescriptorSet = nullptr;
+		ChunkedDescriptorPoolWrapper& const m_OwningPoolWrapper;
+		DescriptorSetPool& m_OwningPool;
+	};
+
+	class DescriptorSetPool : public BaseApplicationSubobject
+	{
+	public:
+		DescriptorSetPool(CVulkanApplication& application, uint32_t maxSize);
+		void Initialize();
+		ShaderDescriptorSetObject AllocateSet(ShaderDescriptorSetAllocator const& owningAllocator);
+		void ReleaseSet(ShaderDescriptorSetObject& releasedSet);
+		bool operator<(DescriptorSetPool const& other) const
+		{
+			return m_Pool < other.m_Pool;
+		}
+		bool operator==(DescriptorSetPool const& other) const
+		{
+			return m_Pool == other.m_Pool;
+		}
+	private:
+		vk::DescriptorPool m_Pool = nullptr;
+		uint32_t m_UsingSize = 0;
+		uint32_t m_MaxSize = 0;
+		std::deque<vk::DescriptorSet> m_AvailableSets;
+	};
+
 	class ChunkedDescriptorPoolWrapper : public BaseApplicationSubobject
 	{
 	public:
 		ChunkedDescriptorPoolWrapper(ShaderDescriptorSetAllocator& owningAllocator
 			, CVulkanApplication& application);
 		void Initialize(ShaderDescriptorSetLayoutInfo, uint32_t chunkSize = 4);
-		vk::DescriptorSet AllocateSet();
+		ShaderDescriptorSetObject AllocateSet();
 		void ReleaseSet();
 	private:
-		vk::DescriptorPool GetAvailablePool();
+		DescriptorSetPool& GetAvailablePool();
 		uint32_t m_ChunkSize = 1;
 		ShaderDescriptorSetAllocator const& m_OwningAllocator;
-		std::vector<vk::DescriptorPool> m_DescriptorSetPoolList;
+		std::set<DescriptorSetPool> m_DescriptorSetPoolList;
 	};
 
 	class ShaderDescriptorSetAllocator : public BaseApplicationSubobject

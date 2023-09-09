@@ -8,6 +8,7 @@
 namespace graphics_backend
 {
 	class ShaderConstantSetMetadata;
+	class ShaderDescriptorSetAllocator;
 
 	class ShaderConstantSet_Impl : public BaseUploadingResource, public ShaderConstantSet
 	{

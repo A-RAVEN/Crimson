@@ -1,4 +1,4 @@
-#include "private/include/pch.h"
+#include "pch.h"
 #include "ShaderDescriptorSetAllocator.h"
 
 namespace graphics_backend
@@ -46,7 +46,7 @@ namespace graphics_backend
 	{
 		//GetDevice().releaseDes
 	}
-	vk::DescriptorPool ChunkedDescriptorPoolWrapper::GetAvailablePool()
+	DescriptorSetPool& ChunkedDescriptorPoolWrapper::GetAvailablePool()
 	{
 		auto& layoutInfo = m_OwningAllocator.GetLayoutInfo();
 		std::vector<vk::DescriptorPoolSize> poolSizes = {
@@ -55,5 +55,16 @@ namespace graphics_backend
 		vk::DescriptorPoolCreateInfo poolInfo{{}, m_ChunkSize, poolSizes};
 		GetDevice().createDescriptorPool(poolInfo);
 		return vk::DescriptorPool();
+	}
+
+	DescriptorSetPool::DescriptorSetPool(CVulkanApplication& application, uint32_t maxSize) : BaseApplicationSubobject(application)
+	{
+	}
+	ShaderDescriptorSetObject DescriptorSetPool::AllocateSet(ShaderDescriptorSetAllocator const& owningAllocator)
+	{
+	}
+	void DescriptorSetPool::Initialize()
+	{
+
 	}
 }
