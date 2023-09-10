@@ -23,23 +23,25 @@ namespace graphics_backend
 	{
 	public:
 		ShaderDescriptorSetObject(vk::DescriptorSet descriptorSet
-			, ChunkedDescriptorPoolWrapper* pPoolWrapper
-			, vk::DescriptorPool pool);
+			, DescriptorSetPool& pool);
 	private:
 		friend class ChunkedDescriptorPoolWrapper;
+		friend class DescriptorSetPool;
 
 		vk::DescriptorSet m_DescriptorSet = nullptr;
-		ChunkedDescriptorPoolWrapper& const m_OwningPoolWrapper;
 		DescriptorSetPool& m_OwningPool;
 	};
 
 	class DescriptorSetPool : public BaseApplicationSubobject
 	{
 	public:
-		DescriptorSetPool(CVulkanApplication& application, uint32_t maxSize);
+		DescriptorSetPool(CVulkanApplication& application
+			, ShaderDescriptorSetAllocator const& owningAllocator
+			, uint32_t maxSize);
 		void Initialize();
-		ShaderDescriptorSetObject AllocateSet(ShaderDescriptorSetAllocator const& owningAllocator);
+		ShaderDescriptorSetObject AllocateSet();
 		void ReleaseSet(ShaderDescriptorSetObject& releasedSet);
+		bool IsFull() const { return m_UsingSize >= m_MaxSize; }
 		bool operator<(DescriptorSetPool const& other) const
 		{
 			return m_Pool < other.m_Pool;
@@ -49,6 +51,7 @@ namespace graphics_backend
 			return m_Pool == other.m_Pool;
 		}
 	private:
+		ShaderDescriptorSetAllocator const& m_OwningAllocator;
 		vk::DescriptorPool m_Pool = nullptr;
 		uint32_t m_UsingSize = 0;
 		uint32_t m_MaxSize = 0;

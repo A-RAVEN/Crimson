@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ShaderDescriptorSetAllocator.h"
+#include <SharedTools/header/DebugUtils.h>
 
 namespace graphics_backend
 {
@@ -57,7 +58,10 @@ namespace graphics_backend
 		return vk::DescriptorPool();
 	}
 
-	DescriptorSetPool::DescriptorSetPool(CVulkanApplication& application, uint32_t maxSize) : BaseApplicationSubobject(application)
+	DescriptorSetPool::DescriptorSetPool(CVulkanApplication& application
+		, ShaderDescriptorSetAllocator const& owningAllocator
+		, uint32_t maxSize) : BaseApplicationSubobject(application)
+		, m_OwningAllocator(owningAllocator)
 	{
 	}
 	ShaderDescriptorSetObject DescriptorSetPool::AllocateSet(ShaderDescriptorSetAllocator const& owningAllocator)
@@ -66,5 +70,29 @@ namespace graphics_backend
 	void DescriptorSetPool::Initialize()
 	{
 
+	}
+	ShaderDescriptorSetObject DescriptorSetPool::AllocateSet()
+	{
+		CA_ASSERT(!IsFull(), "Descriptor Set Pool Is Full!");
+		vk::DescriptorSet resultSet = nullptr;
+		if (!m_AvailableSets.empty())
+		{
+			resultSet = m_AvailableSets.front();
+			m_AvailableSets.pop_front();
+		}
+		else
+		{
+			vk::DescriptorSetAllocateInfo allocInfo{
+				m_Pool
+				, 1
+				, & m_OwningAllocator.GetDescriptorSetLayout()};
+			resultSet = GetDevice().allocateDescriptorSets(allocInfo).front();
+		}
+		return ShaderDescriptorSetObject(resultSet, *this);
+	}
+	void DescriptorSetPool::ReleaseSet(ShaderDescriptorSetObject& releasedSet)
+	{
+		CA_ASSERT(this == (&releasedSet.m_OwningPool), "Descriptor Set Pool Mismatch!");
+		m_AvailableSets.push_back(releasedSet.m_DescriptorSet);
 	}
 }
