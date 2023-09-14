@@ -3,11 +3,13 @@
 #include "VulkanIncludes.h"
 #include "VulkanApplicationSubobjectBase.h"
 #include <list>
+#include <SharedTools/header/RAII.h>
 
 namespace graphics_backend
 {
 	class DescriptorSetPool;
 	class ShaderDescriptorSetAllocator;
+	class ChunkedDescriptorPoolWrapper;
 
 	class ShaderDescriptorSetLayoutInfo
 	{
@@ -23,23 +25,29 @@ namespace graphics_backend
 	{
 	public:
 		ShaderDescriptorSetObject(vk::DescriptorSet descriptorSet
-			, ChunkedDescriptorPoolWrapper* pPoolWrapper
-			, vk::DescriptorPool pool);
+			, DescriptorSetPool& pool);
+		ShaderDescriptorSetObject(ShaderDescriptorSetObject const& other) = delete;
+		ShaderDescriptorSetObject& operator=(ShaderDescriptorSetObject const& other) = delete;
+		ShaderDescriptorSetObject(ShaderDescriptorSetObject && other) = default;
+		ShaderDescriptorSetObject& operator=(ShaderDescriptorSetObject && other) = default;
 	private:
-		friend class ChunkedDescriptorPoolWrapper;
 
-		vk::DescriptorSet m_DescriptorSet = nullptr;
-		ChunkedDescriptorPoolWrapper& const m_OwningPoolWrapper;
+		friend class DescriptorSetPool;
+		vk::DescriptorSet m_DescriptorSet;
 		DescriptorSetPool& m_OwningPool;
 	};
+
+	using ShaderDescriptorSetHandle = raii_utils::TRAIIContainer<ShaderDescriptorSetObject>;
 
 	class DescriptorSetPool : public BaseApplicationSubobject
 	{
 	public:
-		DescriptorSetPool(CVulkanApplication& application, uint32_t maxSize);
+		DescriptorSetPool(CVulkanApplication& application
+			, ChunkedDescriptorPoolWrapper const& owningWrapper
+			, uint32_t maxSize);
 		void Initialize();
-		ShaderDescriptorSetObject AllocateSet(ShaderDescriptorSetAllocator const& owningAllocator);
-		void ReleaseSet(ShaderDescriptorSetObject& releasedSet);
+		ShaderDescriptorSetHandle AllocateSet();
+		bool Available() const { return m_UsingSize < m_MaxSize; }
 		bool operator<(DescriptorSetPool const& other) const
 		{
 			return m_Pool < other.m_Pool;
@@ -49,10 +57,12 @@ namespace graphics_backend
 			return m_Pool == other.m_Pool;
 		}
 	private:
+		void ReleaseSet(ShaderDescriptorSetObject& releasedSet);
 		vk::DescriptorPool m_Pool = nullptr;
 		uint32_t m_UsingSize = 0;
 		uint32_t m_MaxSize = 0;
 		std::deque<vk::DescriptorSet> m_AvailableSets;
+		ChunkedDescriptorPoolWrapper const& m_OwningWrapper;
 	};
 
 	class ChunkedDescriptorPoolWrapper : public BaseApplicationSubobject
@@ -61,8 +71,9 @@ namespace graphics_backend
 		ChunkedDescriptorPoolWrapper(ShaderDescriptorSetAllocator& owningAllocator
 			, CVulkanApplication& application);
 		void Initialize(ShaderDescriptorSetLayoutInfo, uint32_t chunkSize = 4);
-		ShaderDescriptorSetObject AllocateSet();
-		void ReleaseSet();
+		ShaderDescriptorSetHandle AllocateSet();
+		uint32_t GetChunkSize() const { return m_ChunkSize; }
+		ShaderDescriptorSetAllocator const& GetAllocator() const { return m_OwningAllocator; }
 	private:
 		DescriptorSetPool& GetAvailablePool();
 		uint32_t m_ChunkSize = 1;
@@ -77,7 +88,7 @@ namespace graphics_backend
 		void Create(ShaderDescriptorSetLayoutInfo const& layoutInfo);
 		virtual void Release() override;
 
-		vk::DescriptorSet AllocateSet();
+		ShaderDescriptorSetObject AllocateSet();
 
 		vk::DescriptorSetLayout GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
 		ShaderDescriptorSetLayoutInfo const& GetLayoutInfo() const { return m_LayoutInfo; }

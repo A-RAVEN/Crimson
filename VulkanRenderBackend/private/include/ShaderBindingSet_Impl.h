@@ -74,15 +74,15 @@ namespace graphics_backend
 		vk::DescriptorSet m_DescriptorSet;
 	};
 
-	class ShaderDescriptorSetAllocator : public BaseApplicationSubobject
-	{
-	public:
-		ShaderDescriptorSetAllocator(CVulkanApplication& owner);
-		void Create(ShaderBindingBuilder const& builder);
-		std::shared_ptr<ShaderBindingSet> AllocateSet();
-		virtual void Release() override;
-	private:
-		ShaderConstantSetMetadata m_Metadata;
-		TVulkanApplicationPool<ShaderConstantSet_Impl> m_ShaderConstantSetPool;
-	};
+	//class ShaderDescriptorSetAllocator : public BaseApplicationSubobject
+	//{
+	//public:
+	//	ShaderDescriptorSetAllocator(CVulkanApplication& owner);
+	//	void Create(ShaderBindingBuilder const& builder);
+	//	std::shared_ptr<ShaderBindingSet> AllocateSet();
+	//	virtual void Release() override;
+	//private:
+	//	ShaderConstantSetMetadata m_Metadata;
+	//	TVulkanApplicationPool<ShaderConstantSet_Impl> m_ShaderConstantSetPool;
+	//};
 }
