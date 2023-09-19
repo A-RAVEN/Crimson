@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
 	TModuleLoader<IShaderCompiler> shaderCompilerLoader(L"ShaderCompiler");
 	TModuleLoader<RenderInterfaceManager> renderInterfaceLoader(L"RenderInterface");
 
-	ShaderConstantsBuilder shaderConstantBuilder{ "Default Camera Constants" };
+	ShaderConstantsBuilder shaderConstantBuilder{ "DefaultCameraConstants" };
 	shaderConstantBuilder
 		.Mat4<float>("viewProjectionMatrix");
 
@@ -88,9 +88,13 @@ int main(int argc, char *argv[])
 	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
 
 	auto shaderConstants = pBackend->CreateShaderConstantSet(shaderConstantBuilder);
+	auto shaderBindings = pBackend->CreateShaderBindingSet(shaderBindingBuilder);
 
 	glm::mat4 data{1};
 	shaderConstants->SetValue("viewProjectionMatrix", data);
+
+	shaderBindings->SetConstantSet(shaderConstants->GetName(), shaderConstants);
+
 
 	std::vector<VertexData> vertexDataList = {
 		VertexData{-0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
@@ -177,6 +181,7 @@ int main(int argc, char *argv[])
 			vertexBuffer1->UploadAsync();
 			indexBuffer->UploadAsync();
 			shaderConstants->UploadAsync();
+			shaderBindings->UploadAsync();
 		}
 
 		pBackend->ExecuteRenderGraph(pRenderGraph);

@@ -37,6 +37,7 @@ namespace graphics_backend
 			, uint64_t count
 			, uint64_t stride) = 0;
 		virtual std::shared_ptr<ShaderConstantSet> CreateShaderConstantSet(ShaderConstantsBuilder const& inBuilder) = 0;
+		virtual std::shared_ptr<ShaderBindingSet> CreateShaderBindingSet(ShaderBindingBuilder const& inBuilder) = 0;
 	};
 }
 

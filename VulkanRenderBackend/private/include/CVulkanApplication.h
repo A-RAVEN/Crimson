@@ -122,6 +122,7 @@ namespace graphics_backend
 		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);
 
 		std::shared_ptr<ShaderConstantSet> NewShaderConstantSet(ShaderConstantsBuilder const& builder);
+		std::shared_ptr<ShaderBindingSet> NewShaderBindingSet(ShaderBindingBuilder const& builder);
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);
@@ -154,7 +155,10 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
+		//Uniform Buffer
 		HashPool<ShaderConstantsBuilder, ShaderConstantSetAllocator> m_ConstantSetAllocator;
+		//Shader Descriptor Set
+		HashPool<ShaderBindingBuilder, ShaderBindingSetAllocator> m_ShaderBindingSetAllocator;
 
 		GPUObjectManager m_GPUObjectManager;
 		RenderGraphExecutorDic m_RenderGraphDic;

@@ -141,6 +141,8 @@ public:
 		return *this;
 	}
 
+	std::string const& GetName() const { return m_Name; }
+
 	bool operator==(ShaderConstantsBuilder const& rhs) const
 	{
 		return m_NumericDescriptors == rhs.m_NumericDescriptors
@@ -224,6 +226,14 @@ public:
 
 	std::string const& GetSpaceName() const {
 		return m_SpaceName;
+	}
+
+	std::vector<ShaderConstantsBuilder> const& GetConstantBufferDescriptors() const {
+		return m_ConstantBufferDescriptors;
+	}
+
+	std::vector<std::pair<std::string, ShaderTextureDescriptor>> const& GetTextureDescriptors() const {
+		return m_TextureDescriptors;
 	}
 
 	bool operator==(ShaderBindingBuilder const& rhs) const

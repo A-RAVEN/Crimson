@@ -65,4 +65,8 @@ namespace graphics_backend
 	{
 		return m_Application.NewShaderConstantSet(inBuilder);
 	}
+	std::shared_ptr<ShaderBindingSet> CRenderBackend_Vulkan::CreateShaderBindingSet(ShaderBindingBuilder const& inBuilder)
+	{
+		return m_Application.NewShaderBindingSet(inBuilder);
+	}
 }

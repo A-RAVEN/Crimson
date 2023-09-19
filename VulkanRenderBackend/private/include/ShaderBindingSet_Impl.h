@@ -19,6 +19,8 @@ namespace graphics_backend
 		void Initialize(ShaderConstantSetMetadata const* inMetaData);
 		virtual void UploadAsync() override;
 		virtual bool UploadingDone() const override;
+		virtual std::string const& GetName() const override;
+		std::shared_ptr<CVulkanBufferObject> GetBufferObject() const { return m_BufferObject; }
 	protected:
 		virtual void DoUpload() override;
 	private:
@@ -33,6 +35,7 @@ namespace graphics_backend
 		void Initialize(ShaderConstantsBuilder const& builder);
 		std::unordered_map<std::string, std::pair<size_t, size_t>> const& GetArithmeticValuePositions() const;
 		size_t GetTotalSize() const;
+		ShaderConstantsBuilder const* GetBuilder() const { return p_Builder; }
 	private:
 		ShaderConstantsBuilder const* p_Builder;
 		size_t m_TotalSize = 0;
@@ -54,9 +57,12 @@ namespace graphics_backend
 	class ShaderBindingSetMetadata
 	{
 	public:
-		void Initialize(ShaderConstantsBuilder const& builder);
+		void Initialize(ShaderBindingBuilder const& builder);
+		ShaderDescriptorSetLayoutInfo const& GetLayoutInfo() const { return m_LayoutInfo; }
+		std::unordered_map<std::string, uint32_t> const& GetCBufferNameToBindingIndex() const { return m_CBufferNameToBindingIndex; }
 	private:
-		std::unordered_map<std::string, uint32_t> m_NameToBindingIndex;
+		ShaderDescriptorSetLayoutInfo m_LayoutInfo;
+		std::unordered_map<std::string, uint32_t> m_CBufferNameToBindingIndex;
 	};
 
 	class ShaderBindingSet_Impl : public BaseUploadingResource, public ShaderBindingSet
@@ -71,18 +77,19 @@ namespace graphics_backend
 		virtual void DoUpload() override;
 	private:
 		ShaderBindingSetMetadata const* p_Metadata;
-		vk::DescriptorSet m_DescriptorSet;
+		ShaderDescriptorSetHandle m_DescriptorSetHandle;
+		std::unordered_map<std::string, std::shared_ptr<ShaderConstantSet>> m_ConstantSets;
 	};
 
-	//class ShaderDescriptorSetAllocator : public BaseApplicationSubobject
-	//{
-	//public:
-	//	ShaderDescriptorSetAllocator(CVulkanApplication& owner);
-	//	void Create(ShaderBindingBuilder const& builder);
-	//	std::shared_ptr<ShaderBindingSet> AllocateSet();
-	//	virtual void Release() override;
-	//private:
-	//	ShaderConstantSetMetadata m_Metadata;
-	//	TVulkanApplicationPool<ShaderConstantSet_Impl> m_ShaderConstantSetPool;
-	//};
+	class ShaderBindingSetAllocator : public BaseApplicationSubobject
+	{
+	public:
+		ShaderBindingSetAllocator(CVulkanApplication& owner);
+		void Create(ShaderBindingBuilder const& builder);
+		std::shared_ptr<ShaderBindingSet> AllocateSet();
+		virtual void Release() override;
+	private:
+		ShaderBindingSetMetadata m_Metadata;
+		TVulkanApplicationPool<ShaderBindingSet_Impl> m_ShaderBindingSetPool;
+	};
 }

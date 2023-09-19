@@ -31,16 +31,17 @@ namespace graphics_backend
 				{
 					result = std::shared_ptr<ValType>{ new ValType{ GetVulkanApplication() } };
 					m_InternalMap.insert(std::make_pair(desc, result));
-					result = m_InternalMap[desc];
+					it = m_InternalMap.find(desc);
+					result = it->second;
 				}
 				else
 				{
 					result = it->second;
 				}
-			}
-			if (newResult)
-			{
-				result->Create(desc);
+				if (newResult)
+				{
+					result->Create(it->first);
+				}
 			}
 			return std::weak_ptr<ValType>(result);
 		}

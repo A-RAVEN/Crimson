@@ -69,6 +69,11 @@ namespace graphics_backend {
 		return BaseUploadingResource::UploadingDone();
 	}
 
+	std::string const& ShaderConstantSet_Impl::GetName() const
+	{
+		return p_Metadata->GetBuilder()->GetName();
+	}
+
 	void ShaderConstantSet_Impl::DoUpload()
 	{
 		CVulkanMemoryManager& memoryManager = GetMemoryManager();
@@ -170,5 +175,89 @@ namespace graphics_backend {
 	void ShaderConstantSetAllocator::Release()
 	{
 		m_ShaderConstantSetPool.ReleaseAll();
+	}
+	ShaderBindingSet_Impl::ShaderBindingSet_Impl(CVulkanApplication& owner) : BaseUploadingResource(owner)
+	{
+	}
+	void ShaderBindingSet_Impl::Initialize(ShaderBindingSetMetadata const* inMetaData)
+	{
+		p_Metadata = inMetaData;
+	}
+	void ShaderBindingSet_Impl::SetConstantSet(std::string const& name, std::shared_ptr<ShaderConstantSet> const& pConstantSet)
+	{
+		m_ConstantSets.insert(std::make_pair(name, pConstantSet));
+	}
+	void ShaderBindingSet_Impl::UploadAsync()
+	{
+		BaseUploadingResource::UploadAsync();
+	}
+	bool ShaderBindingSet_Impl::UploadingDone() const
+	{
+		return BaseUploadingResource::UploadingDone();
+	}
+	void ShaderBindingSet_Impl::DoUpload()
+	{
+		if (!m_DescriptorSetHandle.IsRAIIAquired())
+		{
+			auto& descPoolCache = GetVulkanApplication().GetGPUObjectManager().GetShaderDescriptorPoolCache();
+			ShaderDescriptorSetLayoutInfo layoutInfo = p_Metadata->GetLayoutInfo();
+			auto allocator = descPoolCache.GetOrCreate(layoutInfo).lock();
+			m_DescriptorSetHandle = std::move(allocator->AllocateSet());
+		}
+		CA_ASSERT(m_DescriptorSetHandle.IsRAIIAquired(), "Descriptor Set Is Not Aquired!");
+		vk::DescriptorSet targetSet = m_DescriptorSetHandle->GetDescriptorSet();
+		std::vector<vk::WriteDescriptorSet> constantBufferWrites;
+		if (!m_ConstantSets.empty())
+		{
+			constantBufferWrites.reserve(m_ConstantSets.size());
+			auto& nameToIndex = p_Metadata->GetCBufferNameToBindingIndex();
+			for (auto pair : m_ConstantSets)
+			{
+				auto& name = pair.first;
+				auto set = std::static_pointer_cast<ShaderConstantSet_Impl>(pair.second);
+				auto iter = nameToIndex.find(name);
+				CA_ASSERT(iter != nameToIndex.end(), "invalid constant buffer name");
+				uint32_t bindingIndex = iter->second;
+				vk::DescriptorBufferInfo bufferInfo{set->GetBufferObject()->GetBuffer(), 0, VK_WHOLE_SIZE};
+				vk::WriteDescriptorSet writeSet{targetSet
+					, bindingIndex
+					, 0
+					, 1
+					, vk::DescriptorType::eUniformBuffer
+					, nullptr
+					, &bufferInfo
+					, nullptr
+				};
+				constantBufferWrites.push_back(writeSet);
+			}
+		}
+		GetDevice().updateDescriptorSets(constantBufferWrites, {});
+	}
+	void ShaderBindingSetMetadata::Initialize(ShaderBindingBuilder const& builder)
+	{
+		auto& constantBufferDescriptors = builder.GetConstantBufferDescriptors();
+		m_LayoutInfo.m_ConstantBufferCount = constantBufferDescriptors.size();
+
+		uint32_t bindingIndex = 0;
+		for (auto& desc : constantBufferDescriptors)
+		{
+			m_CBufferNameToBindingIndex.emplace(desc.GetName(), bindingIndex++);
+		};
+	}
+	ShaderBindingSetAllocator::ShaderBindingSetAllocator(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
+		, m_ShaderBindingSetPool(owner)
+	{
+	}
+	void ShaderBindingSetAllocator::Create(ShaderBindingBuilder const& builder)
+	{
+		m_Metadata.Initialize(builder);
+	}
+	std::shared_ptr<ShaderBindingSet> ShaderBindingSetAllocator::AllocateSet()
+	{
+		return m_ShaderBindingSetPool.AllocShared(&m_Metadata);
+	}
+	void ShaderBindingSetAllocator::Release()
+	{
+		m_ShaderBindingSetPool.ReleaseAll();
 	}
 }

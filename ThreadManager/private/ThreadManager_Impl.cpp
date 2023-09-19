@@ -203,14 +203,181 @@ namespace thread_management
 
     void CThreadManager_Impl::EnqueueGraphTasks(std::vector<CTask_Impl*> const& tasks)
     {
-        {
-            std::lock_guard<std::mutex> guard(m_Mutex);
-            m_TaskQueue.insert(m_TaskQueue.end(), tasks.begin(), tasks.end());
-            m_ConditinalVariable.notify_all();
-        }
+        std::lock_guard<std::mutex> guard(m_Mutex);
+        m_TaskQueue.insert(m_TaskQueue.end(), tasks.begin(), tasks.end());
+        m_ConditinalVariable.notify_all();
     }
 
     CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(CThreadManager, CThreadManager_Impl)
+
+    TaskGraph_Impl1::TaskGraph_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) : 
+        TaskNode(TaskObjectType::eGraph, owner, owningManager)
+    {
+    }
+
+    CTask_Impl1* TaskGraph_Impl1::NewTask()
+    {
+        std::lock_guard<std::mutex> guard(m_Mutex);
+        m_TaskPool.emplace_back(this, m_OwningManager);
+        CTask_Impl1* result = &m_TaskPool.back();
+        m_SubTasks.push_back(result);
+        return result;
+    }
+
+    TaskGraph_Impl1* TaskGraph_Impl1::NewSubTaskGraph()
+    {
+        std::lock_guard<std::mutex> guard(m_Mutex);
+        m_TaskGraphPool.emplace_back(this, m_OwningManager);
+        TaskGraph_Impl1* result = &m_TaskGraphPool.back();
+        m_SubTasks.push_back(result);
+        return result;
+    }
+
+    void TaskGraph_Impl1::NotifyChildNodeFinish(TaskNode* childNode)
+    {
+        uint32_t remainCounter = --m_PendingSubnodeCount;
+        if (remainCounter == 0)
+        {
+            FinalizeExecution_Internal();
+        }
+    }
+    void TaskGraph_Impl1::Execute_Internal()
+    {
+        SetupSubnodeDependencies();
+        m_OwningManager->EnqueueTaskNodes(m_RootTasks);
+    }
+
+    void TaskGraph_Impl1::SetupSubnodeDependencies()
+    {
+        m_RootTasks.clear();
+        for (TaskNode* itrTask : m_SubTasks)
+        {
+            itrTask->SetupThisNodeDependencies_Internal();
+            if (itrTask->GetDepenedentCount() == 0)
+            {
+                m_RootTasks.push_back(itrTask);
+            }
+        }
+        uint32_t pendingTaskCount = m_SubTasks.size();
+        m_PendingSubnodeCount.store(pendingTaskCount, std::memory_order_release);
+    }
+    CTask_Impl1::CTask_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) : 
+        TaskNode(TaskObjectType::eNode, owner, owningManager)
+    {
+    }
+    CTask_Impl1& CTask_Impl1::DependsOn(TaskNode* dependsOnTaskNode)
+    {
+        DependsOn_Internal(dependsOnTaskNode);
+		return *this;
+    }
+    CTask_Impl1& CTask_Impl1::Name(std::string const& name)
+    {
+        Name_Internal(name);
+        return *this;
+    }
+    CTask_Impl1& CTask_Impl1::Functor(std::function<void()> functor)
+    {
+        m_Functor = functor;
+    }
+
+    void CTask_Impl1::Release()
+    {
+        m_Functor = nullptr;
+    }
+
+    void CTask_Impl1::Execute_Internal()
+    {
+        if (m_Functor != nullptr)
+        {
+            m_Functor();
+        }
+        FinalizeExecution_Internal();
+    }
+
+    ThreadManager_Impl1::ThreadManager_Impl1() : 
+        TaskBaseObject(TaskObjectType::eManager)
+        , m_TaskGraphPool(threadsafe_utils::DefaultInitializer<TaskGraph_Impl1>{})
+        , m_TaskPool(threadsafe_utils::DefaultInitializer<CTask_Impl1>{})
+    {
+    }
+
+    void ThreadManager_Impl1::InitializeThreadCount(uint32_t threadNum)
+    {
+        m_WorkerThreads.reserve(threadNum);
+        for (uint32_t i = 0; i < threadNum; ++i)
+        {
+            m_WorkerThreads.emplace_back(&ThreadManager_Impl1::ProcessingWorks, this, i);
+        }
+    }
+    CTask_Impl1* ThreadManager_Impl1::NewTask()
+    {
+        return m_TaskPool.Alloc(this, this);
+    }
+    TaskGraph_Impl1* ThreadManager_Impl1::NewSubTaskGraph()
+    {
+        return m_TaskGraphPool.Alloc(this, this);
+    }
+    void ThreadManager_Impl1::EnqueueTaskNode(TaskNode* enqueueNode)
+    {
+        std::lock_guard<std::mutex> guard(m_Mutex);
+        if (!enqueueNode->m_Running)
+        {
+            enqueueNode->m_Running.store(true, std::memory_order_relaxed);
+            m_TaskQueue.push_back(enqueueNode);
+            m_ConditinalVariable.notify_one();
+        }
+    }
+    void ThreadManager_Impl1::EnqueueTaskNodes(std::deque<TaskNode*> const& nodeDeque)
+    {
+        std::lock_guard<std::mutex> guard(m_Mutex);
+        uint32_t enqueuedCounter = 0;
+        for (TaskNode* itrNode : nodeDeque)
+        {
+            if (!itrNode->m_Running)
+            {
+                itrNode->m_Running.store(true, std::memory_order_relaxed);
+                m_TaskQueue.push_back(itrNode);
+                ++enqueuedCounter;
+            }
+        };
+        if (enqueuedCounter == 0)
+            return;
+        std::atomic_thread_fence(std::memory_order_release);
+        if(enqueuedCounter > 1)
+		{
+			m_ConditinalVariable.notify_all();
+		}
+		else
+		{
+			m_ConditinalVariable.notify_one();
+		}
+    }
+    void ThreadManager_Impl1::ProcessingWorks(uint32_t threadId)
+    {
+        while (!m_Stopped)
+        {
+            std::unique_lock<std::mutex> lock(m_Mutex);
+            m_ConditinalVariable.wait(lock, [this]()
+                {
+                    return !m_TaskQueue.empty();
+                });
+
+            if (m_TaskQueue.empty())
+            {
+                lock.unlock();
+                continue;
+            }
+            if (m_Stopped)
+            {
+                lock.unlock();
+                return;
+            }
+            auto task = m_TaskQueue.front();
+            m_TaskQueue.pop_front();
+            lock.unlock();
+            task->Execute_Internal();
+        }
+    }
 }
 
 

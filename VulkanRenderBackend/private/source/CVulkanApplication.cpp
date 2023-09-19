@@ -157,6 +157,12 @@ namespace graphics_backend
 		return subAllocator->AllocateSet();
 	}
 
+	std::shared_ptr<ShaderBindingSet> CVulkanApplication::NewShaderBindingSet(ShaderBindingBuilder const& builder)
+	{
+		auto subAllocator = m_ShaderBindingSetAllocator.GetOrCreate(builder).lock();
+		return subAllocator->AllocateSet();
+	}
+
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
 	{
 		vk::ApplicationInfo application_info(
@@ -577,6 +583,7 @@ namespace graphics_backend
 	, m_MemoryManager(*this)
 	, m_RenderGraphDic(*this)
 	, m_ConstantSetAllocator(*this)
+	, m_ShaderBindingSetAllocator(*this)
 	{
 	}
 
@@ -596,6 +603,8 @@ namespace graphics_backend
 	void CVulkanApplication::ReleaseApp()
 	{
 		DeviceWaitIdle();
+		m_ConstantSetAllocator.Release();
+		m_ShaderBindingSetAllocator.Release();
 		m_GPUBufferPool.ReleaseAll();
 		m_MemoryManager.Release();
 		DestroyThreadContexts();

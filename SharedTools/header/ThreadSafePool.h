@@ -36,7 +36,7 @@ namespace threadsafe_utils
 		TThreadSafePointerPool(TThreadSafePointerPool&& other) = delete;
 		TThreadSafePointerPool& operator=(TThreadSafePointerPool&&) = delete;
 
-		TThreadSafePointerPool(std::function<void(T*)> initializer = DefaultInitializer<T>(), std::function<void(T*)> releaser = DefaultReleaser<T>()) :
+		TThreadSafePointerPool(std::function<void(T*)> initializer = DefaultInitializer<T>{}, std::function<void(T*)> releaser = DefaultReleaser<T>{}) :
 			m_Initializer(initializer)
 			, m_Releaser(releaser)
 		{

@@ -22,6 +22,7 @@ namespace graphics_backend
 			, uint64_t count
 			, uint64_t stride) override;
 		virtual std::shared_ptr<ShaderConstantSet> CreateShaderConstantSet(ShaderConstantsBuilder const& inBuilder) override;
+		virtual std::shared_ptr<ShaderBindingSet> CreateShaderBindingSet(ShaderBindingBuilder const& inBuilder) override;
 	private:
 		CVulkanApplication m_Application;
 	};

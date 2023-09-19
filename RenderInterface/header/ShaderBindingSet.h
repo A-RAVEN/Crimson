@@ -12,6 +12,7 @@ public:
 	virtual void SetValue(std::string const& name, void* pValue) = 0;
 	virtual void UploadAsync() = 0;
 	virtual bool UploadingDone() const = 0;
+	virtual std::string const& GetName() const = 0;
 };
 
 class ShaderBindingSet

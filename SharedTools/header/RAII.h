@@ -7,8 +7,15 @@ namespace raii_utils
 	class TRAIIContainer
 	{
 	public:
-		TRAIIContainer(T&& rttiData, std::function<void(T& releaseObj)> releaser) : m_RAIIData(rttiData)
-			, _Releaser(releaser)
+
+		template<typename TT = T, typename = std::enable_if_t<std::is_default_constructible<TT>::value>>
+		TRAIIContainer() : m_RAIIData(), _Releaser(nullptr)
+			, _RAII_Aquired(false)
+		{
+		}
+
+		TRAIIContainer(T&& rttiData, std::function<void(T& releaseObj)> releaser) : m_RAIIData(std::move(rttiData))
+			, _Releaser(std::move(releaser))
 			, _RAII_Aquired(true)
 		{
 		}
@@ -36,6 +43,21 @@ namespace raii_utils
 		{
 			other._RAII_Aquired = false;
 		}
+		TRAIIContainer& operator=(TRAIIContainer&& other)
+		{
+			RAIIRelease();
+			m_RAIIData = std::move<T&>(other.m_RAIIData);
+			_Releaser = std::move(other._Releaser);
+			_RAII_Aquired = std::move(other._RAII_Aquired);
+			other._RAII_Aquired = false;
+			return *this;
+		}
+
+
+		bool IsRAIIAquired() const
+		{
+			return _RAII_Aquired;
+		}
 
 		T& Get()
 		{
@@ -52,7 +74,7 @@ namespace raii_utils
 			return Get();
 		}
 
-		T const& operator* const()
+		T const& operator*()const
 		{
 			return Get();
 		}
@@ -64,9 +86,21 @@ namespace raii_utils
 		}
 
 		template<typename TT = T>
-		typename std::enable_if_t<std::is_class_v<TT>, TT> operator->() const noexcept
+		typename std::enable_if_t<std::is_pointer_v<TT>, TT> operator->() noexcept
 		{
-			return std::addressof(m_RAIIData);
+			return m_RAIIData;
+		}
+
+		template<typename TT = T>
+		typename std::enable_if_t<std::is_class_v<TT>, TT const*> operator->() const noexcept
+		{
+			return &m_RAIIData;
+		}
+
+		template<typename TT = T>
+		typename std::enable_if_t<std::is_class_v<TT>, TT*> operator->() noexcept
+		{
+			return &m_RAIIData;
 		}
 
 	private:
