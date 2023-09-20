@@ -3,7 +3,7 @@
 
 namespace thread_management
 {
-    CTask_Impl::CTask_Impl(CTaskGraph_Impl& owningGraph) : m_OwningGraph(owningGraph)
+    /*CTask_Impl::CTask_Impl(CTaskGraph_Impl& owningGraph) : m_OwningGraph(owningGraph)
     {
     }
     CTask* CTask_Impl::Succeed(CTask* parentTask)
@@ -206,16 +206,36 @@ namespace thread_management
         std::lock_guard<std::mutex> guard(m_Mutex);
         m_TaskQueue.insert(m_TaskQueue.end(), tasks.begin(), tasks.end());
         m_ConditinalVariable.notify_all();
-    }
+    }*/
 
-    CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(CThreadManager, CThreadManager_Impl)
+    //CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(CThreadManager, CThreadManager_Impl)
 
-    TaskGraph_Impl1::TaskGraph_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) : 
+CTaskGraph* TaskGraph_Impl1::Name(std::string name)
+{
+    Name_Internal(name);
+    return this;
+}
+
+CTaskGraph* TaskGraph_Impl1::DependsOn(CTask* parentTask)
+{
+    CTask_Impl1* task = static_cast<CTask_Impl1*>(parentTask);
+    DependsOn_Internal(task);
+    return this;
+}
+
+CTaskGraph* TaskGraph_Impl1::DependsOn(CTaskGraph* parentTask)
+{
+    TaskGraph_Impl1* task = static_cast<TaskGraph_Impl1*>(parentTask);
+    DependsOn_Internal(task);
+    return this;
+}
+
+TaskGraph_Impl1::TaskGraph_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) :
         TaskNode(TaskObjectType::eGraph, owner, owningManager)
     {
     }
 
-    CTask_Impl1* TaskGraph_Impl1::NewTask()
+    CTask_Impl1* TaskGraph_Impl1::NewTask_Internal()
     {
         std::lock_guard<std::mutex> guard(m_Mutex);
         m_TaskPool.emplace_back(this, m_OwningManager);
@@ -224,7 +244,7 @@ namespace thread_management
         return result;
     }
 
-    TaskGraph_Impl1* TaskGraph_Impl1::NewSubTaskGraph()
+    TaskGraph_Impl1* TaskGraph_Impl1::NewSubTaskGraph_Internal()
     {
         std::lock_guard<std::mutex> guard(m_Mutex);
         m_TaskGraphPool.emplace_back(this, m_OwningManager);
@@ -261,21 +281,35 @@ namespace thread_management
         uint32_t pendingTaskCount = m_SubTasks.size();
         m_PendingSubnodeCount.store(pendingTaskCount, std::memory_order_release);
     }
-    CTask_Impl1::CTask_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) : 
-        TaskNode(TaskObjectType::eNode, owner, owningManager)
-    {
-    }
-    CTask_Impl1& CTask_Impl1::DependsOn(TaskNode* dependsOnTaskNode)
-    {
-        DependsOn_Internal(dependsOnTaskNode);
-		return *this;
-    }
-    CTask_Impl1& CTask_Impl1::Name(std::string const& name)
+    CTask* CTask_Impl1::Name(std::string name)
     {
         Name_Internal(name);
-        return *this;
+        return this;
     }
-    CTask_Impl1& CTask_Impl1::Functor(std::function<void()> functor)
+    CTask* CTask_Impl1::DependsOn(CTask* parentTask)
+    {
+        CTask_Impl1* task = static_cast<CTask_Impl1*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
+    CTask* CTask_Impl1::DependsOn(CTaskGraph* parentTask)
+    {
+        TaskGraph_Impl1* task = static_cast<TaskGraph_Impl1*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
+    std::shared_future<void> CTask_Impl1::Run()
+    {
+        StartExecute();
+        return std::shared_future<void>();
+    }
+    CTask_Impl1::CTask_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) :
+        TaskNode(TaskObjectType::eNode, owner, owningManager)
+    {
+
+    }
+
+    CTask_Impl1& CTask_Impl1::Functor_Internal(std::function<void()> functor)
     {
         m_Functor = functor;
     }
@@ -351,6 +385,25 @@ namespace thread_management
 		{
 			m_ConditinalVariable.notify_one();
 		}
+    }
+    void ThreadManager_Impl1::NotifyChildNodeFinish(TaskNode* childNode)
+    {
+        switch (childNode->GetTaskObjectType())
+        {
+            case TaskObjectType::eGraph:
+			{
+                m_TaskGraphPool.Release(static_cast<TaskGraph_Impl1*>(childNode));
+				break;
+			}
+            case TaskObjectType::eNode:
+            {
+                m_TaskPool.Release(static_cast<CTask_Impl1*>(childNode));
+                break;
+            }
+            default:
+				CA_LOG_ERR("Invalid TaskNode Type");
+				break;
+        }
     }
     void ThreadManager_Impl1::ProcessingWorks(uint32_t threadId)
     {

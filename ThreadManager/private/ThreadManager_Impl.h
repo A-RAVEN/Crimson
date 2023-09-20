@@ -6,90 +6,95 @@
 
 namespace thread_management
 {
-	class CTaskGraph_Impl;
-	class CThreadManager_Impl;
+	//class CTaskGraph_Impl;
+	//class CThreadManager_Impl;
 
-	class CTask_Impl : public CTask
+	//class CTask_Impl : public CTask
+	//{
+	//public:
+	//	CTask_Impl(CTaskGraph_Impl& owningGraph);
+	//	// 通过 CTask 继承
+	//	virtual CTask* Succeed(CTask* parentTask) override;
+	//	virtual CTask* Name(std::string name) override;
+	//	virtual CTask* Functor(std::function<void()> functor) override;
+	//	void SetupWaitingForCounter();
+	//	void Invoke();
+	//	void TryDecCounter();
+	//private:
+	//	std::function<void()> m_Functor;
+	//	std::string m_Name;
+	//	std::shared_ptr<CTaskGraph> p_TaskGraph;
+	//	std::vector<CTask_Impl*>m_Dependents;
+	//	std::vector<CTask_Impl*>m_Successors;
+	//	CTaskGraph_Impl& m_OwningGraph;
+	//	friend class CTaskGraph_Impl;
+	//	std::atomic<uint32_t>m_PendingTaskCount{0};
+	//};
+
+
+	//class CTaskGraph_Impl : public CTaskGraph
+	//{
+	//public:
+	//	CTaskGraph_Impl(CThreadManager_Impl& owningManager);
+	//	void ReleaseGraph();
+	//	// 通过 CTaskGraph 继承
+	//	virtual CTask* NewTask() override;
+	//	virtual CTaskGraph* Name(std::string name) override;
+	//	virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) override;
+
+	//	void SetupTopology();
+	//	CThreadManager_Impl& GetThreadManager() const { return m_OwningManager; }
+	//	void TryDecCounter();
+	//private:
+	//	void Finalize() const;
+	//private:
+	//	std::function<void()> m_Functor;
+	//	std::string m_Name;
+	//	std::deque<CTask_Impl> m_Tasks;
+	//	std::vector<CTask_Impl*> m_SourceTasks;
+	//	CThreadManager_Impl& m_OwningManager;
+	//	std::atomic<uint32_t>m_PendingTaskCount{0};
+	//	std::promise<void> m_Promise;
+	//	friend class CThreadManager_Impl;
+	//};
+
+	//class CThreadManager_Impl : public CThreadManager
+	//{
+	//public:
+	//	CThreadManager_Impl();
+	//	// 通过 CThreadManager 继承
+	//	virtual void InitializeThreadCount(uint32_t threadNum) override;
+	//	virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) override;
+	//	virtual std::shared_future<void> ExecuteTaskGraph(CTaskGraph* graph) override;
+	//	virtual CTaskGraph* NewTaskGraph() override;
+
+	//	void RemoveTaskGraph(CTaskGraph_Impl* graph);
+	//	void EnqueueGraphTask(CTask_Impl* newTask);
+	//	void EnqueueGraphTasks(std::vector<CTask_Impl*> const& tasks);
+	//private:
+	//	void ProcessingWorks(uint32_t threadId);
+	//private:
+	//	std::deque<CTask_Impl*> m_TaskQueue;
+	//	bool m_Stopped = false;
+	//	std::vector<std::thread> m_WorkerThreads;
+	//	std::mutex m_Mutex;
+	//	std::condition_variable m_ConditinalVariable;
+	//	threadsafe_utils::TThreadSafePointerPool<CTaskGraph_Impl> m_TaskGraphPool;
+	//};
+
+	class CTask_Impl1 : public TaskNode, public CTask
 	{
 	public:
-		CTask_Impl(CTaskGraph_Impl& owningGraph);
-		// 通过 CTask 继承
-		virtual CTask* Succeed(CTask* parentTask) override;
 		virtual CTask* Name(std::string name) override;
-		virtual CTask* Functor(std::function<void()> functor) override;
-		void SetupWaitingForCounter();
-		void Invoke();
-		void TryDecCounter();
-	private:
-		std::function<void()> m_Functor;
-		std::string m_Name;
-		std::shared_ptr<CTaskGraph> p_TaskGraph;
-		std::vector<CTask_Impl*>m_Dependents;
-		std::vector<CTask_Impl*>m_Successors;
-		CTaskGraph_Impl& m_OwningGraph;
-		friend class CTaskGraph_Impl;
-		std::atomic<uint32_t>m_PendingTaskCount{0};
-	};
+		virtual CTask* DependsOn(CTask* parentTask) override;
+		virtual CTask* DependsOn(CTaskGraph* parentTask) override;
+		virtual std::shared_future<void> Run() override;
 
-
-	class CTaskGraph_Impl : public CTaskGraph
-	{
-	public:
-		CTaskGraph_Impl(CThreadManager_Impl& owningManager);
-		void ReleaseGraph();
-		// 通过 CTaskGraph 继承
-		virtual CTask* NewTask() override;
-		virtual CTaskGraph* Name(std::string name) override;
-		virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) override;
-
-		void SetupTopology();
-		CThreadManager_Impl& GetThreadManager() const { return m_OwningManager; }
-		void TryDecCounter();
-	private:
-		void Finalize() const;
-	private:
-		std::function<void()> m_Functor;
-		std::string m_Name;
-		std::deque<CTask_Impl> m_Tasks;
-		std::vector<CTask_Impl*> m_SourceTasks;
-		CThreadManager_Impl& m_OwningManager;
-		std::atomic<uint32_t>m_PendingTaskCount{0};
-		std::promise<void> m_Promise;
-		friend class CThreadManager_Impl;
-	};
-
-	class CThreadManager_Impl : public CThreadManager
-	{
-	public:
-		CThreadManager_Impl();
-		// 通过 CThreadManager 继承
-		virtual void InitializeThreadCount(uint32_t threadNum) override;
-		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) override;
-		virtual std::shared_future<void> ExecuteTaskGraph(CTaskGraph* graph) override;
-		virtual CTaskGraph* NewTaskGraph() override;
-
-		void RemoveTaskGraph(CTaskGraph_Impl* graph);
-		void EnqueueGraphTask(CTask_Impl* newTask);
-		void EnqueueGraphTasks(std::vector<CTask_Impl*> const& tasks);
-	private:
-		void ProcessingWorks(uint32_t threadId);
-	private:
-		std::deque<CTask_Impl*> m_TaskQueue;
-		bool m_Stopped = false;
-		std::vector<std::thread> m_WorkerThreads;
-		std::mutex m_Mutex;
-		std::condition_variable m_ConditinalVariable;
-		threadsafe_utils::TThreadSafePointerPool<CTaskGraph_Impl> m_TaskGraphPool;
-	};
-
-	class CTask_Impl1 : public TaskNode
-	{
+		virtual CTask* Functor(std::function<void()> functor) = 0;
 	public:
 		CTask_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager);
 		// 通过 CTask 继承
-		 CTask_Impl1& DependsOn(TaskNode* dependsOnTaskNode);
-		 CTask_Impl1& Name(std::string const& name);
-		 CTask_Impl1& Functor(std::function<void()> functor);
+		 CTask_Impl1& Functor_Internal(std::function<void()> functor);
 		 void Initialize() {}
 		 void Release();
 	private:
@@ -98,15 +103,22 @@ namespace thread_management
 		virtual void Execute_Internal() override;
 	};
 
-	class TaskGraph_Impl1 : public TaskNode
+	class TaskGraph_Impl1 : public TaskNode, public CTaskGraph
 	{
+	public:
+		virtual CTaskGraph* Name(std::string name) override;
+		virtual CTaskGraph* DependsOn(CTask* parentTask) override;
+		virtual CTaskGraph* DependsOn(CTaskGraph* parentTask) override;
+		virtual std::shared_future<void> Run() override;
+
 	public:
 		TaskGraph_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager);
 		void Initialize() {}
 		void Release() {}
+
 	protected:
-		CTask_Impl1* NewTask();
-		TaskGraph_Impl1* NewSubTaskGraph();
+		CTask_Impl1* NewTask_Internal();
+		TaskGraph_Impl1* NewSubTaskGraph_Internal();
 		// 通过 TaskNode 继承
 		virtual void NotifyChildNodeFinish(TaskNode* childNode) override;
 		virtual void Execute_Internal() override;
@@ -133,6 +145,8 @@ namespace thread_management
 
 		void EnqueueTaskNode(TaskNode* enqueueNode);
 		void EnqueueTaskNodes(std::deque<TaskNode*> const& nodeDeque);
+
+		virtual void NotifyChildNodeFinish(TaskNode* childNode) override;
 	private:
 		void ProcessingWorks(uint32_t threadId);
 	private:

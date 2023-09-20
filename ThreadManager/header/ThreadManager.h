@@ -17,10 +17,14 @@ namespace thread_management
 		CTask() = default;
 		CTask(CTask const& other) = delete;
 		CTask& operator=(CTask const& other) = delete;
-		CTask(CTask&& other) = default;
-		CTask& operator=(CTask&& other) = default;
-		virtual CTask* Succeed(CTask* parentTask) = 0;
+		CTask(CTask&& other) = delete;
+		CTask& operator=(CTask&& other) = delete;
+
 		virtual CTask* Name(std::string name) = 0;
+		virtual CTask* DependsOn(CTask* parentTask) = 0;
+		virtual CTask* DependsOn(CTaskGraph* parentTask) = 0;
+		virtual std::shared_future<void> Run() = 0;
+
 		virtual CTask* Functor(std::function<void()> functor) = 0;
 	};
 
@@ -31,11 +35,16 @@ namespace thread_management
 		CTaskGraph() = default;
 		CTaskGraph(CTaskGraph const& other) = delete;
 		CTaskGraph& operator=(CTaskGraph const& other) = delete;
-		CTaskGraph(CTaskGraph && other) = default;
-		CTaskGraph& operator=(CTaskGraph && other) = default;
+		CTaskGraph(CTaskGraph && other) = delete;
+		CTaskGraph& operator=(CTaskGraph && other) = delete;
+
 		virtual CTaskGraph* Name(std::string name) = 0;
+		virtual CTaskGraph* DependsOn(CTask* parentTask) = 0;
+		virtual CTaskGraph* DependsOn(CTaskGraph* parentTask) = 0;
+		virtual std::shared_future<void> Run() = 0;
+
 		virtual CTask* NewTask() = 0;
-		virtual CTaskGraph* FinalizeFunctor(std::function<void()> functor) = 0;
+		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 
 	class CThreadManager
@@ -45,11 +54,11 @@ namespace thread_management
 		CThreadManager() = default;
 		CThreadManager(CThreadManager const& other) = delete;
 		CThreadManager& operator=(CThreadManager const& other) = delete;
-		CThreadManager(CThreadManager&& other) = default;
-		CThreadManager& operator=(CThreadManager&& other) = default;
+		CThreadManager(CThreadManager&& other) = delete;
+		CThreadManager& operator=(CThreadManager&& other) = delete;
 		virtual void InitializeThreadCount(uint32_t threadNum) = 0;
-		virtual std::future<int> EnqueueAnyThreadWorkWithPromise(std::function<void()> function) = 0;
-		virtual std::shared_future<void> ExecuteTaskGraph(CTaskGraph* graph) = 0;
+
+		virtual CTask* NewTask() = 0;
 		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 }
