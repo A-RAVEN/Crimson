@@ -4,12 +4,13 @@
 
 namespace thread_management
 {
-#ifdef THREADMANAGER_EXPORTS
-#define THREADMANAGER_API __declspec(dllexport)
-#else
-#define THREADMANAGER_API
-#endif
-
+//#ifdef THREADMANAGER_EXPORTS
+//#define THREADMANAGER_API __declspec(dllexport)
+//#else
+//#define THREADMANAGER_API
+//#endif
+	class CThreadManager;
+	class CTaskGraph;
 	class CTask
 	{
 	public:
@@ -56,8 +57,8 @@ namespace thread_management
 		CThreadManager& operator=(CThreadManager const& other) = delete;
 		CThreadManager(CThreadManager&& other) = delete;
 		CThreadManager& operator=(CThreadManager&& other) = delete;
-		virtual void InitializeThreadCount(uint32_t threadNum) = 0;
 
+		virtual void InitializeThreadCount(uint32_t threadNum) = 0;
 		virtual CTask* NewTask() = 0;
 		virtual CTaskGraph* NewTaskGraph() = 0;
 	};

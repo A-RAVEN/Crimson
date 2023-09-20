@@ -1,8 +1,10 @@
 #pragma once
+#include <future>
 #include <vector>
 namespace thread_management
 {
 	class ThreadManager_Impl1;
+	class TaskNode;
 	enum class TaskObjectType
 	{
 		eManager = 0,
@@ -25,12 +27,15 @@ namespace thread_management
 	{
 	public:
 		TaskNode(TaskObjectType type, TaskBaseObject* owner, ThreadManager_Impl1* owningManager);
-		void StartExecute();
+		std::shared_future<void> StartExecute();
 		virtual void NotifyChildNodeFinish(TaskNode* childNode) override {}
 		virtual void Execute_Internal() = 0;
 		virtual void SetupSubnodeDependencies() {};
 		void SetupThisNodeDependencies_Internal();
 		size_t GetDepenedentCount() const { return m_Dependents.size(); }
+		void Release_Internal();
+		std::shared_future<void> AquireFuture();
+		void FulfillPromise();
 	protected:
 		void NotifyDependsOnFinish(TaskNode* dependsOnNode);
 		void Name_Internal(const std::string& name);
@@ -44,6 +49,10 @@ namespace thread_management
 		std::vector<TaskNode*>m_Dependents;
 		std::vector<TaskNode*>m_Successors;
 		std::atomic<uint32_t>m_PendingDependsOnTaskCount{0};
+
+		bool m_HasPromise = false;
+		std::promise<void> m_Promise;
+
 		friend class ThreadManager_Impl1;
 	};
 }

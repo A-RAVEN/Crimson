@@ -69,8 +69,8 @@ namespace threadsafe_utils
 		{
 			assert(releaseObj != nullptr);
 			std::lock_guard<std::mutex> lockGuard(m_Mutex);
-			m_Releaser(releaseObj);
 			m_EmptySpaces.push_back(releaseObj);
+			m_Releaser(releaseObj);
 		}
 
 		bool IsEmpty()

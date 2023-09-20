@@ -10,7 +10,7 @@ namespace thread_management
 		, m_OwningManager(owningManager)
 	{
 	}
-	void TaskNode::StartExecute()
+	std::shared_future<void> TaskNode::StartExecute()
 	{
 		if (m_Owner->GetTaskObjectType() == TaskObjectType::eManager
 			&& m_Owner == m_OwningManager
@@ -19,7 +19,9 @@ namespace thread_management
 		{
 			SetupThisNodeDependencies_Internal();
 			m_OwningManager->EnqueueTaskNode(this);
+			return AquireFuture();
 		}
+		return std::shared_future<void>();
 	}
 	void TaskNode::NotifyDependsOnFinish(TaskNode* dependsOnNode)
 	{
@@ -43,6 +45,32 @@ namespace thread_management
 	{
 		uint32_t pendingCount = m_Dependents.size();
 		m_PendingDependsOnTaskCount.store(pendingCount, std::memory_order_relaxed);
+	}
+	void TaskNode::Release_Internal()
+	{
+		FulfillPromise();
+		m_Running.store(false, std::memory_order_relaxed);
+		m_PendingDependsOnTaskCount.store(0, std::memory_order_relaxed);
+		m_Name = "";
+		m_Dependents.clear();
+		m_Successors.clear();
+		m_HasPromise = false;
+	}
+	std::shared_future<void> TaskNode::AquireFuture()
+	{
+		CA_ASSERT(!m_HasPromise, "Future Already Aquired");
+		m_HasPromise = true;
+		m_Promise = std::promise<void>();
+		std::shared_future<void> nodeFuture(m_Promise.get_future());
+		return nodeFuture;
+	}
+	void TaskNode::FulfillPromise()
+	{
+		if (m_HasPromise)
+		{
+			m_HasPromise = false;
+			m_Promise.set_value();
+		}
 	}
 	void TaskNode::FinalizeExecution_Internal()
 	{
