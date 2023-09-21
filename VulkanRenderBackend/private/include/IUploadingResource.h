@@ -1,6 +1,7 @@
 #pragma once
 #include "RenderBackendSettings.h"
 #include "VulkanApplicationSubobjectBase.h"
+#include "TaskScheduling.h"
 
 namespace graphics_backend
 {
@@ -9,7 +10,7 @@ namespace graphics_backend
 	public:
 		BaseUploadingResource(CVulkanApplication& owner);
 		void Upload();
-		void UploadAsync();
+		void UploadAsync(UploadingResourceType resourceType);
 		bool UploadingDone() const;
 	protected:
 		virtual void DoUpload() = 0;

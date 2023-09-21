@@ -254,3 +254,9 @@ protected:
 	std::vector<ShaderConstantsBuilder> m_ConstantBufferDescriptors;
 	std::vector<std::pair<std::string, ShaderTextureDescriptor>> m_TextureDescriptors;
 };
+
+class ShaderBindingSet
+{
+public:
+	std::vector<ShaderBindingBuilder> shaderBindings;
+};

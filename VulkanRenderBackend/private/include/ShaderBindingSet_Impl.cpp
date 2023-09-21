@@ -61,7 +61,7 @@ namespace graphics_backend {
 
 	void ShaderConstantSet_Impl::UploadAsync()
 	{
-		BaseUploadingResource::UploadAsync();
+		BaseUploadingResource::UploadAsync(UploadingResourceType::eAddressDataThisFrame);
 	}
 
 	bool ShaderConstantSet_Impl::UploadingDone() const
@@ -189,7 +189,7 @@ namespace graphics_backend {
 	}
 	void ShaderBindingSet_Impl::UploadAsync()
 	{
-		BaseUploadingResource::UploadAsync();
+		BaseUploadingResource::UploadAsync(UploadingResourceType::eAddressDataThisFrame);
 	}
 	bool ShaderBindingSet_Impl::UploadingDone() const
 	{

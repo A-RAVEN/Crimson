@@ -11,9 +11,9 @@ namespace graphics_backend
 	{
 		DoUpload();
 	}
-	void BaseUploadingResource::UploadAsync()
+	void BaseUploadingResource::UploadAsync(UploadingResourceType resourceType)
 	{
-		auto task = GetVulkanApplication().NewTask()->Name("Uploading Task");
+		auto task = GetVulkanApplication().NewUploadingTask(resourceType)->Name("Uploading Task");
 		task->Functor([this]() {
 			DoUpload();
 		});

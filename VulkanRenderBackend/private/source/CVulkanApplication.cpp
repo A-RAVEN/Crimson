@@ -18,9 +18,9 @@ namespace graphics_backend
 	void CVulkanApplication::PrepareBeforeTick()
 	{
 		p_TaskGraph = p_ThreadManager->NewTaskGraph();
-		p_TaskGraph->Name("GPU Task Graph");
+		p_TaskGraph->Name("Base GPU Task Graph");
 
-		p_RootTask = p_TaskGraph->NewTask()
+		auto initializeTask = p_TaskGraph->NewTask()
 			->Name("GPU Frame Initialize")
 			->Functor([this]()
 				{
@@ -40,63 +40,81 @@ namespace graphics_backend
 						windowContext->MarkUsages(ResourceUsage::eDontCare);
 					}
 				});
+
+		p_MemoryResourceUploadingTaskGraph = p_TaskGraph->NewTaskGraph()
+			->Name("Memory Resource Uploading Task Graph")
+			->DependsOn(initializeTask);
+
+		p_GPUAddressUploadingTaskGraph = p_TaskGraph->NewTaskGraph()
+			->Name("GPU Address Updating Task Graph")
+			->DependsOn(p_MemoryResourceUploadingTaskGraph);
+
+		p_RenderingTaskGraph = p_TaskGraph->NewTaskGraph()
+			->Name("Rendering Task Graph")
+			->DependsOn(p_GPUAddressUploadingTaskGraph);
+
+		p_FinalizeTaskGraph = p_TaskGraph->NewTaskGraph()
+			->Name("Finalize Task Graph")
+			->DependsOn(p_RenderingTaskGraph);
 	}
 
 	void CVulkanApplication::EndThisFrame()
 	{
-		p_TaskGraph->FinalizeFunctor([this, executors = m_CurrentFrameRenderGraphExecutors]()
-			{
-				//收集 Misc Commandbuffers
-				std::vector<vk::CommandBuffer> waitingSubmitCommands;
-				for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+		p_FinalizeTaskGraph->NewTask()
+			->Name("Finalize")
+			->Functor([this, executors = m_CurrentFrameRenderGraphExecutors]()
 				{
-					itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
-				}
+					//收集 Misc Commandbuffers
+					std::vector<vk::CommandBuffer> waitingSubmitCommands;
+					for (auto itrThreadContext = m_ThreadContexts.begin(); itrThreadContext != m_ThreadContexts.end(); ++itrThreadContext)
+					{
+						itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
+					}
 
-				for (auto executor : executors)
-				{
-					executor->CollectCommands(waitingSubmitCommands);
-				}
+					for (auto executor : executors)
+					{
+						executor->CollectCommands(waitingSubmitCommands);
+					}
 
-				if (!m_WindowContexts.empty())
-				{
-					auto windowContext = m_WindowContexts[0];
-					TIndex currentBuffer = windowContext->GetCurrentFrameBufferIndex();
+					if (!m_WindowContexts.empty())
+					{
+						auto windowContext = m_WindowContexts[0];
+						TIndex currentBuffer = windowContext->GetCurrentFrameBufferIndex();
 
-					std::array<const vk::Semaphore, 1> semaphore = { windowContext->m_WaitNextFrameSemaphore };
-					std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
-					std::array<const vk::Semaphore, 1> presentSemaphore = { windowContext->m_CanPresentSemaphore };
+						std::array<const vk::Semaphore, 1> semaphore = { windowContext->m_WaitNextFrameSemaphore };
+						std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
+						std::array<const vk::Semaphore, 1> presentSemaphore = { windowContext->m_CanPresentSemaphore };
 
-					auto& threadContext = AquireThreadContext();
-					auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
+						auto& threadContext = AquireThreadContext();
+						auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
 
-					VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-					presentBarrier.PushImageBarrier(windowContext->GetCurrentFrameImage()
-						, windowContext->m_CurrentFrameUsageFlags, ResourceUsage::ePresent);
-					presentBarrier.ExecuteBarrier(cmd);
+						VulkanBarrierCollector presentBarrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
+						presentBarrier.PushImageBarrier(windowContext->GetCurrentFrameImage()
+							, windowContext->m_CurrentFrameUsageFlags, ResourceUsage::ePresent);
+						presentBarrier.ExecuteBarrier(cmd);
 
-					cmd.end();
-					waitingSubmitCommands.push_back(cmd);
+						cmd.end();
+						waitingSubmitCommands.push_back(cmd);
 
-					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
-						, semaphore
-						, waitStages
-						, presentSemaphore);
+						m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands
+							, semaphore
+							, waitStages
+							, presentSemaphore);
 
-					vk::PresentInfoKHR presenttInfo(
-						presentSemaphore
-						, windowContext->m_Swapchain
-						, currentBuffer
-					);
-					windowContext->m_PresentQueue.second.presentKHR(presenttInfo);
+						vk::PresentInfoKHR presenttInfo(
+							presentSemaphore
+							, windowContext->m_Swapchain
+							, currentBuffer
+						);
+						windowContext->m_PresentQueue.second.presentKHR(presenttInfo);
 
-					ReturnThreadContext(threadContext);
-				}
-				else
-				{
-					m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
-				}
-			});
+						ReturnThreadContext(threadContext);
+					}
+					else
+					{
+						m_SubmitCounterContext.FinalizeCurrentFrameGraphics(waitingSubmitCommands);
+					}
+				});
 
 		m_CurrentFrameRenderGraphExecutors.clear();
 
@@ -105,7 +123,7 @@ namespace graphics_backend
 			m_TaskFuture.wait();
 		}
 
-		m_TaskFuture = p_ThreadManager->ExecuteTaskGraph(p_TaskGraph);
+		m_TaskFuture = p_TaskGraph->Run();
 	}
 
 	void CVulkanApplication::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
@@ -413,12 +431,21 @@ namespace graphics_backend
 
 	CTask* CVulkanApplication::NewTask()
 	{
-		CTask* newTask = p_TaskGraph->NewTask();
-		newTask->Succeed(p_RootTask);
-		return newTask;
+		return p_RenderingTaskGraph->NewTask();
 	}
 
-
+	CTask* CVulkanApplication::NewUploadingTask(UploadingResourceType resourceType)
+	{
+		switch(resourceType)
+		{
+		case UploadingResourceType::eMemoryDataThisFrame:
+		case UploadingResourceType::eMemoryDataLowPriority:
+			return p_MemoryResourceUploadingTaskGraph->NewTask();
+		case UploadingResourceType::eAddressDataThisFrame:
+			return p_GPUAddressUploadingTaskGraph->NewTask();
+		}
+		return nullptr;
+	}
 
 	std::shared_ptr<WindowHandle> CVulkanApplication::CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight)
 	{

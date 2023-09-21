@@ -179,6 +179,7 @@
     <ClInclude Include="private\include\ResourceUsageInfo.h" />
     <ClInclude Include="private\include\ShaderBindingSet_Impl.h" />
     <ClInclude Include="private\include\ShaderDescriptorSetAllocator.h" />
+    <ClInclude Include="private\include\TaskScheduling.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />

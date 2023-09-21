@@ -59,6 +59,7 @@ namespace graphics_backend
 
 		CThreadManager* GetThreadManager() const;
 		CTask* NewTask();
+		CTask* NewUploadingTask(UploadingResourceType resourceType);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		std::shared_ptr<WindowHandle> CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);
 		void TickWindowContexts();
@@ -149,9 +150,19 @@ namespace graphics_backend
 
 		Internal_InterlockedQueue<uint32_t> m_AvailableThreadQueue;
 		mutable std::vector<CVulkanThreadContext> m_ThreadContexts;
+
+		//Thread Manager
 		CThreadManager* p_ThreadManager = nullptr;
+		//Root Graph
 		CTaskGraph* p_TaskGraph = nullptr;
-		CTask* p_RootTask = nullptr;
+		//Resource Loading Graph
+		CTaskGraph* p_MemoryResourceUploadingTaskGraph = nullptr;
+		CTaskGraph* p_GPUAddressUploadingTaskGraph = nullptr;
+		//Rendergraph Execution Graph
+		CTaskGraph* p_RenderingTaskGraph = nullptr;
+		//Finalize Graph
+		CTaskGraph* p_FinalizeTaskGraph = nullptr;
+		//Future
 		std::shared_future<void> m_TaskFuture;
 
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;

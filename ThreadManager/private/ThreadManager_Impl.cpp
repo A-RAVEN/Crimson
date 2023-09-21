@@ -45,14 +45,19 @@ namespace thread_management
 
     void TaskGraph_Impl1::Release()
     {
-        for (TaskGraph_Impl1* itrGraph : m_TaskGraphPool)
-        {
-            delete itrGraph;
-        }
         m_PendingSubnodeCount.store(0, std::memory_order_relaxed);
         m_RootTasks.clear();
         m_SubTasks.clear();
+        for (auto& ref_subtask : m_TaskPool)
+        {
+            ref_subtask.Release();
+        }
         m_TaskPool.clear();
+        for (auto p_subtaskgraph : m_TaskGraphPool)
+        {
+            p_subtaskgraph->Release();
+            delete p_subtaskgraph;
+        }
         m_TaskGraphPool.clear();
         Release_Internal();
     }
@@ -85,6 +90,11 @@ namespace thread_management
     }
     void TaskGraph_Impl1::Execute_Internal()
     {
+        if (m_SubTasks.empty())
+        {
+            FinalizeExecution_Internal();
+            return;
+        }
         SetupSubnodeDependencies();
         m_OwningManager->EnqueueTaskNodes(m_RootTasks);
     }
@@ -251,6 +261,7 @@ namespace thread_management
             std::unique_lock<std::mutex> lock(m_Mutex);
             m_ConditinalVariable.wait(lock, [this]()
                 {
+                    //TaskQueue不是空的，或者线程管理器已经停止，不再等待
                     return m_Stopped || !m_TaskQueue.empty();
                 });
 
@@ -267,6 +278,7 @@ namespace thread_management
             auto task = m_TaskQueue.front();
             m_TaskQueue.pop_front();
             lock.unlock();
+            //std::cout << task->m_Name << std::endl;
             task->Execute_Internal();
         }
     }

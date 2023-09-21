@@ -49,9 +49,19 @@ int main(int argc, char* argv[])
 			});
 	graph01->NewTask()
 		->Name("Test Work 4")
-		->Functor([]()
+		->Functor([threadManager]()
 			{
 				std::cout << "4";
+
+				auto graph02 = threadManager->NewTaskGraph()
+					->Name("Test Work Group 02");
+				graph02->NewTask()
+					->Name("Test Work 5")
+					->Functor([]()
+						{
+							std::cout << "5";
+						});
+				graph02->Run();
 			});
 	auto future = graph->Run();
 	future.wait();

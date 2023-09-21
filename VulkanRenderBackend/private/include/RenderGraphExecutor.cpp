@@ -51,12 +51,12 @@ namespace graphics_backend
 		{
 			auto compileTask = GetVulkanApplication().NewTask();
 			compileTask->Name("Compile RenderPass");
-			compileTask->Succeed(creationTask);
+			compileTask->DependsOn(creationTask);
 			compileTask->Functor([this, i]()
 				{
 					m_RenderPasses[i].Compile();
 				});
-			resolvingTask->Succeed(compileTask);
+			resolvingTask->DependsOn(compileTask);
 		}
 		m_CompiledFrame = GetVulkanApplication().GetSubmitCounterContext().GetCurrentFrameID();
 	}
@@ -111,7 +111,7 @@ namespace graphics_backend
 					m_RenderPasses[i].PrepareCommandBuffers(threadContext);
 					GetVulkanApplication().ReturnThreadContext(threadContext);
 				});
-			collectCommandsTask->Succeed(recorderTask);
+			collectCommandsTask->DependsOn(recorderTask);
 		}
 
 		collectCommandsTask->Functor([this, nodeCount]()

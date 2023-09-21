@@ -27,7 +27,7 @@ namespace graphics_backend
 	}
 	void GPUBuffer_Impl::UploadAsync()
 	{
-		BaseUploadingResource::UploadAsync();
+		BaseUploadingResource::UploadAsync(UploadingResourceType::eMemoryDataLowPriority);
 	}
 	bool GPUBuffer_Impl::UploadingDone() const
 	{
