@@ -434,6 +434,11 @@ namespace graphics_backend
 		return p_RenderingTaskGraph->NewTask();
 	}
 
+	TaskParallelFor* CVulkanApplication::NewTaskParallelFor()
+	{
+		return p_RenderingTaskGraph->NewTaskParallelFor();
+	}
+
 	CTask* CVulkanApplication::NewUploadingTask(UploadingResourceType resourceType)
 	{
 		switch(resourceType)

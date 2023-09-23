@@ -12,6 +12,7 @@ namespace graphics_backend
 	void CRenderBackend_Vulkan::InitializeThreadContextCount(CThreadManager* threadManager, uint32_t threadCount)
 	{
 		m_Application.InitializeThreadContext(threadManager, threadCount);
+		m_Application.PrepareBeforeTick();
 	}
 
 	void CRenderBackend_Vulkan::Release()
@@ -33,13 +34,10 @@ namespace graphics_backend
 	{
 		m_Application.TickWindowContexts();
 	}
-	void CRenderBackend_Vulkan::StartCurrentFrame()
-	{
-		m_Application.PrepareBeforeTick();
-	}
-	void CRenderBackend_Vulkan::EndCurrentFrame()
+	void CRenderBackend_Vulkan::TickBackend()
 	{
 		m_Application.EndThisFrame();
+		m_Application.PrepareBeforeTick();
 	}
 
 	void CRenderBackend_Vulkan::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)

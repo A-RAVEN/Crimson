@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
 	auto pBackend = renderBackendLoader.New();
 	pBackend->Initialize("Test Vulkan Backend", "CASCADED Engine");
-	pBackend->InitializeThreadContextCount(pThreadManager.get(), 1);
+	pBackend->InitializeThreadContextCount(pThreadManager.get(), 5);
 	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
 
 	glm::mat4 data{1};
@@ -180,28 +180,22 @@ int main(int argc, char *argv[])
 
 	pRenderGraph->PresentWindow(windowHandle);
 
+	vertexBuffer->UploadAsync();
+	vertexBuffer1->UploadAsync();
+	indexBuffer->UploadAsync();
+	shaderConstants->UploadAsync();
+	shaderBindings->UploadAsync();
+
 	while (pBackend->AnyWindowRunning())
 	{
-		pBackend->StartCurrentFrame();
-
-		if (frame == 0)
-		{
-			vertexBuffer->UploadAsync();
-			vertexBuffer1->UploadAsync();
-			indexBuffer->UploadAsync();
-			shaderConstants->UploadAsync();
-			shaderBindings->UploadAsync();
-		}
-
 		pBackend->ExecuteRenderGraph(pRenderGraph);
-		pBackend->EndCurrentFrame();
+		pBackend->TickBackend();
 		pBackend->TickWindows();
 		++frame;
 		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
 	pBackend->Release();
 	pBackend.reset();
-
 	pThreadManager.reset();
 
 	return EXIT_SUCCESS;

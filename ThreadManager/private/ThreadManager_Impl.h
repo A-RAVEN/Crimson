@@ -38,7 +38,8 @@ namespace thread_management
 		virtual TaskParallelFor* DependsOn(TaskParallelFor* parentTask) override;
 		virtual TaskParallelFor* DependsOn(CTaskGraph* parentTask) override;
 		virtual TaskParallelFor* Functor(std::function<void(uint32_t)> functor) override;
-		virtual std::shared_future<void> Dispatch(uint32_t jobCount) override;
+		virtual TaskParallelFor* JobCount(uint32_t jobCount) override;
+		virtual std::shared_future<void> Run() override;
 
 	public:
 		TaskParallelFor_Impl(TaskBaseObject* owner, ThreadManager_Impl1* owningManager);

@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 {
 	TModuleLoader<CThreadManager> threadManagerLoader(L"ThreadManager");
 	auto threadManager = threadManagerLoader.New();
-	threadManager->InitializeThreadCount(5);
+	threadManager->InitializeThreadCount(8);
 	//auto task0 = threadManager->NewTask()
 	//	->Name("Test Work 0")
 	//	->Functor([]()
@@ -65,11 +65,11 @@ int main(int argc, char* argv[])
 			});
 	graph01->NewTaskParallelFor()
 		->Name("Test Work Parallel For")
-			->Functor([](int i)
+			->Functor([](uint32_t i)
 			{
-				std::cout << ("p" + i);
+				std::cout << ("p" + std::to_string(i));
 			})
-		->Dispatch(10);
+		->JobCount(10);
 	auto future = graph->Run();
 	future.wait();
 	return 0;

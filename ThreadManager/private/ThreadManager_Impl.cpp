@@ -293,7 +293,7 @@ namespace thread_management
             std::unique_lock<std::mutex> lock(m_Mutex);
             m_ConditinalVariable.wait(lock, [this]()
                 {
-                    //TaskQueue²»ÊÇ¿ÕµÄ£¬»òÕßÏß³Ì¹ÜÀíÆ÷ÒÑ¾­Í£Ö¹£¬²»ÔÙµÈ´ı
+                    //TaskQueueä¸æ˜¯ç©ºçš„ï¼Œæˆ–è€…çº¿ç¨‹ç®¡ç†å™¨å·²ç»åœæ­¢ï¼Œä¸å†ç­‰å¾…
                     return m_Stopped || !m_TaskQueue.empty();
                 });
 
@@ -351,9 +351,14 @@ namespace thread_management
         return this;
     }
 
-    std::shared_future<void> TaskParallelFor_Impl::Dispatch(uint32_t jobCount)
+    TaskParallelFor* TaskParallelFor_Impl::JobCount(uint32_t jobCount)
     {
         m_PendingSubnodeCount.store(jobCount, std::memory_order_release);
+        return this;
+    }
+
+    std::shared_future<void> TaskParallelFor_Impl::Run()
+    {
         return StartExecute();
     }
 

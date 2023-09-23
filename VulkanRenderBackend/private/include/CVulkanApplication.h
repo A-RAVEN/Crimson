@@ -59,6 +59,7 @@ namespace graphics_backend
 
 		CThreadManager* GetThreadManager() const;
 		CTask* NewTask();
+		TaskParallelFor* NewTaskParallelFor();
 		CTask* NewUploadingTask(UploadingResourceType resourceType);
 		bool AnyWindowRunning() const { return !m_WindowContexts.empty(); }
 		std::shared_ptr<WindowHandle> CreateWindowContext(std::string windowName, uint32_t initialWidth, uint32_t initialHeight);

@@ -8,6 +8,7 @@
 #include "ShaderProvider.h"
 #include "CVertexInputDescriptor.h"
 #include "CTextureHandle.h"
+#include "ShaderBindingBuilder.h"
 
 constexpr uint32_t INVALID_ATTACHMENT_INDEX = 256;
 
