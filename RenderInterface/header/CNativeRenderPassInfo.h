@@ -92,6 +92,7 @@ struct SimpleDrawcallSubpassData
 	CPipelineStateObject pipelineStateObject;
 	CVertexInputDescriptor vertexInputDescriptor;
 	GraphicsShaderSet shaderSet;
+	ShaderBindingDescriptorList shaderBindingDescriptorList;
 	std::function<void(CInlineCommandList&)> commandFunction;
 };
 
@@ -114,6 +115,7 @@ public:
 		, CPipelineStateObject const& pipelineStates
 		, CVertexInputDescriptor const& vertexInputs
 		, GraphicsShaderSet const& shaderSet
+		, ShaderBindingDescriptorList const& shaderBindingDescriptorList
 		, std::function<void(CInlineCommandList&)> commandFunction)
 	{
 		mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
@@ -121,6 +123,7 @@ public:
 			pipelineStates
 			, vertexInputs
 			, shaderSet
+			, shaderBindingDescriptorList
 			, commandFunction
 			});
 		m_SubpassDataReferences.emplace_back(ESubpassType::eSimpleDraw

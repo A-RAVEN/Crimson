@@ -10,6 +10,7 @@ namespace thread_management
 		eManager = 0,
 		eGraph,
 		eNode,
+		eNodeParallel,
 	};
 
 	class TaskBaseObject

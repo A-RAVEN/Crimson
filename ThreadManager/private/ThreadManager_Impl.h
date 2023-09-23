@@ -13,6 +13,7 @@ namespace thread_management
 	public:
 		virtual CTask* Name(std::string name) override;
 		virtual CTask* DependsOn(CTask* parentTask) override;
+		virtual CTask* DependsOn(TaskParallelFor* parentTask) override;
 		virtual CTask* DependsOn(CTaskGraph* parentTask) override;
 		virtual std::shared_future<void> Run() override;
 
@@ -29,15 +30,42 @@ namespace thread_management
 		virtual void Execute_Internal() override;
 	};
 
+	class TaskParallelFor_Impl : public TaskNode, public TaskParallelFor
+	{
+	public:
+		virtual TaskParallelFor* Name(std::string name) override;
+		virtual TaskParallelFor* DependsOn(CTask* parentTask) override;
+		virtual TaskParallelFor* DependsOn(TaskParallelFor* parentTask) override;
+		virtual TaskParallelFor* DependsOn(CTaskGraph* parentTask) override;
+		virtual TaskParallelFor* Functor(std::function<void(uint32_t)> functor) override;
+		virtual std::shared_future<void> Dispatch(uint32_t jobCount) override;
+
+	public:
+		TaskParallelFor_Impl(TaskBaseObject* owner, ThreadManager_Impl1* owningManager);
+
+		void Initialize() {}
+		void Release();
+
+		// 通过 TaskNode 继承
+		virtual void NotifyChildNodeFinish(TaskNode* childNode) override;
+		virtual void Execute_Internal() override;
+	private:
+		std::function<void(uint32_t)> m_Functor;
+		std::atomic<uint32_t>m_PendingSubnodeCount{0};
+		std::deque<CTask_Impl1> m_TaskPool;
+	};
+
 	class TaskGraph_Impl1 : public TaskNode, public CTaskGraph
 	{
 	public:
 		virtual CTaskGraph* Name(std::string name) override;
 		virtual CTaskGraph* DependsOn(CTask* parentTask) override;
+		virtual CTaskGraph* DependsOn(TaskParallelFor* parentTask) override;
 		virtual CTaskGraph* DependsOn(CTaskGraph* parentTask) override;
 		virtual std::shared_future<void> Run() override;
 
 		virtual CTask* NewTask() override;
+		virtual TaskParallelFor* NewTaskParallelFor() override;
 		virtual CTaskGraph* NewTaskGraph() override;
 
 	public:
@@ -58,6 +86,7 @@ namespace thread_management
 		std::mutex m_Mutex;
 		std::deque<TaskNode*> m_SubTasks;
 		std::deque<CTask_Impl1> m_TaskPool;
+		std::deque<TaskParallelFor_Impl> m_TaskParallelForPool;
 		//在类里面放自己的deque会不会有问题？
 		std::deque<TaskGraph_Impl1*> m_TaskGraphPool;
 	};
@@ -67,13 +96,13 @@ namespace thread_management
 	public:
 		virtual void InitializeThreadCount(uint32_t threadNum) override;
 		virtual CTask* NewTask() override;
+		virtual TaskParallelFor* NewTaskParallelFor() override;
 		virtual CTaskGraph* NewTaskGraph() override;
 	public:
 		ThreadManager_Impl1();
 		~ThreadManager_Impl1();
 		void EnqueueTaskNode(TaskNode* node);
 		void EnqueueTaskNodes(std::deque<TaskNode*> const& nodeDeque);
-
 		virtual void NotifyChildNodeFinish(TaskNode* childNode) override;
 	private:
 		void ProcessingWorks(uint32_t threadId);
@@ -86,6 +115,7 @@ namespace thread_management
 		std::condition_variable m_ConditinalVariable;
 
 		threadsafe_utils::TThreadSafePointerPool<CTask_Impl1> m_TaskPool;
+		threadsafe_utils::TThreadSafePointerPool<TaskParallelFor_Impl> m_TaskParallelForPool;
 		threadsafe_utils::TThreadSafePointerPool<TaskGraph_Impl1> m_TaskGraphPool;
 	};
 }

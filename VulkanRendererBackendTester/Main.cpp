@@ -87,12 +87,10 @@ int main(int argc, char *argv[])
 	pBackend->InitializeThreadContextCount(pThreadManager.get(), 1);
 	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
 
-	auto shaderConstants = pBackend->CreateShaderConstantSet(shaderConstantBuilder);
-	auto shaderBindings = pBackend->CreateShaderBindingSet(shaderBindingBuilder);
-
 	glm::mat4 data{1};
+	auto shaderConstants = pBackend->CreateShaderConstantSet(shaderConstantBuilder);
 	shaderConstants->SetValue("viewProjectionMatrix", data);
-
+	auto shaderBindings = pBackend->CreateShaderBindingSet(shaderBindingBuilder);
 	shaderBindings->SetConstantSet(shaderConstants->GetName(), shaderConstants);
 
 
@@ -132,6 +130,7 @@ int main(int argc, char *argv[])
 		, VertexAttribute{1, offsetof(VertexData, r), VertexInputFormat::eR32G32B32_SFloat}
 		});
 
+	ShaderBindingDescriptorList bindingSetList = { shaderBindingBuilder };
 
 	auto windowBackBuffer = pRenderGraph->RegisterWindowBackbuffer(windowHandle);
 	CAttachmentInfo attachmentInfo{};
@@ -141,7 +140,12 @@ int main(int argc, char *argv[])
 	CRenderpassBuilder& newRenderPass = pRenderGraph->NewRenderPass({ attachmentInfo });
 	newRenderPass.SetAttachmentTarget(0, windowBackBuffer);
 	newRenderPass
-		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer, vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+		.Subpass({ {0} }
+			, CPipelineStateObject{}
+			, vertexInputDesc
+			, shaderSet
+			, bindingSetList
+			, [vertexBuffer, vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
 			{
@@ -154,7 +158,12 @@ int main(int argc, char *argv[])
 				std::cout << "Not Finish Yet" << std::endl;
 			}
 		})
-		.Subpass({ {0} }, CPipelineStateObject{}, vertexInputDesc, shaderSet, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+		.Subpass({ {0} }
+			, CPipelineStateObject{}
+			, vertexInputDesc
+			, shaderSet
+			, bindingSetList
+			, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
 			{

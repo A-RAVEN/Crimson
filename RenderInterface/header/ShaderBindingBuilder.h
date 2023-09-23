@@ -255,8 +255,10 @@ protected:
 	std::vector<std::pair<std::string, ShaderTextureDescriptor>> m_TextureDescriptors;
 };
 
-class ShaderBindingSet
+class ShaderBindingDescriptorList
 {
 public:
+	ShaderBindingDescriptorList(std::initializer_list<ShaderBindingBuilder> binding_sets) : shaderBindings(binding_sets) {}
+	
 	std::vector<ShaderBindingBuilder> shaderBindings;
 };

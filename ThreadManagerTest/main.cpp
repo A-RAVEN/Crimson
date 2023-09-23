@@ -63,6 +63,13 @@ int main(int argc, char* argv[])
 						});
 				graph02->Run();
 			});
+	graph01->NewTaskParallelFor()
+		->Name("Test Work Parallel For")
+			->Functor([](int i)
+			{
+				std::cout << ("p" + i);
+			})
+		->Dispatch(10);
 	auto future = graph->Run();
 	future.wait();
 	return 0;

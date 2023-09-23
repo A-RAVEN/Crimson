@@ -16,6 +16,13 @@ namespace thread_management
         return this;
     }
 
+    CTaskGraph* TaskGraph_Impl1::DependsOn(TaskParallelFor* parentTask)
+    {
+        TaskParallelFor_Impl* task = static_cast<TaskParallelFor_Impl*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
+
     CTaskGraph* TaskGraph_Impl1::DependsOn(CTaskGraph* parentTask)
     {
         TaskGraph_Impl1* task = static_cast<TaskGraph_Impl1*>(parentTask);
@@ -31,6 +38,15 @@ namespace thread_management
     CTask* TaskGraph_Impl1::NewTask()
     {
         return NewTask_Internal();
+    }
+
+    TaskParallelFor* TaskGraph_Impl1::NewTaskParallelFor()
+    {
+        std::lock_guard<std::mutex> guard(m_Mutex);
+        m_TaskParallelForPool.emplace_back(this, m_OwningManager);
+        TaskParallelFor_Impl* result = &m_TaskParallelForPool.back();
+        m_SubTasks.push_back(result);
+        return result;
     }
 
     CTaskGraph* TaskGraph_Impl1::NewTaskGraph()
@@ -124,6 +140,12 @@ namespace thread_management
         DependsOn_Internal(task);
         return this;
     }
+    CTask* CTask_Impl1::DependsOn(TaskParallelFor* parentTask)
+    {
+        TaskParallelFor_Impl* task = static_cast<TaskParallelFor_Impl*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
     CTask* CTask_Impl1::DependsOn(CTaskGraph* parentTask)
     {
         TaskGraph_Impl1* task = static_cast<TaskGraph_Impl1*>(parentTask);
@@ -168,6 +190,7 @@ namespace thread_management
         TaskBaseObject(TaskObjectType::eManager)
         , m_TaskGraphPool(threadsafe_utils::DefaultInitializer<TaskGraph_Impl1>{})
         , m_TaskPool(threadsafe_utils::DefaultInitializer<CTask_Impl1>{})
+        , m_TaskParallelForPool(threadsafe_utils::DefaultInitializer<TaskParallelFor_Impl>{})
     {
     }
 
@@ -194,6 +217,10 @@ namespace thread_management
     CTask* ThreadManager_Impl1::NewTask()
     {
         return m_TaskPool.Alloc(this, this);
+    }
+    TaskParallelFor* ThreadManager_Impl1::NewTaskParallelFor()
+    {
+        return m_TaskParallelForPool.Alloc(this, this);
     }
     CTaskGraph* ThreadManager_Impl1::NewTaskGraph()
     {
@@ -249,6 +276,11 @@ namespace thread_management
                 m_TaskPool.Release(static_cast<CTask_Impl1*>(childNode));
                 break;
             }
+            case TaskObjectType::eNodeParallel:
+            {
+                m_TaskParallelForPool.Release(static_cast<TaskParallelFor_Impl*>(childNode));
+                break;
+            }
             default:
 				CA_LOG_ERR("Invalid TaskNode Type");
 				break;
@@ -284,6 +316,93 @@ namespace thread_management
     }
 
     CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(CThreadManager, ThreadManager_Impl1)
+
+
+    TaskParallelFor* TaskParallelFor_Impl::Name(std::string name)
+    {
+        Name_Internal(name);
+        return this;
+    }
+
+    TaskParallelFor* TaskParallelFor_Impl::DependsOn(CTask* parentTask)
+    {
+        CTask_Impl1* task = static_cast<CTask_Impl1*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
+
+    TaskParallelFor* TaskParallelFor_Impl::DependsOn(TaskParallelFor* parentTask)
+    {
+        TaskParallelFor_Impl* task = static_cast<TaskParallelFor_Impl*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
+
+    TaskParallelFor* TaskParallelFor_Impl::DependsOn(CTaskGraph* parentTask)
+    {
+        TaskGraph_Impl1* task = static_cast<TaskGraph_Impl1*>(parentTask);
+        DependsOn_Internal(task);
+        return this;
+    }
+
+    TaskParallelFor* TaskParallelFor_Impl::Functor(std::function<void(uint32_t)> functor)
+    {
+        m_Functor = functor;
+        return this;
+    }
+
+    std::shared_future<void> TaskParallelFor_Impl::Dispatch(uint32_t jobCount)
+    {
+        m_PendingSubnodeCount.store(jobCount, std::memory_order_release);
+        return StartExecute();
+    }
+
+    TaskParallelFor_Impl::TaskParallelFor_Impl(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) :
+        TaskNode(TaskObjectType::eNodeParallel, owner, owningManager)
+    {
+    }
+
+    void TaskParallelFor_Impl::Release()
+    {
+        m_PendingSubnodeCount.store(0, std::memory_order_relaxed);
+        for (auto& ref_subtask : m_TaskPool)
+        {
+            ref_subtask.Release();
+        }
+        m_TaskPool.clear();
+        Release_Internal();
+    }
+
+    void TaskParallelFor_Impl::NotifyChildNodeFinish(TaskNode* childNode)
+    {
+        uint32_t remainCounter = --m_PendingSubnodeCount;
+        if (remainCounter == 0)
+        {
+            FinalizeExecution_Internal();
+        }
+    }
+
+    void TaskParallelFor_Impl::Execute_Internal()
+    {
+        if (m_PendingSubnodeCount == 0 || m_Functor == nullptr)
+        {
+            FinalizeExecution_Internal();
+            return;
+        };
+        std::deque<TaskNode*> p_nodes;
+        for (uint32_t taskId = 0; taskId < m_PendingSubnodeCount; ++taskId)
+        {
+            m_TaskPool.emplace_back(this, m_OwningManager);
+            CTask_Impl1* itrTask = &m_TaskPool.back();
+            itrTask->Name(m_Name + " Subtask:" + std::to_string(taskId));
+            itrTask->Functor([functor = m_Functor, taskId]()
+				{
+                    functor(taskId);
+				});
+		    p_nodes.push_back(itrTask);
+        };
+        m_OwningManager->EnqueueTaskNodes(p_nodes);
+    }
 }
 
 

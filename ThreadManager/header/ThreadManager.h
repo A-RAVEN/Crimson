@@ -4,13 +4,9 @@
 
 namespace thread_management
 {
-//#ifdef THREADMANAGER_EXPORTS
-//#define THREADMANAGER_API __declspec(dllexport)
-//#else
-//#define THREADMANAGER_API
-//#endif
 	class CThreadManager;
 	class CTaskGraph;
+	class TaskParallelFor;
 	class CTask
 	{
 	public:
@@ -23,10 +19,30 @@ namespace thread_management
 
 		virtual CTask* Name(std::string name) = 0;
 		virtual CTask* DependsOn(CTask* parentTask) = 0;
+		virtual CTask* DependsOn(TaskParallelFor* parentTask) = 0;
 		virtual CTask* DependsOn(CTaskGraph* parentTask) = 0;
 		virtual std::shared_future<void> Run() = 0;
 
 		virtual CTask* Functor(std::function<void()> functor) = 0;
+	};
+
+	class TaskParallelFor
+	{
+	public:
+		virtual ~TaskParallelFor() = default;
+		TaskParallelFor() = default;
+		TaskParallelFor(TaskParallelFor const& other) = delete;
+		TaskParallelFor& operator=(TaskParallelFor const& other) = delete;
+		TaskParallelFor(TaskParallelFor&& other) = delete;
+		TaskParallelFor& operator=(TaskParallelFor&& other) = delete;
+
+		virtual TaskParallelFor* Name(std::string name) = 0;
+		virtual TaskParallelFor* DependsOn(CTask* parentTask) = 0;
+		virtual TaskParallelFor* DependsOn(TaskParallelFor* parentTask) = 0;
+		virtual TaskParallelFor* DependsOn(CTaskGraph* parentTask) = 0;
+
+		virtual TaskParallelFor* Functor(std::function<void(uint32_t)> functor) = 0;
+		virtual std::shared_future<void> Dispatch(uint32_t jobCount) = 0;
 	};
 
 	class CTaskGraph
@@ -41,10 +57,12 @@ namespace thread_management
 
 		virtual CTaskGraph* Name(std::string name) = 0;
 		virtual CTaskGraph* DependsOn(CTask* parentTask) = 0;
+		virtual CTaskGraph* DependsOn(TaskParallelFor* parentTask) = 0;
 		virtual CTaskGraph* DependsOn(CTaskGraph* parentTask) = 0;
 		virtual std::shared_future<void> Run() = 0;
 
 		virtual CTask* NewTask() = 0;
+		virtual TaskParallelFor* NewTaskParallelFor() = 0;
 		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 
@@ -60,6 +78,7 @@ namespace thread_management
 
 		virtual void InitializeThreadCount(uint32_t threadNum) = 0;
 		virtual CTask* NewTask() = 0;
+		virtual TaskParallelFor* NewTaskParallelFor() = 0;
 		virtual CTaskGraph* NewTaskGraph() = 0;
 	};
 }
