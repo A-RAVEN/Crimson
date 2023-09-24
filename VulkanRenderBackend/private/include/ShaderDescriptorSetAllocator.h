@@ -5,6 +5,8 @@
 #include <list>
 #include <SharedTools/header/RAII.h>
 #include "HashPool.h"
+#include <RenderInterface/header/ShaderBindingBuilder.h>
+#include "Containers.h"
 
 namespace graphics_backend
 {
@@ -14,6 +16,8 @@ namespace graphics_backend
 	class ShaderDescriptorSetLayoutInfo
 	{
 	public:
+		ShaderDescriptorSetLayoutInfo() = default;
+		ShaderDescriptorSetLayoutInfo(ShaderBindingBuilder const& bindingBuilder);
 		uint32_t m_ConstantBufferCount = 0;
 		bool operator==(ShaderDescriptorSetLayoutInfo const& other) const
 		{
@@ -29,7 +33,8 @@ namespace graphics_backend
 		vk::DescriptorSet GetDescriptorSet() const { return m_DescriptorSet; }
 		ShaderDescriptorSetObject(ShaderDescriptorSetObject&& other) = default;
 		ShaderDescriptorSetObject& operator=(ShaderDescriptorSetObject&& other) = default;
-
+		ShaderDescriptorSetObject(ShaderDescriptorSetObject const& other) = default;
+		ShaderDescriptorSetObject& operator=(ShaderDescriptorSetObject const& other) = default;
 	private:
 		friend class ChunkedDescriptorPoolWrapper;
 		friend class DescriptorSetPool;
@@ -46,8 +51,9 @@ namespace graphics_backend
 			, uint32_t maxSize);
 		void Initialize();
 		ShaderDescriptorSetHandle AllocateSet();
-		void ReleaseSet(ShaderDescriptorSetObject& releasedSet);
-		bool IsFull() const { return m_UsingSize >= m_MaxSize; }
+		void ClientReleaseSet(ShaderDescriptorSetObject&& releasedSet);
+		void ReleaseFrameboundResources();
+		bool IsFull() const { return m_AvailableSets.empty() && (m_UsingSize >= m_MaxSize); }
 		bool operator<(DescriptorSetPool const& other) const
 		{
 			return m_Pool < other.m_Pool;
@@ -62,6 +68,7 @@ namespace graphics_backend
 		uint32_t m_UsingSize = 0;
 		uint32_t m_MaxSize = 0;
 		std::deque<vk::DescriptorSet> m_AvailableSets;
+		TFrameboundReleaser<ShaderDescriptorSetObject> m_FrameboundReleaser;
 	};
 
 	class ChunkedDescriptorPoolWrapper : public BaseApplicationSubobject
@@ -72,6 +79,8 @@ namespace graphics_backend
 			, uint32_t chunkSize);
 		ShaderDescriptorSetHandle AllocateSet();
 		void Release() override;
+
+		void ReleaseFrameboundResources();
 	private:
 		DescriptorSetPool& GetAvailablePool();
 		void MarkPoolAvailable(DescriptorSetPool& pool);
@@ -92,6 +101,8 @@ namespace graphics_backend
 
 		vk::DescriptorSetLayout GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
 		ShaderDescriptorSetLayoutInfo const& GetLayoutInfo() const { return *m_LayoutInfo; }
+
+		void ReleaseFrameboundResources() { m_DescriptorPool.ReleaseFrameboundResources(); }
 	private:
 		ShaderDescriptorSetLayoutInfo const* m_LayoutInfo;
 		vk::DescriptorSetLayout m_DescriptorSetLayout;

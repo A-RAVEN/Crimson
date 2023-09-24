@@ -110,14 +110,6 @@ namespace graphics_backend
 		void ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph);
 
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
-
-		void ExecuteSubpass_SimpleDraw(
-			CRenderpassBuilder const& inRenderPass
-			, uint32_t subpassID
-			, uint32_t width
-			, uint32_t height
-			, vk::CommandBuffer cmd);
-		void ExecuteRenderPass(CRenderpassBuilder const& inRenderPass);
 	public:
 		//Allocation
 		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
@@ -125,6 +117,8 @@ namespace graphics_backend
 
 		std::shared_ptr<ShaderConstantSet> NewShaderConstantSet(ShaderConstantsBuilder const& builder);
 		std::shared_ptr<ShaderBindingSet> NewShaderBindingSet(ShaderBindingBuilder const& builder);
+
+		HashPool<ShaderBindingBuilder, ShaderBindingSetAllocator>& GetShaderBindingSetAllocators() { return m_ShaderBindingSetAllocator; }
 	private:
 
 		void InitializeInstance(std::string const& name, std::string const& engineName);

@@ -1,4 +1,5 @@
 #include <private/include/pch.h>
+#include <private/include/CVulkanApplication.h>
 #include <private/include/InterfaceTranslator.h>
 #include <private/include/VulkanPipelineObject.h>
 
@@ -116,7 +117,7 @@ namespace graphics_backend
 		inoutBlendAttachmentStates.resize(attachmentCount);
 		for(uint32_t i = 0; i < attachmentCount; ++i)
 		{
-			auto const& srcInfo =colorAttachments.attachmentBlendStates[i];
+			auto const& srcInfo = colorAttachments.attachmentBlendStates[i];
 			auto& dstInfo = inoutBlendAttachmentStates[i];
 			dstInfo.blendEnable = srcInfo.blendEnable;
 			dstInfo.srcColorBlendFactor = EBlendFactorTranslate(srcInfo.sourceColorBlendFactor);
@@ -186,7 +187,8 @@ namespace graphics_backend
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 		PopulateShaderStages(pipelineObjectDescriptor.shaderState, shaderStages);
 
-		vk::PipelineLayoutCreateInfo layoutCreateInfo{};
+		//TODO Populate Shader Binding Layout Info
+		vk::PipelineLayoutCreateInfo layoutCreateInfo{{}, pipelineObjectDescriptor.descriptorSetLayouts, {}};
 		m_PipelineLayout = GetDevice().createPipelineLayout(layoutCreateInfo);
 
 		std::array<vk::Viewport, 1> dummyViewports = { vk::Viewport{0, 0, 1, 1, 0, 1} };

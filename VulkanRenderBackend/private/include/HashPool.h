@@ -2,6 +2,7 @@
 #include <SharedTools/header/uhash.h>
 #include <unordered_map>
 #include <private/include/VulkanApplicationSubobjectBase.h>
+#include <functional>
 
 namespace graphics_backend
 {
@@ -46,6 +47,13 @@ namespace graphics_backend
 			return std::weak_ptr<ValType>(result);
 		}
 
+		void Foreach(std::function<void(DescType const&, ValType*)> callbackFunc)
+		{
+			for (auto& it : m_InternalMap)
+			{
+				callbackFunc(it.first, it.second.get());
+			};
+		}
 	private:
 		std::mutex m_Mutex;
 		std::unordered_map<DescType, std::shared_ptr<ValType>, hash_utils::default_hashAlg> m_InternalMap;

@@ -94,27 +94,23 @@ namespace graphics_backend
 	{
 		if (!CompileDone())
 			return;
+		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
+
+		auto recorderTask = GetVulkanApplication().NewTaskParallelFor();
+		recorderTask->Name("Record RenderPass Cmds");
+		recorderTask->JobCount(nodeCount);
+		recorderTask->Functor([this](uint32_t i)
+			{
+				CVulkanThreadContext& threadContext = GetVulkanApplication().AquireThreadContext();
+				m_RenderPasses[i].SetupFrameBuffer();
+				m_RenderPasses[i].PrepareCommandBuffers(threadContext);
+				GetVulkanApplication().ReturnThreadContext(threadContext);
+			});
 
 		auto collectCommandsTask = GetVulkanApplication().NewTask()
-			->Name("Collect RenderPass Commands");
-
-
-		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
-		for (uint32_t i = 0; i < nodeCount; ++i)
-		{
-			auto recorderTask = GetVulkanApplication().NewTask();
-			recorderTask->Name("Record RenderPass Cmds");
-			recorderTask->Functor([this, i]()
-				{
-					CVulkanThreadContext& threadContext = GetVulkanApplication().AquireThreadContext();
-					m_RenderPasses[i].SetupFrameBuffer();
-					m_RenderPasses[i].PrepareCommandBuffers(threadContext);
-					GetVulkanApplication().ReturnThreadContext(threadContext);
-				});
-			collectCommandsTask->DependsOn(recorderTask);
-		}
-
-		collectCommandsTask->Functor([this, nodeCount]()
+			->Name("Collect RenderPass Commands")
+			->DependsOn(recorderTask)
+			->Functor([this, nodeCount]()
 			{
 				m_PendingGraphicsCommandBuffers.clear();
 				for (uint32_t i = 0; i < nodeCount; ++i)
@@ -122,12 +118,6 @@ namespace graphics_backend
 					m_RenderPasses[i].AppendCommandBuffers(m_PendingGraphicsCommandBuffers);
 				}
 				auto windowTarget = m_RenderGraph->GetTargetWindow<CWindowContext>();
-
-				std::array<const vk::Semaphore, 1> semaphore = { windowTarget->GetWaitDoneSemaphore()};
-				std::array<const vk::PipelineStageFlags, 1> waitStages = { vk::PipelineStageFlagBits::eTransfer };
-				std::array<const vk::Semaphore, 1> signalSemaphore = { windowTarget->GetPresentWaitingSemaphore() };
-
-				//GetFrameCountContext().SubmitGraphics(m_PendingGraphicsCommandBuffers, semaphore, waitStages);
 				TIndex windowIndex = m_RenderGraph->WindowHandleToTextureIndex(windowTarget);
 				auto state = m_TextureHandleUsageStates.find(windowIndex);
 				if (state != m_TextureHandleUsageStates.end())
@@ -182,20 +172,9 @@ namespace graphics_backend
 		auto& renderPassInfo = m_RenderpassBuilder.GetRenderPassInfo();
 		RenderPassDescriptor rpDesc{ renderPassInfo };
 		auto pRenderPass = gpuObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
-
 		auto& subpassData = m_RenderpassBuilder.GetSubpassData_SimpleDrawcall(subpassID);
-		auto vertModule = gpuObjectManager.GetShaderModuleCache().GetOrCreate({ subpassData.shaderSet.vert }).lock();
-		auto fragModule = gpuObjectManager.GetShaderModuleCache().GetOrCreate({ subpassData.shaderSet.frag }).lock();
-
-		CPipelineObjectDescriptor pipelineDesc{
-			subpassData.pipelineStateObject
-			, subpassData.vertexInputDescriptor
-			, ShaderStateDescriptor{vertModule, fragModule}
-			, pRenderPass
-			, subpassID };
 
 		auto pPipeline = m_GraphicsPipelineObjects[subpassID];
-
 
 		cmd.setViewport(0
 			, {
@@ -214,7 +193,7 @@ namespace graphics_backend
 			}
 		);
 		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-		CCommandList_Impl cmdListInterface{ cmd, pRenderPass, subpassID };
+		CCommandList_Impl cmdListInterface{ cmd, pRenderPass, subpassID, pPipeline };
 		subpassData.commandFunction(cmdListInterface);
 	}
 
@@ -352,11 +331,23 @@ namespace graphics_backend
 			auto& subpassData = m_RenderpassBuilder.GetSubpassData_SimpleDrawcall(subpassID);
 			auto vertModule = gpuObjectManager.GetShaderModuleCache().GetOrCreate({ subpassData.shaderSet.vert }).lock();
 			auto fragModule = gpuObjectManager.GetShaderModuleCache().GetOrCreate({ subpassData.shaderSet.frag }).lock();
+			
+			//也许从shader中提取layout信息更好
+			std::vector<vk::DescriptorSetLayout> layouts;
+			layouts.reserve(subpassData.shaderBindingDescriptorList.shaderBindingDescs.size());
+			auto& descPoolCache = gpuObjectManager.GetShaderDescriptorPoolCache();
+			for (auto& shaderBindingDesc : subpassData.shaderBindingDescriptorList.shaderBindingDescs)
+			{
+				ShaderDescriptorSetLayoutInfo layoutInfo{ shaderBindingDesc };
+				auto shaderDescriptorSetLayout = descPoolCache.GetOrCreate(layoutInfo).lock();
+				layouts.push_back(shaderDescriptorSetLayout->GetDescriptorSetLayout());
+			}
 
 			CPipelineObjectDescriptor pipelineDesc{
 			subpassData.pipelineStateObject
 			, subpassData.vertexInputDescriptor
 			, ShaderStateDescriptor{vertModule, fragModule}
+			, layouts
 			, m_RenderPassObject
 			, subpassID };
 

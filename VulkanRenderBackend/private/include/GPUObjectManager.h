@@ -17,6 +17,8 @@ namespace graphics_backend
 		FramebufferObjectDic& GetFramebufferCache() { return m_FramebufferObjectCache; }
 		PipelineObjectDic& GetPipelineCache() { return m_PipelineObjectCache; }
 		ShaderDescriptorSetAllocatorPool& GetShaderDescriptorPoolCache() { return m_ShaderDescriptorPoolCache; }
+		//Release framebound resources
+		void ReleaseFrameboundResources(FrameType releasingFrame);
 	private:
 		ShaderModuleObjectDic m_ShaderModuleCache;
 		RenderPassObjectDic m_RenderPassCache;

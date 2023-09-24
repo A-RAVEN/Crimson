@@ -40,11 +40,6 @@ namespace graphics_backend
 		m_Application.PrepareBeforeTick();
 	}
 
-	void CRenderBackend_Vulkan::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)
-	{
-		m_Application.ExecuteRenderPass(inRenderPass);
-	}
-
 	void CRenderBackend_Vulkan::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
 		m_Application.ExecuteRenderGraph(inRenderGraph);

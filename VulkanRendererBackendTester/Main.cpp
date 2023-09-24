@@ -13,6 +13,7 @@
 #include "TestShaderProvider.h"
 #include <RenderInterface/header/ShaderBindingBuilder.h>
 #include <ExternalLib/glm/glm/mat4x4.hpp>
+#include <ExternalLib/glm/glm/gtc/matrix_transform.hpp>
 using namespace thread_management;
 using namespace library_loader;
 using namespace graphics_backend;
@@ -87,9 +88,8 @@ int main(int argc, char *argv[])
 	pBackend->InitializeThreadContextCount(pThreadManager.get(), 5);
 	auto windowHandle = pBackend->NewWindow(1024, 512, "Test Window");
 
-	glm::mat4 data{1};
 	auto shaderConstants = pBackend->CreateShaderConstantSet(shaderConstantBuilder);
-	shaderConstants->SetValue("viewProjectionMatrix", data);
+
 	auto shaderBindings = pBackend->CreateShaderBindingSet(shaderBindingBuilder);
 	shaderBindings->SetConstantSet(shaderConstants->GetName(), shaderConstants);
 
@@ -145,10 +145,11 @@ int main(int argc, char *argv[])
 			, vertexInputDesc
 			, shaderSet
 			, bindingSetList
-			, [vertexBuffer, vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+			, [vertexBuffer, vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
 			{
+				cmd.SetShaderBindings({ shaderBindings });
 				cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
 				cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
 				cmd.DrawIndexed(3);
@@ -163,10 +164,11 @@ int main(int argc, char *argv[])
 			, vertexInputDesc
 			, shaderSet
 			, bindingSetList
-			, [vertexBuffer1, indexBuffer](CInlineCommandList& cmd)
+			, [vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
 		{
 			if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
 			{
+				cmd.SetShaderBindings({ shaderBindings });
 				cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
 				cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
 				cmd.DrawIndexed(3);
@@ -179,20 +181,23 @@ int main(int argc, char *argv[])
 			;
 
 	pRenderGraph->PresentWindow(windowHandle);
-
 	vertexBuffer->UploadAsync();
 	vertexBuffer1->UploadAsync();
 	indexBuffer->UploadAsync();
-	shaderConstants->UploadAsync();
 	shaderBindings->UploadAsync();
 
 	while (pBackend->AnyWindowRunning())
 	{
+		auto lookat = glm::lookAt(glm::vec3(0.0f, 0.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		auto perspective = glm::perspective(glm::radians(45.0f), 1024.0f / 512.0f, 0.1f, 1000.0f);
+		glm::mat4 data = perspective * lookat;
+		shaderConstants->SetValue("viewProjectionMatrix", data);
+		shaderConstants->UploadAsync();
 		pBackend->ExecuteRenderGraph(pRenderGraph);
 		pBackend->TickBackend();
 		pBackend->TickWindows();
 		++frame;
-		std::this_thread::sleep_for(std::chrono::microseconds(10));
+		//std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
 	pBackend->Release();
 	pBackend.reset();

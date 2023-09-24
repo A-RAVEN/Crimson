@@ -1,4 +1,10 @@
 
+[[vk::binding(0, 0)]]
+cbuffer testBuffer
+{
+    float4x4 testMatrix;
+};
+
 struct VertexToFragment
 {
     float4 position : SV_POSITION;
@@ -14,7 +20,7 @@ struct VertexInput
 VertexToFragment vert(in VertexInput input)
 {
     VertexToFragment result = (VertexToFragment)0;
-    result.position = float4(input.position, 0, 1);
+    result.position = mul(testMatrix, float4(input.position, 0, 1));
     result.color = input.color;
     return result;
 }

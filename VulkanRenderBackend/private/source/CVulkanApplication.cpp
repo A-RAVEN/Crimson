@@ -32,6 +32,7 @@ namespace graphics_backend
 						{
 							itrThreadContext->DoReleaseResourceBeforeFrame(releasedFrame);
 						}
+						GetGPUObjectManager().ReleaseFrameboundResources(releasedFrame);
 					}
 					m_MemoryManager.ReleaseCurrentFrameResource();
 					for (auto& windowContext : m_WindowContexts)
@@ -491,122 +492,6 @@ namespace graphics_backend
 	void CVulkanApplication::ReleaseAllWindowContexts()
 	{
 		m_WindowContexts.clear();
-	}
-
-
-	void CVulkanApplication::ExecuteSubpass_SimpleDraw(
-		CRenderpassBuilder const& inRenderPass
-		, uint32_t subpassID
-		, uint32_t width
-		, uint32_t height
-		, vk::CommandBuffer cmd)
-	{
-		auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
-		RenderPassDescriptor rpDesc{ renderPassInfo };
-		auto pRenderPass = m_GPUObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
-
-		auto& subpassData = inRenderPass.GetSubpassData_SimpleDrawcall(subpassID);
-		auto vertModule = m_GPUObjectManager.GetShaderModuleCache().GetOrCreate({subpassData.shaderSet.vert}).lock();
-		auto fragModule = m_GPUObjectManager.GetShaderModuleCache().GetOrCreate({subpassData.shaderSet.frag}).lock();
-
-		CPipelineObjectDescriptor pipelineDesc{
-			subpassData.pipelineStateObject
-			, subpassData.vertexInputDescriptor
-			, ShaderStateDescriptor{vertModule, fragModule}
-			, pRenderPass
-			, subpassID };
-
-		auto pPipeline = m_GPUObjectManager.GetPipelineCache().GetOrCreate(pipelineDesc).lock();
-
-	
-
-		cmd.setViewport(0
-			, {
-				vk::Viewport{0.0f, 0.0f
-				, static_cast<float>(width)
-				, static_cast<float>(height)
-				, 0.0f, 1.0f}
-			}
-		);
-		cmd.setScissor(0
-			, {
-				vk::Rect2D{
-					{0, 0}
-					, { width, height }
-				}
-			}
-		);
-		cmd.bindPipeline(vk::PipelineBindPoint::eGraphics, pPipeline->GetPipeline());
-		CCommandList_Impl cmdListInterface{ cmd, pRenderPass, subpassID };
-		subpassData.commandFunction(cmdListInterface);
-	}
-
-	void CVulkanApplication::ExecuteRenderPass(CRenderpassBuilder const& inRenderPass)
-	{
-		auto newTask = NewTask();
-		newTask->Functor([this, inRenderPass]()
-			{
-				auto& renderPassInfo = inRenderPass.GetRenderPassInfo();
-				auto& threadContext = AquireThreadContext();
-				RenderPassDescriptor rpDesc{ renderPassInfo };
-				auto pRenderPass = m_GPUObjectManager.GetRenderPassCache().GetOrCreate(rpDesc).lock();
-				auto textureSize = m_WindowContexts[0]->GetSize();
-				FramebufferDescriptor fbDesc{ {m_WindowContexts[0]->GetCurrentFrameImageView()}
-				,  pRenderPass
-				, textureSize.x, textureSize.y, 1 };
-				auto pFrameBufferObject = m_GPUObjectManager.GetFramebufferCache().GetOrCreate(fbDesc).lock();
-				std::vector<vk::ClearValue> clearValues;
-				clearValues.resize(renderPassInfo.attachmentInfos.size());
-				for (uint32_t attachmentID = 0; attachmentID < renderPassInfo.attachmentInfos.size(); ++attachmentID)
-				{
-					auto& attachmentInfo = renderPassInfo.attachmentInfos[attachmentID];
-					clearValues[attachmentID] = AttachmentClearValueTranslate(
-						attachmentInfo.clearValue
-						, attachmentInfo.format);
-				}
-
-				auto cmd = threadContext.GetCurrentFramePool().AllocateOnetimeCommandBuffer();
-
-				VulkanBarrierCollector barrier{ GetSubmitCounterContext().GetGraphicsQueueFamily() };
-				barrier.PushImageBarrier(m_WindowContexts[0]->GetCurrentFrameImage()
-					, ResourceUsage::eDontCare, ResourceUsage::eColorAttachmentOutput);
-				barrier.ExecuteBarrier(cmd);
-
-				cmd.beginRenderPass(
-					vk::RenderPassBeginInfo{
-					pRenderPass->GetRenderPass()
-						, pFrameBufferObject->GetFramebuffer()
-						, vk::Rect2D{{0, 0}
-					, { pFrameBufferObject->GetWidth()
-						, pFrameBufferObject->GetHeight() }}
-					, clearValues}
-				, vk::SubpassContents::eInline);
-
-				for (uint32_t subpassId = 0; subpassId < renderPassInfo.subpassInfos.size(); ++subpassId)
-				{
-					ESubpassType subpasType = inRenderPass.GetSubpassType(subpassId);
-					if (subpassId > 0)
-					{
-						cmd.nextSubpass(vk::SubpassContents::eInline);
-					}
-					switch (subpasType)
-					{
-					case ESubpassType::eSimpleDraw:
-						ExecuteSubpass_SimpleDraw(
-							inRenderPass
-							, subpassId
-							, pFrameBufferObject->GetWidth()
-							, pFrameBufferObject->GetHeight()
-							, cmd);
-						break;
-					case ESubpassType::eMultiDrawInterface:
-						break;
-					}
-				}
-				cmd.endRenderPass();
-				cmd.end();
-				ReturnThreadContext(threadContext);
-			});
 	}
 
 	CVulkanApplication::CVulkanApplication() :

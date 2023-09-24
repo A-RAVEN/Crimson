@@ -1,11 +1,12 @@
 #pragma once
 #include "Common.h"
+#include "GPUTexture.h"
 
 namespace graphics_backend
 {
 	class CGPUTextureResource
 	{
 	public:
-		virtual CTextureInfo GetTextureInfo() const = 0;
+		virtual GPUTextureDescriptor GetTextureDescriptor() const = 0;
 	};
 }

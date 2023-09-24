@@ -81,11 +81,14 @@ namespace graphics_backend {
 		auto currentFrame = GetFrameCountContext().GetCurrentFrameID();
 
 		size_t bufferSize = p_Metadata->GetTotalSize() * sizeof(uint32_t);
-		m_BufferObject = memoryManager.AllocateBuffer(
-			EMemoryType::GPU
-			, EMemoryLifetime::Persistent
-			, bufferSize
-			, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		if (m_BufferObject == nullptr)
+		{
+			m_BufferObject = memoryManager.AllocateBuffer(
+				EMemoryType::GPU
+				, EMemoryLifetime::Persistent
+				, bufferSize
+				, vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst);
+		}
 		auto tempBuffer = memoryManager.AllocateFrameBoundTransferStagingBuffer(bufferSize);
 		memcpy(tempBuffer->GetMappedPointer(), m_UploadData.data(), bufferSize);
 
@@ -197,7 +200,8 @@ namespace graphics_backend {
 	}
 	void ShaderBindingSet_Impl::DoUpload()
 	{
-		if (!m_DescriptorSetHandle.IsRAIIAquired())
+		m_DescriptorSetHandle.RAIIRelease();
+		CA_ASSERT(!m_DescriptorSetHandle.IsRAIIAquired(), "RAIIObject Should Be Released Here");
 		{
 			auto& descPoolCache = GetVulkanApplication().GetGPUObjectManager().GetShaderDescriptorPoolCache();
 			ShaderDescriptorSetLayoutInfo layoutInfo = p_Metadata->GetLayoutInfo();
@@ -236,7 +240,7 @@ namespace graphics_backend {
 	void ShaderBindingSetMetadata::Initialize(ShaderBindingBuilder const& builder)
 	{
 		auto& constantBufferDescriptors = builder.GetConstantBufferDescriptors();
-		m_LayoutInfo.m_ConstantBufferCount = constantBufferDescriptors.size();
+		m_LayoutInfo = ShaderDescriptorSetLayoutInfo{ builder };
 
 		uint32_t bindingIndex = 0;
 		for (auto& desc : constantBufferDescriptors)

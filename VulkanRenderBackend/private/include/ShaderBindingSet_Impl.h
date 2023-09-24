@@ -4,6 +4,7 @@
 #include "Containers.h"
 #include "VulkanApplicationSubobjectBase.h"
 #include "CVulkanBufferObject.h"
+#include "ShaderDescriptorSetAllocator.h"
 
 namespace graphics_backend
 {
@@ -73,6 +74,9 @@ namespace graphics_backend
 		virtual void SetConstantSet(std::string const& name, std::shared_ptr<ShaderConstantSet> const& pConstantSet) override;
 		virtual void UploadAsync() override;
 		virtual bool UploadingDone() const override;
+		vk::DescriptorSet GetDescriptorSet() const {
+			return m_DescriptorSetHandle->GetDescriptorSet();
+		}
 	protected:
 		virtual void DoUpload() override;
 	private:

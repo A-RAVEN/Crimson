@@ -2,13 +2,19 @@
 #include <private/include/CommandList_Impl.h>
 #include <private/include/GPUBuffer_Impl.h>
 #include <private/include/InterfaceTranslator.h>
+#include <private/include/ShaderBindingSet_Impl.h>
 
 namespace graphics_backend
 {
-	CCommandList_Impl::CCommandList_Impl(vk::CommandBuffer cmd, std::shared_ptr<RenderPassObject> renderPassObj, TIndex subpassIndex) :
+	CCommandList_Impl::CCommandList_Impl(vk::CommandBuffer cmd
+		, std::shared_ptr<RenderPassObject> renderPassObj
+		, TIndex subpassIndex
+		, std::shared_ptr<CPipelineObject> pipelineObj
+	) :
 		m_CommandBuffer(cmd)
 		, m_RenderPassObject(renderPassObj)
 		, m_SubpassIndex(subpassIndex)
+		, m_PipelineObject(pipelineObj)
 	{
 	}
 	void CCommandList_Impl::BindVertexBuffers(std::vector<GPUBuffer const*> pGPUBuffers, std::vector<uint32_t> offsets)
@@ -33,6 +39,18 @@ namespace graphics_backend
 	{
 		m_CommandBuffer.bindIndexBuffer(static_cast<GPUBuffer_Impl const*>(pGPUBuffer)
 			->GetVulkanBufferObject().GetBuffer(), offset, EIndexBufferTypeTranslate(indexBufferType));
+	}
+	void CCommandList_Impl::SetShaderBindings(std::vector<std::shared_ptr<ShaderBindingSet>> bindings)
+	{
+		std::vector<vk::DescriptorSet> descriptorSets;
+		descriptorSets.resize(bindings.size());
+		for (uint32_t i = 0; i < bindings.size(); ++i)
+		{
+			auto binding_set_impl = std::static_pointer_cast<ShaderBindingSet_Impl>(bindings[i]);
+			descriptorSets[i] = binding_set_impl->GetDescriptorSet();
+		};
+		m_CommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, m_PipelineObject->GetPipelineLayout()
+			, 0, descriptorSets, {});
 	}
 	void CCommandList_Impl::DrawIndexed(uint32_t indexCount, uint32_t instanceCount)
 	{

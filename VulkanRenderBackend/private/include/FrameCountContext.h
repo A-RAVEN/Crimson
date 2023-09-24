@@ -1,5 +1,7 @@
 #pragma once
 #include <private/include/VulkanApplicationSubobjectBase.h>
+#include "RenderBackendSettings.h"
+#include <RenderInterface/header/Common.h>
 namespace graphics_backend
 {
 	class CFrameCountContext : public ApplicationSubobjectBase

@@ -6,6 +6,9 @@
 #include <RenderInterface/header/CVertexInputDescriptor.h>
 #include "RenderPassObject.h"
 
+template<>
+struct hash_utils::is_contiguously_hashable<vk::DescriptorSetLayout> : public std::true_type {};
+
 namespace graphics_backend
 {
 	struct ShaderStateDescriptor
@@ -33,6 +36,8 @@ namespace graphics_backend
 		CPipelineStateObject pso{};
 		CVertexInputDescriptor vertexInputs{};
 		ShaderStateDescriptor shaderState{};
+		//TODO Wrap ME
+		std::vector<vk::DescriptorSetLayout> descriptorSetLayouts{};
 		std::shared_ptr<RenderPassObject> renderPassObject = nullptr;
 		uint32_t subpassIndex = 0;
 
@@ -51,6 +56,7 @@ namespace graphics_backend
 			hash_append(h, pipeline_desc.pso);
 			hash_append(h, pipeline_desc.vertexInputs);
 			hash_append(h, pipeline_desc.shaderState);
+			hash_append(h, pipeline_desc.descriptorSetLayouts);
 			hash_append(h, reinterpret_cast<size_t>(pipeline_desc.renderPassObject.get()));
 			hash_append(h, pipeline_desc.subpassIndex);
 		}
@@ -62,6 +68,7 @@ namespace graphics_backend
 		CPipelineObject(CVulkanApplication& owner) : BaseApplicationSubobject(owner) {};
 		void Create(CPipelineObjectDescriptor const& pipelineObjectDescriptor);
 		vk::Pipeline const& GetPipeline() const { return m_GraphicsPipeline; }
+		vk::PipelineLayout const& GetPipelineLayout() const { return m_PipelineLayout; }
 	protected:
 		vk::Pipeline m_GraphicsPipeline = nullptr;
 

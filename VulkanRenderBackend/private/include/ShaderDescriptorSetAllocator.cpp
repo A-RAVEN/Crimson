@@ -1,5 +1,6 @@
 #include "private/include/pch.h"
 #include "ShaderDescriptorSetAllocator.h"
+#include "FrameCountContext.h"
 #include <SharedTools/header/DebugUtils.h>
 
 namespace graphics_backend
@@ -69,6 +70,19 @@ namespace graphics_backend
 		m_AvailablePools.clear();
 	}
 
+	void ChunkedDescriptorPoolWrapper::ReleaseFrameboundResources()
+	{
+		for (auto& pool : m_DescriptorSetPoolList)
+		{
+			bool isfullPreRelease = pool.IsFull();
+			pool.ReleaseFrameboundResources();
+			if (isfullPreRelease && !pool.IsFull())
+			{
+				MarkPoolAvailable(pool);
+			};
+		}
+	}
+
 	DescriptorSetPool& ChunkedDescriptorPoolWrapper::GetAvailablePool()
 	{
 		DescriptorSetPool* resultPool = nullptr;
@@ -96,6 +110,13 @@ namespace graphics_backend
 		, uint32_t maxSize) : BaseApplicationSubobject(application)
 		, m_OwningAllocator(owningAllocator)
 		, m_MaxSize(maxSize)
+		, m_FrameboundReleaser([this](std::deque<ShaderDescriptorSetObject> const& released)
+			{
+				for (auto& releasedSet : released)
+				{
+					m_AvailableSets.push_back(releasedSet.m_DescriptorSet);
+				}
+			})
 	{
 	}
 
@@ -126,19 +147,29 @@ namespace graphics_backend
 				, 1
 				, &layout};
 			resultSet = GetDevice().allocateDescriptorSets(allocInfo).front();
+			++m_UsingSize;
 		}
 		ShaderDescriptorSetHandle result{ ShaderDescriptorSetObject(resultSet) , [this](ShaderDescriptorSetObject& released) {
-			ReleaseSet(released);
+			ClientReleaseSet(std::move(released));
 		} };
 		return result;
 	}
-	void DescriptorSetPool::ReleaseSet(ShaderDescriptorSetObject& releasedSet)
+	void DescriptorSetPool::ClientReleaseSet(ShaderDescriptorSetObject&& releasedSet)
 	{
-		//CA_ASSERT(this == (&releasedSet.m_OwningPool), "Descriptor Set Pool Mismatch!");
-		m_AvailableSets.push_back(releasedSet.m_DescriptorSet);
+		FrameType currentFrame = GetFrameCountContext().GetCurrentFrameID();
+		m_FrameboundReleaser.ScheduleRelease(currentFrame, std::move(releasedSet));
+	}
+	void DescriptorSetPool::ReleaseFrameboundResources()
+	{
+		FrameType releasingFrame = GetFrameCountContext().GetReleasedFrameID();
+		m_FrameboundReleaser.ReleaseFrame(releasingFrame);
 	}
 	ShaderDescriptorSetObject::ShaderDescriptorSetObject(vk::DescriptorSet descriptorSet) :
 		m_DescriptorSet(descriptorSet)
+	{
+	}
+	ShaderDescriptorSetLayoutInfo::ShaderDescriptorSetLayoutInfo(ShaderBindingBuilder const& bindingBuilder) :
+		m_ConstantBufferCount(bindingBuilder.GetConstantBufferDescriptors().size())
 	{
 	}
 }

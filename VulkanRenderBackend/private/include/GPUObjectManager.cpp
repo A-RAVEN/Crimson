@@ -12,5 +12,12 @@ namespace graphics_backend
 		, m_ShaderDescriptorPoolCache(application)
 	{
 	}
+	void GPUObjectManager::ReleaseFrameboundResources(FrameType releasingFrame)
+	{
+		m_ShaderDescriptorPoolCache.Foreach([releasingFrame](ShaderDescriptorSetLayoutInfo const& info
+			, ShaderDescriptorSetAllocator* pool)
+			{
+			});
+	}
 }
 
