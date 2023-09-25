@@ -16,11 +16,11 @@ namespace graphics_backend
 	{
 		m_RenderGraph = inRenderGraph;
 	}
-	void RenderGraphExecutor::Compile()
+	void RenderGraphExecutor::Compile(CTaskGraph* taskGraph)
 	{
 		if (CompileIssued())
 			return;
-		auto creationTask = GetVulkanApplication().NewTask();
+		auto creationTask = taskGraph->NewTask();
 		creationTask->Name("Initialize RenderGraph");
 		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
 		creationTask->Functor([this, nodeCount]()
@@ -36,7 +36,7 @@ namespace graphics_backend
 			});
 
 		//处理每个RenderPass的Barrier
-		auto resolvingTask = GetVulkanApplication().NewTask()
+		auto resolvingTask = taskGraph->NewTask()
 			->Name("Resolve Resource Usages")
 			->Functor([this, nodeCount]()
 				{
@@ -47,24 +47,35 @@ namespace graphics_backend
 					}
 				});
 		//编译每个RenderPass(FrameBuffer, RenderPass, PSO)
-		for (uint32_t i = 0; i < nodeCount; ++i)
-		{
-			auto compileTask = GetVulkanApplication().NewTask();
-			compileTask->Name("Compile RenderPass");
-			compileTask->DependsOn(creationTask);
-			compileTask->Functor([this, i]()
+
+		auto compileTask = taskGraph->NewTaskParallelFor()
+			->Name("Compile RenderPasses")
+			->JobCount(nodeCount)
+			->DependsOn(creationTask)
+			->Functor([this](uint32_t i)
 				{
 					m_RenderPasses[i].Compile();
 				});
-			resolvingTask->DependsOn(compileTask);
-		}
+
+		resolvingTask->DependsOn(compileTask);
+		//for (uint32_t i = 0; i < nodeCount; ++i)
+		//{
+		//	auto compileTask = taskGraph->NewTask();
+		//	compileTask->Name("Compile RenderPass");
+		//	compileTask->DependsOn(creationTask);
+		//	compileTask->Functor([this, i]()
+		//		{
+		//			m_RenderPasses[i].Compile();
+		//		});
+		//	resolvingTask->DependsOn(compileTask);
+		//}
 		m_CompiledFrame = GetVulkanApplication().GetSubmitCounterContext().GetCurrentFrameID();
 	}
 
-	void RenderGraphExecutor::Run()
+	void RenderGraphExecutor::Run(CTaskGraph* taskGraph)
 	{
-		Compile();
-		Execute();
+		Compile(taskGraph);
+		Execute(taskGraph);
 	}
 
 	bool RenderGraphExecutor::CompileDone() const
@@ -90,13 +101,13 @@ namespace graphics_backend
 			, inoutCommands.end() - m_PendingGraphicsCommandBuffers.size());
 	}
 
-	void RenderGraphExecutor::Execute()
+	void RenderGraphExecutor::Execute(CTaskGraph* taskGraph)
 	{
 		if (!CompileDone())
 			return;
 		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
 
-		auto recorderTask = GetVulkanApplication().NewTaskParallelFor();
+		auto recorderTask = taskGraph->NewTaskParallelFor();
 		recorderTask->Name("Record RenderPass Cmds");
 		recorderTask->JobCount(nodeCount);
 		recorderTask->Functor([this](uint32_t i)
@@ -107,7 +118,7 @@ namespace graphics_backend
 				GetVulkanApplication().ReturnThreadContext(threadContext);
 			});
 
-		auto collectCommandsTask = GetVulkanApplication().NewTask()
+		auto collectCommandsTask = taskGraph->NewTask()
 			->Name("Collect RenderPass Commands")
 			->DependsOn(recorderTask)
 			->Functor([this, nodeCount]()

@@ -70,13 +70,13 @@ namespace graphics_backend
 	public:
 		RenderGraphExecutor(CVulkanApplication& owner);
 		void Create(std::shared_ptr<CRenderGraph> inRenderGraph);
-		void Run();
+		void Run(thread_management::CTaskGraph* taskGrap);
 		bool CompileDone() const;
 		bool CompileIssued() const;
 		void CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands);
 	private:
-		void Compile();
-		void Execute();
+		void Compile(thread_management::CTaskGraph* taskGrap);
+		void Execute(thread_management::CTaskGraph* taskGrap);
 		bool m_Compiled = false;
 
 		std::shared_ptr<CRenderGraph> m_RenderGraph = nullptr;

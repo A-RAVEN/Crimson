@@ -48,7 +48,6 @@ int main(int argc, char *argv[])
 
 	auto pRenderInterface = renderInterfaceLoader.New();
 
-	auto pRenderGraph = pRenderInterface->NewRenderGraph();
 
 	auto pShaderCompiler = shaderCompilerLoader.New();
 
@@ -132,6 +131,13 @@ int main(int argc, char *argv[])
 
 	ShaderBindingDescriptorList bindingSetList = { shaderBindingBuilder };
 
+	
+	vertexBuffer->UploadAsync();
+	vertexBuffer1->UploadAsync();
+	indexBuffer->UploadAsync();
+	shaderBindings->UploadAsync();
+
+	auto pRenderGraph = pRenderInterface->NewRenderGraph();
 	auto windowBackBuffer = pRenderGraph->RegisterWindowBackbuffer(windowHandle);
 	CAttachmentInfo attachmentInfo{};
 	attachmentInfo.format = windowBackBuffer.GetDescriptor().format;
@@ -146,45 +152,40 @@ int main(int argc, char *argv[])
 			, shaderSet
 			, bindingSetList
 			, [vertexBuffer, vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
-		{
-			if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
 			{
-				cmd.SetShaderBindings({ shaderBindings });
-				cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
-				cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-				cmd.DrawIndexed(3);
-			}
-			else
-			{
-				std::cout << "Not Finish Yet" << std::endl;
-			}
-		})
+				if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
+				{
+					cmd.SetShaderBindings({ shaderBindings });
+					cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
+					cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+					cmd.DrawIndexed(3);
+				}
+				else
+				{
+					std::cout << "Not Finish Yet" << std::endl;
+				}
+			})
 		.Subpass({ {0} }
 			, CPipelineStateObject{}
 			, vertexInputDesc
 			, shaderSet
 			, bindingSetList
 			, [vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
-		{
-			if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
 			{
-				cmd.SetShaderBindings({ shaderBindings });
-				cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
-				cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-				cmd.DrawIndexed(3);
-			}
-			else
-			{
-				std::cout << "Not Finish Yet" << std::endl;
-			}
-		})
-			;
+				if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
+				{
+					cmd.SetShaderBindings({ shaderBindings });
+					cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
+					cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+					cmd.DrawIndexed(3);
+				}
+				else
+				{
+					std::cout << "Not Finish Yet" << std::endl;
+				}
+			});
 
-	pRenderGraph->PresentWindow(windowHandle);
-	vertexBuffer->UploadAsync();
-	vertexBuffer1->UploadAsync();
-	indexBuffer->UploadAsync();
-	shaderBindings->UploadAsync();
+			pRenderGraph->PresentWindow(windowHandle);
 
 	while (pBackend->AnyWindowRunning())
 	{
@@ -193,6 +194,7 @@ int main(int argc, char *argv[])
 		glm::mat4 data = perspective * lookat;
 		shaderConstants->SetValue("viewProjectionMatrix", data);
 		shaderConstants->UploadAsync();
+
 		pBackend->ExecuteRenderGraph(pRenderGraph);
 		pBackend->TickBackend();
 		pBackend->TickWindows();

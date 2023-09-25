@@ -129,9 +129,11 @@ namespace graphics_backend
 
 	void CVulkanApplication::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
+		auto rendergraphExcutionTaskGraph = p_RenderingTaskGraph->NewTaskGraph();
+		//rendergraphExcutionTaskGraph->
 		std::shared_ptr<RenderGraphExecutor> executor = m_RenderGraphDic.GetOrCreate(inRenderGraph).lock();
 		m_CurrentFrameRenderGraphExecutors.push_back(executor.get());
-		executor->Run();
+		executor->Run(p_RenderingTaskGraph);
 	}
 
 	void CVulkanApplication::CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages,

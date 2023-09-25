@@ -70,6 +70,24 @@ int main(int argc, char* argv[])
 				std::cout << ("p" + std::to_string(i));
 			})
 		->JobCount(10);
+			auto setupTask = graph01->NewTask()
+				->Name("Setup Subgraph0");
+			auto testSubgraph = graph01->NewTaskGraph()->Name("Delay Setup Taskgraph")->DependsOn(setupTask);
+
+			setupTask->Functor([testSubgraph]()
+				{
+					std::cout << "delay setup";
+					testSubgraph->NewTask()->Name("delay subtask0")->Functor([]()
+						{
+							std::this_thread::sleep_for(20ms);
+							std::cout << " ds0";
+						});
+					testSubgraph->NewTask()->Name("delay subtask1")->Functor([]()
+						{
+							std::this_thread::sleep_for(20ms);
+							std::cout << " ds1";
+						});
+				});
 	auto future = graph->Run();
 	future.wait();
 	return 0;
