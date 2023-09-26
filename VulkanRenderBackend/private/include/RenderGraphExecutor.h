@@ -11,6 +11,7 @@
 
 namespace graphics_backend
 {
+	using namespace thread_management;
 	class RenderGraphExecutor;
 
 	//RenderPass Executor
@@ -59,24 +60,19 @@ namespace graphics_backend
 		std::vector<vk::CommandBuffer> m_PendingGraphicsCommandBuffers;
 	};
 
-	class PresentExecutor
-	{
-
-	};
-
 	//RenderGraph Executor
 	class RenderGraphExecutor : public BaseApplicationSubobject
 	{
 	public:
 		RenderGraphExecutor(CVulkanApplication& owner);
 		void Create(std::shared_ptr<CRenderGraph> inRenderGraph);
-		void Run(thread_management::CTaskGraph* taskGrap);
+		void Run(CTaskGraph* taskGrap);
 		bool CompileDone() const;
 		bool CompileIssued() const;
 		void CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands);
 	private:
-		void Compile(thread_management::CTaskGraph* taskGrap);
-		void Execute(thread_management::CTaskGraph* taskGrap);
+		void Compile(CTaskGraph* taskGrap);
+		void Execute(CTaskGraph* taskGrap);
 		bool m_Compiled = false;
 
 		std::shared_ptr<CRenderGraph> m_RenderGraph = nullptr;

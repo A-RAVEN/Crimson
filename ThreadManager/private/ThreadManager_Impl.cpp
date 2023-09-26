@@ -30,6 +30,12 @@ namespace thread_management
         return this;
     }
 
+    CTaskGraph* TaskGraph_Impl1::SetupFunctor(std::function<void(CTaskGraph* thisGraph)> functor)
+    {
+        m_Functor = functor;
+        return this;
+    }
+
     std::shared_future<void> TaskGraph_Impl1::Run()
     {
         return StartExecute();
@@ -75,6 +81,7 @@ namespace thread_management
             delete p_subtaskgraph;
         }
         m_TaskGraphPool.clear();
+        m_Functor = nullptr;
         Release_Internal();
     }
 
@@ -106,6 +113,10 @@ namespace thread_management
     }
     void TaskGraph_Impl1::Execute_Internal()
     {
+        if (m_Functor != nullptr)
+        {
+            m_Functor(this);
+        }
         if (m_SubTasks.empty())
         {
             FinalizeExecution_Internal();

@@ -63,6 +63,7 @@ namespace thread_management
 		virtual CTaskGraph* DependsOn(CTask* parentTask) override;
 		virtual CTaskGraph* DependsOn(TaskParallelFor* parentTask) override;
 		virtual CTaskGraph* DependsOn(CTaskGraph* parentTask) override;
+		virtual CTaskGraph* SetupFunctor(std::function<void(CTaskGraph* thisGraph)> functor) override;
 		virtual std::shared_future<void> Run() override;
 
 		virtual CTask* NewTask() override;
@@ -81,6 +82,7 @@ namespace thread_management
 		virtual void Execute_Internal() override;
 		virtual void SetupSubnodeDependencies() override;
 	private:
+		std::function<void(CTaskGraph* thisGraph)> m_Functor = nullptr;
 		std::deque<TaskNode*> m_RootTasks;
 		std::atomic<uint32_t>m_PendingSubnodeCount{0};
 

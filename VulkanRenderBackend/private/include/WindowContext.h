@@ -1,7 +1,7 @@
 #pragma once
 #include <RenderInterface/header/Common.h>
 #include <RenderInterface/header/WindowHandle.h>
-#include "VulkanApplicationSubobjectBase.h";
+#include "VulkanApplicationSubobjectBase.h"
 #include "ResourceUsageInfo.h"
 
 namespace graphics_backend

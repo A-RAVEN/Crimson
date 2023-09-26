@@ -20,72 +20,70 @@ namespace graphics_backend
 	{
 		if (CompileIssued())
 			return;
+		m_CompiledFrame = GetVulkanApplication().GetSubmitCounterContext().GetCurrentFrameID();
+
 		auto creationTask = taskGraph->NewTask();
 		creationTask->Name("Initialize RenderGraph");
 		uint32_t nodeCount = m_RenderGraph->GetRenderNodeCount();
 		creationTask->Functor([this, nodeCount]()
+		{
+			m_RenderPasses.clear();
+			m_RenderPasses.reserve(nodeCount);
+			for (uint32_t itr_node = 0; itr_node < nodeCount; ++itr_node)
 			{
-				m_RenderPasses.clear();
-				m_RenderPasses.reserve(nodeCount);
-				for (uint32_t itr_node = 0; itr_node < nodeCount; ++itr_node)
-				{
-					auto& renderPass = m_RenderGraph->GetRenderPass(itr_node);
-					m_RenderPasses.emplace_back(*this, *m_RenderGraph, renderPass);
-				}
-				
-			});
+				auto& renderPass = m_RenderGraph->GetRenderPass(itr_node);
+				m_RenderPasses.emplace_back(*this, *m_RenderGraph, renderPass);
+			}
+		});
 
-		//处理每个RenderPass的Barrier
-		auto resolvingTask = taskGraph->NewTask()
-			->Name("Resolve Resource Usages")
-			->Functor([this, nodeCount]()
-				{
-					m_TextureHandleUsageStates.clear();
-					for (uint32_t itr_node = 0; itr_node < nodeCount; ++itr_node)
-					{
-						m_RenderPasses[itr_node].ResolveTextureHandleUsages(m_TextureHandleUsageStates);
-					}
-				});
+		
 		//编译每个RenderPass(FrameBuffer, RenderPass, PSO)
-
 		auto compileTask = taskGraph->NewTaskParallelFor()
 			->Name("Compile RenderPasses")
 			->JobCount(nodeCount)
 			->DependsOn(creationTask)
 			->Functor([this](uint32_t i)
-				{
-					m_RenderPasses[i].Compile();
-				});
+			{
+				m_RenderPasses[i].Compile();
+			});
 
-		resolvingTask->DependsOn(compileTask);
-		//for (uint32_t i = 0; i < nodeCount; ++i)
-		//{
-		//	auto compileTask = taskGraph->NewTask();
-		//	compileTask->Name("Compile RenderPass");
-		//	compileTask->DependsOn(creationTask);
-		//	compileTask->Functor([this, i]()
-		//		{
-		//			m_RenderPasses[i].Compile();
-		//		});
-		//	resolvingTask->DependsOn(compileTask);
-		//}
-		m_CompiledFrame = GetVulkanApplication().GetSubmitCounterContext().GetCurrentFrameID();
+		//处理每个RenderPass的Barrier
+		auto resolvingTask = taskGraph->NewTask()
+			->Name("Resolve Resource Usages")
+			->DependsOn(compileTask)
+			->Functor([this, nodeCount]()
+			{
+				m_TextureHandleUsageStates.clear();
+				for (uint32_t itr_node = 0; itr_node < nodeCount; ++itr_node)
+				{
+					m_RenderPasses[itr_node].ResolveTextureHandleUsages(m_TextureHandleUsageStates);
+				}
+			});
 	}
 
 	void RenderGraphExecutor::Run(CTaskGraph* taskGraph)
 	{
-		Compile(taskGraph);
-		Execute(taskGraph);
+		auto compileTaskGraph = taskGraph->NewTaskGraph()
+			->Name("Compile Render Graph")
+			->SetupFunctor([this](CTaskGraph* thisGraph)
+			{
+				Compile(thisGraph);
+			});
+		auto executionTaskGraph = taskGraph->NewTaskGraph()
+			->Name("Execute Render Graph")
+			->DependsOn(compileTaskGraph)
+			->SetupFunctor([this](CTaskGraph* thisGraph)
+			{
+				Execute(thisGraph);
+			});
 	}
 
 	bool RenderGraphExecutor::CompileDone() const
 	{
 		if (m_CompiledFrame == INVALID_FRAMEID)
 			return false;
-		auto& frameContext = GetVulkanApplication().GetSubmitCounterContext();
-		if (!frameContext.AnyFrameFinished())
-			return false;
-		return frameContext.GetReleasedFrameID() >= m_CompiledFrame;
+		auto& frameContext = GetFrameCountContext();
+		return frameContext.GetCurrentFrameID() >= m_CompiledFrame;
 	}
 
 	bool RenderGraphExecutor::CompileIssued() const
