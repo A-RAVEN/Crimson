@@ -39,6 +39,9 @@
     <ClInclude Include="header\RAII.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="header\MoveWrapper.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="header\SharedToolTest.cpp">

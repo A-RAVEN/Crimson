@@ -9,6 +9,7 @@
 namespace graphics_backend
 {
 	RenderGraphExecutor::RenderGraphExecutor(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
+		, m_RenderGraph(nullptr)
 	{
 	}
 
@@ -91,7 +92,7 @@ namespace graphics_backend
 		return m_CompiledFrame != INVALID_FRAMEID;
 	}
 
-	void RenderGraphExecutor::CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands)
+	void RenderGraphExecutor::CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands) const
 	{
 		inoutCommands.resize(inoutCommands.size() + m_PendingGraphicsCommandBuffers.size());
 		std::copy(m_PendingGraphicsCommandBuffers.begin()

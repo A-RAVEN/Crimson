@@ -17,11 +17,11 @@ namespace thread_management
 		virtual CTask* DependsOn(CTaskGraph* parentTask) override;
 		virtual std::shared_future<void> Run() override;
 
-		virtual CTask* Functor(std::function<void()> functor) override;
+		virtual CTask* Functor(std::function<void()>&& functor) override;
 	public:
 		CTask_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager);
 		// 通过 CTask 继承
-		 void Functor_Internal(std::function<void()> functor);
+		 void Functor_Internal(std::function<void()>&& functor);
 		 void Initialize() {}
 		 void Release();
 	private:

@@ -143,6 +143,7 @@
     <ClInclude Include="header\FileLoader.h" />
     <ClInclude Include="header\LibraryExportCommon.h" />
     <ClInclude Include="header\library_loader.h" />
+    <ClInclude Include="header\MoveWrapper.h" />
     <ClInclude Include="header\RAII.h" />
     <ClInclude Include="header\ThreadSafePool.h" />
     <ClInclude Include="header\uenum.h" />

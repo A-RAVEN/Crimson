@@ -167,9 +167,9 @@ namespace thread_management
     {
         return StartExecute();
     }
-    CTask* CTask_Impl1::Functor(std::function<void()> functor)
+    CTask* CTask_Impl1::Functor(std::function<void()>&& functor)
     {
-        Functor_Internal(functor);
+        Functor_Internal(std::move(functor));
         return this;
     }
     CTask_Impl1::CTask_Impl1(TaskBaseObject* owner, ThreadManager_Impl1* owningManager) :
@@ -177,7 +177,7 @@ namespace thread_management
     {
     }
 
-    void CTask_Impl1::Functor_Internal(std::function<void()> functor)
+    void CTask_Impl1::Functor_Internal(std::function<void()>&& functor)
     {
         m_Functor = functor;
     }

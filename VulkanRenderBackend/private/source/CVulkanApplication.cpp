@@ -12,6 +12,7 @@
 #include <private/include/CommandList_Impl.h>
 #include <private/include/InterfaceTranslator.h>
 #include <private/include/RenderGraphExecutor.h>
+#include <SharedTools/header/MoveWrapper.h>
 
 namespace graphics_backend
 {
@@ -61,9 +62,10 @@ namespace graphics_backend
 
 	void CVulkanApplication::EndThisFrame()
 	{
+		//auto executors = shared_tools::makeMoveWrapper(m_Executors);
 		p_FinalizeTaskGraph->NewTask()
 			->Name("Finalize")
-			->Functor([this, executors = m_CurrentFrameRenderGraphExecutors]()
+			->Functor([this, executors = shared_tools::makeMoveWrapper(m_Executors)]()
 				{
 					//收集 Misc Commandbuffers
 					std::vector<vk::CommandBuffer> waitingSubmitCommands;
@@ -72,9 +74,9 @@ namespace graphics_backend
 						itrThreadContext->CollectSubmittingCommandBuffers(waitingSubmitCommands);
 					}
 
-					for (auto executor : executors)
+					for (RenderGraphExecutor const& executor : *executors)
 					{
-						executor->CollectCommands(waitingSubmitCommands);
+						executor.CollectCommands(waitingSubmitCommands);
 					}
 
 					if (!m_WindowContexts.empty())
@@ -117,7 +119,7 @@ namespace graphics_backend
 					}
 				});
 
-		m_CurrentFrameRenderGraphExecutors.clear();
+		m_Executors.clear();
 
 		if (m_TaskFuture.valid())
 		{
@@ -130,9 +132,13 @@ namespace graphics_backend
 	void CVulkanApplication::ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph)
 	{
 		auto rendergraphExcutionTaskGraph = p_RenderingTaskGraph->NewTaskGraph();
-		std::shared_ptr<RenderGraphExecutor> executor = m_RenderGraphDic.GetOrCreate(inRenderGraph).lock();
-		m_CurrentFrameRenderGraphExecutors.push_back(executor.get());
-		executor->Run(p_RenderingTaskGraph);
+		m_Executors.push_back(std::move(RenderGraphExecutor{ *this }));
+		RenderGraphExecutor& newExecutor = m_Executors.back();
+		rendergraphExcutionTaskGraph->SetupFunctor([this, inRenderGraph, &newExecutor](CTaskGraph* thisGraph)
+			{
+				newExecutor.Create(inRenderGraph);
+				newExecutor.Run(thisGraph);
+			});
 	}
 
 	void CVulkanApplication::CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages,

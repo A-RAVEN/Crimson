@@ -69,7 +69,7 @@ namespace graphics_backend
 		void Run(CTaskGraph* taskGrap);
 		bool CompileDone() const;
 		bool CompileIssued() const;
-		void CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands);
+		void CollectCommands(std::vector<vk::CommandBuffer>& inoutCommands) const;
 	private:
 		void Compile(CTaskGraph* taskGrap);
 		void Execute(CTaskGraph* taskGrap);

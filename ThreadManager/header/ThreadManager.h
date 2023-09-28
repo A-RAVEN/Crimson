@@ -23,7 +23,7 @@ namespace thread_management
 		virtual CTask* DependsOn(CTaskGraph* parentTask) = 0;
 		virtual std::shared_future<void> Run() = 0;
 
-		virtual CTask* Functor(std::function<void()> functor) = 0;
+		virtual CTask* Functor(std::function<void()>&& functor) = 0;
 	};
 
 	class TaskParallelFor

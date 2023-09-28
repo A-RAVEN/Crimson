@@ -168,7 +168,9 @@ namespace graphics_backend
 
 		GPUObjectManager m_GPUObjectManager;
 		RenderGraphExecutorDic m_RenderGraphDic;
-		std::vector<RenderGraphExecutor*> m_CurrentFrameRenderGraphExecutors;
+		//std::vector<RenderGraphExecutor*> m_CurrentFrameRenderGraphExecutors;
+
+		std::deque<RenderGraphExecutor> m_Executors;
 
 		CVulkanMemoryManager m_MemoryManager;
 	};
