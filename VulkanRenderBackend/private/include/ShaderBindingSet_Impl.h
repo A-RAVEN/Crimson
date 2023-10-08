@@ -65,6 +65,34 @@ namespace graphics_backend
 		ShaderDescriptorSetLayoutInfo const& GetLayoutInfo() const { return m_LayoutInfo; }
 		std::unordered_map<std::string, uint32_t> const& GetCBufferNameToBindingIndex() const { return m_CBufferNameToBindingIndex; }
 		std::unordered_map<std::string, uint32_t> const& GetTextureNameToBindingIndex() const { return m_TextureNameToBindingIndex; }
+		
+		uint32_t CBufferNameToBindingIndex(std::string const& cbufferName) const
+		{
+			auto it = m_CBufferNameToBindingIndex.find(cbufferName);
+			if (it == m_CBufferNameToBindingIndex.end())
+			{
+				return std::numeric_limits<uint32_t>::max();
+			}
+			return it->second;
+		}
+		uint32_t TextureNameToBindingIndex(std::string const& textureName) const
+		{
+			auto it = m_TextureNameToBindingIndex.find(textureName);
+			if (it == m_TextureNameToBindingIndex.end())
+			{
+				return std::numeric_limits<uint32_t>::max();
+			}
+			return it->second;
+		}
+		uint32_t SamplerNameToBindingIndex(std::string const& samplerName) const
+		{
+			auto it = m_SamplerNameToBindingIndex.find(samplerName);
+			if (it == m_SamplerNameToBindingIndex.end())
+			{
+				return std::numeric_limits<uint32_t>::max();
+			}
+			return it->second;
+		}
 	private:
 		ShaderDescriptorSetLayoutInfo m_LayoutInfo;
 		std::unordered_map<std::string, uint32_t> m_CBufferNameToBindingIndex;
@@ -84,7 +112,6 @@ namespace graphics_backend
 			, std::shared_ptr<GPUTexture> const& pTexture) override;
 		virtual void SetSampler(std::string const& name
 			, std::shared_ptr<TextureSampler> const& pSampler) override;
-		virtual void UploadAsync() override;
 		virtual bool UploadingDone() const override;
 		vk::DescriptorSet GetDescriptorSet() const {
 			return m_DescriptorSetHandle->GetDescriptorSet();

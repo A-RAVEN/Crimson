@@ -16,6 +16,8 @@ namespace graphics_backend
 		virtual GPUTextureDescriptor const& GetDescriptor() const override { return m_Descriptor; }
 		void Initialize(const GPUTextureDescriptor& descriptor);
 		virtual void Release() override;
+		vk::ImageView GetDefaultImageView() const { return m_DefaultImageView; }
+		vk::ImageView GetDepthImageView() const { return m_DepthImageView; }
 	protected:
 		virtual void DoUpload() override;
 	private:

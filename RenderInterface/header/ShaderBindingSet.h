@@ -27,7 +27,6 @@ namespace graphics_backend
 			, std::shared_ptr<GPUTexture> const& pTexture) = 0;
 		virtual void SetSampler(std::string const& name
 			, std::shared_ptr<TextureSampler> const& pSampler) = 0;
-		virtual void UploadAsync() = 0;
 		virtual bool UploadingDone() const = 0;
 	};
 }

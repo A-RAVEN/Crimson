@@ -94,17 +94,16 @@ int main(int argc, char *argv[])
 	auto shaderBindings = pBackend->CreateShaderBindingSet(shaderBindingBuilder);
 	shaderBindings->SetConstantSet(shaderConstants->GetName(), shaderConstants);
 
-
 	std::vector<VertexData> vertexDataList = {
-		VertexData{-0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
-		VertexData{0.4f, 0.2f, 1.0f, 0.0f, 0.0f},
-		VertexData{0.0f, 0.8f, 1.0f, 0.0f, 0.0f},
+		VertexData{-0.4f, 0.2f, 1.0f, 1.0f, 1.0f},
+		VertexData{0.4f, 0.2f, 1.0f, 1.0f, 1.0f},
+		VertexData{0.0f, 0.8f, 1.0f, 1.0f, 1.0f},
 	};
 
 	std::vector<VertexData> vertexDataList1 = {
-		VertexData{-0.4f, -0.8f, 1.0f, 0.0f, 0.0f},
-		VertexData{0.4f, -0.8f, 1.0f, 0.0f, 0.0f},
-		VertexData{0.0f, -0.2f, 1.0f, 0.0f, 0.0f},
+		VertexData{-0.4f, -0.8f, 1.0f, 1.0f, 1.0f},
+		VertexData{0.4f, -0.8f, 1.0f, 1.0f, 1.0f},
+		VertexData{0.0f, -0.2f, 1.0f, 1.0f, 1.0f},
 	};
 
 	std::vector<uint16_t> indexDataList = {
@@ -113,7 +112,7 @@ int main(int argc, char *argv[])
 
 	GPUTextureDescriptor desc{};
 	desc.accessType = ETextureAccessType::eSampled | ETextureAccessType::eTransferDst;
-	desc.format = ETextureFormat::E_R32_SFLOAT;
+	desc.format = ETextureFormat::E_R32G32B32A32_SFLOAT;
 	desc.width = 1;
 	desc.height = 1;
 	desc.layers = 1;
@@ -123,7 +122,11 @@ int main(int argc, char *argv[])
 
 	auto sampler = pBackend->GetOrCreateTextureSampler(TextureSamplerDescriptor{});
 
-	std::vector<float> imageData = { 0.5f };
+	shaderBindings->SetTexture("TestTexture", image);
+	shaderBindings->SetSampler("TestSampler", sampler);
+
+
+	std::vector<float> imageData = { 0.0f, 1.0f, 0.0f, 1.0f };
 	image->ScheduleTextureData(0, imageData.size() * sizeof(float), imageData.data());
 
 	auto vertexBuffer = pBackend->CreateGPUBuffer(
@@ -182,7 +185,7 @@ int main(int argc, char *argv[])
 				, bindingSetList
 				, [vertexBuffer, indexBuffer, shaderBindings](CInlineCommandList& cmd)
 				{
-					if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
+					if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone() && shaderBindings->UploadingDone())
 					{
 						cmd.SetShaderBindings({ shaderBindings });
 						cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
@@ -201,7 +204,7 @@ int main(int argc, char *argv[])
 				, bindingSetList
 				, [vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
 				{
-					if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone())
+					if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone() && shaderBindings->UploadingDone())
 					{
 						cmd.SetShaderBindings({ shaderBindings });
 						cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});

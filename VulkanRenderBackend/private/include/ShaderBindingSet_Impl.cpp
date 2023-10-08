@@ -208,9 +208,6 @@ namespace graphics_backend {
 		MarkDirtyThisFrame();
 	}
 
-	void ShaderBindingSet_Impl::UploadAsync()
-	{
-	}
 	bool ShaderBindingSet_Impl::UploadingDone() const
 	{
 		return BaseTickingUpdateResource::UploadingDone();
@@ -228,33 +225,86 @@ namespace graphics_backend {
 		CA_ASSERT(m_DescriptorSetHandle.IsRAIIAquired(), "Descriptor Set Is Not Aquired!");
 		vk::DescriptorSet targetSet = m_DescriptorSetHandle->GetDescriptorSet();
 		uint32_t writeCount = m_ConstantSets.size() + m_Textures.size() + m_Samplers.size();
-		std::vector<vk::WriteDescriptorSet> constantBufferWrites;
+		std::vector<vk::WriteDescriptorSet> descriptorWrites;
 		if(writeCount > 0)
 		{
-			constantBufferWrites.reserve(writeCount);
+			descriptorWrites.reserve(writeCount);
 			auto& nameToIndex = p_Metadata->GetCBufferNameToBindingIndex();
 			for (auto pair : m_ConstantSets)
 			{
 				auto& name = pair.first;
 				auto set = std::static_pointer_cast<ShaderConstantSet_Impl>(pair.second);
-				auto iter = nameToIndex.find(name);
-				CA_ASSERT(iter != nameToIndex.end(), "invalid constant buffer name");
-				uint32_t bindingIndex = iter->second;
-				vk::DescriptorBufferInfo bufferInfo{set->GetBufferObject()->GetBuffer(), 0, VK_WHOLE_SIZE};
-				vk::WriteDescriptorSet writeSet{targetSet
-					, bindingIndex
-					, 0
-					, 1
-					, vk::DescriptorType::eUniformBuffer
-					, nullptr
-					, &bufferInfo
-					, nullptr
-				};
-				constantBufferWrites.push_back(writeSet);
+				uint32_t bindingIndex = p_Metadata->CBufferNameToBindingIndex(name);
+				if (bindingIndex != std::numeric_limits<uint32_t>::max())
+				{
+					vk::DescriptorBufferInfo bufferInfo{set->GetBufferObject()->GetBuffer(), 0, VK_WHOLE_SIZE};
+					vk::WriteDescriptorSet writeSet{targetSet
+						, bindingIndex
+						, 0
+						, 1
+						, vk::DescriptorType::eUniformBuffer
+						, nullptr
+						, & bufferInfo
+						, nullptr
+					};
+					descriptorWrites.push_back(writeSet);
+				}
+			}
+
+			for (auto pair : m_Textures)
+			{
+				auto& name = pair.first;
+				auto& texture = pair.second;
+				uint32_t bindingIndex = p_Metadata->TextureNameToBindingIndex(name);
+				if (bindingIndex != std::numeric_limits<uint32_t>::max())
+				{
+					if (!texture->UploadingDone())
+						return;
+					vk::DescriptorImageInfo imageInfo{ {}
+						, texture->GetDefaultImageView()
+						, vk::ImageLayout::eShaderReadOnlyOptimal };
+
+					vk::WriteDescriptorSet writeSet{targetSet
+						, bindingIndex
+						, 0
+						, 1
+						, vk::DescriptorType::eSampledImage
+						, & imageInfo
+						, nullptr
+						, nullptr
+					};
+					descriptorWrites.push_back(writeSet);
+				}
+			}
+
+			for (auto pair : m_Samplers)
+			{
+				auto& name = pair.first;
+				auto& sampler = pair.second;
+				uint32_t bindingIndex = p_Metadata->SamplerNameToBindingIndex(name);
+				if (bindingIndex != std::numeric_limits<uint32_t>::max())
+				{
+					vk::DescriptorImageInfo samplerInfo{ sampler->GetSampler()
+						, {}
+						, vk::ImageLayout::eShaderReadOnlyOptimal };
+
+					vk::WriteDescriptorSet writeSet{targetSet
+						, bindingIndex
+						, 0
+						, 1
+						, vk::DescriptorType::eSampler
+						, & samplerInfo
+						, nullptr
+						, nullptr
+					};
+					descriptorWrites.push_back(writeSet);
+				}
 			}
 		}
-
-		GetDevice().updateDescriptorSets(constantBufferWrites, {});
+		if (descriptorWrites.size() > 0)
+		{
+			GetDevice().updateDescriptorSets(descriptorWrites, {});
+		}
 		MarkUploadingDoneThisFrame();
 	}
 	void ShaderBindingSetMetadata::Initialize(ShaderBindingBuilder const& builder)
