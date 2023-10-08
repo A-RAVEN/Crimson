@@ -12,6 +12,7 @@
 #include "CRenderGraph.h"
 #include "ShaderBindingBuilder.h"
 #include "ShaderBindingSet.h"
+#include "TextureSampler.h"
 
 namespace thread_management
 {
@@ -36,6 +37,8 @@ namespace graphics_backend
 			, uint64_t stride) = 0;
 		virtual std::shared_ptr<ShaderConstantSet> CreateShaderConstantSet(ShaderConstantsBuilder const& inBuilder) = 0;
 		virtual std::shared_ptr<ShaderBindingSet> CreateShaderBindingSet(ShaderBindingBuilder const& inBuilder) = 0;
+		virtual std::shared_ptr<GPUTexture> CreateGPUTexture(GPUTextureDescriptor const& inDescriptor) = 0;
+		virtual std::shared_ptr<TextureSampler> GetOrCreateTextureSampler(TextureSamplerDescriptor const& descriptor) = 0;
 	};
 }
 

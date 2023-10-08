@@ -58,6 +58,13 @@ namespace graphics_backend
 		p_FinalizeTaskGraph = p_TaskGraph->NewTaskGraph()
 			->Name("Finalize Task Graph")
 			->DependsOn(p_RenderingTaskGraph);
+
+		//Tick uploading shader bindings
+		m_ShaderBindingSetAllocator.Foreach([this](ShaderBindingBuilder const&, ShaderBindingSetAllocator* allocator)
+			{
+				allocator->TickUploadResources(p_GPUAddressUploadingTaskGraph);
+			});
+
 	}
 
 	void CVulkanApplication::EndThisFrame()
@@ -166,6 +173,56 @@ namespace graphics_backend
 		}
 	}
 
+	vk::ImageView CVulkanApplication::CreateDefaultImageView(
+		GPUTextureDescriptor const& inDescriptor
+		, vk::Image inImage
+		, bool depthAspect
+		, bool stencilAspect) const
+	{
+		bool isDepthStencil = IsDepthStencilFormat(inDescriptor.format);
+		bool isDepthOnly = IsDepthOnlyFormat(inDescriptor.format);
+
+		if ((depthAspect || stencilAspect) && !isDepthStencil)
+			return nullptr;
+
+		if(isDepthOnly && stencilAspect && !depthAspect)
+			return nullptr;
+
+		vk::ImageAspectFlags aspectFlags = vk::ImageAspectFlagBits::eColor;
+		if (isDepthStencil)
+		{
+			aspectFlags = {};
+			if (depthAspect)
+			{
+				aspectFlags |= vk::ImageAspectFlagBits::eDepth;
+			}
+			if (stencilAspect)
+			{
+				aspectFlags |= vk::ImageAspectFlagBits::eStencil;
+			}
+		}
+
+		auto imageInfo = ETextureTypeToVulkanImageInfo(inDescriptor.textureType);
+		vk::ImageViewCreateInfo createInfo{
+			vk::ImageViewCreateFlags{}
+			, inImage
+			, imageInfo.defaultImageViewType
+			, ETextureFormatToVkFotmat(inDescriptor.format)
+			, vk::ComponentMapping(
+				vk::ComponentSwizzle::eIdentity
+				, vk::ComponentSwizzle::eIdentity
+				, vk::ComponentSwizzle::eIdentity
+				, vk::ComponentSwizzle::eIdentity)
+				, vk::ImageSubresourceRange{
+				aspectFlags
+					, 0
+					, VK_REMAINING_MIP_LEVELS
+					, 0
+					, VK_REMAINING_ARRAY_LAYERS}
+		};
+		return GetDevice().createImageView(createInfo);
+	}
+
 	GPUBuffer* CVulkanApplication::NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride)
 	{
 		GPUBuffer_Impl* result = m_GPUBufferPool.Alloc(usageFlags, count, stride);
@@ -175,6 +232,16 @@ namespace graphics_backend
 	void CVulkanApplication::ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer)
 	{
 		m_GPUBufferPool.Release(static_cast<GPUBuffer_Impl*>(releaseGPUBuffer));
+	}
+
+	GPUTexture* CVulkanApplication::NewGPUTexture(GPUTextureDescriptor const& inDescriptor)
+	{
+		return m_GPUTexturePool.Alloc(inDescriptor);
+	}
+
+	void CVulkanApplication::ReleaseGPUTexture(GPUTexture* releaseGPUTexture)
+	{
+		m_GPUTexturePool.Release(static_cast<GPUTexture_Impl*>(releaseGPUTexture));
 	}
 
 	std::shared_ptr<ShaderConstantSet> CVulkanApplication::NewShaderConstantSet(ShaderConstantsBuilder const& builder)
@@ -187,6 +254,11 @@ namespace graphics_backend
 	{
 		auto subAllocator = m_ShaderBindingSetAllocator.GetOrCreate(builder).lock();
 		return subAllocator->AllocateSet();
+	}
+
+	std::shared_ptr<TextureSampler> CVulkanApplication::GetOrCreateTextureSampler(TextureSamplerDescriptor const& descriptor)
+	{
+		return m_GPUObjectManager.GetTextureSamplerCache().GetOrCreate(descriptor).lock();
 	}
 
 	void CVulkanApplication::InitializeInstance(std::string const& name, std::string const& engineName)
@@ -503,6 +575,7 @@ namespace graphics_backend
 
 	CVulkanApplication::CVulkanApplication() :
 	m_GPUBufferPool(*this)
+	, m_GPUTexturePool(*this)
 	, m_GPUObjectManager(*this)
 	, m_MemoryManager(*this)
 	, m_RenderGraphDic(*this)
@@ -530,6 +603,7 @@ namespace graphics_backend
 		m_ConstantSetAllocator.Release();
 		m_ShaderBindingSetAllocator.Release();
 		m_GPUBufferPool.ReleaseAll();
+		m_GPUTexturePool.ReleaseAll();
 		m_MemoryManager.Release();
 		DestroyThreadContexts();
 		ReleaseAllWindowContexts();

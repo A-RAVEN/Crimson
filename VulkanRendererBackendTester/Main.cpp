@@ -109,6 +109,21 @@ int main(int argc, char *argv[])
 		0, 1, 2
 	};
 
+	GPUTextureDescriptor desc{};
+	desc.accessType = ETextureAccessType::eSampled | ETextureAccessType::eTransferDst;
+	desc.format = ETextureFormat::E_R32_SFLOAT;
+	desc.width = 1;
+	desc.height = 1;
+	desc.layers = 1;
+	desc.mipLevels = 1;
+	desc.textureType = ETextureType::e2D;
+	auto image = pBackend->CreateGPUTexture(desc);
+
+	auto sampler = pBackend->GetOrCreateTextureSampler(TextureSamplerDescriptor{});
+
+	std::vector<float> imageData = { 0.5f };
+	image->ScheduleTextureData(0, imageData.size() * sizeof(float), imageData.data());
+
 	auto vertexBuffer = pBackend->CreateGPUBuffer(
 		EBufferUsage::eVertexBuffer | EBufferUsage::eDataDst, 3, sizeof(VertexData));
 	vertexBuffer->ScheduleBufferData(0, vertexDataList.size() * sizeof(VertexData), vertexDataList.data());
@@ -135,8 +150,8 @@ int main(int argc, char *argv[])
 	vertexBuffer->UploadAsync();
 	vertexBuffer1->UploadAsync();
 	indexBuffer->UploadAsync();
-	shaderBindings->UploadAsync();
-
+	//shaderBindings->UploadAsync();
+	image->UploadAsync();
 	
 
 	while (pBackend->AnyWindowRunning())
@@ -147,6 +162,7 @@ int main(int argc, char *argv[])
 		shaderConstants->SetValue("viewProjectionMatrix", data);
 		shaderConstants->UploadAsync();
 
+		shaderBindings->SetConstantSet(shaderConstants->GetName(), shaderConstants);
 
 		auto pRenderGraph = pRenderInterface->NewRenderGraph();
 		auto windowBackBuffer = pRenderGraph->RegisterWindowBackbuffer(windowHandle);
@@ -162,7 +178,7 @@ int main(int argc, char *argv[])
 				, vertexInputDesc
 				, shaderSet
 				, bindingSetList
-				, [vertexBuffer, vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
+				, [vertexBuffer, indexBuffer, shaderBindings](CInlineCommandList& cmd)
 				{
 					if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone())
 					{

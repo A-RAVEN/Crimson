@@ -2,9 +2,15 @@
 #include "RenderBackendSettings.h"
 #include "VulkanApplicationSubobjectBase.h"
 #include "TaskScheduling.h"
+#include <ThreadManager/header/ThreadManager.h>
+#include <deque>
 
 namespace graphics_backend
 {
+	using namespace thread_management;
+	class BaseTickingUpdateResource;
+
+
 	class BaseUploadingResource : public BaseApplicationSubobject
 	{
 	public:
@@ -18,4 +24,6 @@ namespace graphics_backend
 	private:
 		FrameType m_SubmitFrame = INVALID_FRAMEID;
 	};
+
+	
 }

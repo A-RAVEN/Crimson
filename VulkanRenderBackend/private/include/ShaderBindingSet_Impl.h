@@ -5,6 +5,7 @@
 #include "VulkanApplicationSubobjectBase.h"
 #include "CVulkanBufferObject.h"
 #include "ShaderDescriptorSetAllocator.h"
+#include "TickUploadingResource.h"
 
 namespace graphics_backend
 {
@@ -66,19 +67,22 @@ namespace graphics_backend
 		std::unordered_map<std::string, uint32_t> m_CBufferNameToBindingIndex;
 	};
 
-	class ShaderBindingSet_Impl : public BaseUploadingResource, public ShaderBindingSet
+	class ShaderBindingSet_Impl : public BaseTickingUpdateResource, public ShaderBindingSet
 	{
 	public:
 		ShaderBindingSet_Impl(CVulkanApplication& owner);
 		void Initialize(ShaderBindingSetMetadata const* inMetaData);
 		virtual void SetConstantSet(std::string const& name, std::shared_ptr<ShaderConstantSet> const& pConstantSet) override;
+		virtual void SetTexture(std::string const& name
+			, std::shared_ptr<GPUTexture> const& pTexture) override;
+		virtual void SetSampler(std::string const& name
+			, std::shared_ptr<TextureSampler> const& pSampler) override;
 		virtual void UploadAsync() override;
 		virtual bool UploadingDone() const override;
 		vk::DescriptorSet GetDescriptorSet() const {
 			return m_DescriptorSetHandle->GetDescriptorSet();
 		}
-	protected:
-		virtual void DoUpload() override;
+		virtual void TickUpload() override;
 	private:
 		ShaderBindingSetMetadata const* p_Metadata;
 		ShaderDescriptorSetHandle m_DescriptorSetHandle;
@@ -92,8 +96,9 @@ namespace graphics_backend
 		void Create(ShaderBindingBuilder const& builder);
 		std::shared_ptr<ShaderBindingSet> AllocateSet();
 		virtual void Release() override;
+		virtual void TickUploadResources(CTaskGraph* pTaskGraph);
 	private:
 		ShaderBindingSetMetadata m_Metadata;
-		TVulkanApplicationPool<ShaderBindingSet_Impl> m_ShaderBindingSetPool;
+		TTickingUpdateResourcePool<ShaderBindingSet_Impl> m_ShaderBindingSetPool;
 	};
 }

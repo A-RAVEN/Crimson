@@ -124,7 +124,7 @@ namespace graphics_backend
 	{
 		auto& layoutInfo = m_OwningAllocator.GetLayoutInfo();
 		std::vector<vk::DescriptorPoolSize> poolSizes = {
-			vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, layoutInfo.m_ConstantBufferCount}
+			vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, layoutInfo.m_ConstantBufferCount * m_MaxSize}
 		};
 		vk::DescriptorPoolCreateInfo poolInfo{{}, m_MaxSize, poolSizes};
 		m_Pool = GetDevice().createDescriptorPool(poolInfo);

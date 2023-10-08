@@ -7,6 +7,8 @@
 #include <map>
 #include "CVulkanBufferObject.h"
 #include "Containers.h"
+#include "VulkanImageObject.h"
+#include <RenderInterface/header/GPUTexture.h>
 
 namespace graphics_backend
 {
@@ -34,6 +36,13 @@ namespace graphics_backend
 		std::shared_ptr<CVulkanBufferObject> AllocateSharedBuffer(EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
 	};
 
+	class IVulkanImagePool
+	{
+	public:
+		virtual VulkanImageObject AllocateImage(GPUTextureDescriptor const& textureDescriptor) = 0;
+		virtual void ReleaseImage(VulkanImageObject& releasingImage) = 0;
+	};
+
 	class CFrameBoundMemoryPool : public BaseApplicationSubobject, public IVulkanBufferPool
 	{
 	public:
@@ -52,6 +61,7 @@ namespace graphics_backend
 		TVulkanApplicationPool<CVulkanBufferObject> m_BufferObjectPool;
 	};
 
+
 	class CGlobalMemoryPool : public BaseApplicationSubobject, public IVulkanBufferPool
 	{
 	public:
@@ -61,12 +71,18 @@ namespace graphics_backend
 		void ReleaseResourcesBeforeFrame(FrameType frame);
 		void Initialize();
 		void Release() override;
+
+		VulkanImageObject AllocateImage(GPUTextureDescriptor const& textureDescriptor, EMemoryType memoryType);
 	private:
-		VmaAllocator m_BufferAllocator = nullptr;
+		VmaAllocator m_GlobalAllocator = nullptr;
 		std::mutex m_Mutex;
 		std::deque<std::tuple<vk::Buffer, VmaAllocation, FrameType>> m_PendingReleasingBuffers;
 		std::map<vk::Buffer, VmaAllocation> m_ActiveBuffers;
 		TVulkanApplicationPool<CVulkanBufferObject> m_BufferObjectPool;
+
+		void ScheduleReleaseImage(VulkanImageObject_Internal& releasingImage);
+		void ReleaseImage_Internal(std::deque<VulkanImageObject_Internal> const& releasingObjects);
+		TFrameboundReleaser<VulkanImageObject_Internal> m_ImageFrameboundReleaser;
 	};
 
 	class CVulkanMemoryManager : public BaseApplicationSubobject
@@ -75,6 +91,7 @@ namespace graphics_backend
 		CVulkanMemoryManager(CVulkanApplication& owner);
 		std::shared_ptr<CVulkanBufferObject> AllocateBuffer(EMemoryType memoryType, EMemoryLifetime lifetime, size_t bufferSize, vk::BufferUsageFlags bufferUsage);
 		std::shared_ptr<CVulkanBufferObject> AllocateFrameBoundTransferStagingBuffer(size_t bufferSize);
+		VulkanImageObject AllocateImage(GPUTextureDescriptor const& textureDescriptor, EMemoryType memoryType, EMemoryLifetime lifetime);
 		void ReleaseCurrentFrameResource();
 		void Initialize();
 		void Release() override;

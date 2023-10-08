@@ -10,6 +10,7 @@ namespace graphics_backend
 		, m_FramebufferObjectCache(application)
 		, m_PipelineObjectCache(application)
 		, m_ShaderDescriptorPoolCache(application)
+		, m_TextureSamplerCache(application)
 	{
 	}
 	void GPUObjectManager::ReleaseFrameboundResources(FrameType releasingFrame)
@@ -17,6 +18,7 @@ namespace graphics_backend
 		m_ShaderDescriptorPoolCache.Foreach([releasingFrame](ShaderDescriptorSetLayoutInfo const& info
 			, ShaderDescriptorSetAllocator* pool)
 			{
+				pool->ReleaseFrameboundResources();
 			});
 	}
 }

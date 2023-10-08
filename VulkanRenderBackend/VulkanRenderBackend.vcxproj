@@ -182,6 +182,7 @@
     <ClInclude Include="private\include\ShaderBindingSet_Impl.h" />
     <ClInclude Include="private\include\ShaderDescriptorSetAllocator.h" />
     <ClInclude Include="private\include\TaskScheduling.h" />
+    <ClInclude Include="private\include\TextureSampler_Impl.h" />
     <ClInclude Include="private\include\VulkanPipelineObject.h" />
     <ClInclude Include="private\include\RenderBackendSettings.h" />
     <ClInclude Include="private\include\Utils.h" />
@@ -190,6 +191,8 @@
     <ClInclude Include="private\include\VulkanIncludes.h" />
     <ClInclude Include="private\include\WindowContext.h" />
     <ClInclude Include="private\test\TestShaderProvider.h" />
+    <ClInclude Include="private\include\VulkanImageObject.h" />
+    <ClInclude Include="private\include\TickUploadingResource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\include\DescriptorSetLayoutObject.cpp" />
@@ -200,6 +203,7 @@
     <ClCompile Include="private\include\RenderGraphExecutor.cpp" />
     <ClCompile Include="private\include\ShaderBindingSet_Impl.cpp" />
     <ClCompile Include="private\include\ShaderDescriptorSetAllocator.cpp" />
+    <ClCompile Include="private\include\TextureSampler_Impl.cpp" />
     <ClCompile Include="private\source\CommandList_Impl.cpp" />
     <ClCompile Include="private\source\CShaderModule_Vulkan.cpp" />
     <ClCompile Include="private\source\CRenderBakend_Vulkan.cpp" />
@@ -226,6 +230,8 @@
     <ClCompile Include="private\source\VulkanPipelineObject.cpp" />
     <ClCompile Include="private\source\WindowContext.cpp" />
     <ClCompile Include="private\test\TestShaderProvider.cpp" />
+    <ClCompile Include="private\include\VulkanImageObject.cpp" />
+    <ClCompile Include="private\include\TickUploadingResource.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

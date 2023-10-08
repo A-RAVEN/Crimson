@@ -32,5 +32,6 @@ namespace graphics_backend
 		std::atomic_thread_fence(std::memory_order_release);
 		m_SubmitFrame = GetFrameCountContext().GetCurrentFrameID();
 	}
+	
 }
 

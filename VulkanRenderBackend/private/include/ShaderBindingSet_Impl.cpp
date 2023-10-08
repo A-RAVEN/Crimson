@@ -179,7 +179,7 @@ namespace graphics_backend {
 	{
 		m_ShaderConstantSetPool.ReleaseAll();
 	}
-	ShaderBindingSet_Impl::ShaderBindingSet_Impl(CVulkanApplication& owner) : BaseUploadingResource(owner)
+	ShaderBindingSet_Impl::ShaderBindingSet_Impl(CVulkanApplication& owner) : BaseTickingUpdateResource(owner)
 	{
 	}
 	void ShaderBindingSet_Impl::Initialize(ShaderBindingSetMetadata const* inMetaData)
@@ -189,16 +189,29 @@ namespace graphics_backend {
 	void ShaderBindingSet_Impl::SetConstantSet(std::string const& name, std::shared_ptr<ShaderConstantSet> const& pConstantSet)
 	{
 		m_ConstantSets.insert(std::make_pair(name, pConstantSet));
+		MarkDirtyThisFrame();
 	}
+
+	void ShaderBindingSet_Impl::SetTexture(std::string const& name
+		, std::shared_ptr<GPUTexture> const& pTexture)
+	{
+
+	}
+
+	void ShaderBindingSet_Impl::SetSampler(std::string const& name
+		, std::shared_ptr<TextureSampler> const& pSampler)
+	{
+
+	}
+
 	void ShaderBindingSet_Impl::UploadAsync()
 	{
-		BaseUploadingResource::UploadAsync(UploadingResourceType::eAddressDataThisFrame);
 	}
 	bool ShaderBindingSet_Impl::UploadingDone() const
 	{
-		return BaseUploadingResource::UploadingDone();
+		return BaseTickingUpdateResource::UploadingDone();
 	}
-	void ShaderBindingSet_Impl::DoUpload()
+	void ShaderBindingSet_Impl::TickUpload()
 	{
 		m_DescriptorSetHandle.RAIIRelease();
 		CA_ASSERT(!m_DescriptorSetHandle.IsRAIIAquired(), "RAIIObject Should Be Released Here");
@@ -236,6 +249,7 @@ namespace graphics_backend {
 			}
 		}
 		GetDevice().updateDescriptorSets(constantBufferWrites, {});
+		MarkUploadingDoneThisFrame();
 	}
 	void ShaderBindingSetMetadata::Initialize(ShaderBindingBuilder const& builder)
 	{
@@ -263,5 +277,9 @@ namespace graphics_backend {
 	void ShaderBindingSetAllocator::Release()
 	{
 		m_ShaderBindingSetPool.ReleaseAll();
+	}
+	void ShaderBindingSetAllocator::TickUploadResources(CTaskGraph* pTaskGraph)
+	{
+		m_ShaderBindingSetPool.TickUpload(pTaskGraph);
 	}
 }

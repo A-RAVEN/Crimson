@@ -140,7 +140,7 @@ namespace graphics_backend
 		m_TextureDesc.height = swapchainExtent.height;
 		m_TextureDesc.layers = 1;
 		m_TextureDesc.mipLevels = 1;
-		m_TextureDesc.unorderedAccess = false;
+		m_TextureDesc.accessType = (ETextureAccessType::eRT | ETextureAccessType::eTransferDst);
 		m_TextureDesc.format = VkFotmatToETextureFormat(format);
 
 		uint32_t graphicsFamily = GetVulkanApplication().GetSubmitCounterContext().GetGraphicsQueueRef().first;

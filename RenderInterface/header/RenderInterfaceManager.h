@@ -2,9 +2,11 @@
 #include <memory>
 #include "CRenderGraph.h"
 
-class RenderInterfaceManager
+namespace graphics_backend
 {
-public:
-	virtual std::shared_ptr<CRenderGraph> NewRenderGraph() = 0;
-
-};
+	class RenderInterfaceManager
+	{
+	public:
+		virtual std::shared_ptr<CRenderGraph> NewRenderGraph() = 0;
+	};
+}

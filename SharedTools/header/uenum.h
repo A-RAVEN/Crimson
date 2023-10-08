@@ -133,89 +133,91 @@ namespace uenum
     };
 
 
-#if !defined( VULKAN_HPP_HAS_SPACESHIP_OPERATOR )
-    // relational operators only needed for pre C++20
-    template <typename TEnumClass>
-    constexpr bool operator<(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator>(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr bool operator<=(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator>=(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr bool operator>(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator<(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr bool operator>=(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator<=(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr bool operator==(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator==(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr bool operator!=(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator!=(bit);
-    }
-#endif
-
-    // bitwise operators
-    template <typename TEnumClass>
-    constexpr EnumFlags<TEnumClass> operator&(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator&(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr EnumFlags<TEnumClass> operator|(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator|(bit);
-    }
-
-    template <typename TEnumClass>
-    constexpr EnumFlags<TEnumClass> operator^(TEnumClass bit, EnumFlags<TEnumClass> const& flags) noexcept
-    {
-        return flags.operator^(bit);
-    }
-
-    // bitwise operators on TEnumClass
-    template <typename TEnumClass, typename std::enable_if_t<TEnumTraits<TEnumClass>::is_bitmask> = true>
-    inline constexpr EnumFlags<TEnumClass> operator&(TEnumClass lhs, TEnumClass rhs) noexcept
-    {
-        return EnumFlags<TEnumClass>(lhs) & rhs;
-    }
-
-    template <typename TEnumClass, typename std::enable_if<TEnumTraits<TEnumClass>::is_bitmask, bool>::type = true>
-    inline constexpr EnumFlags<TEnumClass> operator|(TEnumClass lhs, TEnumClass rhs) noexcept
-    {
-        return EnumFlags<TEnumClass>(lhs) | rhs;
-    }
-
-    template <typename TEnumClass, typename std::enable_if<TEnumTraits<TEnumClass>::is_bitmask, bool>::type = true>
-    inline constexpr EnumFlags<TEnumClass> operator^(TEnumClass lhs, TEnumClass rhs) noexcept
-    {
-        return EnumFlags<TEnumClass>(lhs) ^ rhs;
-    }
-
-    template <typename TEnumClass, typename std::enable_if<TEnumTraits<TEnumClass>::is_bitmask, bool>::type = true>
-    inline constexpr EnumFlags<TEnumClass> operator~(TEnumClass bit) noexcept
-    {
-        return ~(EnumFlags<TEnumClass>(bit));
-    }
-
     template<typename TEnumClass>
     struct hash_utils::is_contiguously_hashable<EnumFlags<TEnumClass>> : public std::true_type {};
+}
+
+
+
+#if !defined( VULKAN_HPP_HAS_SPACESHIP_OPERATOR )
+// relational operators only needed for pre C++20
+template <typename TEnumClass>
+constexpr bool operator<(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator>(bit);
+}
+
+template <typename TEnumClass>
+constexpr bool operator<=(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator>=(bit);
+}
+
+template <typename TEnumClass>
+constexpr bool operator>(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator<(bit);
+}
+
+template <typename TEnumClass>
+constexpr bool operator>=(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator<=(bit);
+}
+
+template <typename TEnumClass>
+constexpr bool operator==(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator==(bit);
+}
+
+template <typename TEnumClass>
+constexpr bool operator!=(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator!=(bit);
+}
+#endif
+
+// bitwise operators
+template <typename TEnumClass>
+constexpr uenum::EnumFlags<TEnumClass> operator&(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator&(bit);
+}
+
+template <typename TEnumClass>
+constexpr uenum::EnumFlags<TEnumClass> operator|(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator|(bit);
+}
+
+template <typename TEnumClass>
+constexpr uenum::EnumFlags<TEnumClass> operator^(TEnumClass bit, uenum::EnumFlags<TEnumClass> const& flags) noexcept
+{
+    return flags.operator^(bit);
+}
+
+// bitwise operators on TEnumClass
+template <typename TEnumClass, typename std::enable_if_t<uenum::TEnumTraits<TEnumClass>::is_bitmask> = true>
+inline constexpr uenum::EnumFlags<TEnumClass> operator&(TEnumClass lhs, TEnumClass rhs) noexcept
+{
+    return uenum::EnumFlags<TEnumClass>(lhs) & rhs;
+}
+
+template <typename TEnumClass, typename std::enable_if<uenum::TEnumTraits<TEnumClass>::is_bitmask, bool>::type = true>
+inline constexpr uenum::EnumFlags<TEnumClass> operator|(TEnumClass lhs, TEnumClass rhs) noexcept
+{
+    return uenum::EnumFlags<TEnumClass>(lhs) | rhs;
+}
+
+template <typename TEnumClass, typename std::enable_if<uenum::TEnumTraits<TEnumClass>::is_bitmask, bool>::type = true>
+inline constexpr uenum::EnumFlags<TEnumClass> operator^(TEnumClass lhs, TEnumClass rhs) noexcept
+{
+    return uenum::EnumFlags<TEnumClass>(lhs) ^ rhs;
+}
+
+template <typename TEnumClass, typename std::enable_if<uenum::TEnumTraits<TEnumClass>::is_bitmask, bool>::type = true>
+inline constexpr uenum::EnumFlags<TEnumClass> operator~(TEnumClass bit) noexcept
+{
+    return ~(uenum::EnumFlags<TEnumClass>(bit));
 }

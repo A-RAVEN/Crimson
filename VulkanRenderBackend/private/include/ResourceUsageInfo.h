@@ -48,7 +48,6 @@ namespace graphics_backend
 		ePresent = 1 << ePresentID,
 	};
 
-
 	using ResourceUsageFlags = uenum::EnumFlags<ResourceUsage>;
 
 	struct ResourceUsageVulkanInfo

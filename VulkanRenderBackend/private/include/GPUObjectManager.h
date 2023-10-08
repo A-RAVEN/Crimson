@@ -5,6 +5,7 @@
 #include "VulkanPipelineObject.h"
 #include "FramebufferObject.h"
 #include "ShaderDescriptorSetAllocator.h"
+#include "TextureSampler_Impl.h"
 
 namespace graphics_backend
 {
@@ -17,6 +18,7 @@ namespace graphics_backend
 		FramebufferObjectDic& GetFramebufferCache() { return m_FramebufferObjectCache; }
 		PipelineObjectDic& GetPipelineCache() { return m_PipelineObjectCache; }
 		ShaderDescriptorSetAllocatorPool& GetShaderDescriptorPoolCache() { return m_ShaderDescriptorPoolCache; }
+		TextureSamplerObjectDic& GetTextureSamplerCache() { return m_TextureSamplerCache; }
 		//Release framebound resources
 		void ReleaseFrameboundResources(FrameType releasingFrame);
 	private:
@@ -25,5 +27,6 @@ namespace graphics_backend
 		FramebufferObjectDic m_FramebufferObjectCache;
 		PipelineObjectDic m_PipelineObjectCache;
 		ShaderDescriptorSetAllocatorPool m_ShaderDescriptorPoolCache;
+		TextureSamplerObjectDic m_TextureSamplerCache;
 	};
 }

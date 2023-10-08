@@ -1,7 +1,18 @@
 #pragma once
 #include<RenderInterface/header/Common.h>
+#include<RenderInterface/header/TextureSampler.h>
+#include <RenderInterface/header/GPUTexture.h>
+
 namespace graphics_backend
 {
+	struct VulkanImageInfo
+	{
+	public:
+		vk::ImageCreateFlags createFlags;
+		vk::ImageType imageType;
+		vk::ImageViewType defaultImageViewType;
+	};
+
 	constexpr vk::Format VertexInputFormatToVkFormat(VertexInputFormat inFormat)
 	{
 		switch (inFormat)
@@ -42,11 +53,110 @@ namespace graphics_backend
 				return vk::Format::eR32Sfloat;
 			case ETextureFormat::E_R32G32B32A32_SFLOAT:
 				return vk::Format::eR32G32B32A32Sfloat;
+			case ETextureFormat::E_D32_SFLOAT:
+				return vk::Format::eD32Sfloat;
+			case ETextureFormat::E_D32_SFLOAT_S8_UINT:
+				return vk::Format::eD32SfloatS8Uint;
 			case ETextureFormat::E_INVALID:
 			default:
 				return vk::Format::eUndefined;
 		}
 	}
+
+
+
+	constexpr vk::BufferImageCopy GPUTextureDescriptorToBufferImageCopy(GPUTextureDescriptor const& descriptor)
+	{
+		bool isDepthOnly = IsDepthOnlyFormat(descriptor.format);
+		bool isDepthStencil = IsDepthStencilFormat(descriptor.format);
+		bool is3D = descriptor.textureType == ETextureType::e3D;
+		vk::BufferImageCopy result{};
+		if (isDepthOnly)
+		{
+			result.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eDepth;
+		}
+		else if (isDepthStencil)
+		{
+			result.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eDepth
+				| vk::ImageAspectFlagBits::eStencil;
+		}
+		else
+		{
+			result.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		}
+		result.imageSubresource.mipLevel = 0;
+		result.imageSubresource.baseArrayLayer = 0;
+		result.imageSubresource.layerCount = is3D ? 1 : descriptor.layers;
+		result.bufferImageHeight = 0;
+		result.bufferOffset = 0;
+		result.imageOffset = vk::Offset3D{ 0, 0, 0 };
+		result.imageExtent = vk::Extent3D(descriptor.width, descriptor.height, is3D ? descriptor.layers : 1);
+		return result;
+	}
+
+	constexpr vk::ImageUsageFlags ETextureAccessTypeToVulkanImageUsageFlags(ETextureFormat format, ETextureAccessTypeFlags accessType)
+	{
+		vk::ImageUsageFlags resultUsage{};
+		for (std::underlying_type_t<ETextureAccessType> accessTypeId = 0
+			; accessTypeId <= static_cast<std::underlying_type_t<ETextureAccessType>>(ETextureAccessType::eAccessType_Max)
+			; ++accessTypeId)
+		{
+			ETextureAccessType typemask = static_cast<ETextureAccessType>(1 << accessTypeId);
+			if (accessType & typemask)
+			{
+				switch (typemask)
+				{
+				case ETextureAccessType::eSampled:
+					resultUsage |= vk::ImageUsageFlagBits::eSampled;
+					break;
+				case ETextureAccessType::eRT:
+					if (IsDepthStencilFormat(format))
+					{
+						resultUsage |= vk::ImageUsageFlagBits::eDepthStencilAttachment;
+					}
+					else
+					{
+						resultUsage |= vk::ImageUsageFlagBits::eColorAttachment;
+					}
+					break;
+				case ETextureAccessType::eSubpassInput:
+					resultUsage |= vk::ImageUsageFlagBits::eInputAttachment;
+					break;
+				case ETextureAccessType::eUnorderedAccess:
+					resultUsage |= vk::ImageUsageFlagBits::eStorage;
+					break;
+				case ETextureAccessType::eTransferDst:
+					resultUsage |= vk::ImageUsageFlagBits::eTransferDst;
+					break;
+				case ETextureAccessType::eTransferSrc:
+					resultUsage |= vk::ImageUsageFlagBits::eTransferSrc;
+					break;
+				}
+			}
+		}
+		return resultUsage;
+	}
+
+	constexpr VulkanImageInfo ETextureTypeToVulkanImageInfo(ETextureType textureType)
+	{
+		switch (textureType)
+		{
+		case ETextureType::e1D:
+			return VulkanImageInfo{ {}, vk::ImageType::e1D, vk::ImageViewType::e1D };
+		case ETextureType::e2D:
+			return VulkanImageInfo{ {}, vk::ImageType::e2D , vk::ImageViewType::e2D };
+		case ETextureType::e3D:
+			return VulkanImageInfo{ {}, vk::ImageType::e3D , vk::ImageViewType::e3D };
+		case ETextureType::e2DArray:
+			return VulkanImageInfo{ vk::ImageCreateFlagBits::e2DArrayCompatible, vk::ImageType::e2D, vk::ImageViewType::e2DArray };
+		case ETextureType::eCubeMap:
+			return VulkanImageInfo{ vk::ImageCreateFlagBits::eCubeCompatible, vk::ImageType::e2D, vk::ImageViewType::eCube };
+		}
+		CA_LOG_ERR("Unknown Texture Type!");
+		return {};
+	}
+
+
 
 	constexpr ETextureFormat VkFotmatToETextureFormat(vk::Format inFormat)
 	{
@@ -74,8 +184,70 @@ namespace graphics_backend
 			return ETextureFormat::E_R32_SFLOAT;
 		case vk::Format::eR32G32B32A32Sfloat:
 			return ETextureFormat::E_R32G32B32A32_SFLOAT;
+		case vk::Format::eD32Sfloat:
+			return ETextureFormat::E_D32_SFLOAT;
+		case vk::Format::eD32SfloatS8Uint:
+			return ETextureFormat::E_D32_SFLOAT_S8_UINT;
 		default:
 			return ETextureFormat::E_INVALID;
+		}
+	}
+
+	constexpr vk::Filter ETextureSamplerFilterModeToVkFilter(ETextureSamplerFilterMode inFilterMode)
+	{
+		switch (inFilterMode)
+		{
+		case ETextureSamplerFilterMode::eNearest:
+			return vk::Filter::eNearest;
+		case ETextureSamplerFilterMode::eLinear:
+			return vk::Filter::eLinear;
+		default:
+			return vk::Filter::eLinear;
+		}
+	}
+
+	constexpr vk::SamplerMipmapMode ETextureSamplerFilterModeToVkMipmapMode(ETextureSamplerFilterMode inFilterMode)
+	{
+		switch (inFilterMode)
+		{
+		case ETextureSamplerFilterMode::eNearest:
+			return vk::SamplerMipmapMode::eNearest;
+		case ETextureSamplerFilterMode::eLinear:
+			return vk::SamplerMipmapMode::eLinear;
+		default:
+			return vk::SamplerMipmapMode::eLinear;
+		}
+	}
+
+	constexpr vk::SamplerAddressMode ETextureSamplerAddressModeToVkSamplerAddressMode(ETextureSamplerAddressMode inAddressMode)
+	{
+		switch (inAddressMode)
+		{
+			case ETextureSamplerAddressMode::eRepeat:
+				return vk::SamplerAddressMode::eRepeat;
+			case ETextureSamplerAddressMode::eMirroredRepeat:
+				return vk::SamplerAddressMode::eMirroredRepeat;
+			case ETextureSamplerAddressMode::eClampToEdge:
+				return vk::SamplerAddressMode::eClampToEdge;
+			case ETextureSamplerAddressMode::eClampToBorder:
+				return vk::SamplerAddressMode::eClampToBorder;
+		}
+		return vk::SamplerAddressMode::eClampToEdge;
+	}
+
+	constexpr vk::BorderColor ETextureSamplerBorderColorToVkBorderColor(ETextureSamplerBorderColor inBorderColor
+	, bool integerFormat)
+	{
+		switch (inBorderColor)
+		{
+		case ETextureSamplerBorderColor::eTransparentBlack:
+			return integerFormat ? vk::BorderColor::eIntTransparentBlack : vk::BorderColor::eFloatTransparentBlack;
+		case ETextureSamplerBorderColor::eOpaqueBlack:
+			return integerFormat ? vk::BorderColor::eIntOpaqueBlack : vk::BorderColor::eFloatOpaqueBlack;
+		case ETextureSamplerBorderColor::eOpaqueWhite:
+			return integerFormat ? vk::BorderColor::eIntOpaqueWhite : vk::BorderColor::eFloatOpaqueWhite;
+		default:
+			return vk::BorderColor::eFloatOpaqueWhite;
 		}
 	}
 
@@ -329,7 +501,7 @@ namespace graphics_backend
 	{
 		vk::ClearValue result{};
 		//标记浮点值
-		if (inFormat < ETextureFormat::E_FLOAT_TYPE_CATEGORY)
+		if (IsFloatFormat(inFormat))
 		{
 			result.color = vk::ClearColorValue(std::array<float, 4>{
 					inClearValue.color.r
@@ -339,17 +511,17 @@ namespace graphics_backend
 				});
 		}
 		//标记整形值
-		else if (inFormat < ETextureFormat::E_INT_TYPE_CATEGORY)
+		else if (IsIntFormat(inFormat))
 		{
 
 		}
 		//标记无符号整形值
-		else if (inFormat < ETextureFormat::E_UINT_TYPE_CATEGORY)
+		else if (IsUintFormat(inFormat))
 		{
 
 		}
 		//标记深度，模板值
-		else if (inFormat < ETextureFormat::E_DEPTHSTENCIL_TYPE_CATEGORY)
+		else if (IsDepthStencilFormat(inFormat))
 		{
 
 		}

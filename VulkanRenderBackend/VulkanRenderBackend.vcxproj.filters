@@ -114,6 +114,15 @@
     <ClInclude Include="private\include\TaskScheduling.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="private\include\VulkanImageObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\TextureSampler_Impl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="private\include\TickUploadingResource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\source\dllmain.cpp">
@@ -201,6 +210,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="private\include\ShaderDescriptorSetAllocator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\VulkanImageObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\TextureSampler_Impl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="private\include\TickUploadingResource.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

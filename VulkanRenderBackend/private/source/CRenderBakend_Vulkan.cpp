@@ -54,6 +54,14 @@ namespace graphics_backend
 				m_Application.ReleaseGPUBuffer(releaseBuffer);
 			});
 	}
+	std::shared_ptr<GPUTexture> CRenderBackend_Vulkan::CreateGPUTexture(GPUTextureDescriptor const& inDescriptor)
+	{
+		return std::shared_ptr<GPUTexture>(m_Application.NewGPUTexture(inDescriptor)
+			, [this](GPUTexture* releaseTex)
+			{
+				m_Application.ReleaseGPUTexture(releaseTex);
+			});
+	}
 	std::shared_ptr<ShaderConstantSet> CRenderBackend_Vulkan::CreateShaderConstantSet(ShaderConstantsBuilder const& inBuilder)
 	{
 		return m_Application.NewShaderConstantSet(inBuilder);
@@ -61,5 +69,9 @@ namespace graphics_backend
 	std::shared_ptr<ShaderBindingSet> CRenderBackend_Vulkan::CreateShaderBindingSet(ShaderBindingBuilder const& inBuilder)
 	{
 		return m_Application.NewShaderBindingSet(inBuilder);
+	}
+	std::shared_ptr<TextureSampler> CRenderBackend_Vulkan::GetOrCreateTextureSampler(TextureSamplerDescriptor const& descriptor)
+	{
+		return m_Application.GetOrCreateTextureSampler(descriptor);
 	}
 }

@@ -2,22 +2,25 @@
 #include "Common.h"
 #include "GPUTexture.h"
 
-class TextureHandle
+namespace graphics_backend
 {
-public:
-
-	TextureHandle(GPUTextureDescriptor const descriptor, TIndex handleIndex) : 
-		m_Descriptor(descriptor)
-		, m_HandleIndex(handleIndex)
+	class TextureHandle
 	{
-	}
+	public:
 
-	GPUTextureDescriptor const& GetDescriptor() const {
-		return m_Descriptor;
-	}
+		TextureHandle(GPUTextureDescriptor const descriptor, TIndex handleIndex) :
+			m_Descriptor(descriptor)
+			, m_HandleIndex(handleIndex)
+		{
+		}
 
-	TIndex GetHandleIndex() const { return m_HandleIndex; }
-private:
-	GPUTextureDescriptor m_Descriptor;
-	TIndex m_HandleIndex;
-};
+		GPUTextureDescriptor const& GetDescriptor() const {
+			return m_Descriptor;
+		}
+
+		TIndex GetHandleIndex() const { return m_HandleIndex; }
+	private:
+		GPUTextureDescriptor m_Descriptor;
+		TIndex m_HandleIndex;
+	};
+}

@@ -40,7 +40,7 @@ namespace graphics_backend
 		{
 			m_ScheduledData.resize(scheduleSize);
 		}
-		memcpy(m_ScheduledData.data(), pData, dataSize);
+		memcpy(m_ScheduledData.data() + bufferOffset, pData, dataSize);
 	}
 	void GPUBuffer_Impl::DoUpload()
 	{

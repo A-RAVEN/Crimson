@@ -2,15 +2,14 @@
 #include <private/include/CVulkanMemoryManager.h>
 
 #include "private/include/CVulkanApplication.h"
+#include "private/include/VulkanImageObject.h"
+#include <RenderInterface/header/GPUTexture.h>
+#include <private/include/InterfaceTranslator.h>
 
 namespace graphics_backend
 {
-	void AllocateBuffer_Common(VmaAllocator allocator, EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage
-		, vk::Buffer& outBuffer, VmaAllocation& outAllocation, VmaAllocationInfo& outAllocationInfo)
+	constexpr VmaAllocationCreateInfo EMemoryTypeToAllocationCreateInfo(EMemoryType memoryType)
 	{
-		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
-			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
-		);
 		VmaAllocationCreateInfo allocationCreateInfo{};
 		switch (memoryType)
 		{
@@ -37,6 +36,16 @@ namespace graphics_backend
 		}
 		break;
 		}
+		return allocationCreateInfo;
+	}
+
+	void AllocateBuffer_Common(VmaAllocator allocator, EMemoryType memoryType, size_t bufferSize, vk::BufferUsageFlags bufferUsage
+		, vk::Buffer& outBuffer, VmaAllocation& outAllocation, VmaAllocationInfo& outAllocationInfo)
+	{
+		VkBufferCreateInfo bufferCreateInfo = vk::BufferCreateInfo(
+			{}, bufferSize, bufferUsage, vk::SharingMode::eExclusive
+		);
+		VmaAllocationCreateInfo allocationCreateInfo = EMemoryTypeToAllocationCreateInfo(memoryType);
 		VkBuffer vkbuffer_c;
 		vmaCreateBuffer(
 			allocator
@@ -46,6 +55,38 @@ namespace graphics_backend
 			, &outAllocation
 			, &outAllocationInfo);
 		outBuffer = vkbuffer_c;
+	}
+
+	void AllocateImage_Common(VmaAllocator allocator, GPUTextureDescriptor const& desc, EMemoryType memoryType
+		, vk::Image& outImage, VmaAllocation& outAllocation, VmaAllocationInfo& outAllocationInfo)
+	{
+		VulkanImageInfo imageInfo = ETextureTypeToVulkanImageInfo(desc.textureType);
+		bool is3D = imageInfo.imageType == vk::ImageType::e3D;
+		vk::ImageUsageFlags usages = ETextureAccessTypeToVulkanImageUsageFlags(desc.format, desc.accessType);
+		VkImageCreateInfo imageCreateInfo = vk::ImageCreateInfo{imageInfo.createFlags
+			, imageInfo.imageType
+			, ETextureFormatToVkFotmat(desc.format)
+			, vk::Extent3D{
+				desc.width
+				, desc.height
+				, is3D ? desc.layers : 1
+			}
+			, desc.mipLevels
+			, is3D ? 1 : desc.layers
+			, vk::SampleCountFlagBits::e1
+				, vk::ImageTiling::eOptimal
+				, usages
+		};
+		VmaAllocationCreateInfo allocationCreateInfo = EMemoryTypeToAllocationCreateInfo(memoryType);
+		VkImage vkImage_c;
+		vmaCreateImage(
+			allocator
+			, &imageCreateInfo
+			, &allocationCreateInfo
+			, &vkImage_c
+			, &outAllocation
+			, &outAllocationInfo);
+		outImage = vkImage_c;
 	}
 
 	CFrameBoundMemoryPool::CFrameBoundMemoryPool(uint32_t pool_id, CVulkanApplication& owner) :
@@ -114,6 +155,10 @@ namespace graphics_backend
 
 	CGlobalMemoryPool::CGlobalMemoryPool(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
 		, m_BufferObjectPool(owner)
+		, m_ImageFrameboundReleaser([this](std::deque<VulkanImageObject_Internal> const& releasingObjects)
+			{
+				ReleaseImage_Internal(releasingObjects);
+			})
 	{
 	}
 
@@ -126,7 +171,7 @@ namespace graphics_backend
 		vk::Buffer buffer{};
 		VmaAllocation allocation{};
 		VmaAllocationInfo allocationInfo{};
-		AllocateBuffer_Common(m_BufferAllocator, memoryType, bufferSize, bufferUsage
+		AllocateBuffer_Common(m_GlobalAllocator, memoryType, bufferSize, bufferUsage
 			, buffer, allocation, allocationInfo);
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		m_ActiveBuffers.insert(std::make_pair(buffer, allocation));
@@ -155,10 +200,11 @@ namespace graphics_backend
 		{
 			auto frontBuffer = m_PendingReleasingBuffers.front();
 			m_PendingReleasingBuffers.pop_front();
-			vmaDestroyBuffer(m_BufferAllocator
+			vmaDestroyBuffer(m_GlobalAllocator
 				, std::get<0>(frontBuffer)
 				, std::get<1>(frontBuffer));
 		}
+		m_ImageFrameboundReleaser.ReleaseFrame(frame);
 	}
 
 	void CGlobalMemoryPool::Initialize()
@@ -168,7 +214,7 @@ namespace graphics_backend
 		vmaCreateInfo.physicalDevice = static_cast<VkPhysicalDevice>(GetPhysicalDevice());
 		vmaCreateInfo.device = GetDevice();
 		vmaCreateInfo.instance = GetInstance();
-		vmaCreateAllocator(&vmaCreateInfo, &m_BufferAllocator);
+		vmaCreateAllocator(&vmaCreateInfo, &m_GlobalAllocator);
 	}
 
 	void CGlobalMemoryPool::Release()
@@ -176,20 +222,21 @@ namespace graphics_backend
 		std::lock_guard<std::mutex> guard(m_Mutex);
 		for(auto pending_release_buffer : m_PendingReleasingBuffers)
 		{
-			vmaDestroyBuffer(m_BufferAllocator
+			vmaDestroyBuffer(m_GlobalAllocator
 				, std::get<0>(pending_release_buffer)
 				, std::get<1>(pending_release_buffer));
 		}
 		m_PendingReleasingBuffers.clear();
 		for (auto pending_release_buffer : m_ActiveBuffers)
 		{
-			vmaDestroyBuffer(m_BufferAllocator
+			vmaDestroyBuffer(m_GlobalAllocator
 				, pending_release_buffer.first
 				, pending_release_buffer.second);
 		}
 		m_ActiveBuffers.clear();
-		vmaDestroyAllocator(m_BufferAllocator);
-		m_BufferAllocator = nullptr;
+		vmaDestroyAllocator(m_GlobalAllocator);
+		m_GlobalAllocator = nullptr;
+		m_ImageFrameboundReleaser.ReleaseAll();
 	}
 
 	CVulkanMemoryManager::CVulkanMemoryManager(CVulkanApplication& owner) : 
@@ -221,6 +268,11 @@ namespace graphics_backend
 			, EMemoryLifetime::FrameBound
 			, bufferSize
 			, vk::BufferUsageFlagBits::eTransferSrc);
+	}
+
+	VulkanImageObject CVulkanMemoryManager::AllocateImage(GPUTextureDescriptor const& textureDescriptor, EMemoryType memoryType, EMemoryLifetime lifetime)
+	{
+		return m_GlobalMemoryPool.AllocateImage(textureDescriptor, memoryType);
 	}
 
 	void CVulkanMemoryManager::ReleaseCurrentFrameResource()
@@ -263,5 +315,42 @@ namespace graphics_backend
 			{
 				ReleaseBuffer(removingBuffer);
 			});
+	}
+
+	VulkanImageObject CGlobalMemoryPool::AllocateImage(GPUTextureDescriptor const& textureDescriptor, EMemoryType memoryType)
+	{
+		vk::Image resultImage;
+		VmaAllocation allocation;
+		VmaAllocationInfo allocationInfo;
+		AllocateImage_Common(m_GlobalAllocator, textureDescriptor, EMemoryType::GPU
+			, resultImage, allocation, allocationInfo);
+
+		VulkanImageObject_Internal imgObjectInternal(
+			textureDescriptor
+			, resultImage
+			, allocation
+			, allocationInfo);
+		return VulkanImageObject(std::move(imgObjectInternal)
+			, [this](VulkanImageObject_Internal& releasingImage)
+			{
+				ScheduleReleaseImage(releasingImage);
+			});
+	}
+
+	void CGlobalMemoryPool::ScheduleReleaseImage(VulkanImageObject_Internal& releasingImage)
+	{
+		std::lock_guard<std::mutex> guard(m_Mutex);
+		FrameType releasingFrameID = GetFrameCountContext().GetCurrentFrameID();
+		m_ImageFrameboundReleaser.ScheduleRelease(releasingFrameID
+			, std::move(releasingImage));
+	}
+	void CGlobalMemoryPool::ReleaseImage_Internal(std::deque<VulkanImageObject_Internal> const& releasingObjects)
+	{
+		for (VulkanImageObject_Internal const& obj : releasingObjects)
+		{
+			vmaDestroyImage(m_GlobalAllocator
+				, obj.GetImage()
+				, obj.GetAllocation());
+		}
 	}
 }

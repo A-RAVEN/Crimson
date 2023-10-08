@@ -14,10 +14,10 @@
 #include "GPUBuffer_Impl.h"
 #include <RenderInterface/header/CRenderGraph.h>
 #include <RenderInterface/header/ShaderBindingBuilder.h>
-#include <RenderInterface/header/ShaderBindingSet.h>
 #include "GPUObjectManager.h"
 #include "RenderGraphExecutor.h"
 #include "ShaderBindingSet_Impl.h"
+#include "GPUTexture_Impl.h"
 
 namespace graphics_backend
 {
@@ -110,13 +110,22 @@ namespace graphics_backend
 		void ExecuteRenderGraph(std::shared_ptr<CRenderGraph> inRenderGraph);
 
 		void CreateImageViews2D(vk::Format format, std::vector<vk::Image> const& inImages, std::vector<vk::ImageView>& outImageViews) const;
+		vk::ImageView CreateDefaultImageView(
+			GPUTextureDescriptor const& inDescriptor
+			, vk::Image inImage
+			, bool depthAspect
+			, bool stencilAspect) const;
 	public:
 		//Allocation
 		GPUBuffer* NewGPUBuffer(EBufferUsageFlags usageFlags, uint64_t count, uint64_t stride);
 		void ReleaseGPUBuffer(GPUBuffer* releaseGPUBuffer);
 
+		GPUTexture* NewGPUTexture(GPUTextureDescriptor const& inDescriptor);
+		void ReleaseGPUTexture(GPUTexture* releaseGPUTexture);
+
 		std::shared_ptr<ShaderConstantSet> NewShaderConstantSet(ShaderConstantsBuilder const& builder);
 		std::shared_ptr<ShaderBindingSet> NewShaderBindingSet(ShaderBindingBuilder const& builder);
+		std::shared_ptr<TextureSampler> GetOrCreateTextureSampler(TextureSamplerDescriptor const& descriptor);
 
 		HashPool<ShaderBindingBuilder, ShaderBindingSetAllocator>& GetShaderBindingSetAllocators() { return m_ShaderBindingSetAllocator; }
 	private:
@@ -161,6 +170,7 @@ namespace graphics_backend
 		std::shared_future<void> m_TaskFuture;
 
 		TVulkanApplicationPool<GPUBuffer_Impl> m_GPUBufferPool;
+		TVulkanApplicationPool<GPUTexture_Impl> m_GPUTexturePool;
 		//Uniform Buffer
 		HashPool<ShaderConstantsBuilder, ShaderConstantSetAllocator> m_ConstantSetAllocator;
 		//Shader Descriptor Set

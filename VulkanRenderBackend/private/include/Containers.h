@@ -3,7 +3,6 @@
 #include <deque>
 #include <functional>
 #include <unordered_set>
-#include <unordered_map>
 #include <SharedTools/header/DebugUtils.h>
 #include "RenderBackendSettings.h"
 #include "VulkanApplicationSubobjectBase.h"
@@ -96,6 +95,8 @@ namespace graphics_backend
 		std::deque<T*> m_EmptySpaces;
 	};
 
+	
+
 	template<typename T>
 	class TFrameboundReleaser
 	{
@@ -107,6 +108,7 @@ namespace graphics_backend
 		//Called When Release
 		void ScheduleRelease(FrameType frameType, T&& releaseObj)
 		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			if ((!m_WaitForRelease.empty()) && m_WaitForRelease.back().first == frameType)
 			{
 				m_WaitForRelease.back().second.push_back(releaseObj);
@@ -120,17 +122,28 @@ namespace graphics_backend
 		//Called When Frame Done
 		void ReleaseFrame(FrameType doneFrame)
 		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
+			CA_ASSERT(m_ReleaseFunc != nullptr, "Framebound Releaser Has NULL Release Func!");
+			if(m_WaitForRelease.empty())
+				return;
+			while ((!m_WaitForRelease.empty()) && m_WaitForRelease.front().first <= doneFrame)
+			{
+				m_ReleaseFunc(m_WaitForRelease.front().second);
+				m_WaitForRelease.pop_front();
+			};
+		}
+		void ReleaseAll()
+		{
+			std::lock_guard<std::mutex> lockGuard(m_Mutex);
 			CA_ASSERT(m_ReleaseFunc != nullptr, "Framebound Releaser Has NULL Release Func!");
 			for (auto& itrPair : m_WaitForRelease)
 			{
-				if(itrPair.first > doneFrame)
-				{
-					break;
-				}
 				m_ReleaseFunc(itrPair.second);
 			}
+			m_WaitForRelease.clear();
 		}
 	private:
+		std::mutex m_Mutex;
 		std::function<void(std::deque<T> const&)> m_ReleaseFunc;
 		std::deque<std::pair<FrameType, std::deque<T>>> m_WaitForRelease;
 	};

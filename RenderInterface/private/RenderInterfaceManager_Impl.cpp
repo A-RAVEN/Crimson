@@ -2,22 +2,26 @@
 #include "RenderInterfaceManager_Impl.h"
 #include "CRenderGraphImpl.h"
 
-std::shared_ptr<CRenderGraph> RenderInterfaceManager_Impl::NewRenderGraph()
+namespace graphics_backend
 {
-    return std::shared_ptr<CRenderGraph>(NewRenderGraph_Internal(), [this](CRenderGraph* pDeleted)
-        {
-            ReleaseRenderGraph_Internal(pDeleted);
-        });
+    std::shared_ptr<CRenderGraph> RenderInterfaceManager_Impl::NewRenderGraph()
+    {
+        return std::shared_ptr<CRenderGraph>(NewRenderGraph_Internal(), [this](CRenderGraph* pDeleted)
+            {
+                ReleaseRenderGraph_Internal(pDeleted);
+            });
+    }
+
+    CRenderGraph* RenderInterfaceManager_Impl::NewRenderGraph_Internal()
+    {
+        return new CRenderGraph_Impl();
+    }
+
+    void RenderInterfaceManager_Impl::ReleaseRenderGraph_Internal(CRenderGraph* pDeleted)
+    {
+        delete static_cast<CRenderGraph_Impl*>(pDeleted);
+    }
+
+    CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(RenderInterfaceManager, RenderInterfaceManager_Impl)
 }
 
-CRenderGraph* RenderInterfaceManager_Impl::NewRenderGraph_Internal()
-{
-    return new CRenderGraph_Impl();
-}
-
-void RenderInterfaceManager_Impl::ReleaseRenderGraph_Internal(CRenderGraph* pDeleted)
-{
-    delete static_cast<CRenderGraph_Impl*>(pDeleted);
-}
-
-CA_LIBRARY_INSTANCE_LOADING_FUNCTIONS(RenderInterfaceManager, RenderInterfaceManager_Impl)
