@@ -6,6 +6,8 @@
 #include "CVulkanBufferObject.h"
 #include "ShaderDescriptorSetAllocator.h"
 #include "TickUploadingResource.h"
+#include "GPUTexture_Impl.h"
+#include "TextureSampler_Impl.h"
 
 namespace graphics_backend
 {
@@ -62,10 +64,15 @@ namespace graphics_backend
 		void Initialize(ShaderBindingBuilder const& builder);
 		ShaderDescriptorSetLayoutInfo const& GetLayoutInfo() const { return m_LayoutInfo; }
 		std::unordered_map<std::string, uint32_t> const& GetCBufferNameToBindingIndex() const { return m_CBufferNameToBindingIndex; }
+		std::unordered_map<std::string, uint32_t> const& GetTextureNameToBindingIndex() const { return m_TextureNameToBindingIndex; }
 	private:
 		ShaderDescriptorSetLayoutInfo m_LayoutInfo;
 		std::unordered_map<std::string, uint32_t> m_CBufferNameToBindingIndex;
+		std::unordered_map<std::string, uint32_t> m_TextureNameToBindingIndex;
+		std::unordered_map<std::string, uint32_t> m_SamplerNameToBindingIndex;
 	};
+
+
 
 	class ShaderBindingSet_Impl : public BaseTickingUpdateResource, public ShaderBindingSet
 	{
@@ -87,6 +94,8 @@ namespace graphics_backend
 		ShaderBindingSetMetadata const* p_Metadata;
 		ShaderDescriptorSetHandle m_DescriptorSetHandle;
 		std::unordered_map<std::string, std::shared_ptr<ShaderConstantSet>> m_ConstantSets;
+		std::unordered_map<std::string, std::shared_ptr<GPUTexture_Impl>> m_Textures;
+		std::unordered_map<std::string, std::shared_ptr<TextureSampler_Impl>> m_Samplers;
 	};
 
 	class ShaderBindingSetAllocator : public BaseApplicationSubobject

@@ -224,6 +224,12 @@ public:
 		return *this;
 	}
 
+	ShaderBindingBuilder& SamplerState(std::string const& name)
+	{
+		m_TextureSamplers.push_back(name);
+		return *this;
+	}
+
 	std::string const& GetSpaceName() const {
 		return m_SpaceName;
 	}
@@ -234,6 +240,11 @@ public:
 
 	std::vector<std::pair<std::string, ShaderTextureDescriptor>> const& GetTextureDescriptors() const {
 		return m_TextureDescriptors;
+	}
+
+	std::vector<std::string> const& GetTextureSamplers() const
+	{
+		return m_TextureSamplers;
 	}
 
 	bool operator==(ShaderBindingBuilder const& rhs) const
@@ -247,12 +258,14 @@ public:
 	{
 		hash_append(h, bindingBuilder.m_ConstantBufferDescriptors);
 		hash_append(h, bindingBuilder.m_TextureDescriptors);
+		hash_append(h, bindingBuilder.m_TextureSamplers);
 	}
 
 protected:
 	std::string m_SpaceName;
 	std::vector<ShaderConstantsBuilder> m_ConstantBufferDescriptors;
 	std::vector<std::pair<std::string, ShaderTextureDescriptor>> m_TextureDescriptors;
+	std::vector<std::string> m_TextureSamplers;
 };
 
 class ShaderBindingDescriptorList

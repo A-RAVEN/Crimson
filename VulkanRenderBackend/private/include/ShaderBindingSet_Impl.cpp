@@ -195,13 +195,17 @@ namespace graphics_backend {
 	void ShaderBindingSet_Impl::SetTexture(std::string const& name
 		, std::shared_ptr<GPUTexture> const& pTexture)
 	{
-
+		std::shared_ptr<GPUTexture_Impl> texture = std::static_pointer_cast<GPUTexture_Impl>(pTexture);
+		m_Textures.insert(std::make_pair(name, texture));
+		MarkDirtyThisFrame();
 	}
 
 	void ShaderBindingSet_Impl::SetSampler(std::string const& name
 		, std::shared_ptr<TextureSampler> const& pSampler)
 	{
-
+		std::shared_ptr<TextureSampler_Impl> sampler = std::static_pointer_cast<TextureSampler_Impl>(pSampler);
+		m_Samplers.insert(std::make_pair(name, sampler));
+		MarkDirtyThisFrame();
 	}
 
 	void ShaderBindingSet_Impl::UploadAsync()
@@ -215,18 +219,19 @@ namespace graphics_backend {
 	{
 		m_DescriptorSetHandle.RAIIRelease();
 		CA_ASSERT(!m_DescriptorSetHandle.IsRAIIAquired(), "RAIIObject Should Be Released Here");
-		{
+		//{
 			auto& descPoolCache = GetVulkanApplication().GetGPUObjectManager().GetShaderDescriptorPoolCache();
 			ShaderDescriptorSetLayoutInfo layoutInfo = p_Metadata->GetLayoutInfo();
 			auto allocator = descPoolCache.GetOrCreate(layoutInfo).lock();
 			m_DescriptorSetHandle = std::move(allocator->AllocateSet());
-		}
+		//}
 		CA_ASSERT(m_DescriptorSetHandle.IsRAIIAquired(), "Descriptor Set Is Not Aquired!");
 		vk::DescriptorSet targetSet = m_DescriptorSetHandle->GetDescriptorSet();
+		uint32_t writeCount = m_ConstantSets.size() + m_Textures.size() + m_Samplers.size();
 		std::vector<vk::WriteDescriptorSet> constantBufferWrites;
-		if (!m_ConstantSets.empty())
+		if(writeCount > 0)
 		{
-			constantBufferWrites.reserve(m_ConstantSets.size());
+			constantBufferWrites.reserve(writeCount);
 			auto& nameToIndex = p_Metadata->GetCBufferNameToBindingIndex();
 			for (auto pair : m_ConstantSets)
 			{
@@ -248,12 +253,15 @@ namespace graphics_backend {
 				constantBufferWrites.push_back(writeSet);
 			}
 		}
+
 		GetDevice().updateDescriptorSets(constantBufferWrites, {});
 		MarkUploadingDoneThisFrame();
 	}
 	void ShaderBindingSetMetadata::Initialize(ShaderBindingBuilder const& builder)
 	{
 		auto& constantBufferDescriptors = builder.GetConstantBufferDescriptors();
+		auto& textureDescriptors = builder.GetTextureDescriptors();
+		auto& samplerDescriptors = builder.GetTextureSamplers();
 		m_LayoutInfo = ShaderDescriptorSetLayoutInfo{ builder };
 
 		uint32_t bindingIndex = 0;
@@ -261,6 +269,16 @@ namespace graphics_backend {
 		{
 			m_CBufferNameToBindingIndex.emplace(desc.GetName(), bindingIndex++);
 		};
+
+		for (auto& desc : textureDescriptors)
+		{
+			m_TextureNameToBindingIndex.emplace(desc.first, bindingIndex++);
+		}
+
+		for (auto& sampler : samplerDescriptors)
+		{
+			m_SamplerNameToBindingIndex.emplace(sampler, bindingIndex++);
+		}
 	}
 	ShaderBindingSetAllocator::ShaderBindingSetAllocator(CVulkanApplication& owner) : BaseApplicationSubobject(owner)
 		, m_ShaderBindingSetPool(owner)

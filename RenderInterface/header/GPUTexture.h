@@ -20,6 +20,11 @@ namespace graphics_backend
 		}
 	};
 
+	class GPUTextureAccessDescriptor
+	{
+
+	};
+
 	class GPUTexture
 	{
 	public:

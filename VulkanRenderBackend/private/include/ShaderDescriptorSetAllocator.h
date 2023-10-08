@@ -19,6 +19,8 @@ namespace graphics_backend
 		ShaderDescriptorSetLayoutInfo() = default;
 		ShaderDescriptorSetLayoutInfo(ShaderBindingBuilder const& bindingBuilder);
 		uint32_t m_ConstantBufferCount = 0;
+		uint32_t m_TextureCount = 0;
+		uint32_t m_SamplerCount = 0;
 		bool operator==(ShaderDescriptorSetLayoutInfo const& other) const
 		{
 			return hash_utils::memory_equal(*this, other);

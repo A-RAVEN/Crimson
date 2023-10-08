@@ -12,7 +12,10 @@ namespace graphics_backend
 	void ShaderDescriptorSetAllocator::Create(ShaderDescriptorSetLayoutInfo const& layoutInfo)
 	{
 		m_LayoutInfo = &layoutInfo;
-		uint32_t bindingCount = m_LayoutInfo->m_ConstantBufferCount;
+		uint32_t constantBufferCount = m_LayoutInfo->m_ConstantBufferCount;
+		uint32_t textureCount = m_LayoutInfo->m_TextureCount;
+		uint32_t samplerCount = m_LayoutInfo->m_SamplerCount;
+		uint32_t bindingCount = constantBufferCount + textureCount + samplerCount;
 		std::vector<vk::DescriptorSetLayoutBinding> bindings;
 		bindings.resize(bindingCount);
 		uint32_t bindingIndex = 0;
@@ -23,13 +26,32 @@ namespace graphics_backend
 			binding.descriptorCount = 1;
 			binding.descriptorType = vk::DescriptorType::eUniformBuffer;
 			binding.stageFlags = vk::ShaderStageFlagBits::eAll;
+			++bindingIndex;
+		}
+
+		for (uint32_t itrTexture = 0; itrTexture < m_LayoutInfo->m_TextureCount; ++itrTexture)
+		{
+			auto& binding = bindings[bindingIndex];
+			binding.binding = bindingIndex;
+			binding.descriptorCount = 1;
+			binding.descriptorType = vk::DescriptorType::eSampledImage;
+			binding.stageFlags = vk::ShaderStageFlagBits::eAll;
+			++bindingIndex;
+		}
+
+		for (uint32_t itrSampler = 0; itrSampler < m_LayoutInfo->m_SamplerCount; ++itrSampler)
+		{
+			auto& binding = bindings[bindingIndex];
+			binding.binding = bindingIndex;
+			binding.descriptorCount = 1;
+			binding.descriptorType = vk::DescriptorType::eSampler;
+			binding.stageFlags = vk::ShaderStageFlagBits::eAll;
+			++bindingIndex;
 		}
 
 		vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{{}, bindings};
 
 		m_DescriptorSetLayout = GetDevice().createDescriptorSetLayout(layoutCreateInfo);
-
-
 	}
 	void ShaderDescriptorSetAllocator::Release()
 	{
@@ -126,9 +148,22 @@ namespace graphics_backend
 		std::vector<vk::DescriptorPoolSize> poolSizes = {
 			vk::DescriptorPoolSize{vk::DescriptorType::eUniformBuffer, layoutInfo.m_ConstantBufferCount * m_MaxSize}
 		};
+		if (layoutInfo.m_TextureCount > 0)
+		{
+			poolSizes.emplace_back(
+				vk::DescriptorType::eSampledImage
+				, layoutInfo.m_TextureCount * m_MaxSize
+			);
+		}
+		if (layoutInfo.m_SamplerCount > 0)
+		{
+			poolSizes.emplace_back(
+				vk::DescriptorType::eSampler
+				, layoutInfo.m_SamplerCount * m_MaxSize
+			);
+		}
 		vk::DescriptorPoolCreateInfo poolInfo{{}, m_MaxSize, poolSizes};
 		m_Pool = GetDevice().createDescriptorPool(poolInfo);
-
 	}
 	ShaderDescriptorSetHandle DescriptorSetPool::AllocateSet()
 	{
@@ -170,6 +205,8 @@ namespace graphics_backend
 	}
 	ShaderDescriptorSetLayoutInfo::ShaderDescriptorSetLayoutInfo(ShaderBindingBuilder const& bindingBuilder) :
 		m_ConstantBufferCount(bindingBuilder.GetConstantBufferDescriptors().size())
+		, m_TextureCount(bindingBuilder.GetTextureDescriptors().size())
+		, m_SamplerCount(bindingBuilder.GetTextureSamplers().size())
 	{
 	}
 }

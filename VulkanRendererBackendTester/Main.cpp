@@ -42,6 +42,8 @@ int main(int argc, char *argv[])
 
 	ShaderBindingBuilder shaderBindingBuilder{ "TestBinding" };
 	shaderBindingBuilder.ConstantBuffer(shaderConstantBuilder);
+	shaderBindingBuilder.Texture2D<float, 1>("TestTexture");
+	shaderBindingBuilder.SamplerState("TestSampler");
 
 	auto pThreadManager = threadManagerLoader.New();
 	pThreadManager->InitializeThreadCount(5);
