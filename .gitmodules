@@ -14,3 +14,6 @@
 	path = ExternalLib/llvm-project
 	url = https://github.com/llvm/llvm-project.git
 	branch = release/17.x
+[submodule "ExternalLib/stb"]
+	path = ExternalLib/stb
+	url = https://github.com/nothings/stb.git
