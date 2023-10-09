@@ -41,6 +41,7 @@ namespace graphics_backend
 	static std::vector<const char*> GetDeviceExtensionNames()
 	{
 		return std::vector<const char*>{
+			VK_KHR_MAINTENANCE_4_EXTENSION_NAME,
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 		};
 	}

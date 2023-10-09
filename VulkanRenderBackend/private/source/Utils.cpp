@@ -113,7 +113,7 @@ namespace vulkan_backend
 	                }
 	            }
 	        }
-	        return VK_TRUE;
+	        return VK_FALSE;
 	    }
 
 		vk::DebugUtilsMessengerCreateInfoEXT makeDebugUtilsMessengerCreateInfoEXT()

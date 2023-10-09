@@ -36,6 +36,6 @@ VertexToFragment vert(in VertexInput input)
 
 [[vk::location(0)]] float4 frag(in VertexToFragment input) : SV_TARGET0
 {
-    return TestTexture.SampleLevel(TestSampler, input.uv, 0).xyzw * float4(input.color, 1.0);
+    return TestTexture.SampleLevel(TestSampler, input.uv, 0).xyzw;// * float4(input.color, 1.0);
     //return float4(input.color, 1.0);
 }
