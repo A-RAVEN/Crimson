@@ -14,6 +14,7 @@
 #include <RenderInterface/header/ShaderBindingBuilder.h>
 #include <ExternalLib/glm/glm/mat4x4.hpp>
 #include <ExternalLib/glm/glm/gtc/matrix_transform.hpp>
+#include <ExternalLib/stb/stb_image.h>
 using namespace thread_management;
 using namespace library_loader;
 using namespace graphics_backend;
@@ -22,11 +23,9 @@ using namespace uenum;
 
 struct VertexData
 {
-	float x;
-	float y;
-	float r;
-	float g;
-	float b;
+	glm::vec2 pos;
+	glm::vec2 uv;
+	glm::vec3 color;
 };
 
 int main(int argc, char *argv[])
@@ -95,26 +94,25 @@ int main(int argc, char *argv[])
 	shaderBindings->SetConstantSet(shaderConstants->GetName(), shaderConstants);
 
 	std::vector<VertexData> vertexDataList = {
-		VertexData{-0.4f, 0.2f, 1.0f, 1.0f, 1.0f},
-		VertexData{0.4f, 0.2f, 1.0f, 1.0f, 1.0f},
-		VertexData{0.0f, 0.8f, 1.0f, 1.0f, 1.0f},
-	};
-
-	std::vector<VertexData> vertexDataList1 = {
-		VertexData{-0.4f, -0.8f, 1.0f, 1.0f, 1.0f},
-		VertexData{0.4f, -0.8f, 1.0f, 1.0f, 1.0f},
-		VertexData{0.0f, -0.2f, 1.0f, 1.0f, 1.0f},
+		VertexData{glm::vec2(-0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(1, 1, 1)},
+		VertexData{glm::vec2(0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(1, 1, 1)},
+		VertexData{glm::vec2(0.5f, 0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(1, 1, 1)},
+		VertexData{glm::vec2(-0.5f, 0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(1, 1, 1)},
 	};
 
 	std::vector<uint16_t> indexDataList = {
-		0, 1, 2
+		0, 1, 2, 2, 3, 0
 	};
+
+	int w, h, channel_num;
+	auto data = stbi_load("D:/Projects/Crimson/Build/x64/Debug/MonValley_A_LookoutPoint_2k.hdr", &w, &h, &channel_num, 4);
+	size_t imgSize = w * h * sizeof(uint32_t);
 
 	GPUTextureDescriptor desc{};
 	desc.accessType = ETextureAccessType::eSampled | ETextureAccessType::eTransferDst;
-	desc.format = ETextureFormat::E_R32G32B32A32_SFLOAT;
-	desc.width = 1;
-	desc.height = 1;
+	desc.format = ETextureFormat::E_R8G8B8A8_UNORM;
+	desc.width = w;
+	desc.height = h;
 	desc.layers = 1;
 	desc.mipLevels = 1;
 	desc.textureType = ETextureType::e2D;
@@ -126,34 +124,32 @@ int main(int argc, char *argv[])
 	shaderBindings->SetSampler("TestSampler", sampler);
 
 
-	std::vector<float> imageData = { 0.0f, 1.0f, 0.0f, 1.0f };
-	image->ScheduleTextureData(0, imageData.size() * sizeof(float), imageData.data());
+	image->ScheduleTextureData(0, imgSize, data);
+
+	stbi_image_free(data);
 
 	auto vertexBuffer = pBackend->CreateGPUBuffer(
-		EBufferUsage::eVertexBuffer | EBufferUsage::eDataDst, 3, sizeof(VertexData));
+		EBufferUsage::eVertexBuffer | EBufferUsage::eDataDst, vertexDataList.size(), sizeof(VertexData));
 	vertexBuffer->ScheduleBufferData(0, vertexDataList.size() * sizeof(VertexData), vertexDataList.data());
 
-	auto vertexBuffer1 = pBackend->CreateGPUBuffer(
-		EBufferUsage::eVertexBuffer | EBufferUsage::eDataDst, 3, sizeof(VertexData));
-	vertexBuffer1->ScheduleBufferData(0, vertexDataList1.size() * sizeof(VertexData), vertexDataList1.data());
 
 	auto indexBuffer = pBackend->CreateGPUBuffer(
-		EBufferUsage::eIndexBuffer | EBufferUsage::eDataDst, 3, sizeof(uint16_t));
+		EBufferUsage::eIndexBuffer | EBufferUsage::eDataDst, indexDataList.size(), sizeof(uint16_t));
 	indexBuffer->ScheduleBufferData(0, indexDataList.size() * sizeof(uint16_t), indexDataList.data());
 
 	int32_t frame = 0;
 
 	CVertexInputDescriptor vertexInputDesc{};
-	vertexInputDesc.AddPrimitiveDescriptor(20, {
-		VertexAttribute{0, offsetof(VertexData, x), VertexInputFormat::eR32G32_SFloat}
-		, VertexAttribute{1, offsetof(VertexData, r), VertexInputFormat::eR32G32B32_SFloat}
+	vertexInputDesc.AddPrimitiveDescriptor(sizeof(VertexData), {
+		VertexAttribute{0, offsetof(VertexData, pos), VertexInputFormat::eR32G32_SFloat}
+		, VertexAttribute{1, offsetof(VertexData, uv), VertexInputFormat::eR32G32_SFloat}
+		, VertexAttribute{2, offsetof(VertexData, color), VertexInputFormat::eR32G32B32_SFloat}
 		});
 
 	ShaderBindingDescriptorList bindingSetList = { shaderBindingBuilder };
 
 	
 	vertexBuffer->UploadAsync();
-	vertexBuffer1->UploadAsync();
 	indexBuffer->UploadAsync();
 	//shaderBindings->UploadAsync();
 	image->UploadAsync();
@@ -190,32 +186,32 @@ int main(int argc, char *argv[])
 						cmd.SetShaderBindings({ shaderBindings });
 						cmd.BindVertexBuffers({ vertexBuffer.get() }, {});
 						cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-						cmd.DrawIndexed(3);
-					}
-					else
-					{
-						std::cout << "Not Finish Yet" << std::endl;
-					}
-				})
-			.Subpass({ {0} }
-				, CPipelineStateObject{}
-				, vertexInputDesc
-				, shaderSet
-				, bindingSetList
-				, [vertexBuffer1, indexBuffer, shaderBindings](CInlineCommandList& cmd)
-				{
-					if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone() && shaderBindings->UploadingDone())
-					{
-						cmd.SetShaderBindings({ shaderBindings });
-						cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
-						cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
-						cmd.DrawIndexed(3);
+						cmd.DrawIndexed(6);
 					}
 					else
 					{
 						std::cout << "Not Finish Yet" << std::endl;
 					}
 				});
+			//.Subpass({ {0} }
+			//	, CPipelineStateObject{}
+			//	, vertexInputDesc
+			//	, shaderSet
+			//	, bindingSetList
+			//	, [indexBuffer, shaderBindings](CInlineCommandList& cmd)
+			//	{
+			//		if (vertexBuffer1->UploadingDone() && indexBuffer->UploadingDone() && shaderBindings->UploadingDone())
+			//		{
+			//			cmd.SetShaderBindings({ shaderBindings });
+			//			cmd.BindVertexBuffers({ vertexBuffer1.get() }, {});
+			//			cmd.BindIndexBuffers(EIndexBufferType::e16, indexBuffer.get());
+			//			cmd.DrawIndexed(3);
+			//		}
+			//		else
+			//		{
+			//			std::cout << "Not Finish Yet" << std::endl;
+			//		}
+			//	});
 
 				pRenderGraph->PresentWindow(windowHandle);
 
@@ -223,7 +219,6 @@ int main(int argc, char *argv[])
 		pBackend->TickBackend();
 		pBackend->TickWindows();
 		++frame;
-		//std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
 	pBackend->Release();
 	pBackend.reset();

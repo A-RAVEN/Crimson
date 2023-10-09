@@ -18,12 +18,7 @@ namespace graphics_backend
         m_Usages = usages;
 		m_Count = count;
 		m_Stride = stride;
-		CVulkanMemoryManager& memoryManager = GetVulkanApplication().GetMemoryManager();
-		m_BufferObject = memoryManager.AllocateBuffer(
-			EMemoryType::GPU
-			, EMemoryLifetime::Persistent
-			, count * stride
-			, EBufferUsageFlagsTranslate(usages) | vk::BufferUsageFlagBits::eTransferDst);
+
 	}
 	void GPUBuffer_Impl::UploadAsync()
 	{
@@ -49,6 +44,15 @@ namespace graphics_backend
         auto currentFrame = GetFrameCountContext().GetCurrentFrameID();
 
         std::atomic_thread_fence(std::memory_order_acquire);
+
+		if (m_BufferObject == nullptr)
+		{
+			m_BufferObject = memoryManager.AllocateBuffer(
+				EMemoryType::GPU
+				, EMemoryLifetime::Persistent
+				, m_Count * m_Stride
+				, EBufferUsageFlagsTranslate(m_Usages) | vk::BufferUsageFlagBits::eTransferDst);
+		}
 
 		uint64_t byteSize = std::min(m_Count * m_Stride, m_ScheduledData.size());
         auto tempBuffer = memoryManager.AllocateFrameBoundTransferStagingBuffer(byteSize);

@@ -141,6 +141,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="stb_impl.cpp" />
     <ClCompile Include="TestShaderProvider.cpp" />
   </ItemGroup>
   <ItemGroup>
