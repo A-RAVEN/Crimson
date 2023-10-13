@@ -7,8 +7,9 @@
 #include "CPipelineStateObject.h"
 #include "ShaderProvider.h"
 #include "CVertexInputDescriptor.h"
-#include "CTextureHandle.h"
+#include "TextureHandle.h"
 #include "ShaderBindingBuilder.h"
+#include "ShaderBindingSet.h"
 
 namespace graphics_backend
 {
@@ -92,7 +93,7 @@ namespace graphics_backend
 		CPipelineStateObject pipelineStateObject;
 		CVertexInputDescriptor vertexInputDescriptor;
 		GraphicsShaderSet shaderSet;
-		ShaderBindingDescriptorList shaderBindingDescriptorList;
+		ShaderBindingList shaderBindingList;
 		std::function<void(CInlineCommandList&)> commandFunction;
 	};
 
@@ -115,7 +116,7 @@ namespace graphics_backend
 			, CPipelineStateObject const& pipelineStates
 			, CVertexInputDescriptor const& vertexInputs
 			, GraphicsShaderSet const& shaderSet
-			, ShaderBindingDescriptorList const& shaderBindingDescriptorList
+			, ShaderBindingList const& shaderBindingList
 			, std::function<void(CInlineCommandList&)> commandFunction)
 		{
 			mRenderPassInfo.subpassInfos.push_back(inSubpassInfo);
@@ -123,7 +124,7 @@ namespace graphics_backend
 				pipelineStates
 				, vertexInputs
 				, shaderSet
-				, shaderBindingDescriptorList
+				, shaderBindingList
 				, commandFunction
 				});
 			m_SubpassDataReferences.emplace_back(ESubpassType::eSimpleDraw

@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 				, CPipelineStateObject{}
 				, vertexInputDesc
 				, shaderSet
-				, bindingSetList
+				, { {shaderBindings}, {} }
 				, [vertexBuffer, indexBuffer, shaderBindings](CInlineCommandList& cmd)
 				{
 					if (vertexBuffer->UploadingDone() && indexBuffer->UploadingDone() && shaderBindings->UploadingDone())

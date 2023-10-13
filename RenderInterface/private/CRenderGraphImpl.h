@@ -11,6 +11,7 @@ namespace graphics_backend
 		virtual TextureHandle RegisterWindowBackbuffer(std::shared_ptr<WindowHandle> window) override;
 		virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) override;
 		virtual void PresentWindow(std::shared_ptr<WindowHandle> window) override;
+		virtual ShaderBindingSetHandle NewShaderBindingSetHandle(ShaderBindingBuilder const& builder) override;
 
 		virtual uint32_t GetRenderNodeCount() const override;
 		virtual CRenderpassBuilder const& GetRenderPass(uint32_t nodeID) const override;
@@ -34,5 +35,7 @@ namespace graphics_backend
 		std::unordered_map<void*, TIndex> m_RegisteredTextureHandleIDs;
 
 		std::shared_ptr<WindowHandle> m_TargetWindow;
+
+		std::unordered_map<ShaderBindingBuilder, TIndex, hash_utils::default_hashAlg> m_ShaderBindingDescToIndex;
 	};
 }

@@ -117,6 +117,7 @@ namespace graphics_backend
 			return m_DescriptorSetHandle->GetDescriptorSet();
 		}
 		virtual void TickUpload() override;
+		ShaderBindingSetMetadata const* GetMetadata() const { return p_Metadata; }
 	private:
 		ShaderBindingSetMetadata const* p_Metadata;
 		ShaderDescriptorSetHandle m_DescriptorSetHandle;

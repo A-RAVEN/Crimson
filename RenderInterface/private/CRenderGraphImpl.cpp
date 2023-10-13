@@ -25,6 +25,23 @@ namespace graphics_backend
 		m_TargetWindow = window;
 	}
 
+	ShaderBindingSetHandle CRenderGraph_Impl::NewShaderBindingSetHandle(ShaderBindingBuilder const& builder)
+	{
+		auto found = m_ShaderBindingDescToIndex.find(builder);
+		TIndex foundIndex = INVALID_INDEX;
+		if (found == m_ShaderBindingDescToIndex.end())
+		{
+			foundIndex = m_ShaderBindingDescToIndex.size();
+			m_ShaderBindingDescToIndex.insert(std::make_pair(builder, foundIndex));
+		}
+		else
+		{
+			foundIndex = found->second;
+		}
+
+		return ShaderBindingSetHandle(ShaderBindingSetHandle_Impl{ foundIndex }, nullptr);
+	}
+
 	uint32_t CRenderGraph_Impl::GetRenderNodeCount() const
 	{
 		return m_RenderPasses.size();

@@ -343,15 +343,26 @@ namespace graphics_backend
 			auto fragModule = gpuObjectManager.GetShaderModuleCache().GetOrCreate({ subpassData.shaderSet.frag }).lock();
 			
 			//也许从shader中提取layout信息更好
-			std::vector<vk::DescriptorSetLayout> layouts;
-			layouts.reserve(subpassData.shaderBindingDescriptorList.shaderBindingDescs.size());
+			std::set<vk::DescriptorSetLayout> layoutSet;
+			auto& bindingSets = subpassData.shaderBindingList.m_ShaderBindingSets;
 			auto& descPoolCache = gpuObjectManager.GetShaderDescriptorPoolCache();
-			for (auto& shaderBindingDesc : subpassData.shaderBindingDescriptorList.shaderBindingDescs)
+			for (auto itrSet : bindingSets)
 			{
-				ShaderDescriptorSetLayoutInfo layoutInfo{ shaderBindingDesc };
+				std::shared_ptr<ShaderBindingSet_Impl> pSet = std::static_pointer_cast<ShaderBindingSet_Impl>(itrSet);
+				auto& layoutInfo = pSet->GetMetadata()->GetLayoutInfo();
 				auto shaderDescriptorSetLayout = descPoolCache.GetOrCreate(layoutInfo).lock();
-				layouts.push_back(shaderDescriptorSetLayout->GetDescriptorSetLayout());
+				layoutSet.insert(shaderDescriptorSetLayout->GetDescriptorSetLayout());
 			}
+			std::vector<vk::DescriptorSetLayout> layouts;
+			layouts.resize(layoutSet.size());
+			std::copy(layoutSet.begin(), layoutSet.end(), layouts.begin());
+			layoutSet.clear();
+			//for (auto& shaderBindingDesc : subpassData.shaderBindingDescriptorList.shaderBindingDescs)
+			//{
+			//	ShaderDescriptorSetLayoutInfo layoutInfo{ shaderBindingDesc };
+			//	auto shaderDescriptorSetLayout = descPoolCache.GetOrCreate(layoutInfo).lock();
+			//	layouts.push_back(shaderDescriptorSetLayout->GetDescriptorSetLayout());
+			//}
 
 			CPipelineObjectDescriptor pipelineDesc{
 			subpassData.pipelineStateObject

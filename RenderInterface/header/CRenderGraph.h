@@ -4,8 +4,9 @@
 #include <vector>
 #include <type_traits>
 #include "CNativeRenderPassInfo.h"
-#include "CTextureHandle.h"
+#include "TextureHandle.h"
 #include "WindowHandle.h"
+#include "ShaderBindingSetHandle.h"
 
 namespace graphics_backend
 {
@@ -24,6 +25,7 @@ namespace graphics_backend
 		virtual TextureHandle RegisterWindowBackbuffer(std::shared_ptr<WindowHandle> window) = 0;
 		virtual CRenderpassBuilder& NewRenderPass(std::vector<CAttachmentInfo> const& inAttachmentInfo) = 0;
 		virtual void PresentWindow(std::shared_ptr<WindowHandle> window) = 0;
+		virtual ShaderBindingSetHandle NewShaderBindingSetHandle(ShaderBindingBuilder const& builder) = 0;
 
 		//Used By Backend
 		virtual uint32_t GetRenderNodeCount() const = 0;

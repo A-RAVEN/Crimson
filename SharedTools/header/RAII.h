@@ -33,8 +33,23 @@ namespace raii_utils
 			RAIIRelease();
 		}
 
-		TRAIIContainer(TRAIIContainer const& other) = delete;
-		TRAIIContainer& operator=(TRAIIContainer const& other) = delete;
+		TRAIIContainer(TRAIIContainer const& other) :
+			m_RAIIData(std::move(other.m_RAIIData))
+			, _Releaser(std::move(other._Releaser))
+			, _RAII_Aquired(other._RAII_Aquired)
+		{
+			other._RAII_Aquired = false;
+		}
+
+		TRAIIContainer& operator=(TRAIIContainer const& other)
+		{
+			RAIIRelease();
+			m_RAIIData = std::move<T&>(other.m_RAIIData);
+			_Releaser = std::move(other._Releaser);
+			_RAII_Aquired = std::move(other._RAII_Aquired);
+			other._RAII_Aquired = false;
+			return *this;
+		}
 
 		TRAIIContainer(TRAIIContainer&& other) : 
 			m_RAIIData(std::move(other.m_RAIIData))
@@ -104,8 +119,8 @@ namespace raii_utils
 		}
 
 	private:
-		T m_RAIIData;
-		std::function<void(T& releaseObj)> _Releaser;
-		bool _RAII_Aquired = false;
+		mutable T m_RAIIData;
+		mutable std::function<void(T& releaseObj)> _Releaser;
+		mutable bool _RAII_Aquired = false;
 	};
 }

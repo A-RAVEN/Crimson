@@ -24,7 +24,7 @@
     <ClInclude Include="header\CRenderGraph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="header\CTextureHandle.h">
+    <ClInclude Include="header\TextureHandle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="header\Common.h">
@@ -90,6 +90,9 @@
     <ClInclude Include="header\TextureSampler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="header\ShaderBindingSetHandle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="private\dllmain.cpp">
@@ -102,6 +105,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="private\RenderInterfaceManager_Impl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="private\ShaderBindingSetHandle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

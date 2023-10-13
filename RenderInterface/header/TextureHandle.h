@@ -7,7 +7,6 @@ namespace graphics_backend
 	class TextureHandle
 	{
 	public:
-
 		TextureHandle(GPUTextureDescriptor const descriptor, TIndex handleIndex) :
 			m_Descriptor(descriptor)
 			, m_HandleIndex(handleIndex)

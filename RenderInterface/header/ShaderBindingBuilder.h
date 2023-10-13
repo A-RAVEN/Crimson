@@ -272,6 +272,6 @@ class ShaderBindingDescriptorList
 {
 public:
 	ShaderBindingDescriptorList(std::initializer_list<ShaderBindingBuilder> binding_sets) : shaderBindingDescs(binding_sets) {}
-	
 	std::vector<ShaderBindingBuilder> shaderBindingDescs;
 };
+

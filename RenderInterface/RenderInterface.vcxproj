@@ -168,6 +168,7 @@
     <ClInclude Include="header\RenderInterfaceManager.h" />
     <ClInclude Include="header\ShaderBindingBuilder.h" />
     <ClInclude Include="header\ShaderBindingSet.h" />
+    <ClInclude Include="header\ShaderBindingSetHandle.h" />
     <ClInclude Include="header\ShaderProvider.h" />
     <ClInclude Include="header\CShaderStateObject.h" />
     <ClInclude Include="header\CTextureResource.h" />
@@ -180,12 +181,13 @@
     <ClInclude Include="private\framework.h" />
     <ClInclude Include="header\Common.h" />
     <ClInclude Include="header\CRenderGraph.h" />
-    <ClInclude Include="header\CTextureHandle.h" />
+    <ClInclude Include="header\TextureHandle.h" />
     <ClInclude Include="private\pch.h" />
     <ClInclude Include="private\CRenderGraphImpl.h" />
     <ClInclude Include="private\RenderInterfaceManager_Impl.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="private\ShaderBindingSetHandle.cpp" />
     <ClCompile Include="private\dllmain.cpp" />
     <ClCompile Include="private\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
