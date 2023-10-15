@@ -3,14 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crimson", "Crimson\Crimson.vcxproj", "{AA8D8664-5069-4290-940B-6BF751498E88}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RequiemEngine", "RequiemEngine\RequiemEngine.vcxproj", "{1F1D488A-4F54-4586-8C8A-66B57362B787}"
-	ProjectSection(ProjectDependencies) = postProject
-		{AA8D8664-5069-4290-940B-6BF751498E88} = {AA8D8664-5069-4290-940B-6BF751498E88}
-		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7} = {5944BC68-ABA3-4B5E-A52D-677308D8EEC7}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ShaderCompiler", "ShaderCompiler\ShaderCompiler.vcxproj", "{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanRenderBackend", "VulkanRenderBackend\VulkanRenderBackend.vcxproj", "{A569CD3B-6839-4CED-B67B-2BAEE2C06EC6}"
@@ -23,8 +15,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreadManager", "ThreadMana
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SharedTools", "SharedTools\SharedTools.vcxproj", "{FCCACE35-D2E7-4D8C-BCCF-7239D0B8E6E7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CodeGen", "CodeGen\CodeGen.vcxproj", "{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ThreadManagerTest", "ThreadManagerTest\ThreadManagerTest.vcxproj", "{B53AD82B-5A43-4A8E-8461-AC27A9890C1D}"
 EndProject
 Global
@@ -35,22 +25,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Debug|x64.ActiveCfg = Debug|x64
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Debug|x64.Build.0 = Debug|x64
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Debug|x86.ActiveCfg = Debug|Win32
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Debug|x86.Build.0 = Debug|Win32
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Release|x64.ActiveCfg = Release|x64
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Release|x64.Build.0 = Release|x64
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Release|x86.ActiveCfg = Release|Win32
-		{AA8D8664-5069-4290-940B-6BF751498E88}.Release|x86.Build.0 = Release|Win32
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Debug|x64.ActiveCfg = Debug|x64
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Debug|x64.Build.0 = Debug|x64
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Debug|x86.ActiveCfg = Debug|Win32
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Debug|x86.Build.0 = Debug|Win32
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x64.ActiveCfg = Release|x64
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x64.Build.0 = Release|x64
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x86.ActiveCfg = Release|Win32
-		{1F1D488A-4F54-4586-8C8A-66B57362B787}.Release|x86.Build.0 = Release|Win32
 		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x64.ActiveCfg = Debug|x64
 		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x64.Build.0 = Debug|x64
 		{5944BC68-ABA3-4B5E-A52D-677308D8EEC7}.Debug|x86.ActiveCfg = Debug|Win32
@@ -99,14 +73,6 @@ Global
 		{FCCACE35-D2E7-4D8C-BCCF-7239D0B8E6E7}.Release|x64.Build.0 = Release|x64
 		{FCCACE35-D2E7-4D8C-BCCF-7239D0B8E6E7}.Release|x86.ActiveCfg = Release|Win32
 		{FCCACE35-D2E7-4D8C-BCCF-7239D0B8E6E7}.Release|x86.Build.0 = Release|Win32
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Debug|x64.ActiveCfg = Debug|x64
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Debug|x64.Build.0 = Debug|x64
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Debug|x86.ActiveCfg = Debug|Win32
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Debug|x86.Build.0 = Debug|Win32
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Release|x64.ActiveCfg = Release|x64
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Release|x64.Build.0 = Release|x64
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Release|x86.ActiveCfg = Release|Win32
-		{D9861FBA-4F44-4624-9CFA-F5AD938B9B3C}.Release|x86.Build.0 = Release|Win32
 		{B53AD82B-5A43-4A8E-8461-AC27A9890C1D}.Debug|x64.ActiveCfg = Debug|x64
 		{B53AD82B-5A43-4A8E-8461-AC27A9890C1D}.Debug|x64.Build.0 = Debug|x64
 		{B53AD82B-5A43-4A8E-8461-AC27A9890C1D}.Debug|x86.ActiveCfg = Debug|Win32
